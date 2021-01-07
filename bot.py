@@ -43,7 +43,7 @@ erg_db = sqlite3.connect(dbfile, isolation_level=None)
 # --- Database: Get Data ---
 
 # Check database for stored prefix, if none is found, a record is inserted and the default prefix - is used, return all bot prefixes
-async def get_prefix_all(ctx):
+async def get_prefix_all(bot, ctx):
     
     try:
         cur=erg_db.cursor()
@@ -110,7 +110,7 @@ async def get_settings(ctx, setting='all'):
     if setting == 'all':
         sql = 'SELECT * FROM settings_user where user_id=?'
     elif setting == 'hunt':
-        sql = 'SELECT reminders_on, user_donor_tier, partner_donor_tier, hunt_enabled, hunt_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, partner_name, partner_donor_tier, hunt_enabled, hunt_message FROM settings_user where user_id=?'
     
     try:
         cur=erg_db.cursor()
@@ -167,9 +167,9 @@ async def set_reminders(ctx, action):
     status = 'Whoops, something went wrong here.'
     
     if action == 'on':
-        reminders_on = True
+        reminders_on = 1
     elif action == 'off':
-        reminders_on = False
+        reminders_on = 0
     else:
         await log_error(ctx, f'Unknown action in routine toggle_reminders.')
         return
@@ -180,27 +180,47 @@ async def set_reminders(ctx, action):
         record = cur.fetchone()
         
         if record:
-            reminders_status = record[1]
-            if reminders_status == 'True' and reminders_on == True:
+            reminders_status = int(record[0])
+            if reminders_status == 1 and reminders_on == 1:
                 status = f'**{ctx.author.name}**, your reminders are already turned on.'
-                return
-            elif reminders_status == 'False' and reminders_on == False:
+            elif reminders_status == 0 and reminders_on == 0:
                 status = f'**{ctx.author.name}**, your reminders are already turned off.'
-                return
             else:
                 cur.execute('UPDATE settings_user SET reminders_on = ? where user_id = ?', (reminders_on, ctx.author.id,))
                 status = f'**{ctx.author.name}**, your reminders are now turned {action}.'
         else:
             if reminders_on == False:
                 status = f'**{ctx.author.name}**, your reminders are already turned off.'
-                return
             else:
-                cur.execute('INSERT INTO settings_user VALUES (?, ?, ?, ?)', (ctx.author.id, reminders_on, 0, 0,))
+                cur.execute('INSERT INTO settings_user (user_id) VALUES (?)', (ctx.author.id,))
                 status = f'**{ctx.author.name}**, your reminders are now turned {action}.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
     
     return status
+
+# Set partner
+async def set_partner(ctx, partner_name):
+    
+    if partner_name == None:
+        await log_error(ctx, f'Can not write an empty partner name.')
+        return
+    
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT partner_name FROM settings_user where user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        
+        if record:
+            partner_db = record[0]
+            if partner_db == None or (partner_db != partner_name):
+                cur.execute('UPDATE settings_user SET partner_name = ? where user_id = ?', (partner_name, ctx.author.id,))
+            else:
+                return
+        else:
+            return
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
 
 
 # --- Error Logging ---
@@ -248,7 +268,7 @@ async def on_ready():
 async def on_guild_join(guild):
     
     try:
-        prefix = await get_prefix(bot, guild, True)
+        prefix = await get_prefix(guild, True)
         
         welcome_message =   f'Hello! **{guild.name}**! Hey! I\'m here to remind you to do your Epic RPG commands!\n\n'\
                             f'Note that reminders are off by default. If you want to get reminded, please use `{prefix}on` to activate me.\n'\
@@ -290,8 +310,6 @@ async def on_command_error(ctx, error):
         return
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.send(f'You\'re missing some arguments.')
-    elif isinstance(error, FirstTimeUser):
-        return
     else:
         await log_error(ctx, error) # To the database you go
 
@@ -310,7 +328,7 @@ async def setprefix(ctx, *new_prefix):
                 await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
             else:
                 await set_prefix(bot, ctx, new_prefix[0])
-                await ctx.send(f'Prefix changed to `{await get_prefix(bot, ctx)}`.')
+                await ctx.send(f'Prefix changed to `{await get_prefix(ctx)}`.')
         else:
             await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
 
@@ -320,7 +338,7 @@ async def setprefix(ctx, *new_prefix):
 async def prefix(ctx):
     
     if not ctx.prefix == 'rpg ':
-        current_prefix = await get_prefix(bot, ctx)
+        current_prefix = await get_prefix(ctx)
         await ctx.send(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix [prefix]`.')
 
 
@@ -363,7 +381,7 @@ async def on(ctx, *args):
 async def background_task(user, channel, message, time_left):
         
     await asyncio.sleep(time_left)
-    await bot.get_channel(channel).send(f'{user.mention} {message}')
+    await bot.get_channel(channel.id).send(f'{user.mention} {message}')
 
 # --- Hunt commands ---
 @bot.command()
@@ -374,8 +392,18 @@ async def hunt(ctx, *args):
         correct_message = False
         try:
             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-            m = str(m).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-            if (m.find(ctx_author) > 1) and ((m.find('found and killed') > 1) or (m.find(f'are hunting together!') > 1)):
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if ((message.find(ctx_author) > 1) and ((message.find('found a') > 1) or (message.find(f'are hunting together!') > 1))) or (message.find(f'\'s cooldown') > 1) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > 1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -386,7 +414,7 @@ async def hunt(ctx, *args):
 
     
     if ctx.prefix == 'rpg ' and len(args) in (0,1,2):
-        hardmode = False
+        # Determine if hardmode and/or together was used
         together = False
         command = 'rpg hunt'
         if len(args) > 0:
@@ -396,7 +424,6 @@ async def hunt(ctx, *args):
                 together = True
                 command = 'rpg hunt t'
             elif arg1 in ('h', 'hardmode'):
-                hardmode = True
                 command = 'rpg hunt h'
                 if len(args) > 1:
                     arg2 = args[1]
@@ -405,35 +432,83 @@ async def hunt(ctx, *args):
                         together = True
                         command = 'rpg hunt h t'
         try:
-            bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 5)
-            bot_answer = str(bot_answer)
-        
             settings = await get_settings(ctx, 'hunt')
             if not settings == None:
                 reminders_on = settings[0]
-                if not reminders_on == 'False' and not hunt_enabled == 'False':
+                if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
-                    partner_donor_tier = int(settings[2])
-                    hunt_enabled = settings[3]
-                    hunt_message = settings[4]
-                    if hunt_message == '':
-                        hunt_message = global_data.default_message.replace('%',f'`{command}`')
-                    cooldown_data = await get_cooldown(ctx, 'hunt')
-                    cooldown = int(cooldown_data[0])
-                    donor_affected = cooldown_data[1]
-                    if together == True and donor_affected == True:
-                        time_left = cooldown*global_data.donor_cooldowns[partner_donor_tier]
-                    elif together == False and donor_affected == True:
-                        time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
+                    partner_name = settings[2]
+                    partner_donor_tier = int(settings[3])
+                    hunt_enabled = int(settings[4])
+                    hunt_message = settings[5]
+                    if not hunt_enabled == 0:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 5)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if it found a cooldown embed, if yes if it is the correct one, if not, ignore it and try to wait for the bot message one more time
+                        if bot_message.find(f'\'s cooldown') > 1:
+                            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if (bot_message.find(f'{ctx_author}\'s cooldown') > -1) or (bot_message.find(f'{partner_name}\'s cooldown') > -1):
+                                await ctx.send('Found a cooldown embed.')
+                                return
+                            else:
+                                bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 3)
+                                try:
+                                    bot_message = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                except:
+                                    bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        # Ignore anti spam embed
+                        elif bot_message.find('Huh please don\'t spam') > 1:
+                            return
+                        
+                        # Read partner name from hunt together message and save it to database if necessary (to make the bot check safer)
+                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if together == True:
+                            partner_name_start = bot_message.find(f'{ctx_author} and ') + len(ctx_author) + 12
+                            partner_name_end = bot_message.find('are hunting together!', partner_name_start) - 3
+                            partner_name = str(bot_message[partner_name_start:partner_name_end]).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if not partner_name == '':
+                                await set_partner(ctx, partner_name)
                     else:
-                        time_left = cooldown
-                                        
-                    bot.loop.create_task(background_task(ctx.author, ctx.channel, hunt_message, time_left))
-                    
+                        return
                 else:
                     return
             else:
                 return
+            
+            # Set message to send          
+            if hunt_message == None:
+                hunt_message = global_data.default_message.replace('%',f'`{command}`')
+            
+            # Calculate cooldown
+            cooldown_data = await get_cooldown(ctx, 'hunt')
+            cooldown = int(cooldown_data[0])
+            donor_affected = int(cooldown_data[1])
+            if together == True and donor_affected == True:
+                time_left = cooldown*global_data.donor_cooldowns[partner_donor_tier]
+            elif together == False and donor_affected == True:
+                time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
+            else:
+                time_left = cooldown
+            
+            # Schedule task
+            bot.loop.create_task(background_task(ctx.author, ctx.channel, hunt_message, time_left))
+            
+            # Add reaction
+            await bot_answer.add_reaction(emojis.navi)
+            
+            # Add an F if the user died
+            if (bot_message.find(f'{ctx_author} lost') > -1) or (bot_message.find('but lost fighting') > -1):
+                await bot_answer.add_reaction(emojis.rip_reaction)
         except asyncio.TimeoutError as error:
             return
 
@@ -445,7 +520,7 @@ async def hunt(ctx, *args):
 async def help(ctx):
     
     if not ctx.prefix == 'rpg ':
-        prefix = await get_prefix(bot, ctx)
+        prefix = await get_prefix(ctx)
                     
         user_settings = (
             f'{emojis.bp} `{prefix}settings` / `{prefix}me` : Check your target enchant\n'
