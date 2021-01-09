@@ -11,9 +11,6 @@ dbfile = os.path.join(bot_dir, 'database/navi_db.db')
 # Donor tier reductions
 donor_cooldowns = (1,0.9,0.8,0.65,)
 
-# Default message
-default_message = 'Hey! It\'s time for %!'
-
 # Prefix
 default_prefix = 'navi '
 
@@ -24,9 +21,11 @@ timeout_longer = 20
 # Toggle debug reactions and messages
 debug_mode = True
 
-# Global event messages (not changeable)
+# Default messages
+default_message = 'Hey! It\'s time for `%`!'
 arena_message = 'Hey! The **big arena** event just finished! You can check the results on the official EPIC RPG server.'
 miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results on the official EPIC RPG server.'
+pet_message = 'Hey! Your pet `$` is back!'
 
 # Embed color
 color = 0x3abad3

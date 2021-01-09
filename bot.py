@@ -133,7 +133,9 @@ async def get_settings(ctx, setting='all'):
     elif setting == 'lottery':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, lottery_enabled, lottery_message FROM settings_user where user_id=?'
     elif setting == 'minibossarena':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, arena_enabled, miniboss_enabled FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, arena_enabled, miniboss_enabled FROM settings_user where user_id=?'
+    elif setting == 'pet':
+        sql = 'SELECT reminders_on, user_donor_tier, pet_enabled, pet_message FROM settings_user where user_id=?'
         
     try:
         cur=erg_db.cursor()
@@ -165,6 +167,28 @@ async def get_cooldown(ctx, activity):
         await log_error(ctx, error)    
   
     return cooldown_data
+
+# Get active reminders
+async def get_active_reminders(ctx):
+    
+    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = current_time.timestamp()
+    
+    active_reminders = 'None'
+    
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT activity, end_time FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (ctx.author.id,current_time,))
+        record = cur.fetchall()
+        
+        if record:
+            active_reminders = record
+        else:
+            active_reminders = 'None'
+    except sqlite3.Error as error:
+        logger.error(f'Routine \'get_active_reminders\' had the following error: {error}')
+    
+    return active_reminders
 
 # Get due reminders
 async def get_due_reminders():
@@ -327,7 +351,10 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
                 bot.loop.create_task(background_task(ctx.author, ctx.channel, message, time_left, task_name))
                 status = 'scheduled'
             else:
-                cur.execute('UPDATE reminders SET end_time = ?, channel_id = ?, message = ?, triggered = ? WHERE user_id = ? AND activity = ?', (end_time, ctx.channel.id, message, triggered, ctx.author.id, activity,))
+                if cooldown_update == True:
+                    cur.execute('UPDATE reminders SET end_time = ?, channel_id = ?, triggered = ? WHERE user_id = ? AND activity = ?', (end_time, ctx.channel.id, triggered, ctx.author.id, activity,))
+                else:
+                    cur.execute('UPDATE reminders SET end_time = ?, channel_id = ?, message = ?, triggered = ? WHERE user_id = ? AND activity = ?', (end_time, ctx.channel.id, message, triggered, ctx.author.id, activity,))
                 status = 'updated'
         else:
             if time_left > 15:
@@ -406,6 +433,7 @@ async def log_error(ctx, error, guild_join=False):
 
 
 # --- Parsing ---
+# Parse timestring to seconds
 async def parse_timestring(ctx, timestring):
     
     time_left = 0
@@ -452,6 +480,27 @@ async def parse_timestring(ctx, timestring):
     
     return time_left
 
+# Parse seconds to timestring
+async def parse_seconds(time_left):
+
+    days = time_left // 86400
+    days = int(days)
+    hours = (time_left % 86400) // 3600
+    hours = int(hours)
+    minutes = (time_left % 3600) // 60
+    minutes = int(minutes)
+    seconds = time_left % 60
+    seconds = int(seconds)
+    
+    timestring = ''
+    if not days == 0:
+        timestring = f'{timestring}{days}d '
+    if not hours == 0:
+        timestring = f'{timestring}{hours}h '
+    timestring = f'{timestring}{minutes}m {seconds}s'
+    
+    return timestring
+
 
 # --- Command Initialization ---
 
@@ -486,7 +535,6 @@ async def on_guild_join(guild):
         return
 
 
-
 # --- Error Handling ---
 
 # Error handling
@@ -519,79 +567,6 @@ async def on_command_error(ctx, error):
     else:
         await log_error(ctx, error) # To the database you go
 
-
-# --- Server Settings ---
-   
-# Command "setprefix" - Sets new prefix (if user has "manage server" permission)
-@bot.command()
-@commands.has_permissions(manage_guild=True)
-@commands.bot_has_permissions(send_messages=True)
-async def setprefix(ctx, *new_prefix):
-    
-    if not ctx.prefix == 'rpg ':
-        if new_prefix:
-            if len(new_prefix)>1:
-                await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
-            else:
-                await set_prefix(bot, ctx, new_prefix[0])
-                await ctx.send(f'Prefix changed to `{await get_prefix(ctx)}`.')
-        else:
-            await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
-
-# Command "prefix" - Returns current prefix
-@bot.command()
-@commands.bot_has_permissions(send_messages=True)
-async def prefix(ctx):
-    
-    if not ctx.prefix == 'rpg ':
-        current_prefix = await get_prefix(ctx)
-        await ctx.send(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix [prefix]`.')
-
-
-# --- User Settings ---
-
-# Command "settings" - Returns current user progress settings
-@bot.command(aliases=('me',))
-@commands.bot_has_permissions(send_messages=True)
-async def settings(ctx):
-    
-    if not ctx.prefix == 'rpg ':
-        current_settings = await get_settings(ctx)
-        
-        if current_settings:
-            enchants = global_data.enchants_list
-            enchant_setting = current_settings[0]
-            enchant_setting = int(enchant_setting)
-            enchant_name = enchants[enchant_setting]
-            if enchant_setting > 7:
-                enchant_name = enchant_name.upper()
-            else:
-                enchant_name = enchant_name.title()
-            
-            await ctx.send(
-                f'**{ctx.author.name}**, your target enchant is set to **{enchant_name}**.\n'
-                f'Use `{ctx.prefix}set [enchant]` to change it.'
-            )
-    
-# Command "on" - Activates reminders
-@bot.command()
-@commands.bot_has_permissions(send_messages=True)
-async def on(ctx, *args):
-    
-    if not ctx.prefix == 'rpg ':
-        status = await set_reminders(ctx, 'on')
-        await ctx.send(status)
-        
-# Command "off" - Deactivates reminders
-@bot.command()
-@commands.bot_has_permissions(send_messages=True)
-async def off(ctx, *args):
-    
-    if not ctx.prefix == 'rpg ':
-        status = await set_reminders(ctx, 'off')
-        await set_reminder_triggered(ctx, ctx.author.id, 'all')
-        await ctx.send(status)
-        
 
 # --- Tasks ---
 
@@ -665,6 +640,121 @@ async def delete_old_reminders(bot):
                 logger.error(f'{datetime.now()}: Error deleting old reminder {reminder}')
 
 
+# --- Server Settings ---
+   
+# Command "setprefix" - Sets new prefix (if user has "manage server" permission)
+@bot.command()
+@commands.has_permissions(manage_guild=True)
+@commands.bot_has_permissions(send_messages=True)
+async def setprefix(ctx, *new_prefix):
+    
+    if not ctx.prefix == 'rpg ':
+        if new_prefix:
+            if len(new_prefix)>1:
+                await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
+            else:
+                await set_prefix(bot, ctx, new_prefix[0])
+                await ctx.send(f'Prefix changed to `{await get_prefix(ctx)}`.')
+        else:
+            await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
+
+# Command "prefix" - Returns current prefix
+@bot.command()
+@commands.bot_has_permissions(send_messages=True)
+async def prefix(ctx):
+    
+    if not ctx.prefix == 'rpg ':
+        current_prefix = await get_prefix(ctx)
+        await ctx.send(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix [prefix]`.')
+
+
+# --- User Settings ---
+
+# Command "settings" - Returns current user progress settings
+@bot.command(aliases=('me',))
+@commands.bot_has_permissions(send_messages=True)
+async def settings(ctx):
+    
+    if not ctx.prefix == 'rpg ':
+        current_settings = await get_settings(ctx)
+        
+        if current_settings:
+            enchants = global_data.enchants_list
+            enchant_setting = current_settings[0]
+            enchant_setting = int(enchant_setting)
+            enchant_name = enchants[enchant_setting]
+            if enchant_setting > 7:
+                enchant_name = enchant_name.upper()
+            else:
+                enchant_name = enchant_name.title()
+            
+            await ctx.send(
+                f'**{ctx.author.name}**, your target enchant is set to **{enchant_name}**.\n'
+                f'Use `{ctx.prefix}set [enchant]` to change it.'
+            )
+    
+# Command "on" - Activates reminders
+@bot.command()
+@commands.bot_has_permissions(send_messages=True)
+async def on(ctx, *args):
+    
+    if not ctx.prefix == 'rpg ':
+        status = await set_reminders(ctx, 'on')
+        await ctx.send(status)
+        
+# Command "off" - Deactivates reminders
+@bot.command()
+@commands.bot_has_permissions(send_messages=True)
+async def off(ctx, *args):
+    
+    if not ctx.prefix == 'rpg ':
+        status = await set_reminders(ctx, 'off')
+        await set_reminder_triggered(ctx, ctx.author.id, 'all')
+        await ctx.send(status)
+
+# Command "list" - Lists all active reminders
+@bot.command(aliases=('reminders',))
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
+async def list(ctx):
+    
+    if not ctx.prefix == 'rpg ':
+        
+        active_reminders = await get_active_reminders(ctx)
+
+        if active_reminders == 'None':
+            reminders = f'{emojis.bp} You have no active reminders'
+        else:
+            reminders = ''
+            for reminder in active_reminders:
+                activity = reminder[0]
+                end_time = reminder[1]
+                if activity.find('pet-') > -1:
+                    pet_id = activity.replace('pet-','')
+                    activity = f'Pet {pet_id}'
+                else:
+                    activity = activity.capitalize()
+                current_time = datetime.utcnow().replace(microsecond=0)
+                end_time_datetime = datetime.fromtimestamp(end_time)
+                end_time_difference = end_time_datetime - current_time
+                time_left = end_time_difference.total_seconds()
+                timestring = await parse_seconds(time_left)
+                
+                reminders = f'{reminders}\n{emojis.bp}**`{activity}`** (**{timestring}**)'
+                
+        reminders = reminders.strip()
+        user_name = ctx.author.name
+        user_name = user_name.upper()
+    
+        embed = discord.Embed(
+            color = global_data.color,
+            title = f'{user_name}\'S REMINDERS',
+            description = reminders
+        )    
+        
+        await ctx.send(embed=embed)
+  
+
+
 # --- Command detection ---
 # Hunt
 @bot.command()
@@ -692,7 +782,7 @@ async def hunt(ctx, *args):
             
             if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or (message.find('This command is unlocked in') > -1):
+                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -734,9 +824,9 @@ async def hunt(ctx, *args):
                     
                     # Set message to send          
                     if hunt_message == None:
-                        hunt_message = default_message.replace('%',f'`{command}`')
+                        hunt_message = default_message.replace('%',command)
                     else:
-                        hunt_message = hunt_message.replace('%',f'`{command}`')
+                        hunt_message = hunt_message.replace('%',command)
                     
                     if not hunt_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -787,6 +877,11 @@ async def hunt(ctx, *args):
                             return
                         # Ignore higher area error
                         elif bot_message.find('This command is unlocked in') > -1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             return
@@ -859,9 +954,13 @@ async def chop(ctx, *args):
             if global_data.debug_mode == True:
                 logger.debug(f'Work detection: {message}')
             
-            if  ((message.find(f'**{ctx_author}** got ') > -1) and ((message.find('wooden log') > -1) or (message.find('EPIC log') > -1) or (message.find('SUPER log') > -1) or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
-                or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1) or (message.find('RUBY') > -1) or (message.find('apple') > 1) or (message.find('banana') > -1)))\
-                or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1):
+            if  ((message.find(f'{ctx_author}** got ') > -1) and ((message.find('wooden log') > -1) or (message.find('EPIC log') > -1) or (message.find('SUPER log') > -1)\
+                or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
+                or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
+                or (message.find('RUBY') > -1) or (message.find('apple') > 1) or (message.find('banana') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1)\
+                and (message.find('You already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
+                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -886,9 +985,9 @@ async def chop(ctx, *args):
                     
                     # Set message to send          
                     if work_message == None:
-                        work_message = default_message.replace('%',f'`{command}`')
+                        work_message = default_message.replace('%',command)
                     else:
-                        work_message = work_message.replace('%',f'`{command}`')
+                        work_message = work_message.replace('%',command)
                     
                     if not work_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -931,6 +1030,11 @@ async def chop(ctx, *args):
                             return
                         # Ignore higher area error
                         elif bot_message.find('This command is unlocked in') > -1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             return
@@ -994,7 +1098,8 @@ async def training(ctx, *args):
             
             if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1):
+                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1028,9 +1133,9 @@ async def training(ctx, *args):
                     
                     # Set message to send          
                     if tr_message == None:
-                        tr_message = default_message.replace('%',f'`{command}`')
+                        tr_message = default_message.replace('%',command)
                     else:
-                        tr_message = tr_message.replace('%',f'`{command}`')
+                        tr_message = tr_message.replace('%',command)
                     
                     if not tr_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
@@ -1073,6 +1178,11 @@ async def training(ctx, *args):
                             return
                         # Ignore higher area error
                         elif bot_message.find('This command is unlocked in') > -1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             return
@@ -1133,7 +1243,7 @@ async def adventure(ctx, *args):
             
             if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already been in an adventure') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or (message.find('This command is unlocked in') > -1):
+                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1164,9 +1274,9 @@ async def adventure(ctx, *args):
                     
                     # Set message to send          
                     if adv_message == None:
-                        adv_message = default_message.replace('%',f'`{command}`')
+                        adv_message = default_message.replace('%',command)
                     else:
-                        adv_message = adv_message.replace('%',f'`{command}`')
+                        adv_message = adv_message.replace('%',command)
                     
                     if not adv_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -1209,6 +1319,11 @@ async def adventure(ctx, *args):
                             return
                         # Ignore higher area error
                         elif bot_message.find('This command is unlocked in') > -1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             return
@@ -1268,7 +1383,8 @@ async def buy(ctx, *args):
                 logger.debug(f'Lootbox detection: {message}')
             
             if  (message.find('lootbox` successfully bought for') > -1) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already bought a lootbox') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+            or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1301,9 +1417,9 @@ async def buy(ctx, *args):
                         
                         # Set message to send          
                         if lb_message == None:
-                            lb_message = default_message.replace('%',f'`{command}`')
+                            lb_message = default_message.replace('%',command)
                         else:
-                            lb_message = lb_message.replace('%',f'`{command}`')
+                            lb_message = lb_message.replace('%',command)
                         
                         if not lb_enabled == 0:
                             bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -1343,6 +1459,11 @@ async def buy(ctx, *args):
                                 if global_data.debug_mode == True:
                                     await bot_answer.add_reaction(emojis.cross)
                                 await bot_answer.add_reaction(emojis.rip_reaction)
+                                return
+                            # Ignore error when another command is active
+                            elif bot_message.find('end your previous command') > 1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
                                 return
                         else:
                             return
@@ -1412,7 +1533,8 @@ async def epic(ctx, *args):
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('If you don\'t want this quest anymore') > -1))\
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already claimed a quest') > -1)) or (message.find('You cannot do this if you have a pending quest!') > -1)\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1440,9 +1562,9 @@ async def epic(ctx, *args):
                     
                     # Set message to send          
                     if quest_message == None:
-                        quest_message = default_message.replace('%',f'`{command}`')
+                        quest_message = default_message.replace('%',command)
                     else:
-                        quest_message = quest_message.replace('%',f'`{command}`')
+                        quest_message = quest_message.replace('%',command)
                     
                     if not quest_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
@@ -1526,6 +1648,11 @@ async def epic(ctx, *args):
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
                     else:
                         return
                 else:
@@ -1584,7 +1711,8 @@ async def daily(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if  (message.find(f'{ctx_author}\'s daily reward') > -1) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have claimed your daily rewards already') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1610,9 +1738,9 @@ async def daily(ctx, *args):
                     
                     # Set message to send          
                     if daily_message == None:
-                        daily_message = default_message.replace('%',f'`{command}`')
+                        daily_message = default_message.replace('%',command)
                     else:
-                        daily_message = daily_message.replace('%',f'`{command}`')
+                        daily_message = daily_message.replace('%',command)
                     
                     if not daily_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -1652,6 +1780,11 @@ async def daily(ctx, *args):
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             await bot_answer.add_reaction(emojis.rip_reaction)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
                             return
                     else:
                         return
@@ -1707,7 +1840,8 @@ async def weekly(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if  (message.find(f'{ctx_author}\'s weekly reward') > -1) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have claimed your weekly rewards already') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1733,9 +1867,9 @@ async def weekly(ctx, *args):
                     
                     # Set message to send          
                     if weekly_message == None:
-                        weekly_message = default_message.replace('%',f'`{command}`')
+                        weekly_message = default_message.replace('%',command)
                     else:
-                        weekly_message = weekly_message.replace('%',f'`{command}`')
+                        weekly_message = weekly_message.replace('%',command)
                     
                     if not weekly_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -1775,6 +1909,11 @@ async def weekly(ctx, *args):
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             await bot_answer.add_reaction(emojis.rip_reaction)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
                             return
                     else:
                         return
@@ -1831,7 +1970,8 @@ async def lottery(ctx, *args):
             
             if  (message.find(f'Join with `rpg lottery buy [amount]`') > -1) or ((message.find(f'{ctx_author}') > -1) and (message.find(f'lottery ticket successfully bought') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot buy more than 10 tickets per lottery') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1857,9 +1997,9 @@ async def lottery(ctx, *args):
                     
                     # Set message to send          
                     if lottery_message == None:
-                        lottery_message = default_message.replace('%',f'`{command}`')
+                        lottery_message = default_message.replace('%',command)
                     else:
-                        lottery_message = lottery_message.replace('%',f'`{command}`')
+                        lottery_message = lottery_message.replace('%',command)
                     
                     if not lottery_enabled == 0:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -1919,6 +2059,11 @@ async def lottery(ctx, *args):
                                 await bot_answer.add_reaction(emojis.cross)
                             await bot_answer.add_reaction(emojis.rip_reaction)
                             return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
                     else:
                         return
                 else:
@@ -1956,7 +2101,7 @@ async def big(ctx, *args):
                 or ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **not so "mini" boss** event') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you are already registered!') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or (message.find('This command is unlocked in') > -1):
+                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -1987,9 +2132,8 @@ async def big(ctx, *args):
                     reminders_on = settings[0]
                     if not reminders_on == 0:
                         user_donor_tier = int(settings[1])
-                        default_message = settings[2]
-                        arena_enabled = int(settings[3])
-                        miniboss_enabled = int(settings[4])
+                        arena_enabled = int(settings[2])
+                        miniboss_enabled = int(settings[3])
                         
                         # Set message to send          
                         arena_message = global_data.arena_message
@@ -2042,6 +2186,11 @@ async def big(ctx, *args):
                                 if global_data.debug_mode == True:
                                     await bot_answer.add_reaction(emojis.cross)
                                 return
+                            # Ignore error when another command is active
+                            elif bot_message.find('end your previous command') > 1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
                         else:
                             return
                     else:
@@ -2054,10 +2203,342 @@ async def big(ctx, *args):
                     await ctx.send('Big arena / Not so mini boss detection timeout.')
                 return    
 
+# Pets
+@bot.command(aliases=('pets',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
+async def pet(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot send another pet to an adventure!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'what pet are you trying to select?') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'this pet is already in an adventure!') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or (message.find('Your pet started an adventure, it will be back') > -1) or ((message.find('Your pet started an...') > -1) and (message.find('IT CAME BACK INSTANTLY!!') > -1))\
+                or (message.find('This command is unlocked after the second `time travel`') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
+    
+    if ctx.prefix == 'rpg ':
+        
+        command = f'rpg pet adventure'
+        
+        if args:
+            if len(args) == 3:
+                arg1 = args[0]
+                pet_id = args[1]
+                pet_id = pet_id.upper()
+                pet_action = args[2]
+                if (arg1 in ('adv', 'adventure',)) and pet_action in ('dig', 'learn', 'drill',):
+                    try:
+                        settings = await get_settings(ctx, 'pet')
+                        if not settings == None:
+                            reminders_on = settings[0]
+                            if not reminders_on == 0:
+                                user_donor_tier = int(settings[1])
+                                pet_enabled = int(settings[2])
+                                pet_message = settings[3]
+                                
+                                # Set message to send          
+                                if pet_message == None:
+                                    pet_message = global_data.pet_message.replace('%',command).replace('$',pet_id)
+                                else:
+                                    pet_message = pet_message.replace('%',command).replace('$',pet_id)
+                                
+                                if not pet_enabled == 0:
+                                    bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                                    try:
+                                        message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                        message_description = str(bot_answer.embeds[0].description)
+                                        try:
+                                            message_fields = str(bot_answer.embeds[0].fields)
+                                            message_title = str(bot_answer.embeds[0].title)
+                                        except:
+                                            message_fields = ''
+                                        bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                                    except:
+                                        bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
+                                    # Check if lottery overview, if yes, read the time and update/insert the reminder if necessary
+                                    if bot_message.find('Your pet started an adventure, it will be back') > -1:
+                                        timestring_start = bot_message.find('back in **') + 10
+                                        timestring_end = bot_message.find('**!', timestring_start)
+                                        timestring = bot_message[timestring_start:timestring_end]
+                                        timestring = timestring.lower()
+                                        time_left = await parse_timestring(ctx, timestring)
+                                        write_status = await write_reminder(ctx, f'pet-{pet_id}', time_left, pet_message, True)
+                                        if write_status in ('inserted','scheduled','updated'):
+                                            await bot_answer.add_reaction(emojis.navi)
+                                        else:
+                                            if global_data.debug_mode == True:
+                                                await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                    # Ignore error that max amount of pets is on adventures
+                                    elif bot_message.find('you cannot send another pet') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                    # Ignore error that ID is wrong
+                                    elif bot_message.find('what pet are you trying to select?') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                    # Ignore error that pet is already on adventure
+                                    elif bot_message.find('this pet is already in an adventure') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                    # Ignore time traveler instant pet return
+                                    elif bot_message.find('IT CAME BACK INSTANTLY!') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        await bot_answer.add_reaction(emojis.timetraveler)
+                                        return
+                                    # Ignore error that pets are not unlocked yet
+                                    elif bot_message.find('unlocked after second') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                    # Ignore anti spam embed
+                                    elif bot_message.find('Huh please don\'t spam') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                    # Ignore failed Epic Guard event
+                                    elif bot_message.find('is now in the jail!') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        await bot_answer.add_reaction(emojis.rip_reaction)
+                                        return
+                                    # Ignore error when another command is active
+                                    elif bot_message.find('end your previous command') > 1:
+                                        if global_data.debug_mode == True:
+                                            await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                else:
+                                    return
+                            else:
+                                return
+                        else:
+                            return
+                        
+                    except asyncio.TimeoutError as error:
+                        if global_data.debug_mode == True:
+                            await ctx.send('Pet detection timeout.')
+                        return    
 
+# Cooldowns
+@bot.command(aliases=('cd',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
+async def cooldown(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  (message.find(f'{ctx_author}\'s cooldowns') > -1) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
+    
+    if ctx.prefix == 'rpg ':
+            
+        try:
+            settings = await get_settings(ctx, 'all')
+            if not settings == None:
+                reminders_on = settings[1]
+                if not reminders_on == 0:
+                    user_donor_tier = int(settings[2])
+                    default_message = settings[3]
+                    adv_enabled = settings[7]
+                    daily_enabled = settings[9]
+                    lb_enabled = settings[11]
+                    quest_enabled = settings[15]
+                    tr_enabled = settings[16]
+                    weekly_enabled = settings[17]
+                    adv_message = settings[19]
+                    daily_message = settings[21]
+                    lb_message = settings[23]
+                    quest_message = settings[27]
+                    tr_message = settings[28]
+                    weekly_message = settings[29]
+                    
+                    if not ((adv_enabled == 0) and (daily_enabled == 0) and (lb_enabled == 0) and (quest_enabled == 0) and (tr_enabled == 0) and (weekly_enabled == 0)):
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if cooldown list, if yes, extract all the timestrings
+                        if bot_message.find(f'\'s cooldowns') > 1:
+                            
+                            cooldowns = []
+                            
+                            if daily_enabled == 1:
+                                if bot_message.find('Daily`** (**') > -1:
+                                    daily_start = bot_message.find('Daily`** (**') + 12
+                                    daily_end = bot_message.find('s**', daily_start) + 1
+                                    daily = bot_message[daily_start:daily_end]
+                                    daily = daily.lower()
+                                    if daily_message == None:
+                                        daily_message = default_message.replace('%','rpg daily')
+                                    else:
+                                        daily_message = daily_message.replace('%','rpg daily')
+                                    cooldowns.append(['daily',daily,daily_message,])
+                            if weekly_enabled == 1:
+                                if bot_message.find('Weekly`** (**') > -1:
+                                    weekly_start = bot_message.find('Weekly`** (**') + 13
+                                    weekly_end = bot_message.find('s**', weekly_start) + 1
+                                    weekly = bot_message[weekly_start:weekly_end]
+                                    weekly = weekly.lower()
+                                    if weekly_message == None:
+                                        weekly_message = default_message.replace('%','rpg weekly')
+                                    else:
+                                        weekly_message = weekly_message.replace('%','rpg weekly')
+                                    cooldowns.append(['weekly',weekly,weekly_message,])
+                            if lb_enabled == 1:
+                                if bot_message.find('Lootbox`** (**') > -1:
+                                    lb_start = bot_message.find('Lootbox`** (**') + 14
+                                    lb_end = bot_message.find('s**', lb_start) + 1
+                                    lootbox = bot_message[lb_start:lb_end]
+                                    lootbox = lootbox.lower()
+                                    if lb_message == None:
+                                        lb_message = default_message.replace('%','rpg buy lootbox')
+                                    else:
+                                        lb_message = lb_message.replace('%','rpg buy lootbox')
+                                    cooldowns.append(['lootbox',lootbox,lb_message,])
+                            if adv_enabled == 1:
+                                if bot_message.find('Adventure`** (**') > -1:
+                                    adv_start = bot_message.find('Adventure`** (**') + 16
+                                    adv_end = bot_message.find('s**', adv_start) + 1
+                                    adventure = bot_message[adv_start:adv_end]
+                                    adventure = adventure.lower()
+                                    if adv_message == None:
+                                        adv_message = default_message.replace('%','rpg adventure')
+                                    else:
+                                        adv_message = adv_message.replace('%','rpg adventure')
+                                    cooldowns.append(['adventure',adventure,adv_message,])
+                            if tr_enabled == 1:
+                                if bot_message.find('Training`** (**') > -1:
+                                    tr_start = bot_message.find('Training`** (**') + 15
+                                    tr_end = bot_message.find('s**', tr_start) + 1
+                                    training = bot_message[tr_start:tr_end]
+                                    training = training.lower()
+                                    if tr_message == None:
+                                        tr_message = default_message.replace('%','rpg training')
+                                    else:
+                                        tr_message = tr_message.replace('%','rpg training')
+                                    cooldowns.append(['training',training,tr_message,])
+                            if quest_enabled == 1:
+                                if bot_message.find('quest`** (**') > -1:
+                                    quest_start = bot_message.find('quest`** (**') + 12
+                                    quest_end = bot_message.find('s**', quest_start) + 1
+                                    quest = bot_message[quest_start:quest_end]
+                                    quest = quest.lower()
+                                    if quest_message == None:
+                                        quest_message = default_message.replace('%','rpg quest')
+                                    else:
+                                        quest_message = quest_message.replace('%','rpg quest')
+                                    cooldowns.append(['quest',quest,quest_message,])
+                            
+                            write_status_list = []
+                            
+                            for cooldown in cooldowns:
+                                activity = cooldown[0]
+                                timestring = cooldown[1]
+                                message = cooldown[2]
+                                time_left = await parse_timestring(ctx, timestring)
+                                write_status = await write_reminder(ctx, activity, time_left, message, True)
+                                if write_status in ('inserted','scheduled','updated'):
+                                    write_status_list.append('OK')
+                                else:
+                                    write_status_list.append('Fail')
+                                
+                            if not 'Fail' in write_status_list:                       
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if global_data.debug_mode == True:
+                                    await ctx.send(f'Something went wrong here. {write_status_list} {cooldowns}')
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                    
+                        # Ignore anti spam embed
+                        elif bot_message.find('Huh please don\'t spam') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore failed Epic Guard event
+                        elif bot_message.find('is now in the jail!') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            await bot_answer.add_reaction(emojis.rip_reaction)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                    else:
+                        return
+                else:
+                    return
+            else:
+                return
+            
+        except asyncio.TimeoutError as error:
+            if global_data.debug_mode == True:
+                await ctx.send('Cooldown detection timeout.')
+            return
+    else:
+        x = await list(ctx)
+        return
 
 
 
