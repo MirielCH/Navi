@@ -42,6 +42,8 @@ dbfile = global_data.dbfile
 # Open connection to the local database    
 erg_db = sqlite3.connect(dbfile, isolation_level=None)
 
+# Create task dictionary
+running_tasks = {}
          
 # --- Database: Get Data ---
 
@@ -290,7 +292,7 @@ async def set_partner(ctx, partner_name):
         await log_error(ctx, error)
         
 # Write reminder
-async def write_reminder(ctx, activity, time_left, message, insert_only=False):
+async def write_reminder(ctx, activity, time_left, message, cooldown_update=False):
     
     current_time = datetime.utcnow().replace(microsecond=0)
     status = 'aborted'
@@ -312,9 +314,12 @@ async def write_reminder(ctx, activity, time_left, message, insert_only=False):
             db_time_datetime = datetime.fromtimestamp(db_time)
             db_triggered = int(record[1])
             time_difference = db_time_datetime - current_time
-            if 0 <= time_difference.total_seconds() <= 15 and db_triggered == 1 and insert_only == True:
-                status = 'toolate'
-                return
+            if 0 <= time_difference.total_seconds() <= 15 and db_triggered == 1 and cooldown_update == True:
+                task_name = f'{ctx.author.id}-{activity}'
+                if task_name in running_tasks:
+                    running_tasks[task_name].cancel()    
+                bot.loop.create_task(background_task(ctx.author, ctx.channel, message, time_left, task_name))
+                status = 'scheduled'
             else:
                 cur.execute('UPDATE reminders SET end_time = ?, channel_id = ?, message = ?, triggered = ? WHERE user_id = ? AND activity = ?', (end_time, ctx.channel.id, message, triggered, ctx.author.id, activity,))
                 status = 'updated'
@@ -323,7 +328,8 @@ async def write_reminder(ctx, activity, time_left, message, insert_only=False):
                 cur.execute('INSERT INTO reminders (user_id, activity, end_time, channel_id, message) VALUES (?, ?, ?, ?, ?)', (ctx.author.id, activity, end_time, ctx.channel.id, message,))
                 status = 'inserted'
             else:
-                bot.loop.create_task(background_task(ctx.author, ctx.channel, message, time_left))
+                task_name = f'{ctx.author.id}-{activity}'
+                bot.loop.create_task(background_task(ctx.author, ctx.channel, message, time_left, task_name))
                 status = 'scheduled'
     except sqlite3.Error as error:
         await log_error(ctx, error)
@@ -584,12 +590,14 @@ async def off(ctx, *args):
 # --- Tasks ---
 
 # Background task for scheduling reminders
-async def background_task(user, channel, message, time_left):
+async def background_task(user, channel, message, time_left, task_name):
         
     await asyncio.sleep(time_left)
     try:
         await bot.wait_until_ready()
         await bot.get_channel(channel.id).send(f'{user.mention} {message}')
+        delete_task = running_tasks.pop(task_name, None)
+        
     except Exception as e:
         logger.error(f'Error sending reminder: {e}')
 
@@ -619,7 +627,9 @@ async def schedule_reminders(bot):
                 end_time_difference = end_time_datetime - current_time
                 time_left = end_time_difference.total_seconds()
                 
-                bot.loop.create_task(background_task(user, channel, message, time_left))
+                task_name = f'{user_id}-{activity}'
+                task = bot.loop.create_task(background_task(user, channel, message, time_left, task_name))
+                running_tasks[task_name] = task
                 
                 await set_reminder_triggered(None, user_id, activity)
             except Exception as e:
@@ -746,7 +756,7 @@ async def hunt(ctx, *args):
                                 timestring = timestring.lower()
                                 time_left = await parse_timestring(ctx, timestring)
                                 write_status = await write_reminder(ctx, 'hunt', time_left, hunt_message, True)
-                                if write_status in ('inserted','scheduled','updated','toolate'):
+                                if write_status in ('inserted','scheduled','updated'):
                                     await bot_answer.add_reaction(emojis.navi)
                                 else:
                                     if global_data.debug_mode == True:
@@ -896,7 +906,7 @@ async def chop(ctx, *args):
                             timestring = timestring.lower()
                             time_left = await parse_timestring(ctx, timestring)
                             write_status = await write_reminder(ctx, 'work', time_left, work_message, True)
-                            if write_status in ('inserted','scheduled','updated','toolate'):
+                            if write_status in ('inserted','scheduled','updated'):
                                 await bot_answer.add_reaction(emojis.navi)
                             else:
                                 if global_data.debug_mode == True:
@@ -1037,7 +1047,7 @@ async def training(ctx, *args):
                             timestring = timestring.lower()
                             time_left = await parse_timestring(ctx, timestring)
                             write_status = await write_reminder(ctx, 'training', time_left, tr_message, True)
-                            if write_status in ('inserted','scheduled','updated','toolate'):
+                            if write_status in ('inserted','scheduled','updated'):
                                 await bot_answer.add_reaction(emojis.navi)
                             else:
                                 if global_data.debug_mode == True:
@@ -1172,7 +1182,7 @@ async def adventure(ctx, *args):
                             timestring = timestring.lower()
                             time_left = await parse_timestring(ctx, timestring)
                             write_status = await write_reminder(ctx, 'adventure', time_left, adv_message, True)
-                            if write_status in ('inserted','scheduled','updated','toolate'):
+                            if write_status in ('inserted','scheduled','updated'):
                                 await bot_answer.add_reaction(emojis.navi)
                             else:
                                 if global_data.debug_mode == True:
@@ -1298,7 +1308,7 @@ async def buy(ctx, *args):
                                     timestring = timestring.lower()
                                     time_left = await parse_timestring(ctx, timestring)
                                     write_status = await write_reminder(ctx, 'lootbox', time_left, lb_message, True)
-                                    if write_status in ('inserted','scheduled','updated','toolate'):
+                                    if write_status in ('inserted','scheduled','updated'):
                                         await bot_answer.add_reaction(emojis.navi)
                                     else:
                                         if global_data.debug_mode == True:
@@ -1461,7 +1471,7 @@ async def epic(ctx, *args):
                             timestring = timestring.lower()
                             time_left = await parse_timestring(ctx, timestring)
                             write_status = await write_reminder(ctx, 'quest', time_left, quest_message, True)
-                            if write_status in ('inserted','scheduled','updated','toolate'):
+                            if write_status in ('inserted','scheduled','updated'):
                                 await bot_answer.add_reaction(emojis.navi)
                             else:
                                 if global_data.debug_mode == True:
@@ -1608,7 +1618,7 @@ async def daily(ctx, *args):
                             timestring = timestring.lower()
                             time_left = await parse_timestring(ctx, timestring)
                             write_status = await write_reminder(ctx, 'daily', time_left, daily_message, True)
-                            if write_status in ('inserted','scheduled','updated','toolate'):
+                            if write_status in ('inserted','scheduled','updated'):
                                 await bot_answer.add_reaction(emojis.navi)
                             else:
                                 if global_data.debug_mode == True:
