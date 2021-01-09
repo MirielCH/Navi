@@ -130,6 +130,8 @@ async def get_settings(ctx, setting='all'):
         sql = 'SELECT reminders_on, user_donor_tier, default_message, daily_enabled, daily_message FROM settings_user where user_id=?'
     elif setting == 'weekly':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, weekly_enabled, weekly_message FROM settings_user where user_id=?'
+    elif setting == 'lottery':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, lottery_enabled, lottery_message FROM settings_user where user_id=?'
         
     try:
         cur=erg_db.cursor()
@@ -1269,100 +1271,105 @@ async def buy(ctx, *args):
     
     if ctx.prefix == 'rpg ' and args:     
         command = f'rpg buy lootbox'
+        arg1 = ''
+        arg2 = ''
+        arg1 = args[0]
         if len(args) == 2:
             arg2 = args[1]
-            if arg2 in ('lb','lootbox',):
-                try:
-                    settings = await get_settings(ctx, 'lootbox')
-                    if not settings == None:
-                        reminders_on = settings[0]
-                        if not reminders_on == 0:
-                            user_donor_tier = int(settings[1])
-                            default_message = settings[2]
-                            lb_enabled = int(settings[3])
-                            lb_message = settings[4]
-                            
-                            # Set message to send          
-                            if lb_message == None:
-                                lb_message = default_message.replace('%',f'`{command}`')
-                            else:
-                                lb_message = lb_message.replace('%',f'`{command}`')
-                            
-                            if not lb_enabled == 0:
-                                bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+        if arg1 == 'lottery' and arg2 == 'ticket':
+            x = await lottery(ctx, args)
+            return
+        elif (len(args) in (1,2)) and ((arg1 in ('lb','lootbox',)) or (arg2 in ('lb','lootbox',))):
+            try:
+                settings = await get_settings(ctx, 'lootbox')
+                if not settings == None:
+                    reminders_on = settings[0]
+                    if not reminders_on == 0:
+                        user_donor_tier = int(settings[1])
+                        default_message = settings[2]
+                        lb_enabled = int(settings[3])
+                        lb_message = settings[4]
+                        
+                        # Set message to send          
+                        if lb_message == None:
+                            lb_message = default_message.replace('%',f'`{command}`')
+                        else:
+                            lb_message = lb_message.replace('%',f'`{command}`')
+                        
+                        if not lb_enabled == 0:
+                            bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                            try:
+                                message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                message_description = str(bot_answer.embeds[0].description)
                                 try:
-                                    message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                    message_description = str(bot_answer.embeds[0].description)
-                                    try:
-                                        message_fields = str(bot_answer.embeds[0].fields)
-                                        message_title = str(bot_answer.embeds[0].title)
-                                    except:
-                                        message_fields = ''
-                                    bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                                    message_fields = str(bot_answer.embeds[0].fields)
+                                    message_title = str(bot_answer.embeds[0].title)
                                 except:
-                                    bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                    message_fields = ''
+                                bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                            except:
+                                bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
-                                # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
-                                if bot_message.find(f'\'s cooldown') > 1:
-                                    timestring_start = bot_message.find('wait at least **') + 16
-                                    timestring_end = bot_message.find('**...', timestring_start)
-                                    timestring = bot_message[timestring_start:timestring_end]
-                                    timestring = timestring.lower()
-                                    time_left = await parse_timestring(ctx, timestring)
-                                    write_status = await write_reminder(ctx, 'lootbox', time_left, lb_message, True)
-                                    if write_status in ('inserted','scheduled','updated'):
-                                        await bot_answer.add_reaction(emojis.navi)
-                                    else:
-                                        if global_data.debug_mode == True:
-                                            await bot_answer.add_reaction(emojis.cross)
-                                    return
-                                # Ignore anti spam embed
-                                elif bot_message.find('Huh please don\'t spam') > 1:
+                            # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
+                            if bot_message.find(f'\'s cooldown') > 1:
+                                timestring_start = bot_message.find('wait at least **') + 16
+                                timestring_end = bot_message.find('**...', timestring_start)
+                                timestring = bot_message[timestring_start:timestring_end]
+                                timestring = timestring.lower()
+                                time_left = await parse_timestring(ctx, timestring)
+                                write_status = await write_reminder(ctx, 'lootbox', time_left, lb_message, True)
+                                if write_status in ('inserted','scheduled','updated'):
+                                    await bot_answer.add_reaction(emojis.navi)
+                                else:
                                     if global_data.debug_mode == True:
                                         await bot_answer.add_reaction(emojis.cross)
-                                    return
-                                # Ignore failed Epic Guard event
-                                elif bot_message.find('is now in the jail!') > 1:
-                                    if global_data.debug_mode == True:
-                                        await bot_answer.add_reaction(emojis.cross)
-                                    await bot_answer.add_reaction(emojis.rip_reaction)
-                                    return
-                            else:
+                                return
+                            # Ignore anti spam embed
+                            elif bot_message.find('Huh please don\'t spam') > 1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore failed Epic Guard event
+                            elif bot_message.find('is now in the jail!') > 1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                                await bot_answer.add_reaction(emojis.rip_reaction)
                                 return
                         else:
                             return
                     else:
                         return
-                    
-                    # Calculate cooldown
-                    cooldown_data = await get_cooldown(ctx, 'lootbox')
-                    cooldown = int(cooldown_data[0])
-                    donor_affected = int(cooldown_data[1])
-                    if donor_affected == 1:
-                        time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
-                    else:
-                        time_left = cooldown
-                    
-                    # Save task to database
-                    write_status = await write_reminder(ctx, 'lootbox', time_left, lb_message)
-                    
-                    # Add reaction
-                    if not write_status == 'aborted':
-                        await bot_answer.add_reaction(emojis.navi)
-                    else:
-                        if global_data.debug_mode == True:
-                            await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-                    
-                except asyncio.TimeoutError as error:
+                else:
+                    return
+                
+                # Calculate cooldown
+                cooldown_data = await get_cooldown(ctx, 'lootbox')
+                cooldown = int(cooldown_data[0])
+                donor_affected = int(cooldown_data[1])
+                if donor_affected == 1:
+                    time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
+                else:
+                    time_left = cooldown
+                
+                # Save task to database
+                write_status = await write_reminder(ctx, 'lootbox', time_left, lb_message)
+                
+                # Add reaction
+                if not write_status == 'aborted':
+                    await bot_answer.add_reaction(emojis.navi)
+                else:
                     if global_data.debug_mode == True:
-                        await ctx.send('Lootbox detection timeout.')
-                    return   
-            else:
-                return
+                        await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
+                
+            except asyncio.TimeoutError as error:
+                if global_data.debug_mode == True:
+                    await ctx.send('Lootbox detection timeout.')
+                return   
         else:
             return
     else:
         return
+
 
 # Quest
 @bot.command(aliases = ('quest',))
@@ -1792,7 +1799,147 @@ async def weekly(ctx, *args):
                 await ctx.send('Weekly detection timeout.')
             return    
         
+# Lottery
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
+async def lottery(ctx, *args):
     
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  (message.find(f'Join with `rpg lottery buy [amount]`') > -1) or ((message.find(f'{ctx_author}') > -1) and (message.find(f'lottery ticket successfully bought') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot buy more than 10 tickets per lottery') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    
+    if ctx.prefix == 'rpg ':
+        
+        command = f'rpg buy lottery ticket'
+            
+        try:
+            settings = await get_settings(ctx, 'lottery')
+            if not settings == None:
+                reminders_on = settings[0]
+                if not reminders_on == 0:
+                    user_donor_tier = int(settings[1])
+                    default_message = settings[2]
+                    lottery_enabled = int(settings[3])
+                    lottery_message = settings[4]
+                    
+                    # Set message to send          
+                    if lottery_message == None:
+                        lottery_message = default_message.replace('%',f'`{command}`')
+                    else:
+                        lottery_message = lottery_message.replace('%',f'`{command}`')
+                    
+                    if not lottery_enabled == 0:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if lottery overview, if yes, read the time and update/insert the reminder if necessary
+                        if bot_message.find(f'**Next draw**') > 1:
+                            timestring_start = bot_message.find('**Next draw**:') + 15
+                            timestring_end = bot_message.find('s', timestring_start) + 1
+                            timestring = bot_message[timestring_start:timestring_end]
+                            timestring = timestring.lower()
+                            time_left = await parse_timestring(ctx, timestring)
+                            write_status = await write_reminder(ctx, 'lottery', time_left, lottery_message, True)
+                            if write_status in ('inserted','scheduled','updated'):
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Check if lottery ticket confirmation overview, if yes, read the time and update/insert the reminder if necessary
+                        if bot_message.find(f'lottery ticket successfully bought') > 1:
+                            timestring_start = bot_message.find('winner in **') + 12
+                            timestring_end = bot_message.find('**', timestring_start)
+                            timestring = bot_message[timestring_start:timestring_end]
+                            timestring = timestring.lower()
+                            time_left = await parse_timestring(ctx, timestring)
+                            write_status = await write_reminder(ctx, 'lottery', time_left, lottery_message, True)
+                            if write_status in ('inserted','scheduled','updated'):
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore max bought lottery ticket info
+                        elif bot_message.find('you cannot buy more') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore anti spam embed
+                        elif bot_message.find('Huh please don\'t spam') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore failed Epic Guard event
+                        elif bot_message.find('is now in the jail!') > 1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
+                            await bot_answer.add_reaction(emojis.rip_reaction)
+                            return
+                    else:
+                        return
+                else:
+                    return
+            else:
+                return
+            
+        except asyncio.TimeoutError as error:
+            if global_data.debug_mode == True:
+                await ctx.send('Weekly detection timeout.')
+            return    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
