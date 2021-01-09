@@ -132,6 +132,8 @@ async def get_settings(ctx, setting='all'):
         sql = 'SELECT reminders_on, user_donor_tier, default_message, weekly_enabled, weekly_message FROM settings_user where user_id=?'
     elif setting == 'lottery':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, lottery_enabled, lottery_message FROM settings_user where user_id=?'
+    elif setting == 'minibossarena':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, arena_enabled, miniboss_enabled FROM settings_user where user_id=?'
         
     try:
         cur=erg_db.cursor()
@@ -991,7 +993,8 @@ async def training(ctx, *args):
                 logger.debug(f'Training detection: {message}')
             
             if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
-                or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1):
+                or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1):
                 correct_message = True
             else:
                 correct_message = False
@@ -1129,7 +1132,8 @@ async def adventure(ctx, *args):
                 logger.debug(f'Adventure detection: {message}')
             
             if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already been in an adventure') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)):
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or (message.find('This command is unlocked in') > -1):
                 correct_message = True
             else:
                 correct_message = False
@@ -1202,6 +1206,11 @@ async def adventure(ctx, *args):
                             if global_data.debug_mode == True:
                                 await bot_answer.add_reaction(emojis.cross)
                             await bot_answer.add_reaction(emojis.rip_reaction)
+                            return
+                        # Ignore higher area error
+                        elif bot_message.find('This command is unlocked in') > -1:
+                            if global_data.debug_mode == True:
+                                await bot_answer.add_reaction(emojis.cross)
                             return
                     else:
                         return
@@ -1919,10 +1928,131 @@ async def lottery(ctx, *args):
             
         except asyncio.TimeoutError as error:
             if global_data.debug_mode == True:
-                await ctx.send('Weekly detection timeout.')
+                await ctx.send('Lottery detection timeout.')
             return    
 
+# Big arena / Not so mini boss
+@bot.command(aliases=('not',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
+async def big(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **big arena** event') > -1))\
+                or ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **not so "mini" boss** event') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you are already registered!') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or (message.find('This command is unlocked in') > -1):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
+    
+    if ctx.prefix == 'rpg ':
+        
+        if args:
+            full_args = ''
+            for arg in args:
+                full_args = f'{full_args}{arg}'
+        else:
+            return
+                
+        if full_args in ('sominibossjoin','arenajoin',):
+            if full_args == 'sominibossjoin':
+                event = 'miniboss'
+            elif full_args == 'arenajoin':
+                event = 'arena'
+                
+            try:
+                settings = await get_settings(ctx, 'minibossarena')
+                if not settings == None:
+                    reminders_on = settings[0]
+                    if not reminders_on == 0:
+                        user_donor_tier = int(settings[1])
+                        default_message = settings[2]
+                        arena_enabled = int(settings[3])
+                        miniboss_enabled = int(settings[4])
+                        
+                        # Set message to send          
+                        arena_message = global_data.arena_message
+                        miniboss_message = global_data.miniboss_message
+                        
+                        if not ((event == 'miniboss') and (miniboss_enabled == 0)) or ((event == 'arena') and (miniboss_enabled == 0)):
+                            bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                            try:
+                                message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                message_description = str(bot_answer.embeds[0].description)
+                                try:
+                                    message_fields = str(bot_answer.embeds[0].fields)
+                                    message_title = str(bot_answer.embeds[0].title)
+                                except:
+                                    message_fields = ''
+                                bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                            except:
+                                bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                            # Check if event message with time in it, if yes, read the time and update/insert the reminder if necessary
+                            if bot_message.find(f'The next event is in') > -1:
+                                timestring_start = bot_message.find('event is in **') + 14
+                                timestring_end = bot_message.find('**,', timestring_start)
+                                timestring = bot_message[timestring_start:timestring_end]
+                                timestring = timestring.lower()
+                                time_left = await parse_timestring(ctx, timestring)
+                                if event == 'miniboss':
+                                    write_status = await write_reminder(ctx, 'miniboss', time_left, miniboss_message, True)
+                                elif event == 'bigarena':
+                                    write_status = await write_reminder(ctx, 'arena', time_left, arena_message, True)
+                                if write_status in ('inserted','scheduled','updated'):
+                                    await bot_answer.add_reaction(emojis.navi)
+                                else:
+                                    if global_data.debug_mode == True:
+                                        await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore anti spam embed
+                            elif bot_message.find('Huh please don\'t spam') > 1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore failed Epic Guard event
+                            elif bot_message.find('is now in the jail!') > 1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                                await bot_answer.add_reaction(emojis.rip_reaction)
+                                return
+                            # Ignore higher area error
+                            elif bot_message.find('This command is unlocked in') > -1:
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
+                        else:
+                            return
+                    else:
+                        return
+                else:
+                    return
+                
+            except asyncio.TimeoutError as error:
+                if global_data.debug_mode == True:
+                    await ctx.send('Big arena / Not so mini boss detection timeout.')
+                return    
 
 
 

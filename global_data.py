@@ -24,6 +24,10 @@ timeout_longer = 20
 # Toggle debug reactions and messages
 debug_mode = True
 
+# Global event messages (not changeable)
+arena_message = 'Hey! The **big arena** event just finished! You can check the results on the official EPIC RPG server.'
+miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results on the official EPIC RPG server.'
+
 # Embed color
 color = 0x3abad3
 
