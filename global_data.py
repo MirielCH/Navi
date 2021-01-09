@@ -17,6 +17,13 @@ default_message = 'Hey! It\'s time for %!'
 # Prefix
 default_prefix = 'navi '
 
+# Bot message timeout
+timeout = 10
+timeout_longer = 20
+
+# Toggle debug reactions and messages
+debug_mode = True
+
 # Embed color
 color = 0x3abad3
 
