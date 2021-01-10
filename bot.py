@@ -136,6 +136,8 @@ async def get_settings(ctx, setting='all'):
         sql = 'SELECT reminders_on, user_donor_tier, arena_enabled, miniboss_enabled FROM settings_user where user_id=?'
     elif setting == 'pet':
         sql = 'SELECT reminders_on, user_donor_tier, pet_enabled, pet_message FROM settings_user where user_id=?'
+    elif setting == 'donor':
+        sql = 'SELECT user_donor_tier, partner_donor_tier FROM settings_user where user_id=?'
         
     try:
         cur=erg_db.cursor()
@@ -286,7 +288,12 @@ async def set_reminders(ctx, action):
                     status = f'**{ctx.author.name}**, your reminders are now turned **on**.'
                 else:
                     cur.execute('UPDATE settings_user SET reminders_on = ? where user_id = ?', (reminders_on, ctx.author.id,))
-                    status = f'**{ctx.author.name}**, your reminders are now turned **off**.\nPlease note that active reminders that will end within the next ~15 seconds may still ping you.'
+                    cur.execute('DELETE FROM reminders WHERE user_id = ?', (ctx.author.id,))
+                
+                    status = (
+                        f'**{ctx.author.name}**, your reminders are now turned **off**. All active reminders were deleted.\n'
+                        f'Please note that reminders that are about to end within the next ~15s will still trigger.'
+                    )
         else:
             if reminders_on == 0:
                 status = f'**{ctx.author.name}**, your reminders are already turned off.'
@@ -320,6 +327,135 @@ async def set_partner(ctx, partner_name):
             return
     except sqlite3.Error as error:
         await log_error(ctx, error)
+        
+# Set donor tier
+async def set_donor_tier(ctx, donor_tier, partner=False):
+    
+    if not 0 <= donor_tier <= 7:
+        await log_error(ctx, f'Invalid donor tier {donor_tier}, can\'t write that to database.')
+        return
+    
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT user_donor_tier, partner_donor_tier FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        
+        if record:
+            user_donor_tier = record[0]
+            partner_donor_tier = record[1]
+            if partner == True:
+                if partner_donor_tier != donor_tier:
+                    cur.execute('UPDATE settings_user SET partner_donor_tier = ? WHERE user_id = ?', (donor_tier, ctx.author.id,))
+                    status = f'**{ctx.author.name}**, your partner\'s donator tier is now set to **{donor_tier}** ({global_data.donor_tiers[donor_tier]})'
+                else:
+                    status = f'**{ctx.author.name}**, your partner\'s donator tier is already set to **{donor_tier}** ({global_data.donor_tiers[donor_tier]})'
+            else:
+                if user_donor_tier != donor_tier:
+                    cur.execute('UPDATE settings_user SET user_donor_tier = ? WHERE user_id = ?', (donor_tier, ctx.author.id,))
+                    status = f'**{ctx.author.name}**, your donator tier is now set to **{donor_tier}** ({global_data.donor_tiers[donor_tier]})'
+                else:
+                    status = f'**{ctx.author.name}**, your donator tier is already set to **{donor_tier}** ({global_data.donor_tiers[donor_tier]})'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Enable/disable specific reminder
+async def set_specific_reminder(ctx, activity, action):
+    
+    if action == 'enable':
+        enabled = 1
+    elif action == 'disable':
+        enabled = 0
+    else:
+        await log_error(ctx, f'Invalid action {action} in \'set_specific_reminder\'')
+        if global_data.debug_mode == True:
+            status = f'Something went wrong here. Check the error log.'
+        return
+    
+    column = ''
+    
+    if activity == 'adventure':
+        column = 'adv_enabled'
+    elif activity == 'daily':
+        column = 'daily_enabled'
+    elif activity == 'hunt':
+        column = 'hunt_enabled'
+    elif activity == 'lootbox':
+        column = 'lb_enabled'
+    elif activity == 'lottery':
+        column = 'lottery_enabled'
+    elif activity == 'pet':
+        column = 'pet_enabled'
+    elif activity == 'quest':
+        column = 'quest_enabled'
+    elif activity == 'training':
+        column = 'tr_enabled'
+    elif activity == 'weekly':
+        column = 'weekly_enabled'
+    elif activity == 'work':
+        column = 'work_enabled'
+    elif activity == 'all':
+        column = 'hunt_enabled'
+    else:
+        await log_error(ctx, f'Invalid activity {activity} in \'set_specific_reminder\'')
+        if global_data.debug_mode == True:
+            status = f'Something went wrong here. Check the error log.'
+        return
+    
+    try:
+        cur=erg_db.cursor()
+        
+        cur.execute(f'SELECT {column} FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()        
+        
+        if record:
+            if not activity == 'all':
+                enabled_db = record[0]
+                if enabled_db != enabled:
+                    cur.execute(f'UPDATE settings_user SET {column} = ? WHERE user_id = ?', (enabled, ctx.author.id,))
+                    if enabled == 0:
+                        if activity == 'pet':
+                            cur.execute(f'SELECT activity FROM reminders WHERE user_id=?', (ctx.author.id,))
+                            active_reminders = cur.fetchall()
+                            if active_reminders:
+                                pet_reminders = []
+                                for reminder in active_reminders:
+                                    active_activity = reminder[0]
+                                    if active_activity.find('pet-') > -1:
+                                        pet_reminders.append(active_activity)
+                                for index in range(len(pet_reminders)):
+                                    cur.execute('DELETE FROM reminders WHERE user_id = ? and activity = ?', (ctx.author.id,pet_reminders[index],))
+                        else:        
+                            cur.execute('DELETE FROM reminders WHERE user_id = ? and activity = ?', (ctx.author.id,activity,))
+                        status = (
+                            f'**{ctx.author.name}**, your {activity} reminder is now **{action}d**.\n'
+                            f'All active {activity} reminders have been deleted.'
+                        )
+                    else:
+                        status = f'**{ctx.author.name}**, your {activity} reminder is now **{action}d**.'
+                else:
+                    status = f'**{ctx.author.name}**, your {activity} reminder is already **{action}d**.'
+            else:
+                cur.execute(f'UPDATE settings_user SET adv_enabled = ?, daily_enabled = ?, hunt_enabled = ?, lb_enabled = ?,\
+                    lottery_enabled = ?, pet_enabled = ?, quest_enabled = ?, tr_enabled = ?, weekly_enabled = ?, work_enabled = ?\
+                    WHERE user_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.author.id,))
+                if enabled == 0:
+                    cur.execute(f'DELETE FROM reminders WHERE user_id=?', (ctx.author.id,))
+                    status = (
+                        f'**{ctx.author.name}**, all of your reminders are now **{action}d**.\n'        
+                        f'All active reminders have been deleted.'
+                    )
+                else:
+                    status = f'**{ctx.author.name}**, all of your reminders are now **{action}d**.'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
         
 # Write reminder
 async def write_reminder(ctx, activity, time_left, message, cooldown_update=False):
@@ -670,28 +806,108 @@ async def prefix(ctx):
 
 # --- User Settings ---
 
-# Command "settings" - Returns current user progress settings
+# Command "settings" - Returns current user settings
 @bot.command(aliases=('me',))
 @commands.bot_has_permissions(send_messages=True)
 async def settings(ctx):
     
     if not ctx.prefix == 'rpg ':
-        current_settings = await get_settings(ctx)
+        settings = await get_settings(ctx, 'all')
         
-        if current_settings:
-            enchants = global_data.enchants_list
-            enchant_setting = current_settings[0]
-            enchant_setting = int(enchant_setting)
-            enchant_name = enchants[enchant_setting]
-            if enchant_setting > 7:
-                enchant_name = enchant_name.upper()
-            else:
-                enchant_name = enchant_name.title()
+        settings = list(settings)
             
-            await ctx.send(
-                f'**{ctx.author.name}**, your target enchant is set to **{enchant_name}**.\n'
-                f'Use `{ctx.prefix}set [enchant]` to change it.'
+        if settings == None:
+            await ctx.send(f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.')
+            return
+        else:
+            for index in range(7, len(settings)):
+                setting = settings[index]
+                if setting == 1:
+                    settings[index] = 'Enabled'
+                elif setting == 0:
+                    settings[index] = 'Disabled'
+            for index in range(19, len(settings)):
+                setting = settings[index]
+                if setting == None:
+                    settings[index] = '<Default>'
+                
+            reminders_on = settings[1]
+            if reminders_on == 1:
+                reminders_on = 'Enabled'
+            else:
+                reminders_on = 'Disabled'
+            user_donor_tier = settings[2]
+            default_message = settings[3]
+            partner_donor_tier = settings[5]
+            adv_enabled = settings[7]
+            daily_enabled = settings[9]
+            hunt_enabled = settings[10]
+            lb_enabled = settings[11]
+            lottery_enabled = settings[12]
+            pet_enabled = settings[14]
+            quest_enabled = settings[15]
+            tr_enabled = settings[16]
+            weekly_enabled = settings[17]
+            work_enabled = settings[18]
+            adv_message = settings[19]
+            daily_message = settings[21]
+            hunt_message = settings[22]
+            lb_message = settings[23]
+            lottery_message = settings[24]
+            pet_message = settings[26]
+            quest_message = settings[27]
+            tr_message = settings[28]
+            weekly_message = settings[29]
+            work_message = settings[30]
+        
+            user_name = ctx.author.name
+            user_name = user_name.upper()
+        
+            general = (
+                f'{emojis.bp} Reminders: `{reminders_on}`\n'
+                f'{emojis.bp} Donator tier: `{user_donor_tier}` ({global_data.donor_tiers[user_donor_tier]})\n'
+                f'{emojis.bp} Partner donator tier: `{partner_donor_tier}` ({global_data.donor_tiers[partner_donor_tier]})'
             )
+            
+            enabled_reminders = (
+                f'{emojis.bp} Adventure: `{adv_enabled}`\n'
+                f'{emojis.bp} Daily: `{daily_enabled}`\n'
+                f'{emojis.bp} Hunt: `{hunt_enabled}`\n'
+                f'{emojis.bp} Lootbox: `{lb_enabled}`\n'
+                f'{emojis.bp} Lottery: `{lottery_enabled}`\n'
+                f'{emojis.bp} Pet: `{pet_enabled}`\n'
+                f'{emojis.bp} Quest: `{quest_enabled}`\n'
+                f'{emojis.bp} Training: `{tr_enabled}`\n'
+                f'{emojis.bp} Weekly: `{weekly_enabled}`\n'
+                f'{emojis.bp} Work: `{work_enabled}`'
+            )
+            
+            if reminders_on == 'Disabled':
+                enabled_reminders = f'**These settings are ignored because your reminders are off.**\n{enabled_reminders}'
+            
+            reminder_messages = (
+                f'{emojis.bp} Default message: `{default_message}`\n'
+                f'{emojis.bp} Adventure: `{adv_message}`\n'
+                f'{emojis.bp} Daily: `{daily_message}`\n'
+                f'{emojis.bp} Hunt: `{hunt_message}`\n'
+                f'{emojis.bp} Lootbox: `{lb_message}`\n'
+                f'{emojis.bp} Lottery: `{lottery_message}`\n'
+                f'{emojis.bp} Pet: `{pet_message}`\n'
+                f'{emojis.bp} Quest: `{quest_message}`\n'
+                f'{emojis.bp} Training: `{tr_message}`\n'
+                f'{emojis.bp} Weekly: `{weekly_message}`\n'
+                f'{emojis.bp} Work: `{work_message}`'
+            )
+        
+            embed = discord.Embed(
+                color = global_data.color,
+                title = f'{user_name}\'S SETTINGS',
+            )    
+            embed.add_field(name='GENERAL', value=general, inline=False)
+            embed.add_field(name='SPECIFIC REMINDERS', value=enabled_reminders, inline=False)
+            embed.add_field(name='REMINDER MESSAGES', value=reminder_messages, inline=False)
+        
+            await ctx.send(embed=embed)
     
 # Command "on" - Activates reminders
 @bot.command()
@@ -707,15 +923,159 @@ async def on(ctx, *args):
 @commands.bot_has_permissions(send_messages=True)
 async def off(ctx, *args):
     
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    
     if not ctx.prefix == 'rpg ':
-        status = await set_reminders(ctx, 'off')
-        await set_reminder_triggered(ctx, ctx.author.id, 'all')
-        await ctx.send(status)
+        
+        await ctx.send(f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. Are you sure? `[yes/no]`')
+        answer = await bot.wait_for('message', check=check, timeout=30)
+        if answer.content.lower() in ['yes','y']:
+            status = await set_reminders(ctx, 'off')
+            await ctx.send(status)
+        else:
+            await ctx.send('Aborted.')
+        
+# Command "donator" - Sets donor tiers
+@bot.command(aliases=('donator',))
+@commands.bot_has_permissions(send_messages=True)
+async def donor(ctx, *args):
+    
+    possible_tiers = (
+        f'Possible tiers:\n'
+        f'{emojis.bp}`0` : {global_data.donor_tiers[0]}\n'
+        f'{emojis.bp}`1` : {global_data.donor_tiers[1]}\n'
+        f'{emojis.bp}`2` : {global_data.donor_tiers[2]}\n'
+        f'{emojis.bp}`3` : {global_data.donor_tiers[3]}\n'
+        f'{emojis.bp}`4` : {global_data.donor_tiers[4]}\n'
+        f'{emojis.bp}`5` : {global_data.donor_tiers[5]}\n'
+        f'{emojis.bp}`6` : {global_data.donor_tiers[6]}\n'
+        f'{emojis.bp}`7` : {global_data.donor_tiers[7]}\n'
+    )
+    
+    settings = await get_settings(ctx, 'donor')
+    user_donor_tier = int(settings[0])
+    partner_donor_tier = int(settings[1])
+    
+    if not ctx.prefix == 'rpg ':
+        if args:
+            if len(args) in (1,2,3):
+                arg1 = args[0]
+                if arg1 == 'partner':
+                    if len(args) == 2:
+                        arg2 = args[1]
+                        try:
+                            partner_donor_tier = int(arg2)
+                        except:
+                            await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}')
+                            return
+                        if 0 <= partner_donor_tier <= 7:
+                            status = await set_donor_tier(ctx, partner_donor_tier, True)
+                            await ctx.send(status)
+                            return
+                        else:
+                            await ctx.send(f'This is not a valid tier.\n\n{possible_tiers}')
+                            return
+                    else:
+                        await ctx.send(
+                            f'**{ctx.author.name}**, the EPIC RPG donator tier of your partner is **{partner_donor_tier}** ({global_data.donor_tiers[partner_donor_tier]}).\n'
+                            f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}'
+                        )
+                else:
+                    try:
+                        donor_tier = int(arg1)
+                    except:
+                        await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}')
+                        return
+                    if 0 <= donor_tier <= 7:
+                        status = await set_donor_tier(ctx, donor_tier)
+                        await ctx.send(status)
+                        return
+                    else:
+                        await ctx.send(f'This is not a valid tier.\n\n{possible_tiers}')
+                        return
+            else:
+                await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}')
+                return
+                    
+        else:
+            await ctx.send(
+                f'**{ctx.author.name}**, your current EPIC RPG donator tier is **{user_donor_tier}** ({global_data.donor_tiers[user_donor_tier]}).\n'
+                f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} [tier]`.\n\n{possible_tiers}'
+            )
 
+# Command "enable/disable" - Enables/disables specific reminders
+@bot.command(aliases=('disable',))
+@commands.bot_has_permissions(send_messages=True)
+async def enable(ctx, *args):
+    
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+        
+    if not ctx.prefix == 'rpg ':
+        
+        activity_list = 'Possible activities:'
+        for index in range(len(global_data.activities)):
+            activity_list = f'{activity_list}\n{emojis.bp} `{global_data.activities[index]}`'
+        
+        if args:
+            if len(args) == 1:
+                
+                activity_aliases = {
+                    'adv': 'adventure',
+                    'lb': 'lootbox',
+                    'tr': 'training',
+                    'chop': 'work',
+                    'fish': 'work',
+                    'mine': 'work',
+                    'pickup': 'work',
+                    'axe': 'work',
+                    'net': 'work',
+                    'pickaxe': 'work',
+                    'ladder': 'work',
+                    'boat': 'work',
+                    'bowsaw': 'work',
+                    'drill': 'work',
+                    'tractor': 'work',
+                    'chainsaw': 'work',
+                    'bigboat': 'work',
+                    'dynamite': 'work',
+                    'greenhouse': 'work',
+                    'pets': 'pet',
+                }
+
+                activity = args[0]
+                activity = activity.lower()
+                
+                action = ctx.invoked_with
+                
+                if activity == 'all' and action == 'disable':
+                    await ctx.send(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`')
+                    answer = await bot.wait_for('message', check=check, timeout=30)
+                    if not answer.content.lower() in ['yes','y']:
+                        await ctx.send('Aborted')
+                        return
+
+                if activity in activity_aliases:
+                    activity = activity_aliases[activity]
+                
+                if activity in global_data.activities or activity == 'all':
+                    status = await set_specific_reminder(ctx, activity, action)
+                    await ctx.send(status)
+                else:
+                    await ctx.send(f'There is no reminder for activity `{activity}`.\n\n{activity_list}')
+                    return
+            else:
+                await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}')
+                return
+        else:
+            await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}')
+            return
+        
 # Command "list" - Lists all active reminders
-@bot.command(aliases=('reminders',))
+@bot.command(name='list',aliases=('reminders',))
 @commands.bot_has_permissions(send_messages=True, embed_links=True)
-async def list(ctx):
+async def list_cmd(ctx):
     
     if not ctx.prefix == 'rpg ':
         
@@ -782,7 +1142,7 @@ async def hunt(ctx, *args):
             
             if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1):
                 correct_message = True
             else:
                 correct_message = False
@@ -816,9 +1176,13 @@ async def hunt(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     partner_name = settings[3]
                     partner_donor_tier = int(settings[4])
+                    if partner_donor_tier > 3:
+                        partner_donor_tier = 3
                     hunt_enabled = int(settings[5])
                     hunt_message = settings[6]
                     
@@ -857,6 +1221,18 @@ async def hunt(ctx, *args):
                                 else:
                                     if global_data.debug_mode == True:
                                         await bot_answer.add_reaction(emojis.cross)
+                                return
+                            else:
+                                bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 3)
+                                try:
+                                    bot_message = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                except:
+                                    bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        # Check if partner is in the middle of a command, if yes, if it is the correct one, if not, ignore it and try to wait for the bot message one more time
+                        elif bot_message.find(f'is in the middle of a command') > -1:
+                            if (bot_message.find(partner_name) > -1) and (bot_message.find(f'is in the middle of a command') > -1):
+                                if global_data.debug_mode == True:
+                                    await bot_answer.add_reaction(emojis.cross)
                                 return
                             else:
                                 bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 3)
@@ -958,7 +1334,7 @@ async def chop(ctx, *args):
                 or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
                 or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
                 or (message.find('RUBY') > -1) or (message.find('apple') > 1) or (message.find('banana') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1)\
-                and (message.find('You already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
+                and (message.find('You have already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
@@ -979,6 +1355,8 @@ async def chop(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     work_enabled = int(settings[3])
                     work_message = settings[4]
@@ -1127,6 +1505,8 @@ async def training(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     tr_enabled = int(settings[3])
                     tr_message = settings[4]
@@ -1268,6 +1648,8 @@ async def adventure(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     adv_enabled = int(settings[3])
                     adv_message = settings[4]
@@ -1393,7 +1775,6 @@ async def buy(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
     if ctx.prefix == 'rpg ' and args:     
         command = f'rpg buy lootbox'
         arg1 = ''
@@ -1411,6 +1792,8 @@ async def buy(ctx, *args):
                     reminders_on = settings[0]
                     if not reminders_on == 0:
                         user_donor_tier = int(settings[1])
+                        if user_donor_tier > 3:
+                            user_donor_tier = 3
                         default_message = settings[2]
                         lb_enabled = int(settings[3])
                         lb_message = settings[4]
@@ -1556,6 +1939,8 @@ async def epic(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     quest_enabled = int(settings[3])
                     quest_message = settings[4]
@@ -1732,6 +2117,8 @@ async def daily(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     daily_enabled = int(settings[3])
                     daily_message = settings[4]
@@ -1861,6 +2248,8 @@ async def weekly(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     weekly_enabled = int(settings[3])
                     weekly_message = settings[4]
@@ -1991,6 +2380,8 @@ async def lottery(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[2]
                     lottery_enabled = int(settings[3])
                     lottery_message = settings[4]
@@ -2132,6 +2523,8 @@ async def big(ctx, *args):
                     reminders_on = settings[0]
                     if not reminders_on == 0:
                         user_donor_tier = int(settings[1])
+                        if user_donor_tier > 3:
+                            user_donor_tier = 3
                         arena_enabled = int(settings[2])
                         miniboss_enabled = int(settings[3])
                         
@@ -2256,6 +2649,8 @@ async def pet(ctx, *args):
                             reminders_on = settings[0]
                             if not reminders_on == 0:
                                 user_donor_tier = int(settings[1])
+                                if user_donor_tier > 3:
+                                    user_donor_tier = 3
                                 pet_enabled = int(settings[2])
                                 pet_message = settings[3]
                                 
@@ -2279,7 +2674,7 @@ async def pet(ctx, *args):
                                     except:
                                         bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
-                                    # Check if lottery overview, if yes, read the time and update/insert the reminder if necessary
+                                    # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
                                     if bot_message.find('Your pet started an adventure, it will be back') > -1:
                                         timestring_start = bot_message.find('back in **') + 10
                                         timestring_end = bot_message.find('**!', timestring_start)
@@ -2388,6 +2783,8 @@ async def cooldown(ctx, *args):
                 reminders_on = settings[1]
                 if not reminders_on == 0:
                     user_donor_tier = int(settings[2])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
                     default_message = settings[3]
                     adv_enabled = settings[7]
                     daily_enabled = settings[9]
@@ -2537,7 +2934,7 @@ async def cooldown(ctx, *args):
                 await ctx.send('Cooldown detection timeout.')
             return
     else:
-        x = await list(ctx)
+        x = await list_cmd(ctx)
         return
 
 

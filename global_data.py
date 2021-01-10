@@ -14,6 +14,12 @@ donor_cooldowns = (1,0.9,0.8,0.65,)
 # Prefix
 default_prefix = 'navi '
 
+# Donor tiers
+donor_tiers = ['Non-donator','Donator','EPIC donator','SUPER donator','MEGA donator','HYPER donator','ULTRA donator','ULTIMATE donator',]
+
+# All activities
+activities = ['adventure','daily','hunt','lootbox','lottery','pet','quest','training','weekly','work',]
+
 # Bot message timeout
 timeout = 10
 timeout_longer = 20
@@ -25,7 +31,7 @@ debug_mode = True
 default_message = 'Hey! It\'s time for `%`!'
 arena_message = 'Hey! The **big arena** event just finished! You can check the results on the official EPIC RPG server.'
 miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results on the official EPIC RPG server.'
-pet_message = 'Hey! Your pet `$` is back!'
+pet_message = 'Hey! Your pet **$** is back!'
 
 # Embed color
 color = 0x3abad3
