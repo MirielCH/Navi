@@ -56,7 +56,7 @@ async def get_prefix_all(bot, ctx):
         record = cur.fetchone()
         
         if record:
-            prefixes = (record[1].replace('"',''),'rpg ',)
+            prefixes = (record[1].replace('"',''),'rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ')
         else:
             cur.execute('INSERT INTO settings_guild VALUES (?, ?)', (ctx.guild.id, global_data.default_prefix,))
             prefixes = (global_data.default_prefix,'rpg ')
@@ -825,7 +825,8 @@ async def prefix(ctx):
 @commands.bot_has_permissions(send_messages=True, embed_links=True)
 async def settings(ctx):
     
-    if not ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         settings = await get_settings(ctx, 'all')
         
         settings = list(settings)
@@ -928,7 +929,8 @@ async def settings(ctx):
 @commands.bot_has_permissions(send_messages=True)
 async def on(ctx, *args):
     
-    if not ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         status = await set_reminders(ctx, 'on')
         await ctx.send(status)
         
@@ -940,7 +942,8 @@ async def off(ctx, *args):
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
     
-    if not ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         
         await ctx.send(f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. Are you sure? `[yes/no]`')
         try:
@@ -974,7 +977,8 @@ async def donor(ctx, *args):
     user_donor_tier = int(settings[0])
     partner_donor_tier = int(settings[1])
     
-    if not ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         if args:
             if len(args) in (1,2,3):
                 arg1 = args[0]
@@ -1028,8 +1032,9 @@ async def enable(ctx, *args):
     
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
-        
-    if not ctx.prefix == 'rpg ':
+    
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         
         activity_list = 'Possible activities:'
         for index in range(len(global_data.activities)):
@@ -1097,7 +1102,8 @@ async def enable(ctx, *args):
 @commands.bot_has_permissions(send_messages=True, embed_links=True)
 async def list_cmd(ctx):
     
-    if not ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         
         active_reminders = await get_active_reminders(ctx)
 
@@ -1142,7 +1148,8 @@ async def list_cmd(ctx):
 @commands.bot_has_permissions(send_messages=True, embed_links=True)
 async def help(ctx):
     
-    if not ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
         prefix = await get_prefix(ctx)
         
         reminder_management = (
@@ -1210,8 +1217,8 @@ async def hunt(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ' and len(args) in (0,1,2):
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ' and len(args) in (0,1,2):
         # Determine if hardmode and/or together was used
         together = False
         command = 'rpg hunt'
@@ -1404,8 +1411,8 @@ async def chop(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         command = f'rpg {ctx.invoked_with}'
         
         try:
@@ -1545,8 +1552,8 @@ async def training(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         if args:
             arg = args[0]
@@ -1691,8 +1698,8 @@ async def adventure(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         command = f'rpg adventure'
         
@@ -1834,7 +1841,8 @@ async def buy(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    if ctx.prefix == 'rpg ' and args:     
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ' and args:     
         command = f'rpg buy lootbox'
         arg1 = ''
         arg2 = ''
@@ -1985,8 +1993,8 @@ async def epic(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':     
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':     
         command = f'rpg quest'
         if args:
             arg = args[0]
@@ -2165,8 +2173,8 @@ async def daily(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         command = f'rpg daily'
         
@@ -2296,8 +2304,8 @@ async def weekly(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         command = f'rpg weekly'
         
@@ -2428,8 +2436,8 @@ async def lottery(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         command = f'rpg buy lottery ticket'
             
@@ -2560,8 +2568,8 @@ async def big(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         if args:
             full_args = ''
@@ -2690,8 +2698,8 @@ async def pet(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
         
         command = f'rpg pet adventure'
         
@@ -2833,8 +2841,8 @@ async def cooldown(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-    
-    if ctx.prefix == 'rpg ':
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
             
         try:
             settings = await get_settings(ctx, 'all')
