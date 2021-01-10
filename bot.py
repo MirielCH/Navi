@@ -929,12 +929,15 @@ async def off(ctx, *args):
     if not ctx.prefix == 'rpg ':
         
         await ctx.send(f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. Are you sure? `[yes/no]`')
-        answer = await bot.wait_for('message', check=check, timeout=30)
-        if answer.content.lower() in ['yes','y']:
-            status = await set_reminders(ctx, 'off')
-            await ctx.send(status)
-        else:
-            await ctx.send('Aborted.')
+        try:
+            answer = await bot.wait_for('message', check=check, timeout=30)
+            if answer.content.lower() in ['yes','y']:
+                status = await set_reminders(ctx, 'off')
+                await ctx.send(status)
+            else:
+                await ctx.send('Aborted.')
+        except asyncio.TimeoutError as error:
+            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
         
 # Command "donator" - Sets donor tiers
 @bot.command(aliases=('donator',))
@@ -1051,10 +1054,13 @@ async def enable(ctx, *args):
                 
                 if activity == 'all' and action == 'disable':
                     await ctx.send(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`')
-                    answer = await bot.wait_for('message', check=check, timeout=30)
-                    if not answer.content.lower() in ['yes','y']:
-                        await ctx.send('Aborted')
-                        return
+                    try:
+                        answer = await bot.wait_for('message', check=check, timeout=30)
+                        if not answer.content.lower() in ['yes','y']:
+                            await ctx.send('Aborted')
+                            return
+                    except asyncio.TimeoutError as error:
+                        await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
 
                 if activity in activity_aliases:
                     activity = activity_aliases[activity]
@@ -3062,12 +3068,15 @@ async def shutdown(ctx):
         return m.author == ctx.author and m.channel == ctx.channel
 
     if not ctx.prefix == 'rpg ':    
-        await ctx.send(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
-        answer = await bot.wait_for('message', check=check, timeout=30)
-        if answer.content.lower() in ['yes','y']:
-            await ctx.send(f'Shutting down.')
-            await ctx.bot.logout()
-        else:
-            await ctx.send(f'Phew, was afraid there for a second.')
+        try:
+            await ctx.send(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
+            answer = await bot.wait_for('message', check=check, timeout=30)
+            if answer.content.lower() in ['yes','y']:
+                await ctx.send(f'Shutting down.')
+                await ctx.bot.logout()
+            else:
+                await ctx.send(f'Phew, was afraid there for a second.')
+        except asyncio.TimeoutError as error:
+            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
 
 bot.run(TOKEN)
