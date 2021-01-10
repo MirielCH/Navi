@@ -299,7 +299,7 @@ async def set_reminders(ctx, action):
                 status = f'**{ctx.author.name}**, your reminders are already turned off.'
             else:
                 cur.execute('INSERT INTO settings_user (user_id, reminders_on, default_message) VALUES (?, ?, ?)', (ctx.author.id, reminders_on, global_data.default_message,))
-                status = f'Hey! **{ctx.author.name}**! Wecome! Your reminders are now turned **on**.\nDon\'t forget to set your donor tier with `{ctx.prefix}tbd`.\nYou can check all of your settings with `{ctx.prefix}settings` or `{ctx.prefix}me`.'
+                status = f'Hey! **{ctx.author.name}**! Wecome! Your reminders are now turned **on**.\nDon\'t forget to set your donor tier with `{ctx.prefix}donator`.\nYou can check all of your settings with `{ctx.prefix}settings` or `{ctx.prefix}me`.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
     
@@ -822,7 +822,7 @@ async def prefix(ctx):
 
 # Command "settings" - Returns current user settings
 @bot.command(aliases=('me',))
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
 async def settings(ctx):
     
     if not ctx.prefix == 'rpg ':
@@ -3012,6 +3012,7 @@ async def cooldown(ctx, *args):
 
 # Ascended commands, used as a test command atm
 @bot.command()
+@commands.is_owner()
 @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
 async def ascended(ctx, *args):
     
@@ -3076,6 +3077,15 @@ async def devstats(ctx):
         
         await ctx.send(embed=embed)
   
+# Hey! Listen!
+@bot.command(aliases=('listen',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
+async def hey(ctx):
+    
+    if not ctx.prefix == 'rpg ':
+        await ctx.send('https://tenor.com/view/navi-hey-listen-gif-4837431')
+    
+
 
 
 # --- Owner Commands ---
