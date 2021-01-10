@@ -18,7 +18,7 @@ default_prefix = 'navi '
 donor_tiers = ['Non-donator','Donator','EPIC donator','SUPER donator','MEGA donator','HYPER donator','ULTRA donator','ULTIMATE donator',]
 
 # All activities
-activities = ['adventure','daily','hunt','lootbox','lottery','pet','quest','training','weekly','work',]
+activities = ['all','adventure','daily','hunt','lootbox','lottery','pet','quest','training','weekly','work',]
 
 # Bot message timeout
 timeout = 10

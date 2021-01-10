@@ -56,7 +56,7 @@ async def get_prefix_all(bot, ctx):
         record = cur.fetchone()
         
         if record:
-            prefixes = (record[1],'rpg ',)
+            prefixes = (record[1].replace('"',''),'rpg ',)
         else:
             cur.execute('INSERT INTO settings_guild VALUES (?, ?)', (ctx.guild.id, global_data.default_prefix,))
             prefixes = (global_data.default_prefix,'rpg ')
@@ -638,9 +638,11 @@ async def parse_seconds(time_left):
     return timestring
 
 
+
 # --- Command Initialization ---
 
 bot = commands.Bot(command_prefix=get_prefix_all, help_command=None, case_insensitive=True)
+
 
 
 # --- Ready & Join Events ---
@@ -669,6 +671,7 @@ async def on_guild_join(guild):
         await guild.system_channel.send(welcome_message)
     except:
         return
+
 
 
 # --- Error Handling ---
@@ -702,6 +705,7 @@ async def on_command_error(ctx, error):
         await ctx.send(f'You\'re missing some arguments.')
     else:
         await log_error(ctx, error) # To the database you go
+
 
 
 # --- Tasks ---
@@ -776,6 +780,8 @@ async def delete_old_reminders(bot):
                 logger.error(f'{datetime.now()}: Error deleting old reminder {reminder}')
 
 
+
+
 # --- Server Settings ---
    
 # Command "setprefix" - Sets new prefix (if user has "manage server" permission)
@@ -787,12 +793,18 @@ async def setprefix(ctx, *new_prefix):
     if not ctx.prefix == 'rpg ':
         if new_prefix:
             if len(new_prefix)>1:
-                await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
+                await ctx.send(
+                    f'The command syntax is `{ctx.prefix}setprefix [prefix]`.\n'
+                    f'If you want to include a space in your prefix, use \" (example: `{ctx.prefix}setprefix "navi "`)'
+                )
             else:
                 await set_prefix(bot, ctx, new_prefix[0])
                 await ctx.send(f'Prefix changed to `{await get_prefix(ctx)}`.')
         else:
-            await ctx.send(f'The command syntax is `{ctx.prefix}setprefix [prefix]`.')
+            await ctx.send(
+                f'The command syntax is `{ctx.prefix}setprefix [prefix]`.\n'
+                f'If you want to include a space in your prefix, use \" (example: `{ctx.prefix}setprefix "navi "`)'
+            )
 
 # Command "prefix" - Returns current prefix
 @bot.command()
@@ -801,7 +813,9 @@ async def prefix(ctx):
     
     if not ctx.prefix == 'rpg ':
         current_prefix = await get_prefix(ctx)
-        await ctx.send(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix [prefix]`.')
+        await ctx.send(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix`.')
+
+
 
 
 # --- User Settings ---
@@ -864,7 +878,7 @@ async def settings(ctx):
             user_name = user_name.upper()
         
             general = (
-                f'{emojis.bp} Reminders: `{reminders_on}`\n'
+                f'{emojis.bp} Bot: `{reminders_on}`\n'
                 f'{emojis.bp} Donator tier: `{user_donor_tier}` ({global_data.donor_tiers[user_donor_tier]})\n'
                 f'{emojis.bp} Partner donator tier: `{partner_donor_tier}` ({global_data.donor_tiers[partner_donor_tier]})'
             )
@@ -909,7 +923,7 @@ async def settings(ctx):
         
             await ctx.send(embed=embed)
     
-# Command "on" - Activates reminders
+# Command "on" - Activates bot
 @bot.command()
 @commands.bot_has_permissions(send_messages=True)
 async def on(ctx, *args):
@@ -918,7 +932,7 @@ async def on(ctx, *args):
         status = await set_reminders(ctx, 'on')
         await ctx.send(status)
         
-# Command "off" - Deactivates reminders
+# Command "off" - Deactivates bot
 @bot.command()
 @commands.bot_has_permissions(send_messages=True)
 async def off(ctx, *args):
@@ -1065,7 +1079,7 @@ async def enable(ctx, *args):
                 if activity in activity_aliases:
                     activity = activity_aliases[activity]
                 
-                if activity in global_data.activities or activity == 'all':
+                if activity in global_data.activities:
                     status = await set_specific_reminder(ctx, activity, action)
                     await ctx.send(status)
                 else:
@@ -1119,6 +1133,45 @@ async def list_cmd(ctx):
         
         await ctx.send(embed=embed)
   
+
+
+# --- Main menus ---
+
+# Main menu
+@bot.command(aliases=('h',))
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
+async def help(ctx):
+    
+    if not ctx.prefix == 'rpg ':
+        prefix = await get_prefix(ctx)
+        
+        reminder_management = (
+            f'{emojis.bp} `{prefix}list` : List all your active reminders'
+        )
+                    
+        user_settings = (
+            f'{emojis.bp} `{prefix}on` / `{prefix}off` : Turn the bot on or off\n'
+            f'{emojis.bp} `{prefix}settings` : Check your settings\n'
+            f'{emojis.bp} `{prefix}donator` : Set your EPIC RPG donator tier\n'
+            f'{emojis.bp} `{prefix}donator partner` : Set your marriage partner\'s EPIC RPG donator tier\n'
+            f'{emojis.bp} `{prefix}enable` / `{prefix}disable` : Enable/disable specific reminders'
+        )  
+        
+        server_settings = (
+            f'{emojis.bp} `{prefix}prefix` : Check the bot prefix\n'
+            f'{emojis.bp} `{prefix}setprefix` / `{prefix}sp` : Set the bot prefix'
+        )  
+        
+        embed = discord.Embed(
+            color = global_data.color,
+            title = 'NAVI',
+            description =   f'Hey! **{ctx.author.name}**! Hello!'
+        )    
+        embed.add_field(name='REMINDERS', value=reminder_management, inline=False)
+        embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
+        embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
+        
+        await ctx.send(embed=embed)
 
 
 # --- Command detection ---
@@ -2998,37 +3051,6 @@ async def ascended(ctx, *args):
             if global_data.debug_mode == True:
                 await ctx.send('Ascended detection timeout.')
             return   
-
-# --- Main menus ---
-
-# Main menu
-@bot.command(aliases=('g','h',))
-@commands.bot_has_permissions(send_messages=True, embed_links=True)
-async def help(ctx):
-    
-    if not ctx.prefix == 'rpg ':
-        prefix = await get_prefix(ctx)
-                    
-        user_settings = (
-            f'{emojis.bp} `{prefix}settings` / `{prefix}me` : Check your target enchant\n'
-            f'{emojis.bp} `{prefix}set` : Set your target enchant'
-        )  
-        
-        server_settings = (
-            f'{emojis.bp} `{prefix}prefix` : Check the bot prefix\n'
-            f'{emojis.bp} `{prefix}setprefix` / `{prefix}sp` : Set the bot prefix'
-        )  
-        
-        embed = discord.Embed(
-            color = global_data.color,
-            title = 'ARCHMAGE',
-            description =   f'Well **{ctx.author.name}**, need to do some enchanting?'
-        )    
-        embed.set_footer(text=await global_data.default_footer(prefix))
-        embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
-        embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
-        
-        await ctx.send(embed=embed)
 
 
 
