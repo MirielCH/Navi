@@ -34,6 +34,10 @@ arena_message = 'Hey! The **big arena** event just finished! You can check the r
 miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results on the official EPIC RPG server.'
 pet_message = 'Hey! Your pet **$** is back!'
 
+# Guild defaults
+guild_reset = (5,21,59) # Weekday, hour, minute (UTC, weekday starts from 0)
+guild_stealth = 90
+
 # Embed color
 color = 0x3abad3
 
