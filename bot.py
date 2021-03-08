@@ -8,6 +8,7 @@ import global_data
 import emojis
 import logging
 import logging.handlers
+import itertools
 from emoji import demojize
 from emoji import emojize
 
@@ -45,6 +46,17 @@ erg_db = sqlite3.connect(dbfile, isolation_level=None)
 
 # Create task dictionary
 running_tasks = {}
+
+# Mixed Case prefix
+async def mixedCase(*args):
+  mixed_prefixes = []
+  for string in args:
+    all_prefixes = map(''.join, itertools.product(*((c.upper(), c.lower()) for c in string)))
+    for prefix in list(all_prefixes):
+        mixed_prefixes.append(prefix)
+
+  return list(mixed_prefixes)
+
          
 # --- Database: Get Data ---
 
@@ -57,8 +69,17 @@ async def get_prefix_all(bot, ctx):
         record = cur.fetchone()
         
         if record:
-            prefixes = (record[1].replace('"',''),'rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ')
+            prefix_db = record[1].replace('"','')
+            prefix_db_mixed_case = await mixedCase(prefix_db)
+            prefixes = ['rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ']
+            for prefix in prefix_db_mixed_case:
+                prefixes.append(prefix)
         else:
+            prefix_mixed_case = await mixedCase(global_data.default_prefix)
+            prefixes = ['rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ']
+            for prefix in prefix_mixed_case:
+                prefixes.append(prefix)
+            
             cur.execute('INSERT INTO settings_guild VALUES (?, ?)', (ctx.guild.id, global_data.default_prefix,))
             prefixes = (global_data.default_prefix,'rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ')
     except sqlite3.Error as error:
@@ -108,15 +129,31 @@ async def get_user_number(ctx):
         
     return user_number
    
+# Get dnd state from user id
+async def get_dnd(user_id):
+
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT dnd FROM settings_user where user_id=?', (user_id,))
+        record = cur.fetchone()
+
+        if record:
+            setting_dnd = record[0]
+    
+    except sqlite3.Error as error:
+        logger.error(f'Unable to get dnd mode setting: {error}')
+  
+    return setting_dnd
+   
 # Get settings
 async def get_settings(ctx, setting='all', partner_id=None):
     
     current_settings = None
     
     if setting == 'all':
-        sql = 'SELECT * FROM settings_user where user_id=?'
+        sql = 'SELECT * FROM settings_user s1 INNER JOIN settings_user s2 ON s2.user_id = s1.partner_id where s1.user_id=?'
     elif setting == 'hunt':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, partner_name, partner_donor_tier, partner_id, hunt_enabled, hunt_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, partner_name, partner_donor_tier, partner_id, hunt_enabled, hunt_message, dnd FROM settings_user where user_id=?'
     elif setting == 'work':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, work_enabled, work_message FROM settings_user where user_id=?'
     elif setting == 'training':
@@ -141,17 +178,21 @@ async def get_settings(ctx, setting='all', partner_id=None):
         sql = 'SELECT user_donor_tier FROM settings_user where user_id=?'
     elif setting == 'partner':
         sql = 'SELECT partner_donor_tier, partner_id, partner_channel_id FROM settings_user where user_id=?'
-    elif setting == 'alert_channel':
-        sql = 'SELECT partner_channel_id, reminders_on, alert_enabled FROM settings_user where user_id=?'
+    elif setting == 'partner_alert_hardmode':
+        sql = 'SELECT partner_channel_id, reminders_on, alert_enabled, hardmode, dnd FROM settings_user where user_id=?'
     elif setting == 'events':
         sql = 'SELECT reminders_on, default_message, arena_enabled, arena_message, lottery_enabled, lottery_message, miniboss_enabled, miniboss_message, pet_enabled, pet_message FROM settings_user where user_id=?'
+    elif setting == 'hardmode':
+        sql = 'SELECT hardmode FROM settings_user where user_id=?'
+    elif setting == 'dnd':
+        sql = 'SELECT dnd FROM settings_user where user_id=?'
         
     try:
         cur=erg_db.cursor()
-        if not setting == 'alert_channel':
+        if not setting == 'partner_alert_hardmode':
             cur.execute(sql, (ctx.author.id,))
         else:
-            if not partner_id == None:
+            if not partner_id == 0:
                 cur.execute(sql, (partner_id,))
             else:
                 await log_error(ctx, f'Invalid partner_id {partner_id} in get_settings')
@@ -412,7 +453,7 @@ async def reset_partner(ctx):
         if record:
             partner_id = record[0]
             cur.execute('UPDATE settings_user SET partner_id = ?, partner_donor_tier = ? WHERE user_id = ?', (None, 0, ctx.author.id,))
-            if not partner_id == None:
+            if not partner_id == 0:
                 cur.execute('UPDATE settings_user SET partner_id = ?, partner_donor_tier = ? WHERE user_id = ?', (None, 0, partner_id,))
             status = 'updated'
         else:
@@ -495,6 +536,67 @@ async def set_donor_tier(ctx, donor_tier, partner=False):
                     status = f'**{ctx.author.name}**, your donator tier is now set to **{donor_tier}** ({global_data.donor_tiers[donor_tier]})'
                 else:
                     status = f'**{ctx.author.name}**, your donator tier is already set to **{donor_tier}** ({global_data.donor_tiers[donor_tier]})'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Set hardmode state
+async def set_hardmode(ctx, state):
+    
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT partner_id, hardmode FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        status = ''
+        
+        if record:
+            partner_id_db = record[0]
+            hardmode_state_db = record[1]
+            if not partner_id_db == 0:
+                if hardmode_state_db == 1 and state == 1:
+                    status = f'**{ctx.author.name}**, hardmode mode is already turned **on**.'
+                elif hardmode_state_db == 0 and state == 0:
+                    status = f'**{ctx.author.name}**, hardmode mode is already turned **off**.'
+                else:
+                    cur.execute('UPDATE settings_user SET hardmode = ? WHERE user_id = ?', (state, ctx.author.id,))
+                    if state == 1:
+                        status = f'**{ctx.author.name}**, hardmode mode is now turned **on**.'
+                    elif state == 0:
+                        status = f'**{ctx.author.name}**, hardmode mode is now turned **off**.'
+            else:
+                status = f'**{ctx.author.name}**, you do not have a partner set. This setting only does something if you are married and added your partner to this bot.\nUse `{ctx.prefix}partner` to add your partner.'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Set dnd state
+async def set_dnd(ctx, state):
+    
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT dnd FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        status = ''
+        
+        if record:
+            dnd_state_db = record[0]
+            
+            if dnd_state_db == 1 and state == 1:
+                status = f'**{ctx.author.name}**, DND mode is already turned **on**.'
+            elif dnd_state_db == 0 and state == 0:
+                status = f'**{ctx.author.name}**, DND mode is already turned **off**.'
+            else:
+                cur.execute('UPDATE settings_user SET dnd = ? WHERE user_id = ?', (state, ctx.author.id,))
+                if state == 1:
+                    status = f'**{ctx.author.name}**, DND mode is now turned **on**. Reminders will not ping you.'
+                elif state == 0:
+                    status = f'**{ctx.author.name}**, DND mode is now turned **off**. Reminders will ping you again.'
         else:
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
@@ -1063,8 +1165,13 @@ async def background_task(user, channel, message, time_left, task_name, guild=Fa
     await asyncio.sleep(time_left)
     try:
         if guild == False:
+            setting_dnd = await get_dnd(user.id)
+            
             await bot.wait_until_ready()
-            await bot.get_channel(channel.id).send(f'{user.mention} {message}')
+            if setting_dnd == 0:
+                await bot.get_channel(channel.id).send(f'{user.mention} {message}')
+            else:
+                await bot.get_channel(channel.id).send(f'**{user.name}**, {message}')
         else:
             guild_members = await get_guild_members(user)
             message_mentions = ''
@@ -1075,7 +1182,7 @@ async def background_task(user, channel, message, time_left, task_name, guild=Fa
                     if not member_user == None:
                         message_mentions = f'{message_mentions}{member_user.mention} '
             await bot.wait_until_ready()
-            await bot.get_channel(channel.id).send(f'{message_mentions}{message}')
+            await bot.get_channel(channel.id).send(f'{message}\n{message_mentions}')
         delete_task = running_tasks.pop(task_name, None)
         
     except Exception as e:
@@ -1097,6 +1204,7 @@ async def schedule_reminders(bot):
                 end_time = float(reminder[2])
                 channel_id = int(reminder[3])
                 message = reminder[4]
+                
                 await bot.wait_until_ready()
                 channel = bot.get_channel(channel_id)
                 if not activity == 'guild':
@@ -1207,12 +1315,12 @@ async def settings(ctx):
         settings = await get_settings(ctx, 'all')
         guild_data = await get_guild(ctx, 'member')
         
-        settings = list(settings)
-            
         if settings == None:
             await ctx.send(f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.')
             return
         else:
+            settings = list(settings)
+            
             for index in range(7, len(settings)):
                 setting = settings[index]
                 if setting == 1:
@@ -1223,7 +1331,7 @@ async def settings(ctx):
                 setting = settings[index]
                 if setting == None:
                     settings[index] = '<Default>'
-                
+                      
             reminders_on = settings[1]
             if reminders_on == 1:
                 reminders_on = 'Enabled'
@@ -1256,6 +1364,13 @@ async def settings(ctx):
             tr_message = settings[32]
             weekly_message = settings[33]
             work_message = settings[34]
+            hardmode = settings[35]
+            dnd = settings[36]
+            
+            if not partner_id == 0:
+                hardmode_partner = settings[72]
+            else:
+                hardmode_partner = 'N/A'
         
             if not guild_data == None:
                 guild_name = guild_data[0]
@@ -1276,7 +1391,7 @@ async def settings(ctx):
             user_name = user_name.upper()
             
             await bot.wait_until_ready()
-            if not partner_id == None:
+            if not partner_id == 0:
                 partner = bot.get_user(partner_id)
                 if not partner == None:
                     partner_name = f'{partner.name}#{partner.discriminator}'
@@ -1299,21 +1414,24 @@ async def settings(ctx):
             
         
             general = (
-                f'{emojis.bp} Bot: `{reminders_on}`\n'
+                f'{emojis.bp} Reminders: `{reminders_on}`\n'
                 f'{emojis.bp} Donator tier: `{user_donor_tier}` ({global_data.donor_tiers[user_donor_tier]})\n'
+                f'{emojis.bp} DND mode: `{dnd}`\n'
+                f'{emojis.bp} Hardmode mode: `{hardmode}`'
             )
             
             partner = (
-                f'{emojis.bp} Partner: `{partner_name}`\n'
-                f'{emojis.bp} Partner donator tier: `{partner_donor_tier}` ({global_data.donor_tiers[partner_donor_tier]})\n'
+                f'{emojis.bp} Name: `{partner_name}`\n'
+                f'{emojis.bp} Hardmode mode: `{hardmode_partner}`\n'
+                f'{emojis.bp} Donator tier: `{partner_donor_tier}` ({global_data.donor_tiers[partner_donor_tier]})\n'
                 f'{emojis.bp} Lootbox alert channel: `{partner_channel_name}`'
             )
             
             guild = (
-                f'{emojis.bp} Guild: `{guild_name}`\n'
-                f'{emojis.bp} Guild reminders: `{guild_reminders_on}`\n'
-                f'{emojis.bp} Guild alert channel: `{guild_channel_name}`\n'
-                f'{emojis.bp} Guild stealth threshold: `{guild_stealth}`'
+                f'{emojis.bp} Name: `{guild_name}`\n'
+                f'{emojis.bp} Reminders: `{guild_reminders_on}`\n'
+                f'{emojis.bp} Alert channel: `{guild_channel_name}`\n'
+                f'{emojis.bp} Stealth threshold: `{guild_stealth}`'
             )
             
             enabled_reminders = (
@@ -1351,7 +1469,7 @@ async def settings(ctx):
                 color = global_data.color,
                 title = f'{user_name}\'S SETTINGS',
             )    
-            embed.add_field(name='GENERAL', value=general, inline=False)
+            embed.add_field(name='USER', value=general, inline=False)
             embed.add_field(name='PARTNER', value=partner, inline=False)
             embed.add_field(name='GUILD', value=guild, inline=False)
             embed.add_field(name='SPECIFIC REMINDERS', value=enabled_reminders, inline=False)
@@ -1360,7 +1478,7 @@ async def settings(ctx):
             await ctx.send(embed=embed)
 
 # Command "on" - Activates bot
-@bot.command()
+@bot.command(aliases=('start',))
 @commands.bot_has_permissions(send_messages=True)
 async def on(ctx, *args):
     
@@ -1370,7 +1488,7 @@ async def on(ctx, *args):
         await ctx.send(status)
         
 # Command "off" - Deactivates bot
-@bot.command()
+@bot.command(aliases=('stop',))
 @commands.bot_has_permissions(send_messages=True)
 async def off(ctx, *args):
     
@@ -1516,7 +1634,7 @@ async def partner(ctx, *args):
                     if len(args) == 2:
                         arg2 = args[1]
                         if arg2 == 'set':
-                            if not partner_id == None:
+                            if not partner_id == 0:
                                 await ctx.send(f'**{ctx.author.name}**, set `{ctx.channel.name}` as your lootbox alert channel? `[yes/no]`')
                                 answer = await bot.wait_for('message', check=check, timeout=30)
                                 if answer.content.lower() in ['yes','y']:
@@ -1598,7 +1716,7 @@ async def partner(ctx, *args):
                     if len(ctx.message.mentions) == 1:
                         settings = await get_settings(ctx, 'partner')
                         partner_id = settings[1]
-                        if not partner_id == None:
+                        if not partner_id == 0:
                             await ctx.send(
                                 f'**{ctx.author.name}**, you already have a partner.\n'
                                 f'Use `{ctx.prefix}{ctx.invoked_with} reset` to remove your old one first.'
@@ -1829,12 +1947,16 @@ async def guild(ctx, *args):
                             except:
                                 bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
+                            guild_upgraded = False
+                            
                             # Check if stealth was upgraded
                             if bot_message.find('Guild succesfully upgraded!') > 1:
                                 stealth_start = bot_message.find('--> **') + 6
                                 stealth_end = bot_message.find('**', stealth_start)
                                 stealth = bot_message[stealth_start:stealth_end]
+                                guild_stealth_before = guild_stealth_current
                                 guild_stealth_current = int(stealth)
+                                guild_upgraded = True
                                 status = await set_guild_stealth_current(ctx, guild_name, guild_stealth_current)
                             
                             # Set message to send
@@ -1893,6 +2015,11 @@ async def guild(ctx, *args):
                     # Add reaction
                     if not write_status == 'aborted':
                         await bot_answer.add_reaction(emojis.navi)
+                        if guild_upgraded == True and guild_stealth_current >= guild_stealth_threshold:
+                            await bot_answer.add_reaction(emojis.yay)
+                        
+                        if guild_upgraded == True and guild_stealth_current == guild_stealth_before:
+                            await bot_answer.add_reaction(emojis.angry)
                     else:
                         if DEBUG_MODE == 'ON':
                             await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
@@ -2082,10 +2209,14 @@ async def list_cmd(ctx):
                 activity = reminder[0]
                 end_time = reminder[1]
                 if activity == 'pett':
-                    activity = f'Pet tournament'
+                    activity = 'Pet tournament'
                 elif activity.find('pet-') > -1:
                     pet_id = activity.replace('pet-','')
                     activity = f'Pet {pet_id}'
+                elif activity == 'arena':
+                    activity = 'Big arena'
+                elif activity == 'miniboss':
+                    activity = 'Not so mini boss'
                 else:
                     activity = activity.capitalize()
                 current_time = datetime.utcnow().replace(microsecond=0)
@@ -2107,7 +2238,59 @@ async def list_cmd(ctx):
         )    
         
         await ctx.send(embed=embed)
-  
+
+# Command "hardmode" - Sets hardmode mode
+@bot.command(aliases=('hm',))
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
+async def hardmode(ctx, *args):
+    
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        
+        if args:
+            arg = args[0]
+            if arg in ('on','enable','start'):
+                status = await set_hardmode(ctx, 1)
+            elif arg in ('off','disable','stop'):
+                status = await set_hardmode(ctx, 0)
+            else:
+                status = f'**{ctx.author.name}**, the correct syntax is `{prefix}hardmode on` / `off`.'
+            await ctx.send(status)
+        else:
+            settings = await get_settings(ctx, 'hardmode')
+            hm = settings[0]
+            if hm == 1:
+                hm = 'on'
+            elif hm == 0:
+                hm = 'off'
+            await ctx.send(f'**{ctx.author.name}**, hardmode mode is currently turned **{hm}**.\nUse `{prefix}hardmode on` / `off` to change it.')
+
+# Command "dnd" - Sets dnd state
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
+async def dnd(ctx, *args):
+    
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        
+        if args:
+            arg = args[0]
+            if arg in ('on','enable','start'):
+                status = await set_dnd(ctx, 1)
+            elif arg in ('off','disable','stop'):
+                status = await set_dnd(ctx, 0)
+            else:
+                status = f'**{ctx.author.name}**, the correct syntax is `{prefix}dnd on` / `off`.'
+            await ctx.send(status)
+        else:
+            settings = await get_settings(ctx, 'dnd')
+            dnd = settings[0]
+            if dnd == 1:
+                dnd = 'on'
+            elif dnd == 0:
+                dnd = 'off'
+            await ctx.send(f'**{ctx.author.name}**, DND mode is currently turned **{dnd}**.\nUse `{prefix}dnd on` / `off` to change it.')
+            
 # Update guild
 @bot.event
 async def on_message_edit(message_before, message_after):
@@ -2172,10 +2355,12 @@ async def help(ctx):
         )
                     
         user_settings = (
-            f'{emojis.bp} `{prefix}on` / `off` : Turn the bot on or off\n'
+            f'{emojis.bp} `{prefix}on` / `off` : Turn the bot on/off\n'
             f'{emojis.bp} `{prefix}settings` : Check your settings\n'
             f'{emojis.bp} `{prefix}donator` : Set your EPIC RPG donator tier\n'
-            f'{emojis.bp} `{prefix}enable` / `disable` : Enable/disable specific reminders'
+            f'{emojis.bp} `{prefix}enable` / `disable` : Enable/disable specific reminders\n'
+            f'{emojis.bp} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
+            f'{emojis.bp} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)'
         )
         
         partner_settings = (
@@ -2310,6 +2495,7 @@ async def hunt(ctx, *args):
                     partner_id = settings[5]
                     hunt_enabled = int(settings[6])
                     hunt_message = settings[7]
+                    dnd = settings[8]
                     
                     # Set message to send          
                     if hunt_message == None:
@@ -2333,6 +2519,23 @@ async def hunt(ctx, *args):
                                 else:
                                     if DEBUG_MODE == 'ON':
                                         await bot_answer.add_reaction(emojis.cross)
+                                
+                                if not partner_id == 0:
+                                    partner_settings = await get_settings(ctx, 'partner_alert_hardmode', partner_id)
+                                    partner_hardmode = partner_settings[3]
+                                
+                                    if together == True and partner_hardmode == 1:
+                                        if dnd == 0:
+                                            hm_message = f'{ctx.author.mention} **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
+                                        else:
+                                            hm_message = f'**{ctx.author.name}**, **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
+                                        
+                                    elif together == False and partner_hardmode == 0:
+                                        if dnd == 0:
+                                            hm_message = f'{ctx.author.mention} **{partner_name}** is not hardmoding, feel free to take them hunting.'
+                                        else:
+                                            hm_message = f'**{ctx.author.name}**, **{partner_name}** is not hardmoding, feel free to take them hunting.'
+                                    await ctx.send(hm_message)
                                 return
                             else:
                                 bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 3)
@@ -2340,6 +2543,7 @@ async def hunt(ctx, *args):
                                     bot_message = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                 except:
                                     bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                    
                         # Check if partner is in the middle of a command, if yes, if it is the correct one, if not, ignore it and try to wait for the bot message one more time
                         elif bot_message.find(f'is in the middle of a command') > -1:
                             if (bot_message.find(partner_name) > -1) and (bot_message.find(f'is in the middle of a command') > -1):
@@ -2419,40 +2623,64 @@ async def hunt(ctx, *args):
                 if DEBUG_MODE == 'ON':
                     await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
             
-            # Check for lootboxes and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
-            if not partner_id == None and together == True:
-                await bot.wait_until_ready()
-                partner = bot.get_user(partner_id)
-                partner_name = partner.name
-                lootbox_alert = ''
-                if bot_message.find(f'**{partner_name}** got a common lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbcommon} common lootbox')
-                elif bot_message.find(f'**{partner_name}** got an uncommon lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbuncommon} uncommon lootbox')
-                elif bot_message.find(f'**{partner_name}** got a rare lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbrare} rare lootbox')
-                elif bot_message.find(f'**{partner_name}** got an EPIC lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbepic} EPIC lootbox')
-                elif bot_message.find(f'**{partner_name}** got an EDGY lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbedgy} EDGY lootbox')
-                elif bot_message.find(f'**{partner_name}** got an OMEGA lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lobomega} OMEGA lootbox')
-                elif bot_message.find(f'**{partner_name}** got a GODLY lootbox') > -1:
-                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbgodly} GODLY lootbox')
-                
-                if not lootbox_alert == '':
-                    channel_settings = await get_settings(ctx, 'alert_channel', partner_id)
-                    partner_channel_id = channel_settings[0]
-                    partner_reminders_on = channel_settings[1]
-                    alert_enabled = channel_settings[2]
-                    if not partner_channel_id == None and not alert_enabled == 0 and not partner_reminders_on == 0:
-                        try:
-                            await bot.wait_until_ready()
-                            await bot.get_channel(partner_channel_id).send(f'{partner.mention} {lootbox_alert}')
-                            await bot_answer.add_reaction(emojis.partner_alert)
-                        except Exception as e:
-                            await ctx.send(e)
+            # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
+            if not partner_id == 0:
+                partner_settings = await get_settings(ctx, 'partner_alert_hardmode', partner_id)
+                partner_hardmode = partner_settings[3]
             
+                if together == True:
+                    await bot.wait_until_ready()
+                    partner = bot.get_user(partner_id)
+                    partner_name = partner.name
+                    lootbox_alert = ''
+                    
+                    if bot_message.find(f'**{partner_name}** got a common lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbcommon} common lootbox')
+                    elif bot_message.find(f'**{partner_name}** got an uncommon lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbuncommon} uncommon lootbox')
+                    elif bot_message.find(f'**{partner_name}** got a rare lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbrare} rare lootbox')
+                    elif bot_message.find(f'**{partner_name}** got an EPIC lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbepic} EPIC lootbox')
+                    elif bot_message.find(f'**{partner_name}** got an EDGY lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbedgy} EDGY lootbox')
+                    elif bot_message.find(f'**{partner_name}** got an OMEGA lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lobomega} OMEGA lootbox')
+                    elif bot_message.find(f'**{partner_name}** got a GODLY lootbox') > -1:
+                        lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbgodly} GODLY lootbox')
+                    
+                    if not lootbox_alert == '':
+                        
+                        partner_channel_id = partner_settings[0]
+                        partner_reminders_on = partner_settings[1]
+                        alert_enabled = partner_settings[2]
+                        partner_dnd = partner_settings[4]
+                        if not partner_channel_id == None and not alert_enabled == 0 and not partner_reminders_on == 0:
+                            try:
+                                if partner_dnd == 0:
+                                    lb_message = f'{partner.mention} {lootbox_alert}'
+                                else:
+                                    lb_message = f'**{partner.name}**, {lootbox_alert}'
+                                await bot.wait_until_ready()
+                                await bot.get_channel(partner_channel_id).send(lb_message)
+                                await bot_answer.add_reaction(emojis.partner_alert)
+                            except Exception as e:
+                                await ctx.send(e)
+                    
+                    if partner_hardmode == 1:
+                        if dnd == 0:
+                            hm_message = f'{ctx.author.mention} **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
+                        else:
+                            hm_message = f'**{ctx.author.name}**, **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
+                        await ctx.send(hm_message)
+                else:
+                    if partner_hardmode == 0:
+                        if dnd == 0:
+                            hm_message = f'{ctx.author.mention} **{partner_name}** is not hardmoding, feel free to take them hunting.'
+                        else:
+                            hm_message = f'**{ctx.author.name}**, **{partner_name}** is not hardmoding, feel free to take them hunting.'
+                        await ctx.send(hm_message)
+                                
             # Add an F if the user died
             if (bot_message.find(f'{ctx_author} lost') > -1) or (bot_message.find('but lost fighting') > -1):
                 await bot_answer.add_reaction(emojis.rip)
@@ -2485,7 +2713,7 @@ async def chop(ctx, *args):
             if DEBUG_MODE == 'ON':
                 logger.debug(f'Work detection: {message}')
             
-            if  ((message.find(f'{ctx_author}** got ') > -1) and ((message.find('wooden log') > -1) or (message.find('EPIC log') > -1) or (message.find('SUPER log') > -1)\
+            if  (((message.find(f'{ctx_author}** got ') > -1) or (message.find(f'{ctx_author}** GOT ') > -1)) and ((message.find('wooden log') > -1) or (message.find('EPIC log') > -1) or (message.find('SUPER log') > -1)\
                 or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
                 or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
                 or (message.find('RUBY') > -1) or (message.find('apple') > 1) or (message.find('banana') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1)\
@@ -2973,7 +3201,9 @@ async def buy(ctx, *args):
             if  (message.find('lootbox` successfully bought for') > -1) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already bought a lootbox') > -1))\
             or (message.find('You can\'t carry more than 1 lootbox at once!') > -1)\
             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you have to be level') > -1)):
+            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you have to be level') > -1))\
+            or (message.find('You can\'t buy this type of lootboxes, keep trying to drop them!') > -1)\
+            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough coins to do this') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -3051,6 +3281,11 @@ async def buy(ctx, *args):
                                 if DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
                                 return
+                            # Ignore not enough money info
+                            elif bot_message.find('you don\'t have enough coins to do this') > 1:
+                                if DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
                             # Ignore anti spam embed
                             elif bot_message.find('Huh please don\'t spam') > 1:
                                 if DEBUG_MODE == 'ON':
@@ -3066,6 +3301,10 @@ async def buy(ctx, *args):
                             elif bot_message.find('end your previous command') > 1:
                                 if DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore error when trying to buy omegas or godlys
+                            elif bot_message.find('You can\'t buy this type of lootboxes, keep trying to drop them!') > 1:
+                                await bot_answer.add_reaction(emojis.sad)
                                 return
                         else:
                             return
@@ -3579,7 +3818,8 @@ async def lottery(ctx, *args):
             if  (message.find(f'Join with `rpg lottery buy [amount]`') > -1) or ((message.find(f'{ctx_author}') > -1) and (message.find(f'lottery ticket successfully bought') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot buy more than 10 tickets per lottery') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough coins to do this') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -3658,6 +3898,11 @@ async def lottery(ctx, *args):
                             if DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return
+                        # Ignore not enough money info
+                        elif bot_message.find('you don\'t have enough coins to do this') > 1:
+                            if DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
                         # Ignore anti spam embed
                         elif bot_message.find('Huh please don\'t spam') > 1:
                             if DEBUG_MODE == 'ON':
@@ -3712,7 +3957,9 @@ async def big(ctx, *args):
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you are already registered!') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
-                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                or ((message.find(f'{ctx_author}') > -1) and (message.find('You have started an arena recently') > -1))\
+                or ((message.find(f'{ctx_author}') > -1) and (message.find('You have been in a fight with a boss recently') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -3728,10 +3975,10 @@ async def big(ctx, *args):
     if prefix.lower() == 'rpg ':
         
         if args:
-            if invoked == 'ascended':
-                args = args[0]            
-
             full_args = ''
+            if invoked == 'ascended':
+                args = args[0]
+                args.pop(0)     
             for arg in args:
                 full_args = f'{full_args}{arg}'
         else:
@@ -3812,6 +4059,11 @@ async def big(ctx, *args):
                                 return
                             # Ignore error when another command is active
                             elif bot_message.find('end your previous command') > 1:
+                                if DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore if on cooldown
+                            elif (bot_message.find('You have started an arena recently') > 1) or (bot_message.find('You have been in a fight with a boss recently') > 1):
                                 if DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
                                 return
