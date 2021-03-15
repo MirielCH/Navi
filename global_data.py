@@ -20,6 +20,9 @@ donor_tiers = ['Non-donator','Donator','EPIC donator','SUPER donator','MEGA dona
 # All activities
 activities = ['all','adventure','daily','hunt','lootbox','lootbox-alert','lottery','pet','quest','training','weekly','work',]
 
+# All activities (cooldowns)
+cooldown_activities = ['adventure','arena','daily','guild','hunt','lootbox','miniboss','quest','training','weekly','work',]
+
 # Bot message timeout
 timeout = 10
 timeout_longer = 20

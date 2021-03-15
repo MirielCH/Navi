@@ -65,11 +65,11 @@ async def get_prefix_all(bot, ctx):
     
     try:
         cur=erg_db.cursor()
-        cur.execute('SELECT * FROM settings_guild where guild_id=?', (ctx.guild.id,))
+        cur.execute('SELECT prefix FROM settings_guild where guild_id=?', (ctx.guild.id,))
         record = cur.fetchone()
         
         if record:
-            prefix_db = record[1].replace('"','')
+            prefix_db = record[0].replace('"','')
             prefix_db_mixed_case = await mixedCase(prefix_db)
             prefixes = ['rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ']
             for prefix in prefix_db_mixed_case:
@@ -81,7 +81,6 @@ async def get_prefix_all(bot, ctx):
                 prefixes.append(prefix)
             
             cur.execute('INSERT INTO settings_guild VALUES (?, ?)', (ctx.guild.id, global_data.default_prefix,))
-            prefixes = (global_data.default_prefix,'rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ')
     except sqlite3.Error as error:
         await log_error(ctx, error)
         
@@ -97,11 +96,11 @@ async def get_prefix(ctx, guild_join=False):
     
     try:
         cur=erg_db.cursor()
-        cur.execute('SELECT * FROM settings_guild where guild_id=?', (guild.id,))
+        cur.execute('SELECT prefix FROM settings_guild where guild_id=?', (guild.id,))
         record = cur.fetchone()
         
         if record:
-            prefix = record[1]
+            prefix = record[0]
         else:
             prefix = global_data.default_prefix
     except sqlite3.Error as error:
@@ -186,7 +185,7 @@ async def get_settings(ctx, setting='all', partner_id=None):
         sql = 'SELECT hardmode FROM settings_user where user_id=?'
     elif setting == 'dnd':
         sql = 'SELECT dnd FROM settings_user where user_id=?'
-        
+    
     try:
         cur=erg_db.cursor()
         if not setting == 'partner_alert_hardmode':
@@ -219,6 +218,24 @@ async def get_cooldown(ctx, activity):
             cooldown_data = record
         else:
             await log_error(ctx, f'No cooldown data found for activity \'{activity}\'.')
+    
+    except sqlite3.Error as error:
+        await log_error(ctx, error)    
+  
+    return cooldown_data
+
+# Get all cooldowns
+async def get_cooldowns(ctx):
+    
+    try:
+        cur=erg_db.cursor()
+        cur.execute('SELECT activity, cooldown FROM cooldowns ORDER BY activity ASC')
+        record = cur.fetchall()
+    
+        if record:
+            cooldown_data = record
+        else:
+            await log_error(ctx, f'No cooldown data found in get_cooldowns.')
     
     except sqlite3.Error as error:
         await log_error(ctx, error)    
@@ -334,6 +351,7 @@ async def get_old_reminders():
         logger.error(f'Routine \'get_old_reminders\' had the following error: {error}')
     
     return old_reminders
+
 
 
 # --- Database: Write Data ---
@@ -599,6 +617,19 @@ async def set_dnd(ctx, state):
                     status = f'**{ctx.author.name}**, DND mode is now turned **off**. Reminders will ping you again.'
         else:
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Set cooldown of activities
+async def set_cooldown(ctx, activity, seconds):
+    
+    try:
+        cur=erg_db.cursor()
+        status = ''
+        cur.execute('UPDATE cooldowns SET cooldown = ? WHERE activity = ?', (seconds, activity,))
+        status = f'**{ctx.author.name}**, the cooldown for activity **{activity}** is now set to **{seconds}**'
     except sqlite3.Error as error:
         await log_error(ctx, error)
     
@@ -1138,7 +1169,7 @@ async def on_command_error(ctx, error):
                 missing_perms = f'{missing_perms}, `{missing_perm}`'
             else:
                 missing_perms = f'`{missing_perm}`'
-        await ctx.send(f'Sorry **{ctx.author.name}**, you need the permission(s) {missing_perms} to use this command.')
+        await ctx.reply(f'Sorry **{ctx.author.name}**, you need the permission(s) {missing_perms} to use this command.', mention_author=False)
     elif isinstance(error, (commands.BotMissingPermissions)):
         missing_perms = ''
         for missing_perm in error.missing_perms:
@@ -1151,7 +1182,7 @@ async def on_command_error(ctx, error):
     elif isinstance(error, (commands.NotOwner)):
         return
     elif isinstance(error, commands.MissingRequiredArgument):
-        await ctx.send(f'You\'re missing some arguments.')
+        await ctx.reply(f'You\'re missing some arguments.', mention_author=False)
     else:
         await log_error(ctx, error) # To the database you go
 
@@ -1272,33 +1303,35 @@ async def reset_guild(bot):
 # Command "setprefix" - Sets new prefix (if user has "manage server" permission)
 @bot.command()
 @commands.has_permissions(manage_guild=True)
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def setprefix(ctx, *new_prefix):
     
     if not ctx.prefix == 'rpg ':
         if new_prefix:
             if len(new_prefix)>1:
-                await ctx.send(
+                await ctx.reply(
                     f'The command syntax is `{ctx.prefix}setprefix [prefix]`.\n'
-                    f'If you want to include a space in your prefix, use \" (example: `{ctx.prefix}setprefix "navi "`)'
+                    f'If you want to include a space in your prefix, use \" (example: `{ctx.prefix}setprefix "navi "`)',
+                    mention_author=False
                 )
             else:
                 await set_prefix(bot, ctx, new_prefix[0])
-                await ctx.send(f'Prefix changed to `{await get_prefix(ctx)}`.')
+                await ctx.reply(f'Prefix changed to `{await get_prefix(ctx)}`.', mention_author=False)
         else:
-            await ctx.send(
+            await ctx.reply(
                 f'The command syntax is `{ctx.prefix}setprefix [prefix]`.\n'
-                f'If you want to include a space in your prefix, use \" (example: `{ctx.prefix}setprefix "navi "`)'
+                f'If you want to include a space in your prefix, use \" (example: `{ctx.prefix}setprefix "navi "`)',
+                mention_author=False
             )
 
 # Command "prefix" - Returns current prefix
 @bot.command()
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def prefix(ctx):
     
     if not ctx.prefix == 'rpg ':
         current_prefix = await get_prefix(ctx)
-        await ctx.send(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix`.')
+        await ctx.reply(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix`.', mention_author=False)
 
 
 
@@ -1307,7 +1340,7 @@ async def prefix(ctx):
 
 # Command "settings" - Returns current user settings
 @bot.command(aliases=('me',))
-@commands.bot_has_permissions(send_messages=True, embed_links=True)
+@commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def settings(ctx):
     
     prefix = ctx.prefix
@@ -1316,7 +1349,7 @@ async def settings(ctx):
         guild_data = await get_guild(ctx, 'member')
         
         if settings == None:
-            await ctx.send(f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.')
+            await ctx.reply(f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.', mention_author=False)
             return
         else:
             settings = list(settings)
@@ -1348,8 +1381,8 @@ async def settings(ctx):
             hunt_enabled = settings[13]
             lb_enabled = settings[14]
             lottery_enabled = settings[15]
-            pet_enabled = settings[16]
-            quest_enabled = settings[17]
+            pet_enabled = settings[17]
+            quest_enabled = settings[18]
             tr_enabled = settings[19]
             weekly_enabled = settings[20]
             work_enabled = settings[21]
@@ -1475,21 +1508,21 @@ async def settings(ctx):
             embed.add_field(name='SPECIFIC REMINDERS', value=enabled_reminders, inline=False)
             #embed.add_field(name='REMINDER MESSAGES', value=reminder_messages, inline=False)
         
-            await ctx.send(embed=embed)
+            await ctx.reply(embed=embed, mention_author=False)
 
 # Command "on" - Activates bot
 @bot.command(aliases=('start',))
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def on(ctx, *args):
     
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         status = await set_reminders(ctx, 'on')
-        await ctx.send(status)
+        await ctx.reply(status, mention_author=False)
         
 # Command "off" - Deactivates bot
 @bot.command(aliases=('stop',))
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def off(ctx, *args):
     
     def check(m):
@@ -1498,7 +1531,7 @@ async def off(ctx, *args):
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         
-        await ctx.send(f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. Are you sure? `[yes/no]`')
+        await ctx.reply(f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
         try:
             answer = await bot.wait_for('message', check=check, timeout=30)
             if answer.content.lower() in ['yes','y']:
@@ -1511,7 +1544,7 @@ async def off(ctx, *args):
         
 # Command "donator" - Sets user donor tier
 @bot.command(aliases=('donator',))
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def donor(ctx, *args):
     
     possible_tiers = (
@@ -1540,46 +1573,48 @@ async def donor(ctx, *args):
                         try:
                             partner_donor_tier = int(arg2)
                         except:
-                            await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}')
+                            await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}', mention_author=False)
                             return
                         if 0 <= partner_donor_tier <= 7:
                             status = await set_donor_tier(ctx, partner_donor_tier, True)
-                            await ctx.send(status)
+                            await ctx.reply(status, mention_author=False)
                             return
                         else:
-                            await ctx.send(f'This is not a valid tier.\n\n{possible_tiers}')
+                            await ctx.reply(f'This is not a valid tier.\n\n{possible_tiers}', mention_author=False)
                             return
                     else:
-                        await ctx.send(
+                        await ctx.reply(
                             f'**{ctx.author.name}**, the EPIC RPG donator tier of your partner is **{partner_donor_tier}** ({global_data.donor_tiers[partner_donor_tier]}).\n'
-                            f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}'
+                            f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}',
+                            mention_author=False
                         )
                 else:
                     try:
                         donor_tier = int(arg1)
                     except:
-                        await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}')
+                        await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}', mention_author=False)
                         return
                     if 0 <= donor_tier <= 7:
                         status = await set_donor_tier(ctx, donor_tier)
-                        await ctx.send(status)
+                        await ctx.reply(status, mention_author=False)
                         return
                     else:
-                        await ctx.send(f'This is not a valid tier.\n\n{possible_tiers}')
+                        await ctx.reply(f'This is not a valid tier.\n\n{possible_tiers}', mention_author=False)
                         return
             else:
-                await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}')
+                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}', mention_author=False)
                 return
                     
         else:
-            await ctx.send(
+            await ctx.reply(
                 f'**{ctx.author.name}**, your current EPIC RPG donator tier is **{user_donor_tier}** ({global_data.donor_tiers[user_donor_tier]}).\n'
-                f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} [tier]`.\n\n{possible_tiers}'
+                f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} [tier]`.\n\n{possible_tiers}',
+                mention_author=False
             )
 
 # Command "partner" - Sets marriage partner settings
 @bot.command()
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def partner(ctx, *args):
     
     def check(m):
@@ -1616,26 +1651,27 @@ async def partner(ctx, *args):
                         try:
                             partner_donor_tier = int(arg2)
                         except:
-                            await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} donator [tier]`')
+                            await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} donator [tier]`', mention_author=False)
                             return
                         if 0 <= partner_donor_tier <= 7:
                             status = await set_donor_tier(ctx, partner_donor_tier, True)
-                            await ctx.send(status)
+                            await ctx.reply(status, mention_author=False)
                             return
                         else:
-                            await ctx.send(f'This is not a valid tier.\n\n{possible_tiers}')
+                            await ctx.reply(f'This is not a valid tier.\n\n{possible_tiers}', mention_author=False)
                             return
                     else:
-                        await ctx.send(
+                        await ctx.reply(
                             f'**{ctx.author.name}**, the EPIC RPG donator tier of your partner is **{partner_donor_tier}** ({global_data.donor_tiers[partner_donor_tier]}).\n'
-                            f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} donator [tier]`.\n\n{possible_tiers}'
+                            f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} donator [tier]`.\n\n{possible_tiers}',
+                            mention_author=False
                         )
                 elif arg1 == 'channel':
                     if len(args) == 2:
                         arg2 = args[1]
                         if arg2 == 'set':
                             if not partner_id == 0:
-                                await ctx.send(f'**{ctx.author.name}**, set `{ctx.channel.name}` as your lootbox alert channel? `[yes/no]`')
+                                await ctx.reply(f'**{ctx.author.name}**, set `{ctx.channel.name}` as your lootbox alert channel? `[yes/no]`', mention_author=False)
                                 answer = await bot.wait_for('message', check=check, timeout=30)
                                 if answer.content.lower() in ['yes','y']:
                                     status = await set_partner_channel(ctx, ctx.channel.id)
@@ -1652,9 +1688,10 @@ async def partner(ctx, *args):
                                     await ctx.send(f'Aborted.')
                                     return
                             else:
-                                await ctx.send(
+                                await ctx.reply(
                                     f'You don\'t have a partner set.\n'
-                                    f'If you want to set a partner, use `{ctx.prefix}{ctx.invoked_with} [@User]`'
+                                    f'If you want to set a partner, use `{ctx.prefix}{ctx.invoked_with} [@User]`',
+                                    mention_author=False
                                 )
                                 return
                         elif arg2 == 'reset':
@@ -1666,7 +1703,7 @@ async def partner(ctx, *args):
                                 else:
                                     channel_name = channel.name
                                     
-                                await ctx.send(f'**{ctx.author.name}**, do you want to remove **{channel_name}** as your lootbox alert channel? `[yes/no]`')
+                                await ctx.reply(f'**{ctx.author.name}**, do you want to remove **{channel_name}** as your lootbox alert channel? `[yes/no]`', mention_author=False)
                                 answer = await bot.wait_for('message', check=check, timeout=30)
                                 if answer.content.lower() in ['yes','y']:
                                     status = await set_partner_channel(ctx, None)
@@ -1680,28 +1717,30 @@ async def partner(ctx, *args):
                                     await ctx.send(f'Aborted.')
                                     return
                             else:
-                                await ctx.send(f'You don\'t have a lootbox alert channel set, there is no need to reset it.')
+                                await ctx.reply(f'You don\'t have a lootbox alert channel set, there is no need to reset it.', mention_author=False)
                                 return
                     else:
                         await bot.wait_until_ready()
                         channel = bot.get_channel(partner_channel)
                         if not channel == None:
-                            await ctx.send(
+                            await ctx.reply(
                                 f'Your current lootbox alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                                 f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} channel set` within your new alert channel.\n'
-                                f'To remove the alert channel entirely, use `{ctx.prefix}{ctx.invoked_with} channel reset`'
+                                f'To remove the alert channel entirely, use `{ctx.prefix}{ctx.invoked_with} channel reset`',
+                                mention_author=False
                             )
                             return
                         else:
-                            await ctx.send(
+                            await ctx.reply(
                                 f'You don\'t have a lootbox alert channel set.\n'
-                                f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`'
+                                f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`',
+                                mention_author=False
                             )
                             return
                 elif arg1 == 'alerts':
                     pass # I'm pissed, so I'll do this another day
                 elif arg1 == 'reset':
-                    await ctx.send(f'**{ctx.author.name}**, this will reset both your partner **and** your partner\'s partner (which is you, heh). Do you accept? `[yes/no]`')
+                    await ctx.reply(f'**{ctx.author.name}**, this will reset both your partner **and** your partner\'s partner (which is you, heh). Do you accept? `[yes/no]`', mention_author=False)
                     answer = await bot.wait_for('message', check=check, timeout=30)
                     if answer.content.lower() in ['yes','y']:
                         status = await reset_partner(ctx)
@@ -1717,16 +1756,17 @@ async def partner(ctx, *args):
                         settings = await get_settings(ctx, 'partner')
                         partner_id = settings[1]
                         if not partner_id == 0:
-                            await ctx.send(
+                            await ctx.reply(
                                 f'**{ctx.author.name}**, you already have a partner.\n'
-                                f'Use `{ctx.prefix}{ctx.invoked_with} reset` to remove your old one first.'
+                                f'Use `{ctx.prefix}{ctx.invoked_with} reset` to remove your old one first.',
+                                mention_author=False
                             )
                             return
                         
                         new_partner = ctx.message.mentions[0]
                         new_partner_id = new_partner.id
                         new_partner_name = f'{new_partner.name}#{new_partner.discriminator}'
-                        await ctx.send(f'{new_partner.mention}, **{ctx.author.name}** wants to set you as his partner. Do you accept? `[yes/no]`')
+                        await ctx.reply(f'{new_partner.mention}, **{ctx.author.name}** wants to set you as his partner. Do you accept? `[yes/no]`', mention_author=False)
                         answer = await bot.wait_for('message', check=partner_check, timeout=30)
                         if answer.content.lower() in ['yes','y']:
                             status = await set_partner(ctx, new_partner_id, True)
@@ -1744,9 +1784,10 @@ async def partner(ctx, *args):
                             await ctx.send(f'Aborted.')
                             return
                     else:
-                        await ctx.send(
+                        await ctx.reply(
                             f'Invalid parameter.\n'
-                            f'If you want to set a partner, ping them (`{ctx.prefix}{ctx.invoked_with} [@User]`)'
+                            f'If you want to set a partner, ping them (`{ctx.prefix}{ctx.invoked_with} [@User]`)',
+                            mention_author=False
                         )
                         return
         else:
@@ -1754,16 +1795,18 @@ async def partner(ctx, *args):
             partner = bot.get_user(partner_id)
             if not partner == None:
                 partner_name = f'{partner.name}#{partner.discriminator}'
-                await ctx.send(
+                await ctx.reply(
                     f'Your current partner is **{partner_name}**.\n'
                     f'If you want to change this, use this command to ping your new partner (`{ctx.prefix}{ctx.invoked_with} [@User]`)\n'
-                    f'To remove your partner entirely, use `{ctx.prefix}{ctx.invoked_with} reset`.'
+                    f'To remove your partner entirely, use `{ctx.prefix}{ctx.invoked_with} reset`.',
+                    mention_author=False
                 )
                 return
             else:
-                await ctx.send(
+                await ctx.reply(
                     f'You don\'t have a partner set.\n'
-                    f'If you want to set a partner, use this command to ping her or him (`{ctx.prefix}{ctx.invoked_with} [@User]`)'
+                    f'If you want to set a partner, use this command to ping her or him (`{ctx.prefix}{ctx.invoked_with} [@User]`)',
+                    mention_author=False
                 )
                 return
 
@@ -1812,9 +1855,10 @@ async def guild(ctx, *args):
             guild_data = await get_guild(ctx, 'leader')
             
             if guild_data == None:
-                await ctx.send(
+                await ctx.reply(
                     f'**{ctx.author.name}**, you are not registered as a guild leader. Only guild leaders can run guild commands.\n'
-                    f'If you are a guild leader, run `rpg guild list` first to add or update your guild in my database.'
+                    f'If you are a guild leader, run `rpg guild list` first to add or update your guild in my database.',
+                    mention_author=False
                 )
                 return
             else:    
@@ -1828,7 +1872,7 @@ async def guild(ctx, *args):
                 if len(args) == 2:
                     arg2 = args[1] 
                     if arg2 == 'set':             
-                        await ctx.send(f'**{ctx.author.name}**, set `{ctx.channel.name}` as the alert channel for the guild **{guild_name}**? `[yes/no]`')
+                        await ctx.reply(f'**{ctx.author.name}**, set `{ctx.channel.name}` as the alert channel for the guild **{guild_name}**? `[yes/no]`', mention_author=False)
                         answer = await bot.wait_for('message', check=check, timeout=30)
                         if answer.content.lower() in ['yes','y']:
                             status = await set_guild_channel(ctx, ctx.channel.id)
@@ -1846,7 +1890,7 @@ async def guild(ctx, *args):
                             return
                     elif arg2 == 'reset':        
                         if guild_channel == None:
-                            await ctx.send(f'The guild **{guild_name}** doesn\'t have an alert channel set, there is no need to reset it.')
+                            await ctx.reply(f'The guild **{guild_name}** doesn\'t have an alert channel set, there is no need to reset it.', mention_author=False)
                             return
                     
                         await bot.wait_until_ready()
@@ -1856,7 +1900,7 @@ async def guild(ctx, *args):
                         else:
                             channel_name = channel.name
                             
-                        await ctx.send(f'**{ctx.author.name}**, do you want to remove `{channel_name}` as the alert channel for the guild **{guild_name}**? `[yes/no]`')
+                        await ctx.reply(f'**{ctx.author.name}**, do you want to remove `{channel_name}` as the alert channel for the guild **{guild_name}**? `[yes/no]`', mention_author=False)
                         answer = await bot.wait_for('message', check=check, timeout=30)
                         if answer.content.lower() in ['yes','y']:
                             status = await set_guild_channel(ctx, None)
@@ -1873,16 +1917,18 @@ async def guild(ctx, *args):
                     await bot.wait_until_ready()
                     channel = bot.get_channel(guild_channel)
                     if not channel == None:
-                        await ctx.send(
+                        await ctx.reply(
                             f'The current alert channel for the guild **{guild_name}** is `{channel.name}` (ID `{channel.id}`).\n'
                             f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} channel set` within your new alert channel.\n'
-                            f'To remove the alert channel entirely, use `{ctx.prefix}{ctx.invoked_with} channel reset`'
+                            f'To remove the alert channel entirely, use `{ctx.prefix}{ctx.invoked_with} channel reset`',
+                            mention_author=False
                         )
                         return
                     else:
-                        await ctx.send(
+                        await ctx.reply(
                             f'The guild **{guild_name}** doesn\'t have an alert channel set.\n'
-                            f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`'
+                            f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`',
+                            mention_author=False
                         )
                         return
             elif arg1 == 'stealth':
@@ -1893,25 +1939,26 @@ async def guild(ctx, *args):
                         if 1 <= new_stealth <= 100:
                             status = await set_guild_stealth_threshold(ctx, new_stealth)
                             if status == 'updated':
-                                await ctx.send(f'**{ctx.author.name}**, stealth threshold for the guild **{guild_name}** is now **{new_stealth}**.')
+                                await ctx.reply(f'**{ctx.author.name}**, stealth threshold for the guild **{guild_name}** is now **{new_stealth}**.', mention_author=False)
                                 return
                             else:
-                                await ctx.send(status)
+                                await ctx.reply(status, mention_author=False)
                                 return
                         else:
-                            await ctx.send(f'**{ctx.author.name}**, the stealth threshold needs to be between 1 and 100.')
+                            await ctx.reply(f'**{ctx.author.name}**, the stealth threshold needs to be between 1 and 100.', mention_author=False)
                             return
                     else:
-                        await ctx.send(f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 100.')
+                        await ctx.reply(f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 100.', mention_author=False)
                         return
                 else:
-                    await ctx.send(
+                    await ctx.reply(
                         f'The current stealth threshold for the guild **{guild_name}** is **{guild_stealth}**.\n'
-                        f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} stealth [1-100]`.'
+                        f'If you want to change this, use `{ctx.prefix}{ctx.invoked_with} stealth [1-100]`.',
+                        mention_author=False
                     )
             elif arg1 in ('on','off'):
                 status = await set_guild_reminders(ctx, guild_name, arg1)
-                await ctx.send(status)       
+                await ctx.reply(status, mention_author=False)
     # Guild command detection
     else:
         prefix = ctx.prefix
@@ -2117,7 +2164,7 @@ async def guild(ctx, *args):
                          
 # Command "enable/disable" - Enables/disables specific reminders
 @bot.command(aliases=('disable',))
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def enable(ctx, *args):
     
     def check(m):
@@ -2166,7 +2213,7 @@ async def enable(ctx, *args):
                 action = ctx.invoked_with
                 
                 if activity == 'all' and action == 'disable':
-                    await ctx.send(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`')
+                    await ctx.reply(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
                     try:
                         answer = await bot.wait_for('message', check=check, timeout=30)
                         if not answer.content.lower() in ['yes','y']:
@@ -2180,20 +2227,20 @@ async def enable(ctx, *args):
                 
                 if activity in global_data.activities:
                     status = await set_specific_reminder(ctx, activity, action)
-                    await ctx.send(status)
+                    await ctx.reply(status, mention_author=False)
                 else:
-                    await ctx.send(f'There is no reminder for activity `{activity}`.\n\n{activity_list}')
+                    await ctx.reply(f'There is no reminder for activity `{activity}`.\n\n{activity_list}', mention_author=False)
                     return
             else:
-                await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}')
+                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}', mention_author=False)
                 return
         else:
-            await ctx.send(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}')
+            await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}', mention_author=False)
             return
         
 # Command "list" - Lists all active reminders
 @bot.command(name='list',aliases=('reminders',))
-@commands.bot_has_permissions(send_messages=True, embed_links=True)
+@commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def list_cmd(ctx):
     
     prefix = ctx.prefix
@@ -2237,11 +2284,11 @@ async def list_cmd(ctx):
             description = reminders
         )    
         
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
 # Command "hardmode" - Sets hardmode mode
 @bot.command(aliases=('hm',))
-@commands.bot_has_permissions(send_messages=True, embed_links=True)
+@commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def hardmode(ctx, *args):
     
     prefix = ctx.prefix
@@ -2255,7 +2302,7 @@ async def hardmode(ctx, *args):
                 status = await set_hardmode(ctx, 0)
             else:
                 status = f'**{ctx.author.name}**, the correct syntax is `{prefix}hardmode on` / `off`.'
-            await ctx.send(status)
+            await ctx.reply(status, mention_author=False)
         else:
             settings = await get_settings(ctx, 'hardmode')
             hm = settings[0]
@@ -2263,7 +2310,7 @@ async def hardmode(ctx, *args):
                 hm = 'on'
             elif hm == 0:
                 hm = 'off'
-            await ctx.send(f'**{ctx.author.name}**, hardmode mode is currently turned **{hm}**.\nUse `{prefix}hardmode on` / `off` to change it.')
+            await ctx.reply(f'**{ctx.author.name}**, hardmode mode is currently turned **{hm}**.\nUse `{prefix}hardmode on` / `off` to change it.', mention_author=False)
 
 # Command "dnd" - Sets dnd state
 @bot.command()
@@ -2281,7 +2328,7 @@ async def dnd(ctx, *args):
                 status = await set_dnd(ctx, 0)
             else:
                 status = f'**{ctx.author.name}**, the correct syntax is `{prefix}dnd on` / `off`.'
-            await ctx.send(status)
+            await ctx.reply(status, mention_author=False)
         else:
             settings = await get_settings(ctx, 'dnd')
             dnd = settings[0]
@@ -2289,8 +2336,8 @@ async def dnd(ctx, *args):
                 dnd = 'on'
             elif dnd == 0:
                 dnd = 'off'
-            await ctx.send(f'**{ctx.author.name}**, DND mode is currently turned **{dnd}**.\nUse `{prefix}dnd on` / `off` to change it.')
-            
+            await ctx.reply(f'**{ctx.author.name}**, DND mode is currently turned **{dnd}**.\nUse `{prefix}dnd on` / `off` to change it.', mention_author=False)
+
 # Update guild
 @bot.event
 async def on_message_edit(message_before, message_after):
@@ -2343,7 +2390,7 @@ async def on_message_edit(message_before, message_after):
 # --- Main menus ---
 # Main menu
 @bot.command(aliases=('h',))
-@commands.bot_has_permissions(send_messages=True, embed_links=True)
+@commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def help(ctx):
     
     prefix = ctx.prefix
@@ -2380,7 +2427,7 @@ async def help(ctx):
         server_settings = (
             f'{emojis.bp} `{prefix}prefix` : Check the bot prefix\n'
             f'{emojis.bp} `{prefix}setprefix` / `{prefix}sp` : Set the bot prefix'
-        )  
+        )
         
         embed = discord.Embed(
             color = global_data.color,
@@ -2393,7 +2440,7 @@ async def help(ctx):
         embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)
         embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
         
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
 
 # --- Command detection ---
@@ -2529,13 +2576,14 @@ async def hunt(ctx, *args):
                                             hm_message = f'{ctx.author.mention} **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
                                         else:
                                             hm_message = f'**{ctx.author.name}**, **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
+                                        await ctx.send(hm_message)
                                         
                                     elif together == False and partner_hardmode == 0:
                                         if dnd == 0:
                                             hm_message = f'{ctx.author.mention} **{partner_name}** is not hardmoding, feel free to take them hunting.'
                                         else:
                                             hm_message = f'**{ctx.author.name}**, **{partner_name}** is not hardmoding, feel free to take them hunting.'
-                                    await ctx.send(hm_message)
+                                        await ctx.send(hm_message)
                                 return
                             else:
                                 bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 3)
@@ -2717,7 +2765,7 @@ async def chop(ctx, *args):
                 or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
                 or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
                 or (message.find('RUBY') > -1) or (message.find('apple') > 1) or (message.find('banana') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1)\
-                and (message.find('You have already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
+                and (message.find('You have already got some items') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -3168,6 +3216,10 @@ async def adventure(ctx, *args):
             else:
                 if DEBUG_MODE == 'ON':
                     await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
+                    
+            # Add an F if the user died
+            if bot_message.find('but lost fighting') > -1:
+                await bot_answer.add_reaction(emojis.rip)
             
         except asyncio.TimeoutError as error:
             if DEBUG_MODE == 'ON':
@@ -3203,7 +3255,8 @@ async def buy(ctx, *args):
             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
             or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you have to be level') > -1))\
             or (message.find('You can\'t buy this type of lootboxes, keep trying to drop them!') > -1)\
-            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough coins to do this') > -1)):
+            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough coins to do this') > -1))\
+            or (message.find(f'You don\'t have enough money to buy this lmao') > -1):
                 correct_message = True
             else:
                 correct_message = False
@@ -3282,7 +3335,7 @@ async def buy(ctx, *args):
                                     await bot_answer.add_reaction(emojis.cross)
                                 return
                             # Ignore not enough money info
-                            elif bot_message.find('you don\'t have enough coins to do this') > 1:
+                            elif (bot_message.find(f'you don\'t have enough coins to do this') > -1) or (bot_message.find(f'You don\'t have enough money to buy this lmao') > -1):
                                 if DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
                                 return
@@ -3372,10 +3425,12 @@ async def epic(ctx, *args):
             if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(str(ctx.author.id)) > -1) and (message.find('epic quest cancelled') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(str(ctx.author.id)) > -1) and (message.find('you did not accept the quest') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
-                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('If you don\'t want this quest anymore') > -1))\
+                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
+                or ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('Are you ready to start the EPIC quest') > -1))\
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already claimed a quest') > -1)) or (message.find('You cannot do this if you have a pending quest!') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                or (message.find('You need a **special horse** to do this') > -1):
                 correct_message = True
             else:
                 correct_message = False
@@ -3386,10 +3441,13 @@ async def epic(ctx, *args):
 
     prefix = ctx.prefix
     if prefix.lower() == 'rpg ':     
-        command = f'rpg quest'
+        command = 'rpg quest'
         if args:
             arg = args[0]
-            if arg == 'quit':
+            arg = arg.lower()
+            invoked = ctx.invoked_with
+            invoked = invoked.lower()
+            if invoked == 'epic' and not arg == 'quest':
                 return
         try:
             settings = await get_settings(ctx, 'quest')
@@ -3409,32 +3467,42 @@ async def epic(ctx, *args):
                     else:
                         quest_message = quest_message.replace('%',command)
                     
+                    # Wait for bot message
                     if not quest_enabled == 0:
+                        epic_quest = False
+                        quest_declined = None
+                        
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
                         try:
                             message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                             message_description = str(bot_answer.embeds[0].description)
                             try:
                                 message_fields = str(bot_answer.embeds[0].fields)
-                                message_title = str(bot_answer.embeds[0].title)
                             except:
                                 message_fields = ''
+                            try:
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_title = ''
                             bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
                         except:
                             bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
-                        # Check if the user accepts or denies the quest (different cooldowns)
-                        if bot_message.find('Are you looking for a quest?') > -1:
+                        # Check what quest it is and if normal quest if the user accepts or denies the quest (different cooldowns)
+                        if (bot_message.find('Are you looking for a quest?') > -1) or (bot_message.find('Are you ready to start the EPIC quest') > -1):
                             bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
                             try:
-                                message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')  
                                 message_description = str(bot_answer.embeds[0].description)
                                 try:
                                     message_fields = str(bot_answer.embeds[0].fields)
-                                    message_title = str(bot_answer.embeds[0].title)
                                 except:
                                     message_fields = ''
-                                    bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                                try:
+                                    message_title = str(bot_answer.embeds[0].title)
+                                except:
+                                    message_title = ''
+                                bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
                             except:
                                 bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                             
@@ -3442,10 +3510,12 @@ async def epic(ctx, *args):
                                 quest_declined = True
                             elif bot_message.find('got a **new quest**!') > -1:
                                 quest_declined = False
+                            elif bot_message.find('FIRST WAVE') > -1:
+                                epic_quest = True
                             else:
                                 if DEBUG_MODE == 'ON':
                                     await ctx.send('I could not find out if the quest was accepted or declined.')
-                                return                      
+                                return                   
                         # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
                         elif bot_message.find(f'\'s cooldown') > 1:
                             timestring_start = bot_message.find('wait at least **') + 16
@@ -3491,6 +3561,11 @@ async def epic(ctx, *args):
                             if DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return
+                        # Ignore trying epic quest without a special horse
+                        elif bot_message.find('You need a **special horse** to do this') > -1:
+                            if DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
                         # Ignore error when another command is active
                         elif bot_message.find('end your previous command') > 1:
                             if DEBUG_MODE == 'ON':
@@ -3505,10 +3580,17 @@ async def epic(ctx, *args):
             
             # Calculate cooldown
             cooldown_data = await get_cooldown(ctx, 'quest')
-            if quest_declined == True:
-                cooldown = 3600
-            else:
+            if epic_quest == True:
                 cooldown = int(cooldown_data[0])
+            else:
+                if quest_declined == True:
+                    cooldown = 3600
+                elif quest_declined == False or epic_quest == True:
+                    cooldown = int(cooldown_data[0])
+                else:
+                    logger.error(f'Quest detection error: Neither quest_declined nor epic_quest had a value that allowed me to determine what the user did. epic_quest: {epic_quest}, quest_declined: {quest_declined}')
+                    return
+            
             donor_affected = int(cooldown_data[1])
             if donor_affected == 1:
                 time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
@@ -4702,12 +4784,10 @@ async def event(ctx, *args):
         except asyncio.TimeoutError as error:
             if DEBUG_MODE == 'ON':
                 await ctx.send('Event detection timeout.')
-            return
+            return 
     else:
         x = await list_cmd(ctx)
         return
-
-
 
 # Ascended commands
 @bot.command()
@@ -4735,7 +4815,7 @@ async def ascended(ctx, *args):
 
 # Statistics command
 @bot.command(aliases=('statistic','statistics,','devstat','ping','about','info','stats'))
-@commands.bot_has_permissions(send_messages=True, embed_links=True)
+@commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def devstats(ctx):
 
     prefix = ctx.prefix
@@ -4752,25 +4832,24 @@ async def devstats(ctx):
                             f'{emojis.bp} {round(latency*1000):,} ms latency'
         )
         
-        await ctx.send(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
   
 # Hey! Listen!
 @bot.command(aliases=('listen',))
-@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def hey(ctx):
     
     if not ctx.prefix == 'rpg ':
-        await ctx.send('https://tenor.com/view/navi-hey-listen-gif-4837431')
+        await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431', mention_author=False)
     
 
 
 
 # --- Owner Commands ---
-
 # Shutdown command (only I can use it obviously)
 @bot.command()
 @commands.is_owner()
-@commands.bot_has_permissions(send_messages=True)
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def shutdown(ctx):
 
     def check(m):
@@ -4779,7 +4858,7 @@ async def shutdown(ctx):
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':    
         try:
-            await ctx.send(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
+            await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`', mention_author=False)
             answer = await bot.wait_for('message', check=check, timeout=30)
             if answer.content.lower() in ['yes','y']:
                 await ctx.send(f'Shutting down.')
@@ -4788,5 +4867,99 @@ async def shutdown(ctx):
                 await ctx.send(f'Phew, was afraid there for a second.')
         except asyncio.TimeoutError as error:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+
+# Command "cooldowns" - Sets cooldowns of all activities
+@bot.command(aliases=('cd-setup','setup-cd','setup-cooldown',))
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
+async def setup_cooldown(ctx, *args):
+    
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        if not ctx.author.id in (285399610032390146, 619879176316649482):
+            await ctx.reply('You are not allowed to use this command.', mention_author=False)
+            return
+        
+        activity_list = 'Possible activities:'
+        for index in range(len(global_data.cooldown_activities)):
+            activity_list = f'{activity_list}\n{emojis.bp} `{global_data.cooldown_activities[index]}`'
+        
+        if args:
+            if len(args) in (1,2):
+                
+                activity_aliases = {
+                    'adv': 'adventure',
+                    'lb': 'lootbox',
+                    'tr': 'training',
+                    'chop': 'work',
+                    'fish': 'work',
+                    'mine': 'work',
+                    'pickup': 'work',
+                    'axe': 'work',
+                    'net': 'work',
+                    'pickaxe': 'work',
+                    'ladder': 'work',
+                    'boat': 'work',
+                    'bowsaw': 'work',
+                    'drill': 'work',
+                    'tractor': 'work',
+                    'chainsaw': 'work',
+                    'bigboat': 'work',
+                    'dynamite': 'work',
+                    'greenhouse': 'work',
+                    'mb': 'miniboss'
+                }
+
+                activity = args[0]
+                activity = activity.lower()
+                
+                action = ctx.invoked_with
+                
+                if len(args) == 2:
+                    seconds = args[1]
+                    if seconds.isnumeric():
+                        seconds = int(seconds)
+                    else:
+                        if activity.isnumeric():
+                            seconds = int(activity)
+                            activity = args[1]
+                
+                    if activity in activity_aliases:
+                        activity = activity_aliases[activity]
+                    
+                    if activity in global_data.cooldown_activities:
+                        await ctx.reply(f'**{ctx.author.name}**, this will change the base cooldown (before donor reduction!) of activity **{activity}** to **{seconds:,}** seconds. Continue? [`yes/no`]', mention_author=False)
+                        try:
+                            answer = await bot.wait_for('message', check=check, timeout=30)
+                            if not answer.content.lower() in ['yes','y']:
+                                await ctx.send('Aborted')
+                                return
+                        except asyncio.TimeoutError as error:
+                            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                        
+                        status = await set_cooldown(ctx, activity, seconds)
+                        await ctx.reply(status, mention_author=False)
+                
+                else:
+                    cooldown_data = await get_cooldowns(ctx)
+                    message = 'Current cooldowns:'
+                    for cd in cooldown_data:
+                        message = f'{message}\n{emojis.bp} {cd[0]}: {cd[1]:,}s'
+                        
+                    message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]` to change a cooldown.'
+                    await ctx.reply(message, mention_author=False)
+            else:
+                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]`.\n\n{activity_list}', mention_author=False)
+                return
+        else:
+            cooldown_data = await get_cooldowns(ctx)
+            message = 'Current cooldowns:'
+            for cd in cooldown_data:
+                message = f'{message}\n{emojis.bp} {cd[0]}: {cd[1]:,}s'
+                
+            message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]` to change a cooldown.'
+            await ctx.reply(message, mention_author=False)
 
 bot.run(TOKEN)
