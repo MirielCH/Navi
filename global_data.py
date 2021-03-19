@@ -1,6 +1,9 @@
 # global_data.py
 
 import os
+import logging
+import logging.handlers
+from dotenv import load_dotenv
 
 # Get bot directory
 bot_dir = os.path.dirname(__file__)
@@ -28,8 +31,10 @@ timeout = 10
 timeout_longer = 20
 timeout_longest = 30
 
-# Toggle debug reactions and messages
-debug_mode = True
+# Read the bot token and debug setting from the .env file
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+DEBUG_MODE = os.getenv('DEBUG_MODE')
 
 # Default messages
 default_message = 'Hey! It\'s time for `%`!'
@@ -48,8 +53,19 @@ color = 0x3abad3
 # Set default footer
 async def default_footer(prefix):
     footer = f'Hey! Listen!'
-    
     return footer
 
-# Error log file
+# Open error log file, create if it not exists
 logfile = os.path.join(bot_dir, 'logs/discord.log')
+if not os.path.isfile(logfile):
+    open(logfile, 'a').close()
+
+# Initialize logging
+logger = logging.getLogger('discord')
+if DEBUG_MODE == 'ON':
+    logger.setLevel(logging.DEBUG)
+else:
+    logger.setLevel(logging.INFO)
+handler = logging.handlers.TimedRotatingFileHandler(filename=logfile,when='D',interval=1, encoding='utf-8', utc=True)
+handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+logger.addHandler(handler)
