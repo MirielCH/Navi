@@ -151,28 +151,38 @@ async def get_settings(ctx, setting='all', partner_id=None):
     
     if setting == 'all':
         sql = 'SELECT * FROM settings_user s1 INNER JOIN settings_user s2 ON s2.user_id = s1.partner_id where s1.user_id=?'
-    elif setting == 'hunt':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, partner_name, partner_donor_tier, partner_id, hunt_enabled, hunt_message, dnd FROM settings_user where user_id=?'
-    elif setting == 'work':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, work_enabled, work_message FROM settings_user where user_id=?'
-    elif setting == 'training':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, tr_enabled, tr_message FROM settings_user where user_id=?'
     elif setting == 'adventure':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, adv_enabled, adv_message FROM settings_user where user_id=?'
-    elif setting == 'lootbox':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, lb_enabled, lb_message FROM settings_user where user_id=?'
-    elif setting == 'quest':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, quest_enabled, quest_message FROM settings_user where user_id=?'
+    elif setting == 'arena':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, arena_enabled, arena_message FROM settings_user where user_id=?'
     elif setting == 'daily':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, daily_enabled, daily_message FROM settings_user where user_id=?'
-    elif setting == 'weekly':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, weekly_enabled, weekly_message FROM settings_user where user_id=?'
+    elif setting == 'duel':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, duel_enabled, duel_message FROM settings_user where user_id=?'
+    elif setting == 'dungmb':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, dungmb_enabled, dungmb_message FROM settings_user where user_id=?'
+    elif setting == 'horse':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, horse_enabled, horse_message FROM settings_user where user_id=?'
+    elif setting == 'hunt':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, partner_name, partner_donor_tier, partner_id, hunt_enabled, hunt_message, dnd FROM settings_user where user_id=?'
+    elif setting == 'lootbox':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, lb_enabled, lb_message FROM settings_user where user_id=?'
     elif setting == 'lottery':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, lottery_enabled, lottery_message FROM settings_user where user_id=?'
-    elif setting == 'minibossarena':
-        sql = 'SELECT reminders_on, user_donor_tier, arena_enabled, miniboss_enabled FROM settings_user where user_id=?'
+    elif setting == 'nsmb-bigarena':
+        sql = 'SELECT reminders_on, user_donor_tier, bigarena_enabled, nsmb_enabled FROM settings_user where user_id=?'
     elif setting == 'pet':
         sql = 'SELECT reminders_on, default_message, user_donor_tier, pet_enabled, pet_message FROM settings_user where user_id=?'
+    elif setting == 'quest':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, quest_enabled, quest_message FROM settings_user where user_id=?'
+    elif setting == 'training':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, tr_enabled, tr_message FROM settings_user where user_id=?'
+    elif setting == 'vote':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, vote_enabled, vote_message FROM settings_user where user_id=?'
+    elif setting == 'weekly':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, weekly_enabled, weekly_message FROM settings_user where user_id=?'
+    elif setting == 'work':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, work_enabled, work_message FROM settings_user where user_id=?'
     elif setting == 'donor':
         sql = 'SELECT user_donor_tier FROM settings_user where user_id=?'
     elif setting == 'partner':
@@ -180,7 +190,7 @@ async def get_settings(ctx, setting='all', partner_id=None):
     elif setting == 'partner_alert_hardmode':
         sql = 'SELECT partner_channel_id, reminders_on, alert_enabled, hardmode, dnd FROM settings_user where user_id=?'
     elif setting == 'events':
-        sql = 'SELECT reminders_on, default_message, arena_enabled, arena_message, lottery_enabled, lottery_message, miniboss_enabled, miniboss_message, pet_enabled, pet_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, default_message, bigarena_enabled, lottery_enabled, lottery_message, nsmb_enabled, pet_enabled, pet_message FROM settings_user where user_id=?'
     elif setting == 'hardmode':
         sql = 'SELECT hardmode FROM settings_user where user_id=?'
     elif setting == 'dnd':
@@ -650,35 +660,44 @@ async def set_specific_reminder(ctx, activity, action):
     
     column = ''
     
-    if activity == 'adventure':
-        column = 'adv_enabled'
-    elif activity == 'daily':
-        column = 'daily_enabled'
-    elif activity == 'hunt':
-        column = 'hunt_enabled'
-    elif activity == 'lootbox':
-        column = 'lb_enabled'
-    elif activity == 'lottery':
-        column = 'lottery_enabled'
-    elif activity == 'pet':
-        column = 'pet_enabled'
-    elif activity == 'quest':
-        column = 'quest_enabled'
-    elif activity == 'training':
-        column = 'tr_enabled'
-    elif activity == 'weekly':
-        column = 'weekly_enabled'
-    elif activity == 'work':
-        column = 'work_enabled'
-    elif activity == 'all':
-        column = 'hunt_enabled'
-    elif activity == 'lootbox-alert':
-        column = 'alert_enabled'
+    activity_columns = {
+        'all': 'hunt_enabled',
+        'adventure': 'adv_enabled',
+        'arena': 'arena_enabled',
+        'bigarena': 'bigarena_enabled',
+        'daily': 'daily_enabled',
+        'duel': 'duel_enabled',
+        'dungmb': 'dungmb_enabled',
+        'horse': 'horse_enabled',
+        'hunt': 'hunt_enabled',
+        'lootbox': 'lb_enabled',
+        'lootbox-alert': 'alert_enabled',
+        'lottery': 'lottery_enabled',
+        'nsmb': 'nsmb_enabled',
+        'pet': 'pet_enabled',
+        'quest': 'quest_enabled',
+        'training': 'tr_enabled',
+        'vote': 'vote_enabled',
+        'weekly': 'weekly_enabled',
+        'work': 'work_enabled',
+    }
+    
+    if activity in activity_columns:
+        column = activity_columns[activity]
     else:
         await log_error(ctx, f'Invalid activity {activity} in \'set_specific_reminder\'')
         if DEBUG_MODE == 'ON':
             status = f'Something went wrong here. Check the error log.'
         return
+    
+    if activity == 'nsmb':
+        activity_name = 'not so mini boss'
+    elif activity == 'bigarena':
+        activity_name = 'big arena'
+    elif activity == 'dungmb':
+        activity_name = 'dungeon / miniboss'
+    else:
+        activity_name = activity
     
     try:
         cur=erg_db.cursor()
@@ -707,25 +726,26 @@ async def set_specific_reminder(ctx, activity, action):
                             cur.execute('DELETE FROM reminders WHERE user_id = ? and activity = ?', (ctx.author.id,activity,))
                         if not activity == 'lootbox-alert':
                             status = (
-                                f'**{ctx.author.name}**, your {activity} reminder is now **{action}d**.\n'
-                                f'All active {activity} reminders have been deleted.'
+                                f'**{ctx.author.name}**, your {activity_name} reminder is now **{action}d**.\n'
+                                f'All active {activity_name} reminders have been deleted.'
                             )
                         else:
                             status = f'**{ctx.author.name}**, your partner\'s lootbox alerts are now **{action}d**.'
                     else:
                         if not activity == 'lootbox-alert':
-                            status = f'**{ctx.author.name}**, your {activity} reminder is now **{action}d**.'
+                            status = f'**{ctx.author.name}**, your {activity_name} reminder is now **{action}d**.'
                         else:
                             status = f'**{ctx.author.name}**, your partner\'s lootbox alerts are now **{action}d**.'
                 else:
                     if not activity == 'lootbox-alert':
-                        status = f'**{ctx.author.name}**, your {activity} reminder is already **{action}d**.'
+                        status = f'**{ctx.author.name}**, your {activity_name} reminder is already **{action}d**.'
                     else:
                         status = f'**{ctx.author.name}**, your partner\'s lootbox alerts are already **{action}d**.'
             else:
                 cur.execute(f'UPDATE settings_user SET adv_enabled = ?, alert_enabled = ?, daily_enabled = ?, hunt_enabled = ?, lb_enabled = ?,\
-                    lottery_enabled = ?, pet_enabled = ?, quest_enabled = ?, tr_enabled = ?, weekly_enabled = ?, work_enabled = ?\
-                    WHERE user_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.author.id,))
+                    lottery_enabled = ?, pet_enabled = ?, quest_enabled = ?, tr_enabled = ?, weekly_enabled = ?, work_enabled = ?, duel_enabled = ?,\
+                    arena_enabled = ?, dungmb_enabled = ?, bigarena_enabled = ?, nsmb_enabled = ?, vote_enabled = ?, horse_enabled = ?\
+                    WHERE user_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.author.id,))
                 if enabled == 0:
                     cur.execute(f'DELETE FROM reminders WHERE user_id=?', (ctx.author.id,))
                     status = (
@@ -1377,31 +1397,43 @@ async def settings(ctx):
             partner_channel = settings[7]
             adv_enabled = settings[9]
             alert_enabled = settings[10]
-            daily_enabled = settings[12]
-            hunt_enabled = settings[13]
-            lb_enabled = settings[14]
-            lottery_enabled = settings[15]
-            pet_enabled = settings[17]
-            quest_enabled = settings[18]
-            tr_enabled = settings[19]
-            weekly_enabled = settings[20]
-            work_enabled = settings[21]
-            adv_message = settings[22]
-            alert_message = settings[23]
-            daily_message = settings[25]
-            hunt_message = settings[26]
-            lb_message = settings[27]
-            lottery_message = settings[28]
-            pet_message = settings[30]
-            quest_message = settings[31]
-            tr_message = settings[32]
-            weekly_message = settings[33]
-            work_message = settings[34]
-            hardmode = settings[35]
-            dnd = settings[36]
+            arena_enabled = settings[11]
+            bigarena_enabled = settings[12]
+            daily_enabled = settings[13]
+            duel_enabled = settings[14]
+            dungmb_enabled = settings[15]
+            horse_enabled = settings[16]
+            hunt_enabled = settings[17]
+            lb_enabled = settings[18]
+            lottery_enabled = settings[19]
+            nsmb_enabled = settings[20]
+            pet_enabled = settings[21]
+            quest_enabled = settings[22]
+            tr_enabled = settings[23]
+            vote_enabled = settings[24]
+            weekly_enabled = settings[25]
+            work_enabled = settings[26]
+            adv_message = settings[27]
+            alert_message = settings[28]
+            arena_message = settings[29]
+            daily_message = settings[30]
+            duel_message = settings[31]
+            dungmb_message = settings[32]
+            horse_message = settings[33]
+            hunt_message = settings[34]
+            lb_message = settings[35]
+            lottery_message = settings[36]
+            pet_message = settings[37]
+            quest_message = settings[38]
+            tr_message = settings[39]
+            vote_message = settings[40]
+            weekly_message = settings[41]
+            work_message = settings[42]
+            hardmode = settings[43]
+            dnd = settings[44]
             
             if not partner_id == 0:
-                hardmode_partner = settings[72]
+                hardmode_partner = settings[88]
             else:
                 hardmode_partner = 'N/A'
         
@@ -1469,14 +1501,21 @@ async def settings(ctx):
             
             enabled_reminders = (
                 f'{emojis.bp} Adventure: `{adv_enabled}`\n'
+                f'{emojis.bp} Arena: `{arena_enabled}`\n'
+                f'{emojis.bp} Big arena: `{bigarena_enabled}`\n'
                 f'{emojis.bp} Daily: `{daily_enabled}`\n'
+                f'{emojis.bp} Duel: `{duel_enabled}`\n'
+                f'{emojis.bp} Dungeon / Miniboss: `{dungmb_enabled}`\n'
+                f'{emojis.bp} Horse: `{horse_enabled}`\n'
                 f'{emojis.bp} Hunt: `{hunt_enabled}`\n'
                 f'{emojis.bp} Lootbox: `{lb_enabled}`\n'
                 f'{emojis.bp} Lottery: `{lottery_enabled}`\n'
+                f'{emojis.bp} Not so mini boss: `{nsmb_enabled}`\n'
                 f'{emojis.bp} Partner lootbox alert: `{alert_enabled}`\n'
                 f'{emojis.bp} Pet: `{pet_enabled}`\n'
                 f'{emojis.bp} Quest: `{quest_enabled}`\n'
                 f'{emojis.bp} Training: `{tr_enabled}`\n'
+                f'{emojis.bp} Vote: `{vote_enabled}`\n'
                 f'{emojis.bp} Weekly: `{weekly_enabled}`\n'
                 f'{emojis.bp} Work: `{work_enabled}`'
             )
@@ -1487,13 +1526,18 @@ async def settings(ctx):
             reminder_messages = (
                 f'{emojis.bp} Default message: `{default_message}`\n'
                 f'{emojis.bp} Adventure: `{adv_message}`\n'
+                f'{emojis.bp} Arena: `{arena_message}`\n'
                 f'{emojis.bp} Daily: `{daily_message}`\n'
+                f'{emojis.bp} Duel: `{duel_message}`\n'
+                f'{emojis.bp} Dungeon / Miniboss: `{dungmb_message}`\n'
+                f'{emojis.bp} Horse: `{horse_message}`\n'
                 f'{emojis.bp} Hunt: `{hunt_message}`\n'
                 f'{emojis.bp} Lootbox: `{lb_message}`\n'
                 f'{emojis.bp} Lottery: `{lottery_message}`\n'
                 f'{emojis.bp} Pet: `{pet_message}`\n'
                 f'{emojis.bp} Quest: `{quest_message}`\n'
                 f'{emojis.bp} Training: `{tr_message}`\n'
+                f'{emojis.bp} Vote: `{vote_message}`\n'
                 f'{emojis.bp} Weekly: `{weekly_message}`\n'
                 f'{emojis.bp} Work: `{work_message}`'
             )
@@ -2174,8 +2218,15 @@ async def enable(ctx, *args):
     if not prefix.lower() == 'rpg ':
         
         activity_list = 'Possible activities:'
-        for index in range(len(global_data.activities)):
-            activity_list = f'{activity_list}\n{emojis.bp} `{global_data.activities[index]}`'
+        for index in range(len(global_data.activities)):    
+            
+            activity = global_data.activities[index]
+            if activity == 'dungmb':
+                activity = 'dungeon'
+            elif activity == 'nsmb':
+                activity = 'notsominiboss'
+            
+            activity_list = f'{activity_list}\n{emojis.bp} `{activity}`'
         
         if args:
             if len(args) == 1:
@@ -2204,7 +2255,24 @@ async def enable(ctx, *args):
                     'alert': 'lootbox-alert',
                     'lootboxalert': 'lootbox-alert',
                     'lbalert': 'lootbox-alert',
-                    'lb-alert': 'lootbox-alert'
+                    'lb-alert': 'lootbox-alert',
+                    'notsominiboss': 'nsmb',
+                    'notsomini': 'nsmb',
+                    'big': 'bigarena',
+                    'voting': 'vote',
+                    'dungeon': 'dungmb',
+                    'miniboss': 'dungmb',
+                    'mb': 'dungmb',
+                    'horserace': 'horse',
+                    'horseracing': 'horse',
+                    'horsebreed': 'horse',
+                    'horsebreeding': 'horse',
+                    'breed': 'horse',
+                    'breeding': 'horse',
+                    'race': 'horse',
+                    'racing': 'horse',
+                    'dueling': 'duel',
+                    'duelling': 'duel'
                 }
 
                 activity = args[0]
@@ -2260,10 +2328,12 @@ async def list_cmd(ctx):
                 elif activity.find('pet-') > -1:
                     pet_id = activity.replace('pet-','')
                     activity = f'Pet {pet_id}'
-                elif activity == 'arena':
+                elif activity == 'bigarena':
                     activity = 'Big arena'
-                elif activity == 'miniboss':
+                elif activity == 'nsmb':
                     activity = 'Not so mini boss'
+                elif activity == 'dungmb':
+                    activity = 'Dungeon / Miniboss'
                 else:
                     activity = activity.capitalize()
                 current_time = datetime.utcnow().replace(microsecond=0)
@@ -4068,12 +4138,12 @@ async def big(ctx, *args):
                 
         if full_args in ('sominibossjoin','arenajoin',):
             if full_args == 'sominibossjoin':
-                event = 'miniboss'
+                event = 'nsmb'
             elif full_args == 'arenajoin':
-                event = 'arena'
+                event = 'bigarena'
                 
             try:
-                settings = await get_settings(ctx, 'minibossarena')
+                settings = await get_settings(ctx, 'nsmb-bigarena')
                 if not settings == None:
                     reminders_on = settings[0]
                     if not reminders_on == 0:
@@ -4087,7 +4157,7 @@ async def big(ctx, *args):
                         arena_message = global_data.arena_message
                         miniboss_message = global_data.miniboss_message
                         
-                        if not ((event == 'miniboss') and (miniboss_enabled == 0)) or ((event == 'arena') and (miniboss_enabled == 0)):
+                        if not ((event == 'nsmb') and (miniboss_enabled == 0)) or ((event == 'bigarena') and (miniboss_enabled == 0)):
                             bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
                             try:
                                 message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -4108,10 +4178,10 @@ async def big(ctx, *args):
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()
                                 time_left = await parse_timestring(ctx, timestring)
-                                if event == 'miniboss':
-                                    write_status = await write_reminder(ctx, 'miniboss', time_left, miniboss_message, True)
-                                elif event == 'arena':
-                                    write_status = await write_reminder(ctx, 'arena', time_left, arena_message, True)
+                                if event == 'nsmb':
+                                    write_status = await write_reminder(ctx, 'nsmb', time_left, miniboss_message, True)
+                                elif event == 'bigarena':
+                                    write_status = await write_reminder(ctx, 'bigarena', time_left, arena_message, True)
                                 if write_status in ('inserted','scheduled','updated'):
                                     await bot_answer.add_reaction(emojis.navi)
                                 else:
@@ -4183,7 +4253,7 @@ async def pet(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot send another pet to an adventure!') > -1))\
-                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'what pet are you trying to select?') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'what pet(s) are you trying to select?') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'this pet is already in an adventure!') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or (message.find('Your pet has started an adventure and will be back') > -1) or ((message.find('Your pet has started an...') > -1) and (message.find('IT CAME BACK INSTANTLY!!') > -1))\
@@ -4264,7 +4334,7 @@ async def pet(ctx, *args):
                                             await bot_answer.add_reaction(emojis.cross)
                                         return
                                     # Ignore error that ID is wrong
-                                    elif bot_message.find('what pet are you trying to select?') > 1:
+                                    elif bot_message.find('what pet(s) are you trying to select?') > 1:
                                         if DEBUG_MODE == 'ON':
                                             await bot_answer.add_reaction(emojis.cross)
                                         return
@@ -4401,6 +4471,405 @@ async def pet(ctx, *args):
                             await ctx.send('Pet tournament detection timeout.')
                         return    
 
+# Duel (cooldown detection only)
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def duel(ctx):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(f'\'s cooldown') > -1) and (message.find('You have been in a duel recently') > -1))\
+                or ((message.find(f'{ctx_author}\'s duel') > -1) and (message.find('Profit:') > -1))\
+                or (message.find(f'Huh, next time be sure to say who you want to duel') > -1)\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        command = 'rpg duel'
+        
+        try:
+            settings = await get_settings(ctx, 'duel')
+            if not settings == None:
+                reminders_on = settings[0]
+                if not reminders_on == 0:
+                    user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
+                    default_message = settings[2]
+                    duel_enabled = int(settings[3])
+                    duel_message = settings[4]
+                    
+                    # Set message to send          
+                    if duel_message == None:
+                        duel_message = default_message.replace('%',command)
+                    else:
+                        duel_message = duel_message.replace('%',command)
+                    
+                    if not duel_enabled == 0:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
+                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if bot_message.find(f'{ctx_author}\'s cooldown') > 1:
+                            timestring_start = bot_message.find('wait at least **') + 16
+                            timestring_end = bot_message.find('**...', timestring_start)
+                            timestring = bot_message[timestring_start:timestring_end]
+                            timestring = timestring.lower()
+                            time_left = await parse_timestring(ctx, timestring)
+                            write_status = await write_reminder(ctx, 'duel', time_left, duel_message, True)
+                            if write_status in ('inserted','scheduled','updated'):
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                    else:
+                        return
+                else:
+                    return
+            else:
+                return
+            
+        except asyncio.TimeoutError as error:
+            if DEBUG_MODE == 'ON':
+                await ctx.send('Duel detection timeout.')
+            return   
+        
+# Arena (cooldown detection only)
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def arena(ctx):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have started an arena recently') > -1))\
+                or (message.find(f'{ctx_author}** started an arena event!') > -1)\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        command = 'rpg arena'
+        
+        try:
+            settings = await get_settings(ctx, 'arena')
+            if not settings == None:
+                reminders_on = settings[0]
+                if not reminders_on == 0:
+                    user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
+                    default_message = settings[2]
+                    arena_enabled = int(settings[3])
+                    arena_message = settings[4]
+                    
+                    # Set message to send          
+                    if arena_message == None:
+                        arena_message = default_message.replace('%',command)
+                    else:
+                        arena_message = arena_message.replace('%',command)
+                    
+                    if not arena_enabled == 0:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
+                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if bot_message.find(f'{ctx_author}\'s cooldown') > -1:
+                            timestring_start = bot_message.find('wait at least **') + 16
+                            timestring_end = bot_message.find('**...', timestring_start)
+                            timestring = bot_message[timestring_start:timestring_end]
+                            timestring = timestring.lower()
+                            time_left = await parse_timestring(ctx, timestring)
+                            write_status = await write_reminder(ctx, 'arena', time_left, arena_message, True)
+                            if write_status in ('inserted','scheduled','updated'):
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                    else:
+                        return
+                else:
+                    return
+            else:
+                return
+            
+        except asyncio.TimeoutError as error:
+            if DEBUG_MODE == 'ON':
+                await ctx.send('Arena detection timeout.')
+            return   
+
+# Dungeon / Miniboss (cooldown detection only)
+@bot.command(aliases=('dung','miniboss',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def dungeon(ctx):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(f'\'s cooldown') > -1) and (message.find('been in a fight with a boss recently') > -1))\
+                or ((message.find(f'{ctx_author}') > -1) and (message.find('ARE YOU SURE YOU WANT TO ENTER') > -1))\
+                or (message.find('Requirements to enter the dungeon') > -1)\
+                or (message.find(f'{ctx_author}\'s miniboss') > -1)\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot enter a dungeon alone') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        command = 'rpg dungeon / miniboss'
+        
+        try:
+            settings = await get_settings(ctx, 'dungmb')
+            if not settings == None:
+                reminders_on = settings[0]
+                if not reminders_on == 0:
+                    user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
+                    default_message = settings[2]
+                    dungmb_enabled = int(settings[3])
+                    dungmb_message = settings[4]
+                    
+                    # Set message to send          
+                    if dungmb_message == None:
+                        dungmb_message = default_message.replace('%',command)
+                    else:
+                        dungmb_message = dungmb_message.replace('%',command)
+                    
+                    if not dungmb_enabled == 0:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
+                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if bot_message.find(f'{ctx_author}\'s cooldown') > -1:
+                            timestring_start = bot_message.find('wait at least **') + 16
+                            timestring_end = bot_message.find('**...', timestring_start)
+                            timestring = bot_message[timestring_start:timestring_end]
+                            timestring = timestring.lower()
+                            time_left = await parse_timestring(ctx, timestring)
+                            write_status = await write_reminder(ctx, 'dungmb', time_left, dungmb_message, True)
+                            if write_status in ('inserted','scheduled','updated'):
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                    else:
+                        return
+                else:
+                    return
+            else:
+                return
+            
+        except asyncio.TimeoutError as error:
+            if DEBUG_MODE == 'ON':
+                await ctx.send('Dungeon / Miniboss detection timeout.')
+            return  
+
+# Horse (cooldown detection only)
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def horse(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have used this command recently') > -1))\
+                or (message.find(f'\'s horse breeding') > -1)\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        command = 'rpg horse breed / race'
+        
+        if args:
+            arg = args[0]
+            if arg in ('breed','race'):
+                try:
+                    settings = await get_settings(ctx, 'horse')
+                    if not settings == None:
+                        reminders_on = settings[0]
+                        if not reminders_on == 0:
+                            user_donor_tier = int(settings[1])
+                            if user_donor_tier > 3:
+                                user_donor_tier = 3
+                            default_message = settings[2]
+                            horse_enabled = int(settings[3])
+                            horse_message = settings[4]
+                            
+                            # Set message to send          
+                            if horse_message == None:
+                                horse_message = default_message.replace('%',command)
+                            else:
+                                horse_message = horse_message.replace('%',command)
+                            
+                            if not horse_enabled == 0:
+                                bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
+                                try:
+                                    message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                    message_description = str(bot_answer.embeds[0].description)
+                                    try:
+                                        message_fields = str(bot_answer.embeds[0].fields)
+                                        message_title = str(bot_answer.embeds[0].title)
+                                    except:
+                                        message_fields = ''
+                                    bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                                except:
+                                    bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                                # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
+                                ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                if bot_message.find(f'{ctx_author}\'s cooldown') > -1:
+                                    timestring_start = bot_message.find('wait at least **') + 16
+                                    timestring_end = bot_message.find('**...', timestring_start)
+                                    timestring = bot_message[timestring_start:timestring_end]
+                                    timestring = timestring.lower()
+                                    time_left = await parse_timestring(ctx, timestring)
+                                    write_status = await write_reminder(ctx, 'horse', time_left, horse_message, True)
+                                    if write_status in ('inserted','scheduled','updated'):
+                                        await bot_answer.add_reaction(emojis.navi)
+                                    else:
+                                        if DEBUG_MODE == 'ON':
+                                            await bot_answer.add_reaction(emojis.cross)
+                                    return
+                            else:
+                                return
+                        else:
+                            return
+                    else:
+                        return
+                    
+                except asyncio.TimeoutError as error:
+                    if DEBUG_MODE == 'ON':
+                        await ctx.send('Horse detection timeout.')
+                    return   
+            else:
+                return
+        else:
+            return
+
 # Cooldowns
 @bot.command(aliases=('cd',))
 @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
@@ -4435,6 +4904,11 @@ async def cooldown(ctx, *args):
 
     prefix = ctx.prefix
     if prefix.lower() == 'rpg ':
+        
+        if args:
+            arg = args[0]
+            if not arg.find(ctx.author.id):
+                return
             
         try:
             settings = await get_settings(ctx, 'all')
@@ -4446,19 +4920,29 @@ async def cooldown(ctx, *args):
                         user_donor_tier = 3
                     default_message = settings[3]
                     adv_enabled = settings[9]
-                    daily_enabled = settings[12]
-                    lb_enabled = settings[14]
-                    quest_enabled = settings[18]
-                    tr_enabled = settings[19]
-                    weekly_enabled = settings[20]
-                    adv_message = settings[22]
-                    daily_message = settings[25]
-                    lb_message = settings[27]
-                    quest_message = settings[31]
-                    tr_message = settings[32]
-                    weekly_message = settings[33]
+                    arena_enabled = settings[11]
+                    daily_enabled = settings[13]
+                    duel_enabled = settings[14]
+                    dungmb_enabled = settings[15]
+                    horse_enabled = settings[16]
+                    lb_enabled = settings[18]
+                    quest_enabled = settings[22]
+                    tr_enabled = settings[23]
+                    vote_enabled = settings[24]
+                    weekly_enabled = settings[25]
+                    adv_message = settings[27]
+                    arena_message = settings[29]
+                    daily_message = settings[30]
+                    duel_message = settings[31]
+                    dungmb_message = settings[32]
+                    horse_message = settings[33]
+                    lb_message = settings[35]
+                    quest_message = settings[38]
+                    tr_message = settings[39]
+                    vote_message = settings[40]
+                    weekly_message = settings[41] 
                     
-                    if not ((adv_enabled == 0) and (daily_enabled == 0) and (lb_enabled == 0) and (quest_enabled == 0) and (tr_enabled == 0) and (weekly_enabled == 0)):
+                    if not ((adv_enabled == 0) and (daily_enabled == 0) and (lb_enabled == 0) and (quest_enabled == 0) and (tr_enabled == 0) and (weekly_enabled == 0) and (duel_enabled == 0) and (arena_enabled == 0) and (dungmb_enabled == 0) and (vote_enabled == 0)):
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
                         try:
                             message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -4563,6 +5047,61 @@ async def cooldown(ctx, *args):
                                     else:
                                         quest_message = quest_message.replace('%','rpg quest')
                                     cooldowns.append(['quest',quest,quest_message,])
+                            if duel_enabled == 1:
+                                if bot_message.find('Duel`** (**') > -1:
+                                    duel_start = bot_message.find('Duel`** (**') + 11
+                                    duel_end = bot_message.find('s**', duel_start) + 1
+                                    duel = bot_message[duel_start:duel_end]
+                                    duel = duel.lower()
+                                    if duel_message == None:
+                                        duel_message = default_message.replace('%','rpg duel')
+                                    else:
+                                        duel_message = duel_message.replace('%','rpg duel')
+                                    cooldowns.append(['duel',duel,duel_message,])
+                            if arena_enabled == 1:
+                                if bot_message.find('rena`** (**') > -1:
+                                    arena_start = bot_message.find('rena`** (**') + 11
+                                    arena_end = bot_message.find('s**', arena_start) + 1
+                                    arena = bot_message[arena_start:arena_end]
+                                    arena = arena.lower()
+                                    if arena_message == None:
+                                        arena_message = default_message.replace('%','rpg arena')
+                                    else:
+                                        arena_message = arena_message.replace('%','rpg arena')
+                                    cooldowns.append(['arena',arena,arena_message,])
+                            if dungmb_enabled == 1:
+                                if bot_message.find('boss`** (**') > -1:
+                                    dungmb_start = bot_message.find('boss`** (**') + 11
+                                    dungmb_end = bot_message.find('s**', dungmb_start) + 1
+                                    dungmb = bot_message[dungmb_start:dungmb_end]
+                                    dungmb = dungmb.lower()
+                                    if dungmb_message == None:
+                                        dungmb_message = default_message.replace('%','rpg dungeon / miniboss')
+                                    else:
+                                        dungmb_message = dungmb_message.replace('%','rpg dungeon / miniboss')
+                                    cooldowns.append(['dungmb',dungmb,dungmb_message,])
+                            if horse_enabled == 1:
+                                if bot_message.find('race`** (**') > -1:
+                                    horse_start = bot_message.find('race`** (**') + 11
+                                    horse_end = bot_message.find('s**', horse_start) + 1
+                                    horse = bot_message[horse_start:horse_end]
+                                    horse = horse.lower()
+                                    if horse_message == None:
+                                        horse_message = default_message.replace('%','rpg horse breed / race')
+                                    else:
+                                        horse_message = horse_message.replace('%','rpg horse bred / race')
+                                    cooldowns.append(['horse',horse,horse_message,])
+                            if vote_enabled == 1:
+                                if bot_message.find('Vote`** (**') > -1:
+                                    vote_start = bot_message.find('Vote`** (**') + 11
+                                    vote_end = bot_message.find('s**', vote_start) + 1
+                                    vote = bot_message[vote_start:vote_end]
+                                    vote = vote.lower()
+                                    if vote_message == None:
+                                        vote_message = default_message.replace('%','rpg vote')
+                                    else:
+                                        vote_message = vote_message.replace('%','rpg vote')
+                                    cooldowns.append(['vote',vote,vote_message,])
                             
                             write_status_list = []
                             
@@ -4660,16 +5199,14 @@ async def event(ctx, *args):
                 reminders_on = settings[0]
                 if not reminders_on == 0:
                     default_message = settings[1]
-                    arena_enabled = settings[2]
-                    lottery_enabled = settings[4]
-                    miniboss_enabled = settings[6]
-                    pet_enabled = settings[8]
-                    arena_message = settings[3]
-                    lottery_message = settings[5]
-                    miniboss_message = settings[7]
-                    pet_message = settings[9]
+                    bigarena_enabled = settings[2]
+                    lottery_enabled = settings[3]
+                    nsmb_enabled = settings[5]
+                    pet_enabled = settings[6]
+                    lottery_message = settings[4]
+                    pet_message = settings[7]
                     
-                    if not ((arena_enabled == 0) and (lottery_enabled == 0) and (miniboss_enabled == 0) and (pet_enabled == 0)):
+                    if not ((bigarena_enabled == 0) and (lottery_enabled == 0) and (nsmb_enabled == 0) and (pet_enabled == 0)):
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
                         try:
                             message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -4688,15 +5225,14 @@ async def event(ctx, *args):
                             
                             cooldowns = []
                             
-                            if arena_enabled == 1:
+                            if bigarena_enabled == 1:
                                 if bot_message.find('Big arena**: ') > -1:
                                     arena_start = bot_message.find('Big arena**: ') + 13
                                     arena_end = bot_message.find('s', arena_start) + 1
                                     arena = bot_message[arena_start:arena_end]
                                     arena = arena.lower()
-                                    if arena_message == None:
-                                        arena_message = global_data.arena_message
-                                    cooldowns.append(['arena',arena,arena_message,])
+                                    arena_message = global_data.arena_message
+                                    cooldowns.append(['bigarena',arena,arena_message,])
                             if lottery_enabled == 1:
                                 if bot_message.find('Lottery**: ') > -1:
                                     lottery_start = bot_message.find('Lottery**: ') + 11
@@ -4708,15 +5244,14 @@ async def event(ctx, *args):
                                     else:
                                         lottery_message = lottery_message.replace('%','rpg buy lottery ticket')
                                     cooldowns.append(['lottery',lottery,lottery_message,])
-                            if miniboss_enabled == 1:
+                            if nsmb_enabled == 1:
                                 if bot_message.find('"mini" boss**: ') > -1:
                                     miniboss_start = bot_message.find('"mini" boss**: ') + 15
                                     miniboss_end = bot_message.find('s', miniboss_start) + 1
                                     miniboss = bot_message[miniboss_start:miniboss_end]
                                     miniboss = miniboss.lower()
-                                    if miniboss_message == None:
-                                        miniboss_message = global_data.miniboss_message
-                                    cooldowns.append(['miniboss',miniboss,miniboss_message,])
+                                    miniboss_message = global_data.miniboss_message
+                                    cooldowns.append(['nsmb',miniboss,miniboss_message,])
                             if pet_enabled == 1:
                                 if bot_message.find('tournament**: ') > -1:
                                     pet_start = bot_message.find('tournament**: ') + 14
@@ -4739,7 +5274,7 @@ async def event(ctx, *args):
                                 if activity == 'pett':
                                     time_left = time_left + 60 #The event is somethings not perfectly on point, so I added a minute
                                 if time_left > 1:
-                                    if activity in ('arena','miniboss',):
+                                    if activity in ('bigarena','nsmb',):
                                         write_status = await write_reminder(ctx, activity, time_left, message, True, True)
                                     else:
                                         write_status = await write_reminder(ctx, activity, time_left, message, True)
@@ -4811,8 +5346,9 @@ async def ascended(ctx, *args):
         elif arg1 in ('big','not',):
             x = await big(ctx, args)
 
-# --- Miscellaneous ---
 
+
+# --- Miscellaneous ---
 # Statistics command
 @bot.command(aliases=('statistic','statistics,','devstat','ping','about','info','stats'))
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)

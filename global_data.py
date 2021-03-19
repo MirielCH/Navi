@@ -18,7 +18,7 @@ default_prefix = 'navi '
 donor_tiers = ['Non-donator','Donator','EPIC donator','SUPER donator','MEGA donator','HYPER donator','ULTRA donator','ULTIMATE donator',]
 
 # All activities
-activities = ['all','adventure','daily','hunt','lootbox','lootbox-alert','lottery','pet','quest','training','weekly','work',]
+activities = ['all','adventure','arena','bigarena','daily','duel','dungmb','horse','hunt','lootbox','lootbox-alert','lottery','nsmb','pet','quest','training','vote','weekly','work',]
 
 # All activities (cooldowns)
 cooldown_activities = ['adventure','arena','daily','guild','hunt','lootbox','miniboss','quest','training','weekly','work',]
@@ -26,6 +26,7 @@ cooldown_activities = ['adventure','arena','daily','guild','hunt','lootbox','min
 # Bot message timeout
 timeout = 10
 timeout_longer = 20
+timeout_longest = 30
 
 # Toggle debug reactions and messages
 debug_mode = True
