@@ -318,11 +318,7 @@ async def on_command_error(ctx, error):
         await ctx.reply(f'You\'re missing some arguments.', mention_author=False)
     else:
         await database.log_error(ctx, error) # To the database you go
-
-
-
-
-            
+       
 
 
 # --- Server Settings ---
@@ -359,7 +355,6 @@ async def prefix(ctx):
     if not ctx.prefix == 'rpg ':
         current_prefix = await database.get_prefix(ctx)
         await ctx.reply(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix`.', mention_author=False)
-
 
 
 
@@ -438,9 +433,11 @@ async def settings(ctx):
             work_message = settings[42]
             hardmode = settings[43]
             dnd = settings[44]
+            ruby_counter = settings[45]
+            rubies = settings[46]
             
             if not partner_id == 0:
-                hardmode_partner = settings[88]
+                hardmode_partner = settings[90]
             else:
                 hardmode_partner = 'N/A'
         
@@ -489,7 +486,8 @@ async def settings(ctx):
                 f'{emojis.bp} Reminders: `{reminders_on}`\n'
                 f'{emojis.bp} Donator tier: `{user_donor_tier}` ({global_data.donor_tiers[user_donor_tier]})\n'
                 f'{emojis.bp} DND mode: `{dnd}`\n'
-                f'{emojis.bp} Hardmode mode: `{hardmode}`'
+                f'{emojis.bp} Hardmode mode: `{hardmode}`\n'
+                f'{emojis.bp} Ruby counter: `{ruby_counter}`'
             )
             
             partner = (
@@ -1415,6 +1413,32 @@ async def dnd(ctx, *args):
                 dnd = 'off'
             await ctx.reply(f'**{ctx.author.name}**, DND mode is currently turned **{dnd}**.\nUse `{prefix}dnd on` / `off` to change it.', mention_author=False)
 
+# Command "ruby" - Checks rubies and sets ruby counter state
+@bot.command(aliases=('rubies',))
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
+async def ruby(ctx, *args):
+    
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        
+        if args:
+            arg = args[0]
+            if arg in ('on','enable','start'):
+                status = await database.set_ruby_counter(ctx, 1)
+            elif arg in ('off','disable','stop'):
+                status = await database.set_ruby_counter(ctx, 0)
+            else:
+                status = f'**{ctx.author.name}**, the correct syntax is `{prefix}ruby on` / `off`.'
+            await ctx.reply(status, mention_author=False)
+        else:
+            settings = await database.get_settings(ctx, 'rubies')
+            rubies = settings[0]
+            ruby_counter = settings[1]
+            if ruby_counter == 1:
+                await ctx.reply(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.', mention_author=False)
+            elif ruby_counter == 0:
+                await ctx.reply(f'**{ctx.author.name}**, the ruby counter is currently turned **off**.\nUse `{prefix}ruby on` to turn it on.', mention_author=False)
+
 # Update guild
 @bot.event
 async def on_message_edit(message_before, message_after):
@@ -1484,7 +1508,9 @@ async def help(ctx):
             f'{emojis.bp} `{prefix}donator` : Set your EPIC RPG donator tier\n'
             f'{emojis.bp} `{prefix}enable` / `disable` : Enable/disable specific reminders\n'
             f'{emojis.bp} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
-            f'{emojis.bp} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)'
+            f'{emojis.bp} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
+            f'{emojis.bp} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
+            f'{emojis.bp} `{prefix}ruby` : Check your current ruby count'
         )
         
         partner_settings = (
@@ -1518,6 +1544,7 @@ async def help(ctx):
         embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
         
         await ctx.reply(embed=embed, mention_author=False)
+
 
 
 # --- Command detection ---
@@ -1876,6 +1903,8 @@ async def chop(ctx, *args):
                     default_message = settings[2]
                     work_enabled = int(settings[3])
                     work_message = settings[4]
+                    rubies_db = settings[5]
+                    ruby_counter = settings[6]
                     
                     # Set message to send          
                     if work_message == None:
@@ -1883,20 +1912,33 @@ async def chop(ctx, *args):
                     else:
                         work_message = work_message.replace('%',command)
                     
-                    if not work_enabled == 0:
-                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                    bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                    try:
+                        message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        message_description = str(bot_answer.embeds[0].description)
                         try:
-                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                            message_description = str(bot_answer.embeds[0].description)
-                            try:
-                                message_fields = str(bot_answer.embeds[0].fields)
-                                message_title = str(bot_answer.embeds[0].title)
-                            except:
-                                message_fields = ''
-                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                            message_fields = str(bot_answer.embeds[0].fields)
+                            message_title = str(bot_answer.embeds[0].title)
                         except:
-                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-
+                            message_fields = ''
+                        bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                    except:
+                        bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    
+                    # Check for rubies
+                    if not ruby_counter == 0:
+                        if (bot_message.find('<:ruby:603456286184701953> RUBY') > -1):
+                            rubies_start = bot_message.find(' GOT ') + 5
+                            rubies_end = bot_message.find('<:ruby:603456286184701953> RUBY') - 1
+                            rubies = bot_message[rubies_start:rubies_end]
+                            if rubies.isnumeric():
+                                rubies = rubies_db + int(rubies)
+                                await database.set_rubies(ctx, rubies)
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
+                        
+                    if not work_enabled == 0:
                         # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
                         if bot_message.find(f'\'s cooldown') > 1:
                             timestring_start = bot_message.find('wait at least **') + 16
@@ -1937,35 +1979,34 @@ async def chop(ctx, *args):
                             if global_data.DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return
-                    else:
-                        return
                 else:
                     return
             else:
                 return
             
-            # Calculate cooldown
-            cooldown_data = await database.get_cooldown(ctx, 'work')
-            cooldown = int(cooldown_data[0])
-            donor_affected = int(cooldown_data[1])
-            if donor_affected == 1:
-                time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
-            else:
-                time_left = cooldown
+            if not work_enabled == 0:
+                # Calculate cooldown
+                cooldown_data = await database.get_cooldown(ctx, 'work')
+                cooldown = int(cooldown_data[0])
+                donor_affected = int(cooldown_data[1])
+                if donor_affected == 1:
+                    time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
+                else:
+                    time_left = cooldown
+                
+                # Save task to database
+                write_status = await write_reminder(ctx, 'work', time_left, work_message)
             
-            # Save task to database
-            write_status = await write_reminder(ctx, 'work', time_left, work_message)
-            
-            # Add reaction
-            if not write_status == 'aborted':
-                await bot_answer.add_reaction(emojis.navi)
-                if (bot_message.find(f'IS THIS A **DREAM**?????') > -1) or (bot_message.find(f'**HYPER** log') > -1):
-                    await bot_answer.add_reaction(emojis.fire)
-            else:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-                return
-            
+                # Add reaction
+                if not write_status == 'aborted':
+                    await bot_answer.add_reaction(emojis.navi)
+                    if (bot_message.find(f'IS THIS A **DREAM**?????') > -1) or (bot_message.find(f'**HYPER** log') > -1):
+                        await bot_answer.add_reaction(emojis.fire)
+                else:
+                    if global_data.DEBUG_MODE == 'ON':
+                        await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
+                    return
+
         except asyncio.TimeoutError as error:
             if global_data.DEBUG_MODE == 'ON':
                 await ctx.send('Work detection timeout.')
@@ -1998,6 +2039,7 @@ async def training(ctx, *args):
             if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
+                or ((message.find(ctx_author) > -1) and (message.find('is training in the mine!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
@@ -2045,6 +2087,8 @@ async def training(ctx, *args):
                     default_message = settings[2]
                     tr_enabled = int(settings[3])
                     tr_message = settings[4]
+                    rubies = settings[5]
+                    ruby_counter = settings[6]
                     
                     # Set message to send          
                     if tr_message == None:
@@ -2052,20 +2096,38 @@ async def training(ctx, *args):
                     else:
                         tr_message = tr_message.replace('%',command)
                     
-                    if not tr_enabled == 0:
-                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
+                    bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
+                    try:
+                        message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        message_description = str(bot_answer.embeds[0].description)
                         try:
-                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                            message_description = str(bot_answer.embeds[0].description)
-                            try:
-                                message_fields = str(bot_answer.embeds[0].fields)
-                                message_title = str(bot_answer.embeds[0].title)
-                            except:
-                                message_fields = ''
-                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                            message_fields = str(bot_answer.embeds[0].fields)
+                            message_title = str(bot_answer.embeds[0].title)
                         except:
-                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_fields = ''
+                        bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                    except:
+                        bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
+                    # Trigger ruby counter if necessary
+                    if bot_message.find('training in the mine') > -1:
+                        if not ruby_counter == 0:
+                            await ctx.send(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.')
+                        if not tr_enabled == 0:
+                            bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
+                            try:
+                                message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                message_description = str(bot_answer.embeds[0].description)
+                                try:
+                                    message_fields = str(bot_answer.embeds[0].fields)
+                                    message_title = str(bot_answer.embeds[0].title)
+                                except:
+                                    message_fields = ''
+                                bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                            except:
+                                bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                    if not tr_enabled == 0:
                         # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
                         if bot_message.find(f'\'s cooldown') > 1:
                             timestring_start = bot_message.find('wait at least **') + 16
@@ -4353,6 +4415,311 @@ async def ascended(ctx, *args):
         elif arg1 in ('big','not',):
             x = await big(ctx, args)
 
+# Trade (for ruby counter)
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def trade(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if global_data.DEBUG_MODE == 'ON':
+                global_data.logger.debug(f'Trade detection: {message}')
+            
+            if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('duh the amount has to be') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Alright! Our trade is done then') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        if args:
+            trade_id = args[0]
+            trade_id = trade_id.lower()
+            if trade_id in ('e','f'):
+                settings = await database.get_settings(ctx, 'rubies')
+                rubies_db = settings[0]
+                ruby_counter = settings[1]
+                reminders_on = settings[2]
+                if not reminders_on == 0 and not ruby_counter == 0:
+                    try:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        
+                        if bot_message.find('Our trade is done then'):
+                            rubies_start = bot_message.find('<:ruby:') + 28
+                            if trade_id == 'f':
+                                rubies_end = bot_message.find(f'\'', rubies_start)
+                            else:
+                                rubies_end = bot_message.find(f'\\', rubies_start) -1
+                            rubies = bot_message[rubies_start:rubies_end]
+                            if rubies.isnumeric():
+                                rubies = int(rubies)
+                                if trade_id == 'f':
+                                    rubies = rubies_db + int(rubies)
+                                else:
+                                    rubies = rubies_db - int(rubies)
+                                    if rubies < 0:
+                                        rubies == 0
+                                await database.set_rubies(ctx, rubies)
+                            else:
+                                await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
+                        
+                        # Ignore failed trades
+                        elif (bot_message.find('duh the amount has to be') > -1) or bot_message.find(f'you don\'t have enough') > -1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore anti spam embed
+                        elif bot_message.find('Huh please don\'t spam') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore failed Epic Guard event
+                        elif bot_message.find('is now in the jail!') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            await bot_answer.add_reaction(emojis.rip)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return 
+                    except asyncio.TimeoutError as error:
+                        if global_data.DEBUG_MODE == 'ON':
+                            await ctx.send('Trade detection timeout.')
+                        return    
+                else:
+                    return
+            else:
+                return
+            
+            # Add reaction
+            await bot_answer.add_reaction(emojis.navi)
+
+# Open lootboxes (for ruby counter)
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def open(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have any of this lootbox type') > -1))\
+                or (message.find(f'Huh you don\'t have that many of this lootbox type') > -1)\
+                or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('lootbox opened!') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        if args:
+            settings = await database.get_settings(ctx, 'rubies')
+            rubies_db = settings[0]
+            ruby_counter = settings[1]
+            reminders_on = settings[2]
+            if not reminders_on == 0 and not ruby_counter == 0:
+                try:
+                    bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                    try:
+                        message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        message_description = str(bot_answer.embeds[0].description)
+                        try:
+                            message_fields = str(bot_answer.embeds[0].fields)
+                            message_title = str(bot_answer.embeds[0].title)
+                        except:
+                            message_fields = ''
+                        bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                    except:
+                        bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    
+                    if bot_message.find('lootbox opened!') > -1:
+                        if bot_message.find('<:ruby:') > -1:
+                            rubies_end = bot_message.find('<:ruby:') -1
+                            rubies_start = bot_message.rfind('+', 0, rubies_end) + 1
+                            rubies = bot_message[rubies_start:rubies_end]
+                            if rubies.isnumeric():
+                                rubies = rubies_db + int(rubies)
+                                await database.set_rubies(ctx, rubies)
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
+                        await bot_answer.add_reaction(emojis.navi)
+                    # Ignore failed openings
+                    elif (bot_message.find('of this lootbox type') > -1):
+                        if global_data.DEBUG_MODE == 'ON':
+                            await bot_answer.add_reaction(emojis.cross)
+                        return
+                    # Ignore anti spam embed
+                    elif bot_message.find('Huh please don\'t spam') > 1:
+                        if global_data.DEBUG_MODE == 'ON':
+                            await bot_answer.add_reaction(emojis.cross)
+                        return
+                    # Ignore failed Epic Guard event
+                    elif bot_message.find('is now in the jail!') > 1:
+                        if global_data.DEBUG_MODE == 'ON':
+                            await bot_answer.add_reaction(emojis.cross)
+                        await bot_answer.add_reaction(emojis.rip)
+                        return
+                    # Ignore error when another command is active
+                    elif bot_message.find('end your previous command') > 1:
+                        if global_data.DEBUG_MODE == 'ON':
+                            await bot_answer.add_reaction(emojis.cross)
+                        return 
+                except asyncio.TimeoutError as error:
+                    if global_data.DEBUG_MODE == 'ON':
+                        await ctx.send('Lootbox detection timeout.')
+                    return    
+            else:
+                return
+        else:
+            return
+
+# Inventory (for ruby counter)
+@bot.command(aliases=('i','inv',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def inventory(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  (message.find(f'{ctx_author}\'s inventory') > -1)\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(ctx.author.id) > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        settings = await database.get_settings(ctx, 'rubies')
+        rubies_db = settings[0]
+        ruby_counter = settings[1]
+        reminders_on = settings[2]
+        if not reminders_on == 0 and not ruby_counter == 0:
+            try:
+                bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                try:
+                    message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    message_description = str(bot_answer.embeds[0].description)
+                    try:
+                        message_fields = str(bot_answer.embeds[0].fields)
+                        message_title = str(bot_answer.embeds[0].title)
+                    except:
+                        message_fields = ''
+                    bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                except:
+                    bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                
+                if bot_message.find(f'\'s inventory'):
+                    if bot_message.find('**ruby**:') > -1:
+                        rubies_start = bot_message.find('**ruby**:') + 10
+                        rubies_end = bot_message.find(f'\\', rubies_start)
+                        rubies = bot_message[rubies_start:rubies_end]
+                        if rubies.isnumeric():
+                            await database.set_rubies(ctx, int(rubies))
+                        else:
+                            await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
+                    else:
+                        await database.set_rubies(ctx, 0)
+                # Ignore anti spam embed
+                elif bot_message.find('Huh please don\'t spam') > 1:
+                    if global_data.DEBUG_MODE == 'ON':
+                        await bot_answer.add_reaction(emojis.cross)
+                    return
+                # Ignore failed Epic Guard event
+                elif bot_message.find('is now in the jail!') > 1:
+                    if global_data.DEBUG_MODE == 'ON':
+                        await bot_answer.add_reaction(emojis.cross)
+                    await bot_answer.add_reaction(emojis.rip)
+                    return
+                # Ignore error when another command is active
+                elif bot_message.find('end your previous command') > 1:
+                    if global_data.DEBUG_MODE == 'ON':
+                        await bot_answer.add_reaction(emojis.cross)
+                    return 
+            except asyncio.TimeoutError as error:
+                if global_data.DEBUG_MODE == 'ON':
+                    await ctx.send('Lootbox detection timeout.')
+                return    
+        else:
+            return
+            
+        # Add reaction
+        await bot_answer.add_reaction(emojis.navi)
+        
 
 
 # --- Miscellaneous ---

@@ -109,6 +109,22 @@ async def get_dnd(user_id):
         global_data.logger.error(f'Unable to get dnd mode setting: {error}')
   
     return setting_dnd
+
+# Get ruby count
+async def get_rubies(ctx):
+
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT rubies FROM settings_user where user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+
+        if record:
+            rubies = record[0]
+    
+    except sqlite3.Error as error:
+        global_data.logger.error(f'Unable to get ruby count: {error}')
+  
+    return rubies
    
 # Get settings
 async def get_settings(ctx, setting='all', partner_id=None):
@@ -142,13 +158,13 @@ async def get_settings(ctx, setting='all', partner_id=None):
     elif setting == 'quest':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, quest_enabled, quest_message FROM settings_user where user_id=?'
     elif setting == 'training':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, tr_enabled, tr_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, tr_enabled, tr_message, rubies, ruby_counter FROM settings_user where user_id=?'
     elif setting == 'vote':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, vote_enabled, vote_message FROM settings_user where user_id=?'
     elif setting == 'weekly':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, weekly_enabled, weekly_message FROM settings_user where user_id=?'
     elif setting == 'work':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, work_enabled, work_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, work_enabled, work_message, rubies, ruby_counter FROM settings_user where user_id=?'
     elif setting == 'donor':
         sql = 'SELECT user_donor_tier FROM settings_user where user_id=?'
     elif setting == 'partner':
@@ -161,6 +177,8 @@ async def get_settings(ctx, setting='all', partner_id=None):
         sql = 'SELECT hardmode FROM settings_user where user_id=?'
     elif setting == 'dnd':
         sql = 'SELECT dnd FROM settings_user where user_id=?'
+    elif setting == 'rubies':
+        sql = 'SELECT rubies, ruby_counter, reminders_on FROM settings_user where user_id=?'
     
     try:
         cur=navi_db.cursor()
@@ -598,6 +616,45 @@ async def set_dnd(ctx, state):
     
     return status
 
+# Turn ruby counter on/off
+async def set_ruby_counter(ctx, state):
+    
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT ruby_counter FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        status = ''
+        
+        if record:
+            ruby_counter_db = record[0]
+            
+            if ruby_counter_db == 1 and state == 1:
+                status = f'**{ctx.author.name}**, the ruby counter is already turned **on**.'
+            elif ruby_counter_db == 0 and state == 0:
+                status = f'**{ctx.author.name}**, the ruby counter is already turned **off**.'
+            else:
+                cur.execute('UPDATE settings_user SET ruby_counter = ? WHERE user_id = ?', (state, ctx.author.id,))
+                if state == 1:
+                    status = f'**{ctx.author.name}**, the ruby counter is now turned **on**.'
+                elif state == 0:
+                    status = f'**{ctx.author.name}**, the ruby counter is now turned **off**.'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Set ruby count
+async def set_rubies(ctx, rubies):
+    
+    try:
+        cur=navi_db.cursor()
+        status = ''
+        cur.execute('UPDATE user_settings SET rubies = ? WHERE user_id = ?', (rubies, ctx.author.id,))
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+
 # Set cooldown of activities
 async def set_cooldown(ctx, activity, seconds):
     
@@ -926,6 +983,24 @@ async def set_guild_stealth_current(ctx, guild_name, guild_stealth):
             status = 'updated'
         else:
             status = f'**{ctx.author.name}**, couldn\'t find your guild.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Set rubies
+async def set_rubies(ctx, rubies):
+    
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT rubies FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        
+        if record:
+            cur.execute('UPDATE settings_user SET rubies = ? WHERE user_id = ?', (rubies, ctx.author.id,))
+            status = 'updated'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
     
