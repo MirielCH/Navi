@@ -173,8 +173,8 @@ async def reset_guild(bot):
                 task_name = f'{guild_name}-guild'
                 await bot.wait_until_ready()
                 channel = bot.get_channel(guild_channel_id)
-                if task_name in global_data.running_tasks:
-                    global_data.running_tasks[task_name].cancel()    
+                if task_name in running_tasks:
+                    running_tasks[task_name].cancel()    
                 
                 bot.loop.create_task(background_task(guild_name, channel, guild_message, 60, task_name, True))
             
@@ -881,7 +881,7 @@ async def guild(ctx, *args):
                 except:
                     message_fields = ''
                 message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
-                database.logger.debug(f'Guild detection: {message}')
+                global_data.logger.debug(f'Guild detection: {message}')
             except:
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
@@ -4690,6 +4690,7 @@ async def inventory(ctx, *args):
                         rubies = bot_message[rubies_start:rubies_end]
                         if rubies.isnumeric():
                             await database.set_rubies(ctx, int(rubies))
+                            await bot_answer.add_reaction(emojis.navi)
                         else:
                             await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                     else:
@@ -4716,10 +4717,7 @@ async def inventory(ctx, *args):
                 return    
         else:
             return
-            
-        # Add reaction
-        await bot_answer.add_reaction(emojis.navi)
-        
+
 
 
 # --- Miscellaneous ---
