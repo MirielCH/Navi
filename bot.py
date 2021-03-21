@@ -1937,6 +1937,16 @@ async def chop(ctx, *args):
                                 await bot_answer.add_reaction(emojis.navi)
                             else:
                                 await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
+                        elif (bot_message.find('rubies in it') > -1):
+                            rubies_start = bot_message.find('One of them had ') + 16
+                            rubies_end = bot_message.find('<:ruby:') - 1
+                            rubies = bot_message[rubies_start:rubies_end]
+                            if rubies.isnumeric():
+                                rubies = rubies_db + int(rubies)
+                                await database.set_rubies(ctx, rubies)
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                         
                     if not work_enabled == 0:
                         # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
@@ -3976,7 +3986,7 @@ async def cooldown(ctx, *args):
         
         if args:
             arg = args[0]
-            if not arg.find(ctx.author.id):
+            if not arg.find(f'ctx.author.id'):
                 return
             
         try:
@@ -4685,16 +4695,26 @@ async def inventory(ctx, *args):
                 
                 if bot_message.find(f'\'s inventory'):
                     if bot_message.find('**ruby**:') > -1:
-                        rubies_start = bot_message.find('**ruby**:') + 10
+                        rubies_start = bot_message.find('**ruby**:') + 10                        
                         rubies_end = bot_message.find(f'\\', rubies_start)
+                        rubies_end_bottom = bot_message.find(f'\'', rubies_start)
                         rubies = bot_message[rubies_start:rubies_end]
+                        rubies_bottom = bot_message[rubies_start:rubies_end_bottom]
                         if rubies.isnumeric():
                             await database.set_rubies(ctx, int(rubies))
                             await bot_answer.add_reaction(emojis.navi)
+                        elif rubies_bottom.isnumeric():
+                            await database.set_rubies(ctx, int(rubies_bottom))
+                            await bot_answer.add_reaction(emojis.navi)
                         else:
-                            await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
+                            await ctx.send(
+                                f'Something went wrong here, wanted to read ruby count, found this instead:\n'
+                                f'Mid embed: {rubies}\n'
+                                f'Bottom: {rubies_bottom}'
+                            )
                     else:
                         await database.set_rubies(ctx, 0)
+                        await bot_answer.add_reaction(emojis.navi)
                 # Ignore anti spam embed
                 elif bot_message.find('Huh please don\'t spam') > 1:
                     if global_data.DEBUG_MODE == 'ON':
