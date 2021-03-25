@@ -404,40 +404,42 @@ async def settings(ctx):
             daily_enabled = settings[13]
             duel_enabled = settings[14]
             dungmb_enabled = settings[15]
-            horse_enabled = settings[16]
-            hunt_enabled = settings[17]
-            lb_enabled = settings[18]
-            lottery_enabled = settings[19]
-            nsmb_enabled = settings[20]
-            pet_enabled = settings[21]
-            quest_enabled = settings[22]
-            tr_enabled = settings[23]
-            vote_enabled = settings[24]
-            weekly_enabled = settings[25]
-            work_enabled = settings[26]
-            adv_message = settings[27]
-            alert_message = settings[28]
-            arena_message = settings[29]
-            daily_message = settings[30]
-            duel_message = settings[31]
-            dungmb_message = settings[32]
-            horse_message = settings[33]
-            hunt_message = settings[34]
-            lb_message = settings[35]
-            lottery_message = settings[36]
-            pet_message = settings[37]
-            quest_message = settings[38]
-            tr_message = settings[39]
-            vote_message = settings[40]
-            weekly_message = settings[41]
-            work_message = settings[42]
-            hardmode = settings[43]
-            dnd = settings[44]
-            ruby_counter = settings[45]
-            rubies = settings[46]
+            farm_enabled = settings[16]
+            horse_enabled = settings[17]
+            hunt_enabled = settings[18]
+            lb_enabled = settings[19]
+            lottery_enabled = settings[20]
+            nsmb_enabled = settings[21]
+            pet_enabled = settings[22]
+            quest_enabled = settings[23]
+            tr_enabled = settings[24]
+            vote_enabled = settings[25]
+            weekly_enabled = settings[26]
+            work_enabled = settings[27]
+            adv_message = settings[28]
+            alert_message = settings[29]
+            arena_message = settings[30]
+            daily_message = settings[31]
+            duel_message = settings[32]
+            dungmb_message = settings[33]
+            farm_message = settings[34]
+            horse_message = settings[35]
+            hunt_message = settings[36]
+            lb_message = settings[37]
+            lottery_message = settings[38]
+            pet_message = settings[39]
+            quest_message = settings[40]
+            tr_message = settings[41]
+            vote_message = settings[42]
+            weekly_message = settings[43]
+            work_message = settings[44]
+            hardmode = settings[45]
+            dnd = settings[46]
+            ruby_counter = settings[47]
+            rubies = settings[48]
             
             if not partner_id == 0:
-                hardmode_partner = settings[90]
+                hardmode_partner = settings[94]
             else:
                 hardmode_partner = 'N/A'
         
@@ -511,6 +513,7 @@ async def settings(ctx):
                 f'{emojis.bp} Daily: `{daily_enabled}`\n'
                 f'{emojis.bp} Duel: `{duel_enabled}`\n'
                 f'{emojis.bp} Dungeon / Miniboss: `{dungmb_enabled}`\n'
+                f'{emojis.bp} Farm: `{farm_enabled}`\n'
                 f'{emojis.bp} Horse: `{horse_enabled}`\n'
                 f'{emojis.bp} Hunt: `{hunt_enabled}`\n'
                 f'{emojis.bp} Lootbox: `{lb_enabled}`\n'
@@ -535,6 +538,7 @@ async def settings(ctx):
                 f'{emojis.bp} Daily: `{daily_message}`\n'
                 f'{emojis.bp} Duel: `{duel_message}`\n'
                 f'{emojis.bp} Dungeon / Miniboss: `{dungmb_message}`\n'
+                f'{emojis.bp} Farm: `{farm_message}`\n'
                 f'{emojis.bp} Horse: `{horse_message}`\n'
                 f'{emojis.bp} Hunt: `{hunt_message}`\n'
                 f'{emojis.bp} Lootbox: `{lb_message}`\n'
@@ -2010,7 +2014,7 @@ async def chop(ctx, *args):
                 # Add reaction
                 if not write_status == 'aborted':
                     await bot_answer.add_reaction(emojis.navi)
-                    if (bot_message.find(f'IS THIS A **DREAM**?????') > -1) or (bot_message.find(f'**HYPER** log') > -1):
+                    if (bot_message.find(f'IS THIS A **DREAM**?????') > -1) or (bot_message.find(f'**HYPER** log') > -1) or (bot_message.find(f'**MEGA** log') > -1):
                         await bot_answer.add_reaction(emojis.fire)
                 else:
                     if global_data.DEBUG_MODE == 'ON':
@@ -2375,6 +2379,170 @@ async def adventure(ctx, *args):
                 await ctx.send('Adventure detection timeout.')
             return   
 
+# Farm
+@bot.command()
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def farm(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if global_data.DEBUG_MODE == 'ON':
+                global_data.logger.debug(f'Farm detection: {message}')
+            
+            if  ((message.find(ctx_author) > -1) and (message.find('have grown from the seed') > -1))\
+                or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already farmed') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('seed to farm') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or (message.find('This command is unlocked in') > -1)\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    invoked = ctx.invoked_with
+    invoked = invoked.lower()
+    
+    if prefix.lower() == 'rpg ':
+            
+        if args:
+            if invoked == 'ascended':
+                command = 'rpg ascended farm'
+                args = args[0]
+                args.pop(0)
+            else:
+                command = 'rpg farm'
+        else:
+            command = 'rpg farm'
+        
+        try:
+            settings = await database.get_settings(ctx, 'farm')
+            if not settings == None:
+                reminders_on = settings[0]
+                if not reminders_on == 0:
+                    user_donor_tier = int(settings[1])
+                    if user_donor_tier > 3:
+                        user_donor_tier = 3
+                    default_message = settings[2]
+                    farm_enabled = int(settings[3])
+                    farm_message = settings[4]
+                    
+                    # Set message to send          
+                    if farm_message == None:
+                        farm_message = default_message.replace('%',command)
+                    else:
+                        farm_message = farm_message.replace('%',command)
+                    
+                    if not farm_enabled == 0:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+
+                        # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
+                        if bot_message.find(f'\'s cooldown') > 1:
+                            timestring_start = bot_message.find('wait at least **') + 16
+                            timestring_end = bot_message.find('**...', timestring_start)
+                            timestring = bot_message[timestring_start:timestring_end]
+                            timestring = timestring.lower()
+                            time_left = await parse_timestring(ctx, timestring)
+                            write_status = await write_reminder(ctx, 'farm', time_left, farm_message, True)
+                            if write_status in ('inserted','scheduled','updated'):
+                                await bot_answer.add_reaction(emojis.navi)
+                            else:
+                                if global_data.DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore message that you own no seed
+                        elif bot_message.find('seed to farm') > -1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore anti spam embed
+                        elif bot_message.find('Huh please don\'t spam') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore failed Epic Guard event
+                        elif bot_message.find('is now in the jail!') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            await bot_answer.add_reaction(emojis.rip)
+                            return
+                        # Ignore higher area error
+                        elif bot_message.find('This command is unlocked in') > -1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore ascended error
+                        elif bot_message.find('the ascended command is unlocked with the ascended skill') > -1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                    else:
+                        return
+                else:
+                    return
+            else:
+                return
+            
+            # Calculate cooldown
+            cooldown_data = await database.get_cooldown(ctx, 'farm')
+            cooldown = int(cooldown_data[0])
+            donor_affected = int(cooldown_data[1])
+            if donor_affected == 1:
+                time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]
+            else:
+                time_left = cooldown
+            
+            # Save task to database
+            write_status = await write_reminder(ctx, 'farm', time_left, farm_message)
+            
+            # Add reaction
+            if not write_status == 'aborted':
+                await bot_answer.add_reaction(emojis.navi)
+            else:
+                if global_data.DEBUG_MODE == 'ON':
+                    await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
+            
+        except asyncio.TimeoutError as error:
+            if global_data.DEBUG_MODE == 'ON':
+                await ctx.send('Farm detection timeout.')
+            return   
+
 # Lootbox
 @bot.command()
 @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
@@ -2401,6 +2569,8 @@ async def buy(ctx, *args):
             
             if  (message.find('lootbox` successfully bought for') > -1) or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already bought a lootbox') > -1))\
             or (message.find('You can\'t carry more than 1 lootbox at once!') > -1)\
+            or (message.find('You can\'t carry more than 1 lootbox at once!') > -1)\
+            or ((message.find(f'{ctx.author.id}') > -1) and (message.find('check the name of the item again') > -1))\
             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
             or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you have to be level') > -1))\
             or (message.find('You can\'t buy this type of lootboxes, keep trying to drop them!') > -1)\
@@ -3986,7 +4156,7 @@ async def cooldown(ctx, *args):
         
         if args:
             arg = args[0]
-            if not arg.find(f'ctx.author.id'):
+            if not arg.find(f'ctx.author.id') > -1:
                 return
             
         try:
@@ -4424,6 +4594,8 @@ async def ascended(ctx, *args):
             x = await chop(ctx, args)
         elif arg1 in ('big','not',):
             x = await big(ctx, args)
+        elif arg1 in ('farm',):
+            x = await farm(ctx, args)
 
 # Trade (for ruby counter)
 @bot.command()
@@ -4671,6 +4843,11 @@ async def inventory(ctx, *args):
         
         return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
+    if args:
+            arg = args[0]
+            if not arg.find(f'ctx.author.id') > -1:
+                return
+
     prefix = ctx.prefix
     if prefix.lower() == 'rpg ':
         
@@ -4733,7 +4910,7 @@ async def inventory(ctx, *args):
                     return 
             except asyncio.TimeoutError as error:
                 if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Lootbox detection timeout.')
+                    await ctx.send('Inventory detection timeout.')
                 return    
         else:
             return
@@ -4822,6 +4999,7 @@ async def setup_cooldown(ctx, *args):
                     'lb': 'lootbox',
                     'tr': 'training',
                     'chop': 'work',
+                    'farming': 'farm',
                     'fish': 'work',
                     'mine': 'work',
                     'pickup': 'work',

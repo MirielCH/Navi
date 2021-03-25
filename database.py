@@ -143,6 +143,8 @@ async def get_settings(ctx, setting='all', partner_id=None):
         sql = 'SELECT reminders_on, user_donor_tier, default_message, duel_enabled, duel_message FROM settings_user where user_id=?'
     elif setting == 'dungmb':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, dungmb_enabled, dungmb_message FROM settings_user where user_id=?'
+    elif setting == 'farm':
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, farm_enabled, farm_message FROM settings_user where user_id=?'
     elif setting == 'horse':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, horse_enabled, horse_message FROM settings_user where user_id=?'
     elif setting == 'hunt':
