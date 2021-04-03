@@ -325,6 +325,25 @@ async def get_due_reminders():
     
     return due_reminders
 
+# Get all reminders of a user
+async def get_all_reminders(ctx):
+    
+    reminders = 'None'
+    
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT user_id, activity, end_time FROM reminders WHERE user_id = ?', (ctx.author.id,))
+        record = cur.fetchall()
+        
+        if record:
+            reminders = record
+        else:
+            reminders = 'None'
+    except sqlite3.Error as error:
+        global_data.logger.error(f'Routine \'get_all_reminders\' had the following error: {error}')
+    
+    return reminders
+
 # Get old reminders
 async def get_old_reminders():
     
@@ -680,7 +699,7 @@ async def set_specific_reminder(ctx, activity, action):
     else:
         await log_error(ctx, f'Invalid action {action} in \'set_specific_reminder\'')
         if global_data.DEBUG_MODE == 'ON':
-            status = f'Something went wrong here. Check the error log.'
+            status = 'Something went wrong here. Check the error log.'
         return
     
     column = ''
@@ -830,6 +849,39 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
                     status = 'schedule-task'
                 else:
                     status = 'ignored'
+                    
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+        
+    return status
+
+# Update end time of reminder
+async def update_reminder_time(ctx, activity, time_left):
+    
+    current_time = datetime.utcnow().replace(microsecond=0)
+    status = 'aborted'
+    
+    if not time_left == 0:
+        end_time = current_time + timedelta(seconds=time_left)
+        end_time = end_time.timestamp()
+        triggered = 0
+    else:
+        return
+    
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
+        record = cur.fetchone()
+        
+        if record:
+            db_time = float(record[0])
+            db_time_datetime = datetime.fromtimestamp(db_time)
+            db_triggered = int(record[1])
+            time_difference = db_time_datetime - current_time
+            cur.execute('UPDATE reminders SET end_time = ? WHERE user_id = ? AND activity = ?', (end_time, ctx.author.id, activity,))
+            status = 'updated'
+        else:
+            status = f'There was an error in update_reminder_time when updating the {activity }reminder for user {ctx.author.name} (time left: {time_left} seconds)'
                     
     except sqlite3.Error as error:
         await log_error(ctx, error)

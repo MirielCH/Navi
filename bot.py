@@ -56,6 +56,43 @@ async def write_guild_reminder(ctx, guild_name, guild_channel_id, time_left, mes
         status = 'scheduled'
     
     return status
+
+# Reduce all reminders of a user by a certain amount of time and delete reminders that would instantly finish
+async def reduce_reminder_time(ctx, time_reduction):
+    
+    current_time = datetime.utcnow().replace(microsecond=0)
+    all_status = []
+    return_status = 'ok'
+    
+    reminders = await database.get_all_reminders(ctx)
+      
+    if not reminders == 'None':
+        for reminder in reminders:
+            reminder_activity = reminder[1]
+            reminder_end_time = reminder[2]
+            reminder_end_time_datetime = datetime.fromtimestamp(reminder_end_time)
+            time_difference = reminder_end_time_datetime - current_time
+            if not (reminder_activity.find('pet') > -1) and not reminder_activity == 'vote':
+                if time_difference.total_seconds() <= time_reduction:
+                    await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
+                    task_name = f'{ctx.author.id}-{reminder_activity}'
+                    delete_task = running_tasks.pop(task_name, None)
+                    all_status.append('deleted')
+                else:
+                    reminder_end_time_datetime = reminder_end_time_datetime - timedelta(seconds=time_reduction)
+                    time_left = reminder_end_time_datetime - current_time
+                    time_left = time_left.total_seconds()
+                    status = await database.update_reminder_time(ctx, reminder_activity, time_left)
+                    all_status.append(status)
+            else:
+                all_status.append('ignored')
+    
+    for status in all_status:
+        if not status in ('ignored','updated','deleted'):
+            return_status = status
+            
+    return return_status
+    
     
 
 # --- Tasks ---
@@ -1873,7 +1910,7 @@ async def chop(ctx, *args):
                 or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
                 or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
                 or (message.find('RUBY') > -1) or (message.find('apple') > 1) or (message.find('banana') > -1))) or ((message.find(f'{ctx_author}\'s cooldown') > -1)\
-                and (message.find('You have already got some items') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
+                and (message.find('You have already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -3743,6 +3780,7 @@ async def duel(ctx):
             
             if  ((message.find(f'\'s cooldown') > -1) and (message.find('You have been in a duel recently') > -1))\
                 or ((message.find(f'{ctx_author}\'s duel') > -1) and (message.find('Profit:') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Duel cancelled') > -1))\
                 or (message.find(f'Huh, next time be sure to say who you want to duel') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -3778,7 +3816,7 @@ async def duel(ctx):
                         duel_message = duel_message.replace('%',command)
                     
                     if not duel_enabled == 0:
-                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = 35)
                         try:
                             message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                             message_description = str(bot_answer.embeds[0].description)
@@ -4037,6 +4075,7 @@ async def horse(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if  ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have used this command recently') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('registered for the horse race event') > -1))\
                 or (message.find(f'\'s horse breeding') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -4173,23 +4212,25 @@ async def cooldown(ctx, *args):
                     daily_enabled = settings[13]
                     duel_enabled = settings[14]
                     dungmb_enabled = settings[15]
-                    horse_enabled = settings[16]
+                    farm_enabled = settings[16]
+                    horse_enabled = settings[17]
                     lb_enabled = settings[18]
-                    quest_enabled = settings[22]
-                    tr_enabled = settings[23]
-                    vote_enabled = settings[24]
-                    weekly_enabled = settings[25]
-                    adv_message = settings[27]
-                    arena_message = settings[29]
-                    daily_message = settings[30]
-                    duel_message = settings[31]
-                    dungmb_message = settings[32]
-                    horse_message = settings[33]
-                    lb_message = settings[35]
-                    quest_message = settings[38]
-                    tr_message = settings[39]
-                    vote_message = settings[40]
-                    weekly_message = settings[41] 
+                    quest_enabled = settings[23]
+                    tr_enabled = settings[24]
+                    vote_enabled = settings[25]
+                    weekly_enabled = settings[26]
+                    adv_message = settings[28]
+                    arena_message = settings[30]
+                    daily_message = settings[31]
+                    duel_message = settings[32]
+                    dungmb_message = settings[33]
+                    farm_message = settings[34]
+                    horse_message = settings[35]
+                    lb_message = settings[37]
+                    quest_message = settings[40]
+                    tr_message = settings[41]
+                    vote_message = settings[42]
+                    weekly_message = settings[43] 
                     
                     if not ((adv_enabled == 0) and (daily_enabled == 0) and (lb_enabled == 0) and (quest_enabled == 0) and (tr_enabled == 0) and (weekly_enabled == 0) and (duel_enabled == 0) and (arena_enabled == 0) and (dungmb_enabled == 0) and (vote_enabled == 0)):
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -4351,6 +4392,17 @@ async def cooldown(ctx, *args):
                                     else:
                                         vote_message = vote_message.replace('%','rpg vote')
                                     cooldowns.append(['vote',vote,vote_message,])
+                            if farm_enabled == 1:
+                                if bot_message.find('Farm`** (**') > -1:
+                                    farm_start = bot_message.find('Farm`** (**') + 11
+                                    farm_end = bot_message.find('s**', vote_start) + 1
+                                    farm = bot_message[farm_start:farm_end]
+                                    farm = farm.lower()
+                                    if farm_message == None:
+                                        farm_message = default_message.replace('%','rpg farm')
+                                    else:
+                                        farm_message = farm_message.replace('%','rpg farm')
+                                    cooldowns.append(['farm',farm,farm_message,])
                             
                             write_status_list = []
                             
@@ -4734,6 +4786,7 @@ async def open(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if  ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have any of this lootbox type') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what lootbox are you trying to open?') > -1))\
                 or (message.find(f'Huh you don\'t have that many of this lootbox type') > -1)\
                 or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('lootbox opened!') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -4782,7 +4835,7 @@ async def open(ctx, *args):
                                 await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                         await bot_answer.add_reaction(emojis.navi)
                     # Ignore failed openings
-                    elif (bot_message.find('of this lootbox type') > -1):
+                    elif (bot_message.find('of this lootbox type') > -1) or (bot_message.find('what lootbox') > -1):
                         if global_data.DEBUG_MODE == 'ON':
                             await bot_answer.add_reaction(emojis.cross)
                         return
@@ -4915,6 +4968,103 @@ async def inventory(ctx, *args):
         else:
             return
 
+# Sleepy Potion detection (change command when necessary)
+@bot.command(aliases=('easter',))
+@commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
+async def egg(ctx, *args):
+    
+    def epic_rpg_check(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if  ((message.find(ctx_author) > -1) and (message.find('has slept for a day') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have a sleepy potion') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+
+    prefix = ctx.prefix
+    if prefix.lower() == 'rpg ':
+        
+        if args:
+            args_full = ''
+            for arg in args:
+                args_full = f'{args_full}{arg}'
+            
+            if args_full == 'usesleepypotion':
+                settings = await database.get_settings(ctx, 'hunt') # Just need reminders_on
+                reminders_on = settings[0]
+                
+                if not reminders_on == 0:
+                    try:
+                        bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                        try:
+                            message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            message_description = str(bot_answer.embeds[0].description)
+                            try:
+                                message_fields = str(bot_answer.embeds[0].fields)
+                                message_title = str(bot_answer.embeds[0].title)
+                            except:
+                                message_fields = ''
+                            bot_message = f'{message_author}{message_description}{message_fields}{message_title}'
+                        except:
+                            bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        
+                        if bot_message.find('has slept for a day') > -1:
+                            status = await reduce_reminder_time(ctx, 86400)
+                            if not status == 'ok':
+                                await ctx.send(status)
+                            await bot_answer.add_reaction(emojis.navi)
+                        # Ignore if htey don't have a potion
+                        elif bot_message.find(f'you don\'t have a sleepy potion') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore anti spam embed
+                        elif bot_message.find('Huh please don\'t spam') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore failed Epic Guard event
+                        elif bot_message.find('is now in the jail!') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            await bot_answer.add_reaction(emojis.rip)
+                            return
+                        # Ignore error when another command is active
+                        elif bot_message.find('end your previous command') > 1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return 
+                    except asyncio.TimeoutError as error:
+                        if global_data.DEBUG_MODE == 'ON':
+                            await ctx.send('Sleepy Potion detection timeout.')
+                        return    
+                else:
+                    return
+            else:
+                return
+        else:
+            return
+
 
 
 # --- Miscellaneous ---
@@ -4972,6 +5122,26 @@ async def shutdown(ctx):
                 await ctx.send(f'Phew, was afraid there for a second.')
         except asyncio.TimeoutError as error:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            
+# Sleepy potion text command
+@bot.command()
+@commands.is_owner()
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
+async def sleepy(ctx, arg):
+    
+    prefix = ctx.prefix
+    
+    if arg:
+        try:
+            arg = int(arg)
+        except:
+            await ctx.send(f'Syntax: `{prefix}sleepy [seconds]`')
+            return
+        status = await reduce_reminder_time(ctx, arg)
+        await ctx.send(status)
+    else:
+        await ctx.send(f'Syntax: `{prefix}sleepy [seconds]`')
+        return
 
 # Command "cooldowns" - Sets cooldowns of all activities
 @bot.command(aliases=('cd-setup','setup-cd','setup-cooldown',))
