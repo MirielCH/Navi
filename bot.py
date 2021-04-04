@@ -5144,7 +5144,7 @@ async def sleepy(ctx, arg):
         return
 
 # Command "cooldowns" - Sets cooldowns of all activities
-@bot.command(aliases=('cd-setup','setup-cd','setup-cooldown',))
+@bot.command(aliases=('cd-setup','setup-cd','setup-cooldown','cd-s',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def setup_cooldown(ctx, *args):
     
@@ -5236,6 +5236,135 @@ async def setup_cooldown(ctx, *args):
                 message = f'{message}\n{emojis.bp} {cd[0]}: {cd[1]:,}s'
                 
             message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]` to change a cooldown.'
+            await ctx.reply(message, mention_author=False)
+            
+# Command "event-reduction" - Sets event reductions of all activities
+@bot.command(aliases=('er','event-r','e-r','reduction',))
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
+async def setup_event_reduction(ctx, *args):
+    
+    def check(m):
+        return m.author == ctx.author and m.channel == ctx.channel
+    
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        if not ctx.author.id in (285399610032390146, 619879176316649482):
+            await ctx.reply('You are not allowed to use this command.', mention_author=False)
+            return
+        
+        activity_list = 'Possible activities:'
+        for index in range(len(global_data.cooldown_activities)):
+            activity_list = f'{activity_list}\n{emojis.bp} `{global_data.cooldown_activities[index]}`'
+        
+        if args:
+            if len(args) in (1,2):
+                
+                activity_aliases = {
+                    'adv': 'adventure',
+                    'lb': 'lootbox',
+                    'tr': 'training',
+                    'chop': 'work',
+                    'farming': 'farm',
+                    'fish': 'work',
+                    'mine': 'work',
+                    'pickup': 'work',
+                    'axe': 'work',
+                    'net': 'work',
+                    'pickaxe': 'work',
+                    'ladder': 'work',
+                    'boat': 'work',
+                    'bowsaw': 'work',
+                    'drill': 'work',
+                    'tractor': 'work',
+                    'chainsaw': 'work',
+                    'bigboat': 'work',
+                    'dynamite': 'work',
+                    'greenhouse': 'work',
+                    'mb': 'miniboss'
+                }
+
+                activity = args[0]
+                activity = activity.lower()
+                
+                action = ctx.invoked_with
+                
+                if activity == 'reset':
+                    await ctx.reply(f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]', mention_author=False)
+                    try:
+                        answer = await bot.wait_for('message', check=check, timeout=30)
+                        if not answer.content.lower() in ['yes','y']:
+                            await ctx.send('Aborted')
+                            return
+                    except asyncio.TimeoutError as error:
+                        await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                        
+                    status = await database.set_event_reduction(ctx, 'all', 0.0)
+                    await ctx.reply(status, mention_author=False)
+                    return
+                
+                if len(args) == 2:
+                    reduction = args[1]
+                    reduction = reduction.replace('%','')
+                    try:
+                        reduction = float(reduction)
+                    except:
+                        try:
+                            reduction = float(activity)
+                            activity = args[1]
+                        except:
+                            await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]`.\n\n{activity_list}', mention_author=False)
+                            return
+                        
+                    if not 0 <= reduction <= 99:
+                        await ctx.reply(f'**{ctx.author.name}**, a reduction of **{reduction}%** doesn\'t make much sense, does it.', mention_author=False)
+                        return
+                
+                    if activity in activity_aliases:
+                        activity = activity_aliases[activity]
+                    
+                    if activity in global_data.cooldown_activities:
+                        await ctx.reply(f'**{ctx.author.name}**, this will change the event reduction of activity **{activity}** to **{reduction}%**. Continue? [`yes/no`]', mention_author=False)
+                        try:
+                            answer = await bot.wait_for('message', check=check, timeout=30)
+                            if not answer.content.lower() in ['yes','y']:
+                                await ctx.send('Aborted')
+                                return
+                        except asyncio.TimeoutError as error:
+                            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                        
+                        status = await database.set_event_reduction(ctx, activity, reduction)
+                        await ctx.reply(status, mention_author=False)
+                
+                else:
+                    cooldown_data = await database.get_cooldowns(ctx)
+                    message = 'Current event reductions:'
+                    for cd in cooldown_data:
+                        cooldown = cd[1]
+                        reduction = cd[2]
+                        cooldown = int(ceil(cooldown*((100-reduction)/100)))
+                        if not reduction == 0:
+                            message = f'{message}\n{emojis.bp} **{cd[0]}: {reduction}% ({cooldown:,}s)**'
+                        else:
+                            message = f'{message}\n{emojis.bp} {cd[0]}: {reduction}% ({cooldown:,}s)'
+                        
+                    message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]` to change an event reduction.'
+                    await ctx.reply(message, mention_author=False)
+            else:
+                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]`.\n\n{activity_list}', mention_author=False)
+                return
+        else:
+            cooldown_data = await database.get_cooldowns(ctx)
+            message = 'Current event reductions:'
+            for cd in cooldown_data:
+                cooldown = cd[1]
+                reduction = cd[2]
+                cooldown = int(ceil(cooldown*((100-reduction)/100)))
+                if not reduction == 0:
+                    message = f'{message}\n{emojis.bp} **{cd[0]}: {reduction}% ({cooldown:,}s)**'
+                else:
+                    message = f'{message}\n{emojis.bp} {cd[0]}: {reduction}% ({cooldown:,}s)'
+                
+            message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]` to change a cooldown.'
             await ctx.reply(message, mention_author=False)
 
 bot.run(global_data.TOKEN)

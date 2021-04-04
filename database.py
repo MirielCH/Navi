@@ -6,6 +6,7 @@ import global_data
 
 from discord.ext import commands
 from datetime import datetime, timedelta
+from math import ceil
 
 # Set name of database files
 dbfile = global_data.dbfile
@@ -202,16 +203,20 @@ async def get_settings(ctx, setting='all', partner_id=None):
   
     return current_settings
 
-# Get cooldown
+# Get cooldown (event reduction already calculated because I would have to change a lot of code otherwise)
 async def get_cooldown(ctx, activity):
     
     try:
         cur=navi_db.cursor()
-        cur.execute('SELECT cooldown, donor_affected FROM cooldowns where activity=?', (activity,))
+        cur.execute('SELECT cooldown, donor_affected, event_reduction FROM cooldowns where activity=?', (activity,))
         record = cur.fetchone()
     
         if record:
-            cooldown_data = record
+            cooldown = record[0]
+            donor_affected = record[1]
+            event_reduction = record[2]
+            cooldown = ceil(cooldown*((100-event_reduction)/100))
+            cooldown_data = (int(cooldown),donor_affected,)
         else:
             await log_error(ctx, f'No cooldown data found for activity \'{activity}\'.')
     
@@ -225,7 +230,7 @@ async def get_cooldowns(ctx):
     
     try:
         cur=navi_db.cursor()
-        cur.execute('SELECT activity, cooldown FROM cooldowns ORDER BY activity ASC')
+        cur.execute('SELECT activity, cooldown, event_reduction FROM cooldowns ORDER BY activity ASC')
         record = cur.fetchall()
     
         if record:
@@ -684,6 +689,23 @@ async def set_cooldown(ctx, activity, seconds):
         status = ''
         cur.execute('UPDATE cooldowns SET cooldown = ? WHERE activity = ?', (seconds, activity,))
         status = f'**{ctx.author.name}**, the cooldown for activity **{activity}** is now set to **{seconds}**'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+    
+    return status
+
+# Set event reduction of activities
+async def set_event_reduction(ctx, activity, reduction):
+    
+    try:
+        cur=navi_db.cursor()
+        status = ''
+        if not activity == 'all':
+            cur.execute('UPDATE cooldowns SET event_reduction = ? WHERE activity = ?', (reduction, activity,))
+            status = f'**{ctx.author.name}**, the event reduction for activity **{activity}** is now set to **{reduction}%**'
+        else:
+            cur.execute('UPDATE cooldowns SET event_reduction = ?', (reduction,))
+            status = f'**{ctx.author.name}**, the event reduction for **all** activities is now set to **{reduction}%**'
     except sqlite3.Error as error:
         await log_error(ctx, error)
     
