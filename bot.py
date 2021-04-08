@@ -72,7 +72,7 @@ async def reduce_reminder_time(ctx, time_reduction):
             reminder_end_time = reminder[2]
             reminder_end_time_datetime = datetime.fromtimestamp(reminder_end_time)
             time_difference = reminder_end_time_datetime - current_time
-            if not (reminder_activity.find('pet') > -1) and not reminder_activity == 'vote':
+            if not (reminder_activity.find('pet') > -1) and not (reminder_activity in ('vote','bigarena','nsmb','lottery',)):
                 if time_difference.total_seconds() <= time_reduction:
                     await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
                     task_name = f'{ctx.author.id}-{reminder_activity}'
@@ -1473,8 +1473,11 @@ async def ruby(ctx, *args):
             await ctx.reply(status, mention_author=False)
         else:
             settings = await database.get_settings(ctx, 'rubies')
-            rubies = settings[0]
-            ruby_counter = settings[1]
+            if not settings == None:
+                rubies = settings[0]
+                ruby_counter = settings[1]
+            else:
+                return
             if ruby_counter == 1:
                 await ctx.reply(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.', mention_author=False)
             elif ruby_counter == 0:
@@ -2115,17 +2118,18 @@ async def training(ctx, *args):
                     command = 'rpg ascended training'
                 elif arg_command in ('ultr', 'ultraining',):
                     command = 'rpg ascended ultraining'
+                    
                 args.pop(0)   
-        else:
-            if invoked in ('tr', 'training',):
-                command = 'rpg training'
-            elif invoked in ('ultr', 'ultraining',):
-                command = 'rpg ultraining'
-
-            if len(args) >= 1 and command.find('ultraining') > -1:
-                arg = args[0]
-                if arg in ('p','progress',):
-                    return
+            else:
+                if invoked in ('tr', 'training',):
+                    command = 'rpg training'
+                elif invoked in ('ultr', 'ultraining',):
+                    command = 'rpg ultraining'
+                
+                    if len(args) >= 1 and command.find('ultraining') > -1:
+                        arg = args[0]
+                        if arg in ('p','progress',):
+                            return
         
         try:
             settings = await database.get_settings(ctx, 'training')
@@ -4075,7 +4079,8 @@ async def horse(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if  ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have used this command recently') > -1))\
-                or ((message.find(ctx_author) > -1) and (message.find('registered for the horse race event') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('registered for the next **horse race** event') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you are registered already!') > -1))\
                 or (message.find(f'\'s horse breeding') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -4195,7 +4200,7 @@ async def cooldown(ctx, *args):
         
         if args:
             arg = args[0]
-            if not arg.find(f'ctx.author.id') > -1:
+            if not arg == 'max' and not (arg.find(f'ctx.author.id') > -1):
                 return
             
         try:
@@ -4694,9 +4699,12 @@ async def trade(ctx, *args):
             trade_id = trade_id.lower()
             if trade_id in ('e','f'):
                 settings = await database.get_settings(ctx, 'rubies')
-                rubies_db = settings[0]
-                ruby_counter = settings[1]
-                reminders_on = settings[2]
+                if not settings == None:
+                    rubies_db = settings[0]
+                    ruby_counter = settings[1]
+                    reminders_on = settings[2]
+                else:
+                    return
                 if not reminders_on == 0 and not ruby_counter == 0:
                     try:
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -4804,9 +4812,12 @@ async def open(ctx, *args):
         
         if args:
             settings = await database.get_settings(ctx, 'rubies')
-            rubies_db = settings[0]
-            ruby_counter = settings[1]
-            reminders_on = settings[2]
+            if not settings == None:
+                rubies_db = settings[0]
+                ruby_counter = settings[1]
+                reminders_on = settings[2]
+            else:
+                return
             if not reminders_on == 0 and not ruby_counter == 0:
                 try:
                     bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -4905,9 +4916,13 @@ async def inventory(ctx, *args):
     if prefix.lower() == 'rpg ':
         
         settings = await database.get_settings(ctx, 'rubies')
-        rubies_db = settings[0]
-        ruby_counter = settings[1]
-        reminders_on = settings[2]
+        if not settings == None:
+            rubies_db = settings[0]
+            ruby_counter = settings[1]
+            reminders_on = settings[2]
+        else:
+            return
+        
         if not reminders_on == 0 and not ruby_counter == 0:
             try:
                 bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -5011,7 +5026,10 @@ async def egg(ctx, *args):
             
             if args_full == 'usesleepypotion':
                 settings = await database.get_settings(ctx, 'hunt') # Just need reminders_on
-                reminders_on = settings[0]
+                if not settings == None:
+                    reminders_on = settings[0]
+                else:
+                    return
                 
                 if not reminders_on == 0:
                     try:

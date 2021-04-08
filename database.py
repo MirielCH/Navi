@@ -702,10 +702,10 @@ async def set_event_reduction(ctx, activity, reduction):
         status = ''
         if not activity == 'all':
             cur.execute('UPDATE cooldowns SET event_reduction = ? WHERE activity = ?', (reduction, activity,))
-            status = f'**{ctx.author.name}**, the event reduction for activity **{activity}** is now set to **{reduction}%**'
+            status = f'**{ctx.author.name}**, the event reduction for activity **{activity}** is now set to **{reduction}%**.'
         else:
             cur.execute('UPDATE cooldowns SET event_reduction = ?', (reduction,))
-            status = f'**{ctx.author.name}**, the event reduction for **all** activities is now set to **{reduction}%**'
+            status = f'**{ctx.author.name}**, the event reduction for **all** activities is now set to **{reduction}%**.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
     
@@ -1150,7 +1150,7 @@ async def log_error(ctx, error, guild_join=False):
             settings = ''
             try:
                 user_settings = await get_settings(ctx)
-                settings = f'Enchant {user_settings[0]}'
+                settings = f'User ID {user_settings[0]}'
             except:
                 settings = 'N/A'
             cur=navi_db.cursor()
