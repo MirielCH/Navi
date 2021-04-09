@@ -449,34 +449,35 @@ async def settings(ctx):
             nsmb_enabled = settings[21]
             pet_enabled = settings[22]
             quest_enabled = settings[23]
-            tr_enabled = settings[24]
-            vote_enabled = settings[25]
-            weekly_enabled = settings[26]
-            work_enabled = settings[27]
-            adv_message = settings[28]
-            alert_message = settings[29]
-            arena_message = settings[30]
-            daily_message = settings[31]
-            duel_message = settings[32]
-            dungmb_message = settings[33]
-            farm_message = settings[34]
-            horse_message = settings[35]
-            hunt_message = settings[36]
-            lb_message = settings[37]
-            lottery_message = settings[38]
-            pet_message = settings[39]
-            quest_message = settings[40]
-            tr_message = settings[41]
-            vote_message = settings[42]
-            weekly_message = settings[43]
-            work_message = settings[44]
-            hardmode = settings[45]
-            dnd = settings[46]
-            ruby_counter = settings[47]
-            rubies = settings[48]
+            race_enabled = settings[24]
+            tr_enabled = settings[25]
+            vote_enabled = settings[26]
+            weekly_enabled = settings[27]
+            work_enabled = settings[28]
+            adv_message = settings[29]
+            alert_message = settings[30]
+            arena_message = settings[31]
+            daily_message = settings[32]
+            duel_message = settings[33]
+            dungmb_message = settings[34]
+            farm_message = settings[35]
+            horse_message = settings[36]
+            hunt_message = settings[37]
+            lb_message = settings[38]
+            lottery_message = settings[39]
+            pet_message = settings[40]
+            quest_message = settings[41]
+            tr_message = settings[42]
+            vote_message = settings[43]
+            weekly_message = settings[44]
+            work_message = settings[45]
+            hardmode = settings[46]
+            dnd = settings[47]
+            ruby_counter = settings[48]
+            rubies = settings[49]
             
             if not partner_id == 0:
-                hardmode_partner = settings[94]
+                hardmode_partner = settings[96]
             else:
                 hardmode_partner = 'N/A'
         
@@ -546,7 +547,6 @@ async def settings(ctx):
             enabled_reminders = (
                 f'{emojis.bp} Adventure: `{adv_enabled}`\n'
                 f'{emojis.bp} Arena: `{arena_enabled}`\n'
-                f'{emojis.bp} Big arena: `{bigarena_enabled}`\n'
                 f'{emojis.bp} Daily: `{daily_enabled}`\n'
                 f'{emojis.bp} Duel: `{duel_enabled}`\n'
                 f'{emojis.bp} Dungeon / Miniboss: `{dungmb_enabled}`\n'
@@ -555,7 +555,6 @@ async def settings(ctx):
                 f'{emojis.bp} Hunt: `{hunt_enabled}`\n'
                 f'{emojis.bp} Lootbox: `{lb_enabled}`\n'
                 f'{emojis.bp} Lottery: `{lottery_enabled}`\n'
-                f'{emojis.bp} Not so mini boss: `{nsmb_enabled}`\n'
                 f'{emojis.bp} Partner lootbox alert: `{alert_enabled}`\n'
                 f'{emojis.bp} Pet: `{pet_enabled}`\n'
                 f'{emojis.bp} Quest: `{quest_enabled}`\n'
@@ -563,6 +562,12 @@ async def settings(ctx):
                 f'{emojis.bp} Vote: `{vote_enabled}`\n'
                 f'{emojis.bp} Weekly: `{weekly_enabled}`\n'
                 f'{emojis.bp} Work: `{work_enabled}`'
+            )
+            
+            enabled_event_reminders = (
+                f'{emojis.bp} Big arena: `{bigarena_enabled}`\n'
+                f'{emojis.bp} Horse race: `{race_enabled}`\n'
+                f'{emojis.bp} Not so mini boss: `{nsmb_enabled}`\n'
             )
             
             if reminders_on == 'Disabled':
@@ -595,7 +600,8 @@ async def settings(ctx):
             embed.add_field(name='USER', value=general, inline=False)
             embed.add_field(name='PARTNER', value=partner, inline=False)
             embed.add_field(name='GUILD', value=guild, inline=False)
-            embed.add_field(name='SPECIFIC REMINDERS', value=enabled_reminders, inline=False)
+            embed.add_field(name='COOLDOWN REMINDERS', value=enabled_reminders, inline=False)
+            embed.add_field(name='EVENT REMINDERS', value=enabled_event_reminders, inline=False)
             #embed.add_field(name='REMINDER MESSAGES', value=reminder_messages, inline=False)
         
             await ctx.reply(embed=embed, mention_author=False)
@@ -1271,6 +1277,8 @@ async def enable(ctx, *args):
                 activity = 'dungeon'
             elif activity == 'nsmb':
                 activity = 'notsominiboss'
+            elif activity == 'race':
+                activity = 'horserace'
             
             activity_list = f'{activity_list}\n{emojis.bp} `{activity}`'
         
@@ -1318,7 +1326,8 @@ async def enable(ctx, *args):
                     'race': 'horse',
                     'racing': 'horse',
                     'dueling': 'duel',
-                    'duelling': 'duel'
+                    'duelling': 'duel',
+                    'horserace': 'race'
                 }
 
                 activity = args[0]
@@ -1380,6 +1389,8 @@ async def list_cmd(ctx):
                     activity = 'Not so mini boss'
                 elif activity == 'dungmb':
                     activity = 'Dungeon / Miniboss'
+                elif activity == 'race':
+                    activity = 'Horse race'
                 else:
                     activity = activity.capitalize()
                 current_time = datetime.utcnow().replace(microsecond=0)
@@ -2130,6 +2141,11 @@ async def training(ctx, *args):
                         arg = args[0]
                         if arg in ('p','progress',):
                             return
+        else:
+            if invoked in ('tr', 'training',):
+                command = 'rpg training'
+            elif invoked in ('ultr', 'ultraining',):
+                command = 'rpg ultraining'
         
         try:
             settings = await database.get_settings(ctx, 'training')
@@ -4111,6 +4127,8 @@ async def horse(ctx, *args):
                             default_message = settings[2]
                             horse_enabled = int(settings[3])
                             horse_message = settings[4]
+                            race_enabled = settings[5]
+                            race_message = global_data.race_message
                             
                             # Set message to send          
                             if horse_message == None:
@@ -4118,7 +4136,7 @@ async def horse(ctx, *args):
                             else:
                                 horse_message = horse_message.replace('%',command)
                             
-                            if not horse_enabled == 0:
+                            if not (horse_enabled == 0) and not (race_enabled == 0):
                                 bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
                                 try:
                                     message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -4133,19 +4151,61 @@ async def horse(ctx, *args):
                                     bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
                                 # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
-                                ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                if bot_message.find(f'{ctx_author}\'s cooldown') > -1:
-                                    timestring_start = bot_message.find('wait at least **') + 16
-                                    timestring_end = bot_message.find('**...', timestring_start)
-                                    timestring = bot_message[timestring_start:timestring_end]
-                                    timestring = timestring.lower()
-                                    time_left = await parse_timestring(ctx, timestring)
-                                    write_status = await write_reminder(ctx, 'horse', time_left, horse_message, True)
-                                    if write_status in ('inserted','scheduled','updated'):
-                                        await bot_answer.add_reaction(emojis.navi)
-                                    else:
-                                        if global_data.DEBUG_MODE == 'ON':
-                                            await bot_answer.add_reaction(emojis.cross)
+                                if not horse_enabled == 0:
+                                    ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                    if bot_message.find(f'{ctx_author}\'s cooldown') > -1:
+                                        timestring_start = bot_message.find('wait at least **') + 16
+                                        timestring_end = bot_message.find('**...', timestring_start)
+                                        timestring = bot_message[timestring_start:timestring_end]
+                                        timestring = timestring.lower()
+                                        time_left = await parse_timestring(ctx, timestring)
+                                        write_status = await write_reminder(ctx, 'horse', time_left, horse_message, True)
+                                        if write_status in ('inserted','scheduled','updated'):
+                                            await bot_answer.add_reaction(emojis.navi)
+                                        else:
+                                            if global_data.DEBUG_MODE == 'ON':
+                                                await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                if not race_enabled == 0:
+                                    # Check if event message with time in it, if yes, read the time and update/insert the reminder if necessary
+                                    if bot_message.find(f'The next race is in') > -1:
+                                        timestring_start = bot_message.find('race is in **') + 13
+                                        timestring_end = bot_message.find('**,', timestring_start)
+                                        timestring = bot_message[timestring_start:timestring_end]
+                                        timestring = timestring.lower()
+                                        time_left = await parse_timestring(ctx, timestring)
+                                        write_status = await write_reminder(ctx, 'race', time_left, race_message, True)
+                                        if write_status in ('inserted','scheduled','updated'):
+                                            await bot_answer.add_reaction(emojis.navi)
+                                        else:
+                                            if global_data.DEBUG_MODE == 'ON':
+                                                await bot_answer.add_reaction(emojis.cross)
+                                        return
+                                # Ignore anti spam embed
+                                if bot_message.find('Huh please don\'t spam') > 1:
+                                    if global_data.DEBUG_MODE == 'ON':
+                                        await bot_answer.add_reaction(emojis.cross)
+                                    return
+                                # Ignore failed Epic Guard event
+                                if bot_message.find('is now in the jail!') > 1:
+                                    if global_data.DEBUG_MODE == 'ON':
+                                        await bot_answer.add_reaction(emojis.cross)
+                                    await bot_answer.add_reaction(emojis.rip)
+                                    return
+                                # Ignore higher area error
+                                if bot_message.find('This command is unlocked in') > -1:
+                                    if global_data.DEBUG_MODE == 'ON':
+                                        await bot_answer.add_reaction(emojis.cross)
+                                    return
+                                # Ignore ascended error
+                                if bot_message.find('the ascended command is unlocked with the ascended skill') > -1:
+                                    if global_data.DEBUG_MODE == 'ON':
+                                        await bot_answer.add_reaction(emojis.cross)
+                                    return
+                                # Ignore error when another command is active
+                                if bot_message.find('end your previous command') > 1:
+                                    if global_data.DEBUG_MODE == 'ON':
+                                        await bot_answer.add_reaction(emojis.cross)
                                     return
                             else:
                                 return
@@ -4511,8 +4571,9 @@ async def event(ctx, *args):
                     pet_enabled = settings[6]
                     lottery_message = settings[4]
                     pet_message = settings[7]
+                    race_enabled = settings[8]
                     
-                    if not ((bigarena_enabled == 0) and (lottery_enabled == 0) and (nsmb_enabled == 0) and (pet_enabled == 0)):
+                    if not ((bigarena_enabled == 0) and (lottery_enabled == 0) and (nsmb_enabled == 0) and (pet_enabled == 0) and (race_enabled == 0)):
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
                         try:
                             message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -4569,6 +4630,14 @@ async def event(ctx, *args):
                                     else:
                                         pet_message = default_message.replace('%','rpg pet tournament')
                                     cooldowns.append(['pett',tournament,pet_message,])
+                            if race_enabled == 1:
+                                if bot_message.find('race**: ') > -1:
+                                    race_start = bot_message.find('race**: ') + 8
+                                    race_end = bot_message.find('s', race_start) + 1
+                                    race = bot_message[race_start:race_end]
+                                    race = race.lower()
+                                    race_message = global_data.race_message
+                                    cooldowns.append(['race',race,race_message,])
                             
                             write_status_list = []
                             

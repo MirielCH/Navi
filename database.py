@@ -147,7 +147,7 @@ async def get_settings(ctx, setting='all', partner_id=None):
     elif setting == 'farm':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, farm_enabled, farm_message FROM settings_user where user_id=?'
     elif setting == 'horse':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, horse_enabled, horse_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, horse_enabled, horse_message, race_enabled FROM settings_user where user_id=?'
     elif setting == 'hunt':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, partner_name, partner_donor_tier, partner_id, hunt_enabled, hunt_message, dnd FROM settings_user where user_id=?'
     elif setting == 'lootbox':
@@ -156,6 +156,8 @@ async def get_settings(ctx, setting='all', partner_id=None):
         sql = 'SELECT reminders_on, user_donor_tier, default_message, lottery_enabled, lottery_message FROM settings_user where user_id=?'
     elif setting == 'nsmb-bigarena':
         sql = 'SELECT reminders_on, user_donor_tier, bigarena_enabled, nsmb_enabled FROM settings_user where user_id=?'
+    elif setting == 'race':
+        sql = 'SELECT reminders_on, race_enabled FROM settings_user where user_id=?'
     elif setting == 'pet':
         sql = 'SELECT reminders_on, default_message, user_donor_tier, pet_enabled, pet_message FROM settings_user where user_id=?'
     elif setting == 'quest':
@@ -175,7 +177,7 @@ async def get_settings(ctx, setting='all', partner_id=None):
     elif setting == 'partner_alert_hardmode':
         sql = 'SELECT partner_channel_id, reminders_on, alert_enabled, hardmode, dnd FROM settings_user where user_id=?'
     elif setting == 'events':
-        sql = 'SELECT reminders_on, default_message, bigarena_enabled, lottery_enabled, lottery_message, nsmb_enabled, pet_enabled, pet_message FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, default_message, bigarena_enabled, lottery_enabled, lottery_message, nsmb_enabled, pet_enabled, pet_message, race_enabled FROM settings_user where user_id=?'
     elif setting == 'hardmode':
         sql = 'SELECT hardmode FROM settings_user where user_id=?'
     elif setting == 'dnd':
@@ -742,6 +744,7 @@ async def set_specific_reminder(ctx, activity, action):
         'nsmb': 'nsmb_enabled',
         'pet': 'pet_enabled',
         'quest': 'quest_enabled',
+        'race': 'race_enabled',
         'training': 'tr_enabled',
         'vote': 'vote_enabled',
         'weekly': 'weekly_enabled',
@@ -762,6 +765,8 @@ async def set_specific_reminder(ctx, activity, action):
         activity_name = 'big arena'
     elif activity == 'dungmb':
         activity_name = 'dungeon / miniboss'
+    elif activity == 'race':
+        activity_name = 'horse race'
     else:
         activity_name = activity
     

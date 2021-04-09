@@ -21,7 +21,7 @@ default_prefix = 'navi '
 donor_tiers = ['Non-donator','Donator','EPIC donator','SUPER donator','MEGA donator','HYPER donator','ULTRA donator','ULTIMATE donator',]
 
 # All activities
-activities = ['all','adventure','arena','bigarena','daily','duel','dungmb','farm','horse','hunt','lootbox','lootbox-alert','lottery','nsmb','pet','quest','training','vote','weekly','work',]
+activities = ['all','adventure','arena','bigarena','daily','duel','dungmb','farm','horse','hunt','lootbox','lootbox-alert','lottery','nsmb','pet','quest','race','training','vote','weekly','work',]
 
 # All activities (cooldowns)
 cooldown_activities = ['adventure','arena','daily','farm','guild','hunt','lootbox','miniboss','quest','training','weekly','work',]
@@ -39,9 +39,10 @@ DEBUG_MODE = os.getenv('DEBUG_MODE')
 # Default messages
 default_message = 'Hey! It\'s time for `%`!'
 alert_message = 'Hey! **{user}** found {lootbox} for you!' # Not changeable by user
-arena_message = 'Hey! The **big arena** event just finished! You can check the results on the official EPIC RPG server.'
-miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results on the official EPIC RPG server.'
+arena_message = 'Hey! The **big arena** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
+miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 pet_message = 'Hey! Your pet **$** is back!'
+race_message = 'Hey! The **horse race** just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 
 # Guild defaults
 guild_reset = (5,21,59) # Weekday, hour, minute (UTC, weekday starts from 0)
