@@ -584,18 +584,22 @@ async def set_donor_tier(ctx, donor_tier, partner=False):
     return status
 
 # Set hardmode state
-async def set_hardmode(ctx, state):
+async def set_hardmode(bot, ctx, state):
     
     try:
         cur=navi_db.cursor()
-        cur.execute('SELECT partner_id, hardmode FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        cur.execute('SELECT s1.partner_id, s1.hardmode, s2.partner_channel_id, s2.dnd FROM settings_user s1 INNER JOIN settings_user s2 ON s2.user_id = s1.partner_id where s1.user_id=?', (ctx.author.id,))
         record = cur.fetchone()
         status = ''
         
         if record:
             partner_id_db = record[0]
             hardmode_state_db = record[1]
+            partner_channel_id = record[2]
+            partner_dnd = record[3]
             if not partner_id_db == 0:
+                await bot.wait_until_ready()
+                partner = bot.get_user(partner_id_db)
                 if hardmode_state_db == 1 and state == 1:
                     status = f'**{ctx.author.name}**, hardmode mode is already turned **on**.'
                 elif hardmode_state_db == 0 and state == 0:
@@ -604,8 +608,18 @@ async def set_hardmode(ctx, state):
                     cur.execute('UPDATE settings_user SET hardmode = ? WHERE user_id = ?', (state, ctx.author.id,))
                     if state == 1:
                         status = f'**{ctx.author.name}**, hardmode mode is now turned **on**.'
+                        await bot.wait_until_ready()
+                        if partner_dnd == 1:
+                            await bot.get_channel(partner_channel_id).send(f'**{partner.name}**, **{ctx.author.name}** just started **hardmoding**.')
+                        else:
+                            await bot.get_channel(partner_channel_id).send(f'{partner.mention}, **{ctx.author.name}** just started **hardmoding**.')
                     elif state == 0:
                         status = f'**{ctx.author.name}**, hardmode mode is now turned **off**.'
+                        await bot.wait_until_ready()
+                        if partner_dnd == 1:
+                            await bot.get_channel(partner_channel_id).send(f'**{partner.name}**, **{ctx.author.name}** stopped hardmoding. Feel free to take them hunting.')
+                        else:
+                            await bot.get_channel(partner_channel_id).send(f'{partner.mention}, **{ctx.author.name}** stopped hardmoding. Feel free to take them hunting.')
             else:
                 status = f'**{ctx.author.name}**, you do not have a partner set. This setting only does something if you are married and added your partner to this bot.\nUse `{ctx.prefix}partner` to add your partner.'
         else:

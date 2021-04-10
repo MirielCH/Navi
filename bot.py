@@ -72,7 +72,7 @@ async def reduce_reminder_time(ctx, time_reduction):
             reminder_end_time = reminder[2]
             reminder_end_time_datetime = datetime.fromtimestamp(reminder_end_time)
             time_difference = reminder_end_time_datetime - current_time
-            if not (reminder_activity.find('pet') > -1) and not (reminder_activity in ('vote','bigarena','nsmb','lottery',)):
+            if not (reminder_activity.find('pet') > -1) and not (reminder_activity in ('vote','bigarena','nsmb','lottery','race',)):
                 if time_difference.total_seconds() <= time_reduction:
                     await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
                     task_name = f'{ctx.author.id}-{reminder_activity}'
@@ -176,7 +176,10 @@ async def delete_old_reminders(bot):
     else:
         for reminder in old_reminders:    
             try:
-                user_id = int(reminder[0])
+                try:
+                    user_id = int(reminder[0])
+                except:
+                    user_id = reminder[0]
                 activity = reminder[1]
                 triggered = int(reminder[2])
                 await database.delete_reminder(None, user_id, activity)
@@ -934,7 +937,8 @@ async def guild(ctx, *args):
             
             if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild succesfully upgraded!') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('end your previous command') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('your guild has already 100') > -1))\
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('Your guild has already raided or been upgraded') > -1)):
                 correct_message = True
             else:
@@ -1127,6 +1131,11 @@ async def guild(ctx, *args):
                                 else:
                                     if global_data.DEBUG_MODE == 'ON':
                                         await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore message that guild is fully upgraded
+                            elif bot_message.find('your guild has already 100') > 1:
+                                if global_data.DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
                                 return
                             # Ignore anti spam embed
                             elif bot_message.find('Huh please don\'t spam') > 1:
@@ -1424,9 +1433,9 @@ async def hardmode(ctx, *args):
         if args:
             arg = args[0]
             if arg in ('on','enable','start'):
-                status = await database.set_hardmode(ctx, 1)
+                status = await database.set_hardmode(bot, ctx, 1)
             elif arg in ('off','disable','stop'):
-                status = await database.set_hardmode(ctx, 0)
+                status = await database.set_hardmode(bot, ctx, 0)
             else:
                 status = f'**{ctx.author.name}**, the correct syntax is `{prefix}hardmode on` / `off`.'
             await ctx.reply(status, mention_author=False)
@@ -2104,9 +2113,37 @@ async def training(ctx, *args):
             if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
-                or ((message.find(ctx_author) > -1) and (message.find('is training in the mine!') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('is training in') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                correct_message = True
+            else:
+                correct_message = False
+        except:
+            correct_message = False
+        
+        return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+    
+    def epic_rpg_check_training_answer(m):
+        correct_message = False
+        try:
+            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            try:
+                message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_description = str(m.embeds[0].description)
+                message_title = str(m.embeds[0].title)
+                try:
+                    message_fields = str(m.embeds[0].fields)
+                except:
+                    message_fields = ''
+                message = f'{message_author}{message_description}{message_fields}{message_title}'
+            except:
+                message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            
+            if global_data.DEBUG_MODE == 'ON':
+                global_data.logger.debug(f'Training detection: {message}')
+            
+            if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1):
                 correct_message = True
             else:
                 correct_message = False
@@ -2181,11 +2218,12 @@ async def training(ctx, *args):
                         bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
                     # Trigger ruby counter if necessary
-                    if bot_message.find('training in the mine') > -1:
-                        if not ruby_counter == 0:
-                            await ctx.send(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.')
+                    if bot_message.find('is training in') > -1:
+                        if bot_message.find('training in the mine') > -1:
+                            if not ruby_counter == 0:
+                                await ctx.send(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.')
                         if not tr_enabled == 0:
-                            bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
+                            bot_answer = await bot.wait_for('message', check=epic_rpg_check_training_answer, timeout = global_data.timeout_longer)
                             try:
                                 message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                 message_description = str(bot_answer.embeds[0].description)
@@ -2798,8 +2836,8 @@ async def epic(ctx, *args):
             if global_data.DEBUG_MODE == 'ON':
                 global_data.logger.debug(f'Quest detection: {message}')
             
-            if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(str(ctx.author.id)) > -1) and (message.find('epic quest cancelled') > -1))\
-                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(str(ctx.author.id)) > -1) and (message.find('you did not accept the quest') > -1))\
+            if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
+                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
                 or ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('Are you ready to start the EPIC quest') > -1))\
@@ -4281,21 +4319,21 @@ async def cooldown(ctx, *args):
                     horse_enabled = settings[17]
                     lb_enabled = settings[18]
                     quest_enabled = settings[23]
-                    tr_enabled = settings[24]
-                    vote_enabled = settings[25]
-                    weekly_enabled = settings[26]
-                    adv_message = settings[28]
-                    arena_message = settings[30]
-                    daily_message = settings[31]
-                    duel_message = settings[32]
-                    dungmb_message = settings[33]
-                    farm_message = settings[34]
-                    horse_message = settings[35]
-                    lb_message = settings[37]
-                    quest_message = settings[40]
-                    tr_message = settings[41]
-                    vote_message = settings[42]
-                    weekly_message = settings[43] 
+                    tr_enabled = settings[25]
+                    vote_enabled = settings[26]
+                    weekly_enabled = settings[27]
+                    adv_message = settings[29]
+                    arena_message = settings[31]
+                    daily_message = settings[32]
+                    duel_message = settings[33]
+                    dungmb_message = settings[34]
+                    farm_message = settings[35]
+                    horse_message = settings[36]
+                    lb_message = settings[38]
+                    quest_message = settings[41]
+                    tr_message = settings[42]
+                    vote_message = settings[43]
+                    weekly_message = settings[44] 
                     
                     if not ((adv_enabled == 0) and (daily_enabled == 0) and (lb_enabled == 0) and (quest_enabled == 0) and (tr_enabled == 0) and (weekly_enabled == 0) and (duel_enabled == 0) and (arena_enabled == 0) and (dungmb_enabled == 0) and (vote_enabled == 0)):
                         bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
@@ -4967,7 +5005,7 @@ async def inventory(ctx, *args):
             
             if  (message.find(f'{ctx_author}\'s inventory') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or ((message.find(ctx.author.id) > -1) and (message.find(f'end your previous command') > -1)):
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
                 correct_message = False
@@ -4978,7 +5016,7 @@ async def inventory(ctx, *args):
 
     if args:
             arg = args[0]
-            if not arg.find(f'ctx.author.id') > -1:
+            if not arg.find(f'{ctx.author.id}') > -1:
                 return
 
     prefix = ctx.prefix
