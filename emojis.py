@@ -9,6 +9,14 @@ lbomega = '<:erg_omegalootbox:770547275726454784>'
 lbrare = '<:erg_rarelootbox:770547275709415424>'
 lbuncommon = '<:erg_uncommonlootbox:770547275528667137>'
 
+# Guild leaderboard
+energy = ':low_brightness:'
+one = ':one:'
+two = ':two:'
+three = ':three:'
+four = ':four:'
+five = ':five:'
+
 # Misc
 bp = ':small_blue_diamond:'
 cross = '❎'

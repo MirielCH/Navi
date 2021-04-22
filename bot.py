@@ -935,7 +935,7 @@ async def guild(ctx, *args):
             except:
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
-            if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild succesfully upgraded!') > -1)\
+            if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild successfully upgraded!') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('end your previous command') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('your guild has already 100') > -1))\
@@ -951,17 +951,14 @@ async def guild(ctx, *args):
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         
+        error_not_leader = (
+                f'**{ctx.author.name}**, you are not registered as a guild leader. Only guild leaders can do this.\n'
+                f'If you are a guild leader, run `rpg guild list` first to add or update your guild in my database.'
+            )
+        
         if args:
             guild_data = await database.get_guild(ctx, 'leader')
-            
-            if guild_data == None:
-                await ctx.reply(
-                    f'**{ctx.author.name}**, you are not registered as a guild leader. Only guild leaders can run guild commands.\n'
-                    f'If you are a guild leader, run `rpg guild list` first to add or update your guild in my database.',
-                    mention_author=False
-                )
-                return
-            else:    
+            if not guild_data == None:
                 guild_name = guild_data[0]
                 guild_stealth = guild_data[2]
                 guild_channel = guild_data[4]
@@ -969,6 +966,9 @@ async def guild(ctx, *args):
             arg1 = args[0]
             arg1 = arg1.lower()
             if arg1 == 'channel':
+                if guild_data == None:
+                    await ctx.reply(error_not_leader,mention_author=False)
+                    return
                 if len(args) == 2:
                     arg2 = args[1] 
                     if arg2 == 'set':             
@@ -1032,6 +1032,9 @@ async def guild(ctx, *args):
                         )
                         return
             elif arg1 == 'stealth':
+                if guild_data == None:
+                        await ctx.reply(error_not_leader,mention_author=False)
+                        return
                 if len(args) == 2:
                     arg2 = args[1] 
                     if arg2.isnumeric():
@@ -1057,8 +1060,92 @@ async def guild(ctx, *args):
                         mention_author=False
                     )
             elif arg1 in ('on','off'):
+                if guild_data == None:
+                    await ctx.reply(error_not_leader,mention_author=False)
+                    return
                 status = await database.set_guild_reminders(ctx, guild_name, arg1)
                 await ctx.reply(status, mention_author=False)
+            elif arg1 in ('leaderboard','lb'):
+                leaderboard_data = await database.get_guild_leaderboard(ctx)
+                guild_name = leaderboard_data[0]
+                best_raids = leaderboard_data[1]
+                worst_raids = leaderboard_data[2]
+                
+                if guild_name == None:
+                    await ctx.reply(
+                        f'**{ctx.author.name}**, you are not registered as a member of a guild.\n'
+                        f'If you are in a guild, run `rpg guild list` first to add or update your guild in my database.',
+                        mention_author=False
+                    )
+                    return
+                
+                leaderboard_best = ''
+                leaderboard_worst = ''
+                
+                if not best_raids == None:
+                    counter = 0
+                    for best_raid in best_raids:
+                        counter = counter + 1
+                        if counter == 1:
+                            emoji = emojis.one
+                        elif counter == 2:
+                            emoji = emojis.two
+                        elif counter == 3:
+                            emoji = emojis.three
+                        elif counter == 4:
+                            emoji = emojis.four
+                        elif counter == 5:
+                            emoji = emojis.five
+                        else:
+                            emoji = emojis.bp
+                        user_id = best_raid[0]
+                        energy = best_raid[1]
+                        await bot.wait_until_ready()
+                        best_user = bot.get_user(user_id)
+                        leaderboard_best = (
+                            f'{leaderboard_best}\n'
+                            f'{emoji} **{energy:,}** {emojis.energy} by {best_user.mention}'
+                        )
+                else:
+                    leaderboard_best = f'{emojis.bp} _Not enough raids yet._'
+                
+                if not worst_raids == None:
+                    counter = 0
+                    for worst_raid in worst_raids:
+                        counter = counter + 1
+                        if counter == 1:
+                            emoji = emojis.one
+                        elif counter == 2:
+                            emoji = emojis.two
+                        elif counter == 3:
+                            emoji = emojis.three
+                        elif counter == 4:
+                            emoji = emojis.four
+                        elif counter == 5:
+                            emoji = emojis.five
+                        else:
+                            emoji = emojis.bp
+                        user_id = worst_raid[0]
+                        energy = worst_raid[1]
+                        await bot.wait_until_ready()
+                        worst_user = bot.get_user(user_id)
+                        leaderboard_worst = (
+                            f'{leaderboard_worst}\n'
+                            f'{emoji} **{energy:,}** {emojis.energy} by {worst_user.mention}'
+                        )
+                else:
+                    leaderboard_worst = f'{emojis.bp} _Not enough raids yet._'
+                
+                embed = discord.Embed(
+                    color = global_data.color,
+                    title = f'{guild_name} WEEKLY LEADERBOARD',
+                )    
+                embed.set_footer(text='Imagine being on the lower list.')
+                embed.add_field(name='THE BEST RAIDS', value=leaderboard_best, inline=False)
+                embed.add_field(name='THE WHAT-EVEN-IS-THIS RAIDS', value=leaderboard_worst, inline=False)
+        
+                await ctx.reply(embed=embed, mention_author=False)
+                
     # Guild command detection
     else:
         prefix = ctx.prefix
@@ -1097,7 +1184,7 @@ async def guild(ctx, *args):
                             guild_upgraded = False
                             
                             # Check if stealth was upgraded
-                            if bot_message.find('Guild succesfully upgraded!') > 1:
+                            if bot_message.find('Guild successfully upgraded!') > 1:
                                 stealth_start = bot_message.find('--> **') + 6
                                 stealth_end = bot_message.find('**', stealth_start)
                                 stealth = bot_message[stealth_start:stealth_end]
@@ -1105,6 +1192,14 @@ async def guild(ctx, *args):
                                 guild_stealth_current = int(stealth)
                                 guild_upgraded = True
                                 status = await database.set_guild_stealth_current(ctx, guild_name, guild_stealth_current)
+                                
+                            # Add raid to the leaderboard if there was a raid
+                            if bot_message.find(' RAIDED ') > 1:
+                                energy_start = bot_message.find('earned **') + 9
+                                energy_end = bot_message.find(':low_brightness:', energy_start) - 3
+                                energy = bot_message[energy_start:energy_end]
+                                energy = int(energy)
+                                status = await database.write_raid_energy(ctx, guild_name, energy)
                             
                             # Set message to send
                             if guild_stealth_current >= guild_stealth_threshold:
@@ -1584,7 +1679,7 @@ async def help(ctx):
         )
         
         guild_settings = (
-            f'Note: Only the guild leader can use these commands.\n'
+            f'{emojis.bp} `{prefix}guild leaderboard` : Check the weekly raid leaderboard\n'
             f'{emojis.bp} `rpg guild list` : Add/update your guild\n'
             f'{emojis.bp} `{prefix}guild channel` : Set the channel for guild reminders\n'
             f'{emojis.bp} `{prefix}guild on` / `off` : Turn guild reminders on or off\n'
@@ -2861,8 +2956,11 @@ async def epic(ctx, *args):
             arg = arg.lower()
             invoked = ctx.invoked_with
             invoked = invoked.lower()
-            if invoked == 'epic' and not arg == 'quest':
-                return
+            if invoked == 'epic':
+                if arg == 'quest':
+                    command = 'rpg epic quest'
+                else:
+                    return
         try:
             settings = await database.get_settings(ctx, 'quest')
             if not settings == None:
@@ -4787,6 +4885,7 @@ async def trade(ctx, *args):
             
             if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('duh the amount has to be') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot trade rubies if you did not unlock area 5') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Alright! Our trade is done then') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -4827,7 +4926,7 @@ async def trade(ctx, *args):
                         except:
                             bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         
-                        if bot_message.find('Our trade is done then'):
+                        if bot_message.find('Our trade is done then') > -1:
                             rubies_start = bot_message.find('<:ruby:') + 28
                             if trade_id == 'f':
                                 rubies_end = bot_message.find(f'\'', rubies_start)
@@ -4847,7 +4946,7 @@ async def trade(ctx, *args):
                                 await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                         
                         # Ignore failed trades
-                        elif (bot_message.find('duh the amount has to be') > -1) or bot_message.find(f'you don\'t have enough') > -1:
+                        elif (bot_message.find('duh the amount has to be') > -1) or (bot_message.find(f'you don\'t have enough') > -1) or (bot_message.find(f'you cannot trade rubies if you did not unlock area 5') > -1):
                             if global_data.DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return
@@ -5004,7 +5103,8 @@ async def inventory(ctx, *args):
                 message = str(m.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             
             if  (message.find(f'{ctx_author}\'s inventory') > -1)\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                 correct_message = True
             else:
@@ -5045,7 +5145,7 @@ async def inventory(ctx, *args):
                 except:
                     bot_message = str(bot_answer.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 
-                if bot_message.find(f'\'s inventory'):
+                if bot_message.find(f'\'s inventory') > -1:
                     if bot_message.find('**ruby**:') > -1:
                         rubies_start = bot_message.find('**ruby**:') + 10                        
                         rubies_end = bot_message.find(f'\\', rubies_start)
@@ -5491,5 +5591,33 @@ async def setup_event_reduction(ctx, *args):
                 
             message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]` to change a cooldown.'
             await ctx.reply(message, mention_author=False)
+
+# Command timestring to calculate a time left from a timestamp
+@bot.command(aliases=('ts',))
+@commands.is_owner()
+@commands.bot_has_permissions(send_messages=True, read_message_history=True)
+async def timestring(ctx, *args):
+
+    error_syntax = f'It\'s `{ctx.prefix}timestring [timestamp]`, you dummy.'
+
+    if args:
+        timestamp = args[0]
+        if timestamp.isnumeric():
+            try:
+                timestamp = float(timestamp)
+                current_time = datetime.utcnow().replace(microsecond=0)
+                end_time_datetime = datetime.fromtimestamp(timestamp)
+                end_time_difference = end_time_datetime - current_time
+                time_left = end_time_difference.total_seconds()
+                timestring = await parse_seconds(time_left)
+                await ctx.reply(f'That is **{timestring}** from now.', mention_author=False)
+            except:
+                await ctx.reply(f'That really didn\'t calculate to anything useful.', mention_author=False)
+                return
+        else:
+            await ctx.reply(error_syntax, mention_author=False)    
+    else:
+        await ctx.reply(error_syntax, mention_author=False)
+
 
 bot.run(global_data.TOKEN)

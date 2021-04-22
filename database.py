@@ -374,6 +374,39 @@ async def get_old_reminders():
     
     return old_reminders
 
+# Get guild leaderboard
+async def get_guild_leaderboard(ctx):
+    
+    try:
+        record_leaderboard_worst = None
+        record_leaderboard_best = None
+        cur=navi_db.cursor()
+        cur.execute('SELECT guild_name FROM guilds where member1_id=? or member2_id=? or member3_id=? or member4_id=? or member5_id=? or member6_id=? or member7_id=? or member8_id=? or member9_id=? or member10_id=?', (ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,))
+        record_guild_name = cur.fetchone()
+        if record_guild_name:
+            guild_name = record_guild_name[0]
+            cur.execute('SELECT COUNT(*) FROM guilds_leaderboard WHERE guild_name = ?', (guild_name,))
+            record_raid_count = cur.fetchone()
+            raid_count = int(record_raid_count[0])
+            worst_raid_counts = raid_count - 5
+            if worst_raid_counts < 0:
+                worst_raid_counts = 0
+            if worst_raid_counts > 5:
+                worst_raid_counts = 5
+            if not raid_count == 0:
+                cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy DESC LIMIT 5', (guild_name,))
+                record_leaderboard_best = cur.fetchall()
+            if not worst_raid_counts == 0:
+                cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy LIMIT ?', (guild_name,worst_raid_counts,))
+                record_leaderboard_worst = cur.fetchall()
+        else:
+            guild_name = None
+
+    except sqlite3.Error as error:
+        global_data.logger.error(f'Routine \'get_active_reminders\' had the following error: {error}')
+    
+    return (guild_name, record_leaderboard_best, record_leaderboard_worst)
+
 
 
 # --- Database: Write Data ---
@@ -1144,6 +1177,7 @@ async def reset_guilds(bot):
     try:
         cur=navi_db.cursor()
         cur.execute('DELETE FROM reminders WHERE activity = ?', ('guild',))
+        cur.execute('DELETE FROM guilds_leaderboard')
         cur.execute('UPDATE guilds SET stealth_current = ?', (1,))
         cur.execute('SELECT guild_name, guild_channel_id, guild_message FROM guilds')
         records = cur.fetchall()
@@ -1156,7 +1190,20 @@ async def reset_guilds(bot):
         global_data.logger.error('Error resetting guilds.')
         
     return guilds
-        
+
+# Write raid to leaderboard
+async def write_raid_energy(ctx, guild_name, energy):
+    
+    datetime = ctx.message.created_at
+    timestamp = datetime.timestamp()
+    
+    try:
+        cur=navi_db.cursor()
+        status = ''
+        cur.execute('INSERT INTO guilds_leaderboard (guild_name, user_id, energy, timestamp) VALUES (?, ?, ?, ?)', (guild_name, ctx.author.id, energy, timestamp,))
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+
         
 
 # --- Error Logging ---
