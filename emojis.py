@@ -16,6 +16,8 @@ two = ':two:'
 three = ':three:'
 four = ':four:'
 five = ':five:'
+best_raids = '<:pan_cool:834673942793945098>'
+worst_raids = '<:anime_sus:834673942530359337>'
 
 # Misc
 bp = ':small_blue_diamond:'

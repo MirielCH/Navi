@@ -922,11 +922,11 @@ async def guild(ctx, *args):
         try:
             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             try:
-                message_description = str(m.embeds[0].description)
-                message_title = str(m.embeds[0].title)
-                message_footer = str(m.embeds[0].footer)
+                message_description = str(m.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_title = str(m.embeds[0].title).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                message_footer = str(m.embeds[0].footer).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 try:
-                    message_fields = str(m.embeds[0].fields)
+                    message_fields = str(m.embeds[0].fields).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     message_author = str(m.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except:
                     message_fields = ''
@@ -1141,8 +1141,8 @@ async def guild(ctx, *args):
                     title = f'{guild_name} WEEKLY LEADERBOARD',
                 )    
                 embed.set_footer(text='Imagine being on the lower list.')
-                embed.add_field(name='THE BEST RAIDS', value=leaderboard_best, inline=False)
-                embed.add_field(name='THE WHAT-EVEN-IS-THIS RAIDS', value=leaderboard_worst, inline=False)
+                embed.add_field(name=f'COOL RAIDS {emojis.best_raids}', value=leaderboard_best, inline=False)
+                embed.add_field(name=f'WHAT THE HELL IS THIS {emojis.worst_raids}', value=leaderboard_worst, inline=False)
         
                 await ctx.reply(embed=embed, mention_author=False)
                 
@@ -1170,11 +1170,11 @@ async def guild(ctx, *args):
                             bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
                             try:
                                 message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                message_description = str(bot_answer.embeds[0].description)
+                                message_description = str(bot_answer.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                 message_footer = str(bot_answer.embeds[0].footer)
                                 try:
-                                    message_fields = str(bot_answer.embeds[0].fields)
-                                    message_title = str(bot_answer.embeds[0].title)
+                                    message_fields = str(bot_answer.embeds[0].fields).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                    message_title = str(bot_answer.embeds[0].title).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                 except:
                                     message_fields = ''
                                 bot_message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
@@ -2596,6 +2596,7 @@ async def farm(ctx, *args):
             if  ((message.find(ctx_author) > -1) and (message.find('have grown from the seed') > -1))\
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already farmed') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('seed to farm') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you do not have this type of seed') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or (message.find('This command is unlocked in') > -1)\
@@ -2673,6 +2674,11 @@ async def farm(ctx, *args):
                             return
                         # Ignore message that you own no seed
                         elif bot_message.find('seed to farm') > -1:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore message that you don't own the correct seed
+                        elif bot_message.find('you do not have this type of seed') > -1:
                             if global_data.DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return
@@ -4596,7 +4602,7 @@ async def cooldown(ctx, *args):
                             if farm_enabled == 1:
                                 if bot_message.find('Farm`** (**') > -1:
                                     farm_start = bot_message.find('Farm`** (**') + 11
-                                    farm_end = bot_message.find('s**', vote_start) + 1
+                                    farm_end = bot_message.find('s**', farm_start) + 1
                                     farm = bot_message[farm_start:farm_end]
                                     farm = farm.lower()
                                     if farm_message == None:

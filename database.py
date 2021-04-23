@@ -385,20 +385,10 @@ async def get_guild_leaderboard(ctx):
         record_guild_name = cur.fetchone()
         if record_guild_name:
             guild_name = record_guild_name[0]
-            cur.execute('SELECT COUNT(*) FROM guilds_leaderboard WHERE guild_name = ?', (guild_name,))
-            record_raid_count = cur.fetchone()
-            raid_count = int(record_raid_count[0])
-            worst_raid_counts = raid_count - 5
-            if worst_raid_counts < 0:
-                worst_raid_counts = 0
-            if worst_raid_counts > 5:
-                worst_raid_counts = 5
-            if not raid_count == 0:
-                cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy DESC LIMIT 5', (guild_name,))
-                record_leaderboard_best = cur.fetchall()
-            if not worst_raid_counts == 0:
-                cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy LIMIT ?', (guild_name,worst_raid_counts,))
-                record_leaderboard_worst = cur.fetchall()
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 30 ORDER BY energy DESC LIMIT 5', (guild_name,))
+            record_leaderboard_best = cur.fetchall()
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 30 ORDER BY energy LIMIT 5', (guild_name,))
+            record_leaderboard_worst = cur.fetchall()
         else:
             guild_name = None
 
