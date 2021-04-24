@@ -16,9 +16,6 @@ from discord.ext import commands, tasks
 from discord.ext.commands import CommandNotFound
 from math import ceil
 
-# Create task dictionary
-running_tasks = {}
-
 
 
 # --- Write reminders ---
@@ -29,8 +26,8 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
 
     task_name = f'{ctx.author.id}-{activity}'
     if status == 'delete-schedule-task':
-        if task_name in running_tasks:
-            running_tasks[task_name].cancel()    
+        if task_name in global_data.running_tasks:
+            global_data.running_tasks[task_name].cancel()    
         bot.loop.create_task(background_task(ctx.author, ctx.channel, message, time_left, task_name))
         status = 'scheduled'
     elif status == 'schedule-task':
@@ -47,8 +44,8 @@ async def write_guild_reminder(ctx, guild_name, guild_channel_id, time_left, mes
       
     if status == 'delete-schedule-task':
         task_name = f'{guild_name}-guild'
-        if task_name in running_tasks:
-            running_tasks[task_name].cancel()    
+        if task_name in global_data.running_tasks:
+            global_data.running_tasks[task_name].cancel()    
         bot.loop.create_task(background_task(guild_name, guild_channel_id, message, time_left, task_name))
         status = 'scheduled'
     elif status == 'schedule-task':
@@ -76,7 +73,7 @@ async def reduce_reminder_time(ctx, time_reduction):
                 if time_difference.total_seconds() <= time_reduction:
                     await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
                     task_name = f'{ctx.author.id}-{reminder_activity}'
-                    delete_task = running_tasks.pop(task_name, None)
+                    delete_task = global_data.running_tasks.pop(task_name, None)
                     all_status.append('deleted')
                 else:
                     reminder_end_time_datetime = reminder_end_time_datetime - timedelta(seconds=time_reduction)
@@ -121,7 +118,7 @@ async def background_task(user, channel, message, time_left, task_name, guild=Fa
                         message_mentions = f'{message_mentions}{member_user.mention} '
             await bot.wait_until_ready()
             await bot.get_channel(channel.id).send(f'{message}\n{message_mentions}')
-        delete_task = running_tasks.pop(task_name, None)
+        delete_task = global_data.running_tasks.pop(task_name, None)
         
     except Exception as e:
         global_data.logger.error(f'Error sending reminder: {e}')
@@ -159,7 +156,7 @@ async def schedule_reminders(bot):
                     task = bot.loop.create_task(background_task(user, channel, message, time_left, task_name))
                 else:
                     task = bot.loop.create_task(background_task(user_id, channel, message, time_left, task_name, True))
-                running_tasks[task_name] = task
+                global_data.running_tasks[task_name] = task
                 
                 await database.set_reminder_triggered(None, user_id, activity)
             except Exception as e:
@@ -213,8 +210,8 @@ async def reset_guild(bot):
                 task_name = f'{guild_name}-guild'
                 await bot.wait_until_ready()
                 channel = bot.get_channel(guild_channel_id)
-                if task_name in running_tasks:
-                    running_tasks[task_name].cancel()    
+                if task_name in global_data.running_tasks:
+                    global_data.running_tasks[task_name].cancel()    
                 
                 bot.loop.create_task(background_task(guild_name, channel, guild_message, 60, task_name, True))
             
@@ -1107,7 +1104,7 @@ async def guild(ctx, *args):
                             f'{emoji} **{energy:,}** {emojis.energy} by {best_user.mention}'
                         )
                 else:
-                    leaderboard_best = f'{emojis.bp} _Not enough raids yet._'
+                    leaderboard_best = f'{emojis.bp} _No cool raids yet._'
                 
                 if not worst_raids == None:
                     counter = 0
@@ -1134,7 +1131,7 @@ async def guild(ctx, *args):
                             f'{emoji} **{energy:,}** {emojis.energy} by {worst_user.mention}'
                         )
                 else:
-                    leaderboard_worst = f'{emojis.bp} _Not enough raids yet._'
+                    leaderboard_worst = f'{emojis.bp} _No lame raids yet._'
                 
                 embed = discord.Embed(
                     color = global_data.color,
@@ -2071,7 +2068,7 @@ async def chop(ctx, *args):
                     else:
                         work_message = work_message.replace('%',command)
                     
-                    bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+                    bot_answer = await bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longest)
                     try:
                         message_author = str(bot_answer.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         message_description = str(bot_answer.embeds[0].description)
@@ -2086,9 +2083,9 @@ async def chop(ctx, *args):
                     
                     # Check for rubies
                     if not ruby_counter == 0:
-                        if (bot_message.find('<:ruby:603456286184701953> RUBY') > -1):
-                            rubies_start = bot_message.find(' GOT ') + 5
-                            rubies_end = bot_message.find('<:ruby:603456286184701953> RUBY') - 1
+                        if (bot_message.lower().find('<:ruby:603456286184701953> ruby') > -1):
+                            rubies_start = bot_message.lower().find(' got ') + 5
+                            rubies_end = bot_message.lower().find('<:ruby:603456286184701953> ruby') - 1
                             rubies = bot_message[rubies_start:rubies_end]
                             if rubies.isnumeric():
                                 rubies = rubies_db + int(rubies)

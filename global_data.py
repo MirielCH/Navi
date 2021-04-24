@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 # Get bot directory
 bot_dir = os.path.dirname(__file__)
 
+# Create task dictionary
+running_tasks = {}
+
 # Databases
 dbfile = os.path.join(bot_dir, 'database/navi_db.db')
 
