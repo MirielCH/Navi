@@ -777,6 +777,7 @@ async def set_specific_reminder(ctx, activity, action):
         'daily': 'daily_enabled',
         'duel': 'duel_enabled',
         'dungmb': 'dungmb_enabled',
+        'farm': 'farm_enabled',
         'horse': 'horse_enabled',
         'hunt': 'hunt_enabled',
         'lootbox': 'lb_enabled',
@@ -854,10 +855,10 @@ async def set_specific_reminder(ctx, activity, action):
                     else:
                         status = f'**{ctx.author.name}**, your partner\'s lootbox alerts are already **{action}d**.'
             else:
-                cur.execute(f'UPDATE settings_user SET adv_enabled = ?, alert_enabled = ?, daily_enabled = ?, hunt_enabled = ?, lb_enabled = ?,\
+                cur.execute(f'UPDATE settings_user SET adv_enabled = ?, alert_enabled = ?, daily_enabled = ?, farm_enabled = ?, hunt_enabled = ?, lb_enabled = ?,\
                     lottery_enabled = ?, pet_enabled = ?, quest_enabled = ?, tr_enabled = ?, weekly_enabled = ?, work_enabled = ?, duel_enabled = ?,\
-                    arena_enabled = ?, dungmb_enabled = ?, bigarena_enabled = ?, nsmb_enabled = ?, vote_enabled = ?, horse_enabled = ?\
-                    WHERE user_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.author.id,))
+                    arena_enabled = ?, dungmb_enabled = ?, bigarena_enabled = ?, nsmb_enabled = ?, race_enabled = ?, vote_enabled = ?, horse_enabled = ?\
+                    WHERE user_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.author.id,))
                 if enabled == 0:
                     cur.execute(f'DELETE FROM reminders WHERE user_id=?', (ctx.author.id,))
                     status = (

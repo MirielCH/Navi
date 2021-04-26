@@ -67,7 +67,7 @@ if not os.path.isfile(logfile):
 # Initialize logging
 logger = logging.getLogger('discord')
 if DEBUG_MODE == 'ON':
-    logger.setLevel(logging.INFO)
+    logger.setLevel(logging.DEBUG)
 else:
     logger.setLevel(logging.INFO)
 handler = logging.handlers.TimedRotatingFileHandler(filename=logfile,when='D',interval=1, encoding='utf-8', utc=True)
