@@ -148,9 +148,12 @@ class tradeCog(commands.Cog):
                                 if global_data.DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
                                 return 
+                            
                         except asyncio.TimeoutError as error:
-                            if global_data.DEBUG_MODE == 'ON':
-                                await ctx.send('Trade detection timeout.')
+                            await ctx.send('Trade detection timeout.')
+                            return
+                        except Exception as e:
+                            global_data.logger.error(f'Trade detection error: {e}')
                             return    
                     else:
                         return

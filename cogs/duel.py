@@ -35,6 +35,7 @@ class duelCog(commands.Cog):
                 if  ((message.find(f'\'s cooldown') > -1) and (message.find('You have been in a duel recently') > -1))\
                 or ((message.find(f'{ctx_author}\'s duel') > -1) and (message.find('Profit:') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Duel cancelled') > -1))\
+                or ((message.find(ctx_author) > -1) and (message.find('sent a Duel request') > -1))\
                 or (message.find(f'Huh, next time be sure to say who you want to duel') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -97,6 +98,7 @@ class duelCog(commands.Cog):
                                         if  ((message.find(f'\'s cooldown') > -1) and (message.find('You have been in a duel recently') > -1))\
                                         or ((message.find(f'{ctx_author}\'s duel') > -1) and (message.find('Profit:') > -1))\
                                         or ((message.find(ctx_author) > -1) and (message.find('Duel cancelled') > -1))\
+                                        or ((message.find(ctx_author) > -1) and (message.find('sent a Duel request') > -1))\
                                         or (message.find(f'Huh, next time be sure to say who you want to duel') > -1)\
                                         or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -140,10 +142,12 @@ class duelCog(commands.Cog):
                         return
                 else:
                     return
-                
+            
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Duel detection timeout.')
+                await ctx.send('Duel detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Duel detection error: {e}')
                 return   
         
 # Initialization

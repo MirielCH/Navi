@@ -192,10 +192,11 @@ class horseCog(commands.Cog):
                                 return
                         else:
                             return
-                        
                     except asyncio.TimeoutError as error:
-                        if global_data.DEBUG_MODE == 'ON':
-                            await ctx.send('Horse detection timeout.')
+                        await ctx.send('Horse detection timeout.')
+                        return
+                    except Exception as e:
+                        global_data.logger.error(f'Horse detection error: {e}')
                         return   
                 else:
                     return

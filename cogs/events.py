@@ -210,10 +210,12 @@ class eventsCog(commands.Cog):
                         return
                 else:
                     return
-                
+            
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Event detection timeout.')
+                await ctx.send('Event detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Event detection error: {e}')
                 return 
         
 # Initialization

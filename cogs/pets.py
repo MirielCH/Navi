@@ -194,10 +194,11 @@ class petsCog(commands.Cog):
                                 else:
                                     return
                             else:
-                                return
+                                return    
                         except asyncio.TimeoutError as error:
-                            if global_data.DEBUG_MODE == 'ON':
-                                await ctx.send('Pet adventure detection timeout.')
+                            await ctx.send('Pet adventure detection timeout.')
+                        except Exception as e:
+                            global_data.logger.error(f'Pet adventure detection error: {e}')
                             return  
                     elif arg1 in ('tournament'):
                         command = 'rpg pet tournament'
@@ -309,10 +310,11 @@ class petsCog(commands.Cog):
                                     return
                             else:
                                 return
-                            
                         except asyncio.TimeoutError as error:
-                            if global_data.DEBUG_MODE == 'ON':
-                                await ctx.send('Pet tournament detection timeout.')
+                            await ctx.send('Pet tournament detection timeout.')
+                            return
+                        except Exception as e:
+                            global_data.logger.error(f'Pet tournament detection error: {e}')
                             return    
         
 # Initialization

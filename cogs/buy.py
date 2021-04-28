@@ -215,10 +215,11 @@ class buyCog(commands.Cog):
                     else:
                         if global_data.DEBUG_MODE == 'ON':
                             await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-                    
                 except asyncio.TimeoutError as error:
-                    if global_data.DEBUG_MODE == 'ON':
-                        await ctx.send('Buy detection timeout.')
+                    await ctx.send('Buy detection timeout.')
+                    return
+                except Exception as e:
+                    global_data.logger.error(f'Buy detection error: {e}')
                     return   
             else:
                 return

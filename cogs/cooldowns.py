@@ -336,10 +336,12 @@ class cooldownsCog(commands.Cog):
                         return
                 else:
                     return
-                
+            
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Cooldowns detection timeout.')
+                await ctx.send('Cooldowns detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Cooldowns detection error: {e}')
                 return
         
 # Initialization

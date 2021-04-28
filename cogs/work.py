@@ -226,10 +226,11 @@ class workCog(commands.Cog):
                         if global_data.DEBUG_MODE == 'ON':
                             await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
                         return
-
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Work detection timeout.')
+                await ctx.send('Work detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Work detection error: {e}')
                 return
         
 # Initialization

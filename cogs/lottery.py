@@ -182,10 +182,11 @@ class lotteryCog(commands.Cog):
                         return
                 else:
                     return
-                
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Lottery detection timeout.')
+                await ctx.send('Lottery detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Lottery detection error: {e}')
                 return    
         
 # Initialization

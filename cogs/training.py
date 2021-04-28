@@ -72,7 +72,7 @@ class trainingCog(commands.Cog):
             
             return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
 
-        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
+        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
         bot_message = await global_functions.encode_message(bot_answer)
             
         return (bot_answer, bot_message,)
@@ -253,10 +253,12 @@ class trainingCog(commands.Cog):
                 else:
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-                
+            
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Training detection timeout.')
+                await ctx.send('Training detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Training detection error: {e}')
                 return     
         
 # Initialization

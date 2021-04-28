@@ -206,10 +206,12 @@ class adventureCog(commands.Cog):
                 # Add an F if the user died
                 if bot_message.find('but lost fighting') > -1:
                     await bot_answer.add_reaction(emojis.rip)
-                
+            
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Adventure detection timeout.')
+                await ctx.send('Adventure detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Adventure detection error: {e}')
                 return   
         
 # Initialization

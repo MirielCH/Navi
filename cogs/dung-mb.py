@@ -142,10 +142,11 @@ class dungmbCog(commands.Cog):
                         return
                 else:
                     return
-                
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Dungeon / Miniboss detection timeout.')
+                await ctx.send('Dungeon / Miniboss detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Dungeon / Miniboss detection error: {e}')
                 return  
         
 # Initialization

@@ -1083,9 +1083,7 @@ async def ascended(ctx, *args):
     prefix = ctx.prefix
     if prefix.lower() == 'rpg ' and len(args) >= 1:
         
-        
-        
-        arg1 = args[0]
+        arg1 = args[0].lower()
         args = list(args)
         
         if arg1 == 'hunt':

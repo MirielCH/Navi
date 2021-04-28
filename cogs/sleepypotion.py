@@ -130,9 +130,12 @@ class sleepypotionCog(commands.Cog):
                             if global_data.DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return 
+                        
                     except asyncio.TimeoutError as error:
-                        if global_data.DEBUG_MODE == 'ON':
-                            await ctx.send('Sleepy Potion detection timeout.')
+                        await ctx.send('Sleepy Potion detection timeout.')
+                        return
+                    except Exception as e:
+                        global_data.logger.error(f'Sleepy potion detection error: {e}')
                         return    
                 else:
                     return

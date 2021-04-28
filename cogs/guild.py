@@ -326,7 +326,8 @@ class guildCog(commands.Cog):
                                             if global_data.DEBUG_MODE == 'ON':
                                                 global_data.logger.debug(f'Guild detection: {message}')
                                             
-                                            if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild successfully upgraded!') > -1)\
+                                            if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1)\
+                                            or (message.find('Guild successfully upgraded!') > -1) or (message.find('Guild upgrade failed!') > -1)\
                                             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find('end your previous command') > -1))\
                                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find('your guild has already 100') > -1))\
@@ -348,7 +349,7 @@ class guildCog(commands.Cog):
                                 guild_upgraded = False
                                 
                                 # Check if stealth was upgraded
-                                if bot_message.find('Guild successfully upgraded!') > 1:
+                                if (bot_message.find('Guild successfully upgraded!') > -1) or (bot_message.find('Guild upgrade failed!') > -1):
                                     stealth_start = bot_message.find('--> **') + 6
                                     stealth_end = bot_message.find('**', stealth_start)
                                     stealth = bot_message[stealth_start:stealth_end]
@@ -444,9 +445,11 @@ class guildCog(commands.Cog):
                             if global_data.DEBUG_MODE == 'ON':
                                 await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
                     except asyncio.TimeoutError as error:
-                        if global_data.DEBUG_MODE == 'ON':
-                            await ctx.send('Guild detection timeout.')
-                        return   
+                        await ctx.send('Guild detection timeout.')
+                        return 
+                    except Exception as e:
+                        global_data.logger.error(f'Guild detection error: {e}')
+                        return
             else:
                 try:
                     guild_data = await database.get_guild(ctx, 'member')
@@ -471,7 +474,8 @@ class guildCog(commands.Cog):
                                     if global_data.DEBUG_MODE == 'ON':
                                         global_data.logger.debug(f'Guild detection: {message}')
                                     
-                                    if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild successfully upgraded!') > -1)\
+                                    if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1)\
+                                    or (message.find('Guild successfully upgraded!') > -1) or (message.find('Guild upgrade failed!') > -1)\
                                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('end your previous command') > -1))\
                                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('your guild has already 100') > -1))\
@@ -548,8 +552,10 @@ class guildCog(commands.Cog):
                     else:
                         return
                 except asyncio.TimeoutError as error:
-                    if global_data.DEBUG_MODE == 'ON':
-                        await ctx.send('Guild detection timeout.')
+                    await ctx.send('Guild detection timeout.')
+                    return
+                except Exception as e:
+                    global_data.logger.error(f'Guild detection error: {e}')
                     return   
         
 # Initialization

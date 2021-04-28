@@ -212,11 +212,12 @@ async def encode_message_guild(bot_message):
         message_author = str(bot_message.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         message_description = str(bot_message.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         message_title = str(bot_message.embeds[0].title).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        message_footer = str(bot_message.embeds[0].footer).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         try:
-            message_fields = str(bot_message.embeds[0].fields).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            message_fields = str(bot_message.embeds[0].fields)
         except:
             message_fields = ''
-        message = f'{message_author}{message_description}{message_fields}{message_title}'
+        message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
     except:
         message = str(bot_message.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
     
@@ -244,11 +245,12 @@ def encode_message_guild_non_async(bot_message):
         message_author = str(bot_message.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         message_description = str(bot_message.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         message_title = str(bot_message.embeds[0].title).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        message_footer = str(bot_message.embeds[0].footer).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         try:
-            message_fields = str(bot_message.embeds[0].fields).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            message_fields = str(bot_message.embeds[0].fields)
         except:
             message_fields = ''
-        message = f'{message_author}{message_description}{message_fields}{message_title}'
+        message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
     except:
         message = str(bot_message.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
     

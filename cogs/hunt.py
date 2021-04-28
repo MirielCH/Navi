@@ -136,7 +136,6 @@ class huntCog(commands.Cog):
                                             bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
-                                                
                             if bot_message == None:
                                 task_result = await task_status
                                 if not task_result == None:
@@ -145,7 +144,6 @@ class huntCog(commands.Cog):
                                 else:
                                     await ctx.send('Hunt detection timeout.')
                                     return
-                            
                             # Check if it found a cooldown embed, if yes if it is the correct one, if not, ignore it and try to wait for the bot message one more time
                             if bot_message.find(f'\'s cooldown') > 1:
                                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -333,10 +331,13 @@ class huntCog(commands.Cog):
                 # Add an F if the user died
                 if (bot_message.find(f'**{ctx_author}** lost but ') > -1) or (bot_message.find('but lost fighting') > -1):
                     await bot_answer.add_reaction(emojis.rip)
+            
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Hunt detection timeout.')
-                return  
+                await ctx.send('Hunt detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Hunt detection error: {e}')
+                return
 
 # Initialization
 def setup(bot):

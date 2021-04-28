@@ -73,6 +73,8 @@ class nsmbbaCog(commands.Cog):
                     args = args[0]
                     args.pop(0)     
                 for arg in args:
+                    if arg == 'miniboss':
+                        return
                     full_args = f'{full_args}{arg}'
             else:
                 return
@@ -194,8 +196,10 @@ class nsmbbaCog(commands.Cog):
                         return
                     
                 except asyncio.TimeoutError as error:
-                    if global_data.DEBUG_MODE == 'ON':
-                        await ctx.send('Big arena / Not so mini boss detection timeout.')
+                    await ctx.send('Big arena / Not so mini boss detection timeout.')
+                    return
+                except Exception as e:
+                    global_data.logger.error(f'Big arena / Not so mini boss detection error: {e}')
                     return    
         
 # Initialization

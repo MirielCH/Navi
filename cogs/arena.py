@@ -136,10 +136,11 @@ class arenaCog(commands.Cog):
                         return
                 else:
                     return
-                
             except asyncio.TimeoutError as error:
-                if global_data.DEBUG_MODE == 'ON':
-                    await ctx.send('Arena detection timeout.')
+                await ctx.send('Arena detection timeout.')
+                return
+            except Exception as e:
+                global_data.logger.error(f'Arena detection error: {e}')
                 return   
         
 # Initialization
