@@ -16,6 +16,7 @@ from dotenv import load_dotenv
 from discord.ext import commands, tasks
 from discord.ext.commands import CommandNotFound
 from math import ceil
+from operator import itemgetter
 
     
     
@@ -50,8 +51,11 @@ async def schedule_reminders(bot):
                 end_time_difference = end_time_datetime - current_time
                 time_left = end_time_difference.total_seconds()
                 
-                task_name = f'{user_id}-{activity}'
+                task_name = f'{user_id}-{activity}'    
+                
                 if not activity == 'guild':
+                    if activity.find('custom') > -1:
+                        message = global_data.default_custom_message.replace('%',message)
                     task = bot.loop.create_task(global_functions.background_task(bot, user, channel, message, time_left, task_name))
                 else:
                     task = bot.loop.create_task(global_functions.background_task(bot, user_id, channel, message, time_left, task_name, True))
@@ -78,12 +82,17 @@ async def delete_old_reminders(bot):
                     user_id = reminder[0]
                 activity = reminder[1]
                 triggered = int(reminder[2])
-                await database.delete_reminder(None, user_id, activity)
+                delete_status = await database.delete_reminder(None, user_id, activity)
                 if global_data.DEBUG_MODE == 'ON':
                     if triggered == 1:
                         global_data.logger.info(f'{datetime.now()}: Deleted this old reminder {reminder}')
                     else:
                         global_data.logger.error(f'{datetime.now()}: Deleted this old reminder that was never triggered: {reminder}')
+                if not delete_status == 'deleted':
+                    if delete_status == 'notfound':
+                        global_data.logger.error(f'{datetime.now()}: Tried to delete this reminder, but could not find it: {reminder}')
+                    else:
+                        global_data.logger.error(f'{datetime.now()}: Had an error deleting this reminder: {reminder}')
             except:
                 global_data.logger.error(f'{datetime.now()}: Error deleting old reminder {reminder}')
             
@@ -114,7 +123,8 @@ cog_extensions = ['cogs.hunt',
                   'cogs.open',
                   'cogs.inventory',
                   'cogs.sleepypotion',
-                  'cogs.guild']
+                  'cogs.guild',
+                  'cogs.custom-reminders']
 if __name__ == '__main__':
     for extension in cog_extensions:
         bot.load_extension(extension)
@@ -834,7 +844,7 @@ async def enable(ctx, *args):
             return
         
 # Command "list" - Lists all active reminders
-@bot.command(name='list',aliases=('reminders',))
+@bot.command(name='list')
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def list_cmd(ctx):
     
@@ -842,11 +852,13 @@ async def list_cmd(ctx):
     if not prefix.lower() == 'rpg ':
         
         active_reminders = await database.get_active_reminders(ctx)
+        reminders_custom = ''
+        reminders_custom_list = []
 
         if active_reminders == 'None':
-            reminders = f'{emojis.bp} You have no active reminders'
+            reminders_erpg = f'{emojis.bp} You have no active reminders'
         else:
-            reminders = ''
+            reminders_erpg = ''
             for reminder in active_reminders:
                 activity = reminder[0]
                 end_time = reminder[1]
@@ -870,19 +882,41 @@ async def list_cmd(ctx):
                 end_time_difference = end_time_datetime - current_time
                 time_left = end_time_difference.total_seconds()
                 timestring = await global_functions.parse_seconds(time_left)
+                if activity.find('Custom') > -1:
+                    reminder_id = activity.replace('Custom','')
+                    reminder_message = reminder[2]
+                    if len(reminder_message) > 40:
+                        reminder_message = f'{reminder_message[0:37]}...'
+                    reminders_custom_list.append([reminder_id, timestring, reminder_message,])
+                else:
+                    reminders_erpg = f'{reminders_erpg}\n{emojis.bp}**`{activity}`** (**{timestring}**)'
+        reminders_erpg = reminders_erpg.strip()
+        if reminders_erpg == '':
+            reminders_erpg = f'{emojis.bp} You have no active reminders'
+        
+        if not len(reminders_custom_list) == 0:
+            reminders_custom_list = sorted(reminders_custom_list, key=itemgetter(0))
+            
+            for reminder in reminders_custom_list:
+                reminder_id = reminder[0]
+                timestring = reminder[1]
+                reminder_message = reminder[2]
+                reminders_custom = f'{reminders_custom}\n{emojis.bp} **`{reminder_id}`** (**{timestring}**) - {reminder_message}'
+            
+            reminders_custom = reminders_custom.strip()
                 
-                reminders = f'{reminders}\n{emojis.bp}**`{activity}`** (**{timestring}**)'
-                
-        reminders = reminders.strip()
+        
         user_name = ctx.author.name
         user_name = user_name.upper()
     
         embed = discord.Embed(
             color = global_data.color,
-            title = f'{user_name}\'S REMINDERS',
-            description = reminders
+            title = f'{user_name}\'S REMINDERS'
         )    
         
+        embed.add_field(name='EPIC RPG', value=reminders_erpg, inline=False)
+        if not len(reminders_custom_list) == 0:
+            embed.add_field(name='CUSTOM', value=reminders_custom, inline=False)
         await ctx.reply(embed=embed, mention_author=False)
 
 # Command "hardmode" - Sets hardmode mode
@@ -969,7 +1003,7 @@ async def ruby(ctx, *args):
 # Update guild
 @bot.event
 async def on_message_edit(message_before, message_after):
-    if message_before.author.id == 555955826880413696:
+    if message_before.author.id == global_data.epic_rpg_id:
         if message_before.content.find('loading the EPIC guild member list...') > -1:
             message_guild_name = str(message_after.embeds[0].fields[0].name)
             message_guild_members = str(message_after.embeds[0].fields[0].value)
@@ -1026,7 +1060,8 @@ async def help(ctx):
         prefix = await database.get_prefix(ctx)
         
         reminder_management = (
-            f'{emojis.bp} `{prefix}list` : List all your active reminders'
+            f'{emojis.bp} `{prefix}list` : List all your active reminders\n'
+            f'{emojis.bp} `{prefix}rm` : Manage custom reminders'
         )
                     
         user_settings = (
@@ -1162,7 +1197,7 @@ async def shutdown(ctx):
         except asyncio.TimeoutError as error:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
             
-# Sleepy potion text command
+# Sleepy potion test command
 @bot.command()
 @commands.is_owner()
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)

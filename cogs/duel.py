@@ -45,7 +45,7 @@ class duelCog(commands.Cog):
             except:
                 correct_message = False
             
-            return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
@@ -87,7 +87,7 @@ class duelCog(commands.Cog):
                             bot_message = None
                             message_history = await ctx.channel.history(limit=50).flatten()
                             for msg in message_history:
-                                if (msg.author.id == 555955826880413696) and (msg.created_at > ctx.message.created_at):
+                                if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)

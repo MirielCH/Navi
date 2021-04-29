@@ -295,7 +295,7 @@ async def get_active_reminders(ctx):
     
     try:
         cur=navi_db.cursor()
-        cur.execute('SELECT activity, end_time FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (ctx.author.id,current_time,))
+        cur.execute('SELECT activity, end_time, message FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (ctx.author.id,current_time,))
         record = cur.fetchall()
         
         if record:
@@ -397,7 +397,7 @@ async def get_guild_leaderboard(ctx):
             guild_name = None
 
     except sqlite3.Error as error:
-        global_data.logger.error(f'Routine \'get_active_reminders\' had the following error: {error}')
+        global_data.logger.error(f'Routine \'get_guild_leaderboard\' had the following error: {error}')
     
     return (guild_name, record_leaderboard_best, record_leaderboard_worst)
 
@@ -889,6 +889,18 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
     
     try:
         cur=navi_db.cursor()
+        if activity == 'custom':
+            cur.execute('SELECT activity FROM reminders WHERE user_id = ? AND activity LIKE ? ORDER BY activity DESC LIMIT 5', (ctx.author.id,'custom%',))
+            record_highest_custom_reminder = cur.fetchone()
+            if record_highest_custom_reminder:
+                highest_custom_db = record_highest_custom_reminder[0].replace('custom','')
+                highest_custom_db = int(highest_custom_db)
+                activity = f'custom{highest_custom_db+1}'
+            else:
+                activity = 'custom1'
+            
+        cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))    
+        
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
         record = cur.fetchone()
         
@@ -1029,14 +1041,24 @@ async def set_reminder_triggered(ctx, user_id, activity, triggered=1):
 # Delete reminder
 async def delete_reminder(ctx, user_id, activity):
     
+    status = 'error'
+    
     try:
         cur=navi_db.cursor()
-        cur.execute('DELETE FROM reminders WHERE user_id = ? AND activity = ?', (user_id, activity,))
+        cur.execute('SELECT activity FROM reminders WHERE user_id = ? AND activity = ?', (user_id, activity,))
+        record = cur.fetchone()
+        if record:
+            cur.execute('DELETE FROM reminders WHERE user_id = ? AND activity = ?', (user_id, activity,))
+            status = 'deleted'
+        else:
+            status = 'notfound'
     except sqlite3.Error as error:
         if ctx == None:
             global_data.logger.error(f'Routine \'delete_reminder\' had the following error: {error}')
         else:
             await log_error(ctx, error)
+    
+    return status
 
 # Update guild
 async def update_guild(guild_name, guild_leader, guild_members):

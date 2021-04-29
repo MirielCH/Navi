@@ -34,6 +34,7 @@ class openCog(commands.Cog):
                 
                 if  ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have any of this lootbox type') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what lootbox are you trying to open?') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what are you doing??') > -1))\
                 or (message.find(f'Huh you don\'t have that many of this lootbox type') > -1)\
                 or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('lootbox opened!') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -44,7 +45,7 @@ class openCog(commands.Cog):
             except:
                 correct_message = False
             
-            return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
@@ -77,7 +78,7 @@ class openCog(commands.Cog):
                         bot_message = None
                         message_history = await ctx.channel.history(limit=50).flatten()
                         for msg in message_history:
-                            if (msg.author.id == 555955826880413696) and (msg.created_at > ctx.message.created_at):
+                            if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                 try:
                                     ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                     message = await global_functions.encode_message(msg)
@@ -87,6 +88,7 @@ class openCog(commands.Cog):
                                     
                                     if  ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have any of this lootbox type') > -1))\
                                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what lootbox are you trying to open?') > -1))\
+                                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what are you doing??') > -1))\
                                     or (message.find(f'Huh you don\'t have that many of this lootbox type') > -1)\
                                     or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('lootbox opened!') > -1))\
                                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -119,6 +121,11 @@ class openCog(commands.Cog):
                             await bot_answer.add_reaction(emojis.navi)
                         # Ignore failed openings
                         elif (bot_message.find('of this lootbox type') > -1) or (bot_message.find('what lootbox') > -1):
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore error message if wrong name
+                        elif bot_message.find('what are you doing??') > 1:
                             if global_data.DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return

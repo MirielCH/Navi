@@ -47,7 +47,7 @@ class questCog(commands.Cog):
             except:
                 correct_message = False
             
-            return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
@@ -74,6 +74,9 @@ class questCog(commands.Cog):
                     if arg == 'quest':
                         command = 'rpg epic quest'
                     else:
+                        return
+                else:
+                    if arg == 'quit':
                         return
             try:
                 settings = await database.get_settings(ctx, 'quest')
@@ -102,7 +105,7 @@ class questCog(commands.Cog):
                             bot_message = None
                             message_history = await ctx.channel.history(limit=50).flatten()
                             for msg in message_history:
-                                if (msg.author.id == 555955826880413696) and (msg.created_at > ctx.message.created_at):
+                                if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)
@@ -135,9 +138,40 @@ class questCog(commands.Cog):
 
                             # Check what quest it is and if normal quest if the user accepts or denies the quest (different cooldowns)
                             if (bot_message.find('Are you looking for a quest?') > -1) or (bot_message.find('Are you ready to start the EPIC quest') > -1):
-                                message = await self.get_quest_message(ctx)
-                                bot_answer = message[0]
-                                bot_message = message[1]
+                                task_status = self.bot.loop.create_task(self.get_quest_message(ctx))
+                                bot_message = None
+                                message_history = await ctx.channel.history(limit=50).flatten()
+                                for msg in message_history:
+                                    if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
+                                        try:
+                                            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                            message = await global_functions.encode_message(msg)
+                                            
+                                            if global_data.DEBUG_MODE == 'ON':
+                                                global_data.logger.debug(f'Hunt detection: {message}')
+                                            
+                                            if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
+                                            or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
+                                            or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
+                                            or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
+                                            or ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('Are you ready to start the EPIC quest') > -1))\
+                                            or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already claimed a quest') > -1)) or (message.find('You cannot do this if you have a pending quest!') > -1)\
+                                            or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                                            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                                            or (message.find('You need a **special horse** to do this') > -1):
+                                                bot_answer = msg
+                                                bot_message = message
+                                        except Exception as e:
+                                            await ctx.send(f'Error reading message history: {e}')
+                                                    
+                                if bot_message == None:
+                                    task_result = await task_status
+                                    if not task_result == None:
+                                        bot_answer = task_result[0]
+                                        bot_message = task_result[1]
+                                    else:
+                                        await ctx.send('Quest detection timeout.')
+                                        return
                                 
                                 if bot_message.find('you did not accept the quest') > -1:
                                     quest_declined = True

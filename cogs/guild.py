@@ -64,7 +64,7 @@ class guildCog(commands.Cog):
                 message = global_functions.encode_message_guild_non_async(m)
                 
                 if global_data.DEBUG_MODE == 'ON':
-                    global_data.logger.debug(f'Open detection: {message}')
+                    global_data.logger.debug(f'Guild detection: {message}')
                 
                 if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild successfully upgraded!') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -77,10 +77,10 @@ class guildCog(commands.Cog):
             except:
                 correct_message = False
             
-            return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
-        bot_message = await global_functions.encode_message(bot_answer)
+        bot_message = await global_functions.encode_message_guild(bot_answer)
             
         return (bot_answer, bot_message,)
             
@@ -318,7 +318,7 @@ class guildCog(commands.Cog):
                                 bot_message = None
                                 message_history = await ctx.channel.history(limit=50).flatten()
                                 for msg in message_history:
-                                    if (msg.author.id == 555955826880413696) and (msg.created_at > ctx.message.created_at):
+                                    if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                         try:
                                             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                             message = await global_functions.encode_message_guild(msg)
@@ -466,7 +466,7 @@ class guildCog(commands.Cog):
                         bot_message = None
                         message_history = await ctx.channel.history(limit=50).flatten()
                         for msg in message_history:
-                            if (msg.author.id == 555955826880413696) and (msg.created_at > ctx.message.created_at):
+                            if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                 try:
                                     ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                     message = await global_functions.encode_message_guild(msg)
@@ -496,7 +496,7 @@ class guildCog(commands.Cog):
                                 return
 
                         # Check if correct embed
-                        if bot_message.find('Your guild was raided') > 1:
+                        if bot_message.find('Your guild was raided') > -1:
                             if not guild_reminders_on == 0:
                                 # Upgrade stealth (no point in upgrading that without active reminders)
                                 stealth_start = bot_message.find('**STEALTH**: ') + 13
@@ -504,7 +504,6 @@ class guildCog(commands.Cog):
                                 stealth = bot_message[stealth_start:stealth_end]
                                 guild_stealth_current = int(stealth)
                                 status = await database.set_guild_stealth_current(ctx, guild_name, guild_stealth_current)
-                                await bot_answer.add_reaction(emojis.navi)
 
                                 # Set message to send
                                 if guild_stealth_current >= guild_stealth_threshold:
@@ -550,7 +549,8 @@ class guildCog(commands.Cog):
                         else:
                             return
                     else:
-                        return
+                        global_data.logger.error(f'Guild detection error: Couldn\'t find guild data for user {ctx.author.id} ({ctx.author.name})')
+                        return   
                 except asyncio.TimeoutError as error:
                     await ctx.send('Guild detection timeout.')
                     return

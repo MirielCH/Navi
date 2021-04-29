@@ -8,6 +8,9 @@ from dotenv import load_dotenv
 # Get bot directory
 bot_dir = os.path.dirname(__file__)
 
+# EPIC RPG user ID
+epic_rpg_id = 555955826880413696
+
 # Create task dictionary
 running_tasks = {}
 
@@ -41,6 +44,7 @@ DEBUG_MODE = os.getenv('DEBUG_MODE')
 
 # Default messages
 default_message = 'Hey! It\'s time for `%`!'
+default_custom_message = 'Hey! This is your reminder for **%**!'
 alert_message = 'Hey! **{user}** found {lootbox} for you!' # Not changeable by user
 arena_message = 'Hey! The **big arena** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'

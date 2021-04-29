@@ -124,7 +124,8 @@ async def write_reminder(bot, ctx, activity, time_left, message, cooldown_update
     task_name = f'{ctx.author.id}-{activity}'
     if status == 'delete-schedule-task':
         if task_name in global_data.running_tasks:
-            global_data.running_tasks[task_name].cancel()    
+            global_data.running_tasks[task_name].cancel()
+            delete_task = global_data.running_tasks.pop(task_name, None)
         bot.loop.create_task(background_task(bot, ctx.author, ctx.channel, message, time_left, task_name))
         status = 'scheduled'
     elif status == 'schedule-task':
@@ -142,7 +143,8 @@ async def write_guild_reminder(bot, ctx, guild_name, guild_channel_id, time_left
     if status == 'delete-schedule-task':
         task_name = f'{guild_name}-guild'
         if task_name in global_data.running_tasks:
-            global_data.running_tasks[task_name].cancel()    
+            global_data.running_tasks[task_name].cancel()
+            delete_task = global_data.running_tasks.pop(task_name, None)
         bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name))
         status = 'scheduled'
     elif status == 'schedule-task':
@@ -168,7 +170,12 @@ async def reduce_reminder_time(ctx, time_reduction):
             time_difference = reminder_end_time_datetime - current_time
             if not (reminder_activity.find('pet') > -1) and not (reminder_activity in ('vote','bigarena','nsmb','lottery','race',)):
                 if time_difference.total_seconds() <= time_reduction:
-                    await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
+                    delete_status = await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
+                    if not delete_status == 'deleted':
+                        if delete_status == 'notfound':
+                            global_data.logger.error(f'{datetime.now()}: Tried to delete this reminder, but could not find it: {reminder}')
+                        else:
+                            global_data.logger.error(f'{datetime.now()}: Had an error deleting this reminder: {reminder}')
                     task_name = f'{ctx.author.id}-{reminder_activity}'
                     delete_task = global_data.running_tasks.pop(task_name, None)
                     all_status.append('deleted')

@@ -44,7 +44,7 @@ class trainingCog(commands.Cog):
             except:
                 correct_message = False
             
-            return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
@@ -70,7 +70,7 @@ class trainingCog(commands.Cog):
             except:
                 correct_message = False
             
-            return m.author.id == 555955826880413696 and m.channel == ctx.channel and correct_message
+            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
         bot_message = await global_functions.encode_message(bot_answer)
@@ -140,7 +140,7 @@ class trainingCog(commands.Cog):
                         bot_message = None
                         message_history = await ctx.channel.history(limit=50).flatten()
                         for msg in message_history:
-                            if (msg.author.id == 555955826880413696) and (msg.created_at > ctx.message.created_at):
+                            if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                 try:
                                     ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                     message = await global_functions.encode_message(msg)
@@ -148,7 +148,7 @@ class trainingCog(commands.Cog):
                                     if global_data.DEBUG_MODE == 'ON':
                                         global_data.logger.debug(f'Training detection: {message}')
                                     
-                                    if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
+                                    if (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
                                     or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
                                     or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
                                     or ((message.find(ctx_author) > -1) and (message.find('is training in') > -1))\
@@ -174,9 +174,33 @@ class trainingCog(commands.Cog):
                                 if not ruby_counter == 0:
                                     await ctx.send(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.')
                             if not tr_enabled == 0:
-                                message = await self.get_training_answer_message(ctx)
-                                bot_answer = message[0]
-                                bot_message = message[1]
+                                task_status = self.bot.loop.create_task(self.get_training_answer_message(ctx))
+                                bot_first_answer = bot_answer
+                                bot_message = None
+                                message_history = await ctx.channel.history(limit=50).flatten()
+                                for msg in message_history:
+                                    if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > bot_first_answer.created_at):
+                                        try:
+                                            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                            message = await global_functions.encode_message(msg)
+                                            
+                                            if global_data.DEBUG_MODE == 'ON':
+                                                global_data.logger.debug(f'Training detection (2nd message): {message}')
+                                            
+                                            if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1):
+                                                bot_answer = msg
+                                                bot_message = message
+                                        except Exception as e:
+                                            await ctx.send(f'Error reading message history: {e}')
+                                
+                                if bot_message == None:
+                                    task_result = await task_status
+                                    if not task_result == None:
+                                        bot_answer = task_result[0]
+                                        bot_message = task_result[1]
+                                    else:
+                                        await ctx.send('Training detection timeout.')
+                                        return
 
                         if not tr_enabled == 0:
                             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
