@@ -201,7 +201,7 @@ async def reduce_reminder_time(ctx, time_reduction):
 async def encode_message(bot_message):
     try:
         message_author = str(bot_message.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-        message_description = str(bot_message.embeds[0].description)
+        message_description = str(bot_message.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         message_title = str(bot_message.embeds[0].title)
         try:
             message_fields = str(bot_message.embeds[0].fields)
@@ -230,11 +230,27 @@ async def encode_message_guild(bot_message):
     
     return message
 
+# Encode message (async, encoded fields)
+async def encode_message_with_fields(bot_message):
+    try:
+        message_author = str(bot_message.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        message_description = str(bot_message.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        message_title = str(bot_message.embeds[0].title)
+        try:
+            message_fields = str(bot_message.embeds[0].fields).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        except:
+            message_fields = ''
+        message = f'{message_author}{message_description}{message_fields}{message_title}'
+    except:
+        message = str(bot_message.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+    
+    return message
+
 # Encode message (non async)
 def encode_message_non_async(bot_message):
     try:
         message_author = str(bot_message.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-        message_description = str(bot_message.embeds[0].description)
+        message_description = str(bot_message.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
         message_title = str(bot_message.embeds[0].title)
         try:
             message_fields = str(bot_message.embeds[0].fields)
@@ -258,6 +274,22 @@ def encode_message_guild_non_async(bot_message):
         except:
             message_fields = ''
         message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
+    except:
+        message = str(bot_message.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+    
+    return message
+
+# Encode message (non async, encoded fields)
+def encode_message_with_fields_non_async(bot_message):
+    try:
+        message_author = str(bot_message.embeds[0].author).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        message_description = str(bot_message.embeds[0].description).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        message_title = str(bot_message.embeds[0].title)
+        try:
+            message_fields = str(bot_message.embeds[0].fields).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+        except:
+            message_fields = ''
+        message = f'{message_author}{message_description}{message_fields}{message_title}'
     except:
         message = str(bot_message.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
     

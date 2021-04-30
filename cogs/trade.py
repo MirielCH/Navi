@@ -27,7 +27,7 @@ class tradeCog(commands.Cog):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                message = global_functions.encode_message_non_async(m)
+                message = global_functions.encode_message_with_fields_non_async(m)
                 
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Trade detection: {message}')
@@ -47,7 +47,7 @@ class tradeCog(commands.Cog):
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
-        bot_message = await global_functions.encode_message(bot_answer)
+        bot_message = await global_functions.encode_message_with_fields(bot_answer)
             
         return (bot_answer, bot_message,)
             
@@ -83,7 +83,7 @@ class tradeCog(commands.Cog):
                                 if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                        message = await global_functions.encode_message(msg)
+                                        message = await global_functions.encode_message_with_fields(msg)
                                         
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Trade detection: {message}')
@@ -113,7 +113,7 @@ class tradeCog(commands.Cog):
                                 if trade_id == 'f':
                                     rubies_end = bot_message.find(f'\'', rubies_start)
                                 else:
-                                    rubies_end = bot_message.find(f'\\', rubies_start) -1
+                                    rubies_end = bot_message.find(f'n**', rubies_start) -1
                                 rubies = bot_message[rubies_start:rubies_end]
                                 if rubies.isnumeric():
                                     rubies = int(rubies)

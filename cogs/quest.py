@@ -111,7 +111,7 @@ class questCog(commands.Cog):
                                         message = await global_functions.encode_message(msg)
                                         
                                         if global_data.DEBUG_MODE == 'ON':
-                                            global_data.logger.debug(f'Hunt detection: {message}')
+                                            global_data.logger.debug(f'Quest detection: {message}')
                                         
                                         if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                                         or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
@@ -139,16 +139,17 @@ class questCog(commands.Cog):
                             # Check what quest it is and if normal quest if the user accepts or denies the quest (different cooldowns)
                             if (bot_message.find('Are you looking for a quest?') > -1) or (bot_message.find('Are you ready to start the EPIC quest') > -1):
                                 task_status = self.bot.loop.create_task(self.get_quest_message(ctx))
+                                bot_first_answer = bot_answer
                                 bot_message = None
                                 message_history = await ctx.channel.history(limit=50).flatten()
                                 for msg in message_history:
-                                    if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
+                                    if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > bot_first_answer.created_at):
                                         try:
                                             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                             message = await global_functions.encode_message(msg)
                                             
                                             if global_data.DEBUG_MODE == 'ON':
-                                                global_data.logger.debug(f'Hunt detection: {message}')
+                                                global_data.logger.debug(f'Quest detection: {message}')
                                             
                                             if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                                             or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\

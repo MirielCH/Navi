@@ -37,6 +37,7 @@ class openCog(commands.Cog):
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what are you doing??') > -1))\
                 or (message.find(f'Huh you don\'t have that many of this lootbox type') > -1)\
                 or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('lootbox opened!') > -1))\
+                or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('You were about to open a nice lootbox') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                     correct_message = True
@@ -91,6 +92,7 @@ class openCog(commands.Cog):
                                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what are you doing??') > -1))\
                                     or (message.find(f'Huh you don\'t have that many of this lootbox type') > -1)\
                                     or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('lootbox opened!') > -1))\
+                                    or ((message.find(f'{ctx_author}\'s lootbox') > -1) and (message.find('You were about to open a nice lootbox') > -1))\
                                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):                            
                                         bot_answer = msg
@@ -121,6 +123,11 @@ class openCog(commands.Cog):
                             await bot_answer.add_reaction(emojis.navi)
                         # Ignore failed openings
                         elif (bot_message.find('of this lootbox type') > -1) or (bot_message.find('what lootbox') > -1):
+                            if global_data.DEBUG_MODE == 'ON':
+                                await bot_answer.add_reaction(emojis.cross)
+                            return
+                        # Ignore lootbox event
+                        elif (bot_message.find('You were about to open a nice lootbox') > -1):
                             if global_data.DEBUG_MODE == 'ON':
                                 await bot_answer.add_reaction(emojis.cross)
                             return

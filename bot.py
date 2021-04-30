@@ -101,30 +101,30 @@ async def delete_old_reminders(bot):
 # --- Command Initialization ---
 intents = discord.Intents().all()
 bot = commands.Bot(command_prefix=database.get_prefix_all, help_command=None, case_insensitive=True, intents=intents)
-cog_extensions = ['cogs.hunt',
-                  'cogs.work',
-                  'cogs.training',
-                  'cogs.adventure',
-                  'cogs.farm',
-                  'cogs.buy',
-                  'cogs.lottery',
-                  'cogs.quest',
-                  'cogs.daily',
-                  'cogs.weekly',
-                  'cogs.nsmb-bigarena',
-                  'cogs.pets',
-                  'cogs.duel',
+cog_extensions = ['cogs.adventure',
                   'cogs.arena',
-                  'cogs.dung-mb',
-                  'cogs.horse',
+                  'cogs.buy',
                   'cogs.cooldowns',
+                  'cogs.custom-reminders',
+                  'cogs.daily',
+                  'cogs.duel',
+                  'cogs.dung-mb',
                   'cogs.events',
-                  'cogs.trade',
-                  'cogs.open',
-                  'cogs.inventory',
-                  'cogs.sleepypotion',
+                  'cogs.farm',
                   'cogs.guild',
-                  'cogs.custom-reminders']
+                  'cogs.horse',
+                  'cogs.hunt',
+                  'cogs.inventory',
+                  'cogs.lottery',
+                  'cogs.nsmb-bigarena',
+                  'cogs.open',
+                  'cogs.pets',
+                  'cogs.quest',
+                  'cogs.sleepypotion',
+                  'cogs.trade',
+                  'cogs.training',
+                  'cogs.weekly',
+                  'cogs.work']
 if __name__ == '__main__':
     for extension in cog_extensions:
         bot.load_extension(extension)
@@ -1162,7 +1162,48 @@ async def devstats(ctx):
         )
         
         await ctx.reply(embed=embed, mention_author=False)
-  
+
+# Test command
+@bot.command()
+@commands.is_owner()
+@commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
+async def test(ctx):
+
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        
+        items = (
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+            f'Test\n'
+        )
+        
+        items2 = (
+            f'Test\n'
+        )
+        
+        embed = discord.Embed(
+            color = global_data.color,
+            title = 'TEST EMBED'
+        )
+        
+        embed.add_field(name='Items', value=items, inline=True)
+        embed.add_field(name='Consumables', value=items2, inline=True)
+        embed.add_field(name='Event items', value=items2, inline=True)
+        embed.add_field(name='More items', value=items2, inline=True)
+        
+        await ctx.reply(embed=embed, mention_author=False)
+
 # Hey! Listen!
 @bot.command(aliases=('listen',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)

@@ -37,6 +37,7 @@ class dungmbCog(commands.Cog):
                 or (message.find('Requirements to enter the dungeon') > -1)\
                 or (message.find(f'{ctx_author}\'s miniboss') > -1)\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot enter a dungeon alone') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('bot is going to restart soon') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                     correct_message = True
@@ -100,6 +101,7 @@ class dungmbCog(commands.Cog):
                                         or (message.find('Requirements to enter the dungeon') > -1)\
                                         or (message.find(f'{ctx_author}\'s miniboss') > -1)\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot enter a dungeon alone') > -1))\
+                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find('bot is going to restart soon') > -1))\
                                         or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                                             bot_answer = msg

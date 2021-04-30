@@ -33,6 +33,8 @@ class farmCog(commands.Cog):
                     global_data.logger.debug(f'Work detection: {message}')
                 
                 if  ((message.find(ctx_author) > -1) and (message.find('have grown from the seed') > -1))\
+                or  ((message.find(ctx_author) > -1) and (message.find('HITS THE FLOOR WITH THE FISTS') > -1))\
+                or  ((message.find(ctx_author) > -1) and (message.find('is about to plant another seed') > -1))\
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already farmed') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('seed to farm') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you do not have this type of seed') > -1))\
@@ -115,6 +117,8 @@ class farmCog(commands.Cog):
                                             global_data.logger.debug(f'Farm detection: {message}')
                                         
                                         if  ((message.find(ctx_author) > -1) and (message.find('have grown from the seed') > -1))\
+                                        or  ((message.find(ctx_author) > -1) and (message.find('HITS THE FLOOR WITH THE FISTS') > -1))\
+                                        or  ((message.find(ctx_author) > -1) and (message.find('is about to plant another seed') > -1))\
                                         or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already farmed') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('seed to farm') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you do not have this type of seed') > -1))\
