@@ -145,10 +145,10 @@ async def write_guild_reminder(bot, ctx, guild_name, guild_channel_id, time_left
         if task_name in global_data.running_tasks:
             global_data.running_tasks[task_name].cancel()
             delete_task = global_data.running_tasks.pop(task_name, None)
-        bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name))
+        bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name, True))
         status = 'scheduled'
     elif status == 'schedule-task':
-        bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name))
+        bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name, True))
         status = 'scheduled'
     
     return status

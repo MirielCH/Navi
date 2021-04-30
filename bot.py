@@ -852,69 +852,115 @@ async def list_cmd(ctx):
     if not prefix.lower() == 'rpg ':
         
         active_reminders = await database.get_active_reminders(ctx)
+        reminders_commands = ''
+        reminders_commands_list = []
+        reminders_events = ''
+        reminders_events_list = []
+        reminders_pets = ''
+        reminders_pets_list = []
         reminders_custom = ''
         reminders_custom_list = []
+        user_name = ctx.author.name
+        user_name = user_name.upper()
+        title = f'{user_name}\'S REMINDERS'
 
         if active_reminders == 'None':
-            reminders_erpg = f'{emojis.bp} You have no active reminders'
+            embed = discord.Embed(
+                color = global_data.color,
+                title = title,
+                description = f'{emojis.bp} You have no active reminders'
+            )
         else:
-            reminders_erpg = ''
+            embed = discord.Embed(
+                color = global_data.color,
+                title = title
+            )
+            
             for reminder in active_reminders:
                 activity = reminder[0]
                 end_time = reminder[1]
-                if activity == 'pett':
-                    activity = 'Pet tournament'
-                elif activity.find('pet-') > -1:
-                    pet_id = activity.replace('pet-','')
-                    activity = f'Pet {pet_id}'
-                elif activity == 'bigarena':
-                    activity = 'Big arena'
-                elif activity == 'nsmb':
-                    activity = 'Not so mini boss'
-                elif activity == 'dungmb':
-                    activity = 'Dungeon / Miniboss'
-                elif activity == 'race':
-                    activity = 'Horse race'
-                else:
-                    activity = activity.capitalize()
                 current_time = datetime.utcnow().replace(microsecond=0)
                 end_time_datetime = datetime.fromtimestamp(end_time)
                 end_time_difference = end_time_datetime - current_time
                 time_left = end_time_difference.total_seconds()
                 timestring = await global_functions.parse_seconds(time_left)
-                if activity.find('Custom') > -1:
-                    reminder_id = activity.replace('Custom','')
+                
+                # Pets
+                if activity.find('pet-') > -1:
+                    pet_id = activity.replace('pet-','')
+                    activity = f'Pet {pet_id}'
+                    reminders_pets_list.append([activity, timestring])
+                
+                # Events
+                elif activity == 'pett':
+                    activity = 'Pet tournament'
+                    reminders_events_list.append([activity, timestring])
+                elif activity == 'bigarena':
+                    activity = 'Big arena'
+                    reminders_events_list.append([activity, timestring])
+                elif activity == 'nsmb':
+                    activity = 'Not so mini boss'
+                    reminders_events_list.append([activity, timestring])
+                elif activity == 'race':
+                    activity = 'Horse race'
+                    reminders_events_list.append([activity, timestring])
+                elif activity == 'lottery':
+                    activity = activity.capitalize()
+                    reminders_events_list.append([activity, timestring])
+                
+                # Custom reminders
+                elif activity.find('custom') > -1:
+                    reminder_id = activity.capitalize().replace('Custom','')
                     reminder_message = reminder[2]
                     if len(reminder_message) > 40:
                         reminder_message = f'{reminder_message[0:37]}...'
                     reminders_custom_list.append([reminder_id, timestring, reminder_message,])
+                    
+                # Commands
+                elif activity == 'dungmb':
+                    activity = 'Dungeon / Miniboss'
+                    reminders_commands_list.append([activity, timestring])
                 else:
-                    reminders_erpg = f'{reminders_erpg}\n{emojis.bp}**`{activity}`** (**{timestring}**)'
-        reminders_erpg = reminders_erpg.strip()
-        if reminders_erpg == '':
-            reminders_erpg = f'{emojis.bp} You have no active reminders'
+                    activity = activity.capitalize()
+                    reminders_commands_list.append([activity, timestring])
         
-        if not len(reminders_custom_list) == 0:
-            reminders_custom_list = sorted(reminders_custom_list, key=itemgetter(0))
+            # Create lists
+            if not len(reminders_commands_list) == 0:
+                for reminder in reminders_commands_list:
+                    activity = reminder[0]
+                    timestring = reminder[1]
+                    reminders_commands = f'{reminders_commands}\n{emojis.bp} **`{activity}`** (**{timestring}**)'
+                reminders_commands = reminders_commands.strip()
             
-            for reminder in reminders_custom_list:
-                reminder_id = reminder[0]
-                timestring = reminder[1]
-                reminder_message = reminder[2]
-                reminders_custom = f'{reminders_custom}\n{emojis.bp} **`{reminder_id}`** (**{timestring}**) - {reminder_message}'
-            
-            reminders_custom = reminders_custom.strip()
+            if not len(reminders_events_list) == 0:
+                for reminder in reminders_events_list:
+                    activity = reminder[0]
+                    timestring = reminder[1]
+                    reminders_events = f'{reminders_events}\n{emojis.bp} **`{activity}`** (**{timestring}**)'
+                reminders_events = reminders_events.strip()
                 
+            if not len(reminders_pets_list) == 0:
+                for reminder in reminders_pets_list:
+                    activity = reminder[0]
+                    timestring = reminder[1]
+                    reminders_pets = f'{reminders_pets}\n{emojis.bp} **`{activity}`** (**{timestring}**)'
+                reminders_pets = reminders_pets.strip()
+            
+            if not len(reminders_custom_list) == 0:
+                reminders_custom_list = sorted(reminders_custom_list, key=itemgetter(0))
+                for reminder in reminders_custom_list:
+                    reminder_id = reminder[0]
+                    timestring = reminder[1]
+                    reminder_message = reminder[2]
+                    reminders_custom = f'{reminders_custom}\n{emojis.bp} **`{reminder_id}`** (**{timestring}**) - {reminder_message}'
+                reminders_custom = reminders_custom.strip()
         
-        user_name = ctx.author.name
-        user_name = user_name.upper()
-    
-        embed = discord.Embed(
-            color = global_data.color,
-            title = f'{user_name}\'S REMINDERS'
-        )    
-        
-        embed.add_field(name='EPIC RPG', value=reminders_erpg, inline=False)
+        if not len(reminders_commands_list) == 0:
+            embed.add_field(name='COMMANDS', value=reminders_commands, inline=False)
+        if not len(reminders_events_list) == 0:
+            embed.add_field(name='EVENTS', value=reminders_events, inline=False)
+        if not len(reminders_pets_list) == 0:
+            embed.add_field(name='PETS', value=reminders_pets, inline=False)
         if not len(reminders_custom_list) == 0:
             embed.add_field(name='CUSTOM', value=reminders_custom, inline=False)
         await ctx.reply(embed=embed, mention_author=False)
