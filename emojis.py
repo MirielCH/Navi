@@ -20,6 +20,7 @@ best_raids = '<:pan_cool:834673942793945098>'
 worst_raids = '<:anime_sus:834673942530359337>'
 
 # Misc
+blank = '<:blank:837342790752534528>'
 bp = ':small_blue_diamond:'
 cross = '❎'
 error = '<:redcross:796796637695311963>'

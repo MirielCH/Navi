@@ -860,11 +860,12 @@ async def list_cmd(ctx):
         reminders_pets_list = []
         reminders_custom = ''
         reminders_custom_list = []
+        reminder_guild = ''
         user_name = ctx.author.name
         user_name = user_name.upper()
         title = f'{user_name}\'S REMINDERS'
 
-        if active_reminders == 'None':
+        if len(active_reminders) == 0:
             embed = discord.Embed(
                 color = global_data.color,
                 title = title,
@@ -915,7 +916,12 @@ async def list_cmd(ctx):
                     if len(reminder_message) > 40:
                         reminder_message = f'{reminder_message[0:37]}...'
                     reminders_custom_list.append([reminder_id, timestring, reminder_message,])
-                    
+                
+                # Guild reminder
+                elif activity == 'guild':
+                    guild_name = reminder[3]
+                    reminder_guild = f'{emojis.bp} **`{guild_name}`** (**{timestring}**)'
+                
                 # Commands
                 elif activity == 'dungmb':
                     activity = 'Dungeon / Miniboss'
@@ -961,6 +967,8 @@ async def list_cmd(ctx):
             embed.add_field(name='EVENTS', value=reminders_events, inline=False)
         if not len(reminders_pets_list) == 0:
             embed.add_field(name='PETS', value=reminders_pets, inline=False)
+        if not reminder_guild == '':
+            embed.add_field(name='GUILD', value=reminder_guild, inline=False)
         if not len(reminders_custom_list) == 0:
             embed.add_field(name='CUSTOM', value=reminders_custom, inline=False)
         await ctx.reply(embed=embed, mention_author=False)

@@ -33,9 +33,9 @@ activities = ['all','adventure','arena','bigarena','daily','duel','dungmb','farm
 cooldown_activities = ['adventure','arena','daily','farm','guild','hunt','lootbox','miniboss','quest','training','weekly','work',]
 
 # Bot message timeout
-timeout = 10
-timeout_longer = 20
-timeout_longest = 30
+timeout = 20
+timeout_longer = 30
+timeout_longest = 40
 
 # Read the bot token and debug setting from the .env file
 load_dotenv()

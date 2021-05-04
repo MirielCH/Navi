@@ -291,17 +291,23 @@ async def get_active_reminders(ctx):
     current_time = datetime.utcnow().replace(microsecond=0)
     current_time = current_time.timestamp()
     
-    active_reminders = 'None'
+    active_reminders = []
     
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT activity, end_time, message FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (ctx.author.id,current_time,))
-        record = cur.fetchall()
+        record_reminders_user = cur.fetchall()
+        guild_data = await get_guild(ctx,'member')
+        if not guild_data == None:
+            guild_name = guild_data[0]
+            cur.execute('SELECT activity, end_time, message, user_id FROM reminders WHERE user_id = ? AND end_time > ?', (guild_name,current_time,))
+            record_reminder_guild = cur.fetchone()
         
-        if record:
-            active_reminders = record
-        else:
-            active_reminders = 'None'
+        if record_reminders_user:
+            active_reminders = record_reminders_user
+        if record_reminder_guild:
+            active_reminders.append(record_reminder_guild)
+        
     except sqlite3.Error as error:
         global_data.logger.error(f'Routine \'get_active_reminders\' had the following error: {error}')
     
@@ -400,6 +406,58 @@ async def get_guild_leaderboard(ctx):
         global_data.logger.error(f'Routine \'get_guild_leaderboard\' had the following error: {error}')
     
     return (guild_name, record_leaderboard_best, record_leaderboard_worst)
+
+# Get guild weekly report
+async def get_guild_leaderboard_weekly_report(bot):
+    
+    try:
+        guild_report_data = []
+        energy_total = 0
+        cur=navi_db.cursor()
+        cur.execute('SELECT guild_name, guild_channel_id FROM guilds')
+        record_guilds = cur.fetchall()
+        if not len(record_guilds) == 0:
+            for guild in record_guilds:
+                try:
+                    guild_name = guild[0]
+                    guild_channel_id = guild[1]
+                    energy_total = 0
+                    cur.execute('SELECT text FROM guilds_leaderboard_praises ORDER BY RANDOM() LIMIT 1')
+                    record_praise = cur.fetchone()
+                    cur.execute('SELECT text FROM guilds_leaderboard_roasts ORDER BY RANDOM() LIMIT 1')
+                    record_roast = cur.fetchone()
+                    cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy DESC LIMIT 1', (guild_name,))
+                    record_best_raid = cur.fetchone()
+                    cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy LIMIT 1', (guild_name,))
+                    record_worst_raid = cur.fetchone()
+                    cur.execute('SELECT energy FROM guilds_leaderboard WHERE guild_name = ?', (guild_name,))
+                    record_all_raids_energy = cur.fetchall()
+                    if record_all_raids_energy:
+                        for raid_energy in record_all_raids_energy:
+                            energy_total = energy_total + raid_energy[0]
+                    praise = record_praise[0]
+                    roast = record_roast[0]
+                    if record_worst_raid:
+                        raid_worst_user_id = record_worst_raid[0]
+                        raid_worst_energy = record_worst_raid[1]
+                    else:
+                        raid_worst_user_id = 0
+                        raid_worst_energy = 0
+                    if record_best_raid:
+                        raid_best_user_id = record_best_raid[0]
+                        raid_best_energy = record_best_raid[1]
+                    else:
+                        raid_best_user_id = 0
+                        raid_best_energy = 0
+                    guild_report_data.append((guild_name,guild_channel_id,energy_total,raid_worst_user_id,raid_worst_energy, roast, raid_best_user_id, raid_best_energy, praise))
+
+                except sqlite3.Error as error:
+                    global_data.logger.error(f'Error getting weekly guild report for guild {guild_name}: {error}')
+
+    except sqlite3.Error as error:
+        global_data.logger.error(f'Error getting guild data for guild report: {error}')
+        
+    return guild_report_data
 
 
 

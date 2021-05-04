@@ -92,11 +92,10 @@ async def background_task(bot, user, channel, message, time_left, task_name, gui
         if guild == False:
             setting_dnd = await database.get_dnd(user.id)
             
-            await bot.wait_until_ready()
             if setting_dnd == 0:
-                await bot.get_channel(channel.id).send(f'{user.mention} {message}')
+                await channel.send(f'{user.mention} {message}')
             else:
-                await bot.get_channel(channel.id).send(f'**{user.name}**, {message}')
+                await channel.send(f'**{user.name}**, {message}')
         else:
             guild_members = await database.get_guild_members(user)
             message_mentions = ''
@@ -106,8 +105,7 @@ async def background_task(bot, user, channel, message, time_left, task_name, gui
                     member_user = bot.get_user(member)
                     if not member_user == None:
                         message_mentions = f'{message_mentions}{member_user.mention} '
-            await bot.wait_until_ready()
-            await bot.get_channel(channel.id).send(f'{message}\n{message_mentions}')
+            await channel.send(f'{message}\n{message_mentions}')
         delete_task = global_data.running_tasks.pop(task_name, None)
         
     except Exception as e:
@@ -145,10 +143,14 @@ async def write_guild_reminder(bot, ctx, guild_name, guild_channel_id, time_left
         if task_name in global_data.running_tasks:
             global_data.running_tasks[task_name].cancel()
             delete_task = global_data.running_tasks.pop(task_name, None)
-        bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name, True))
+            await bot.wait_until_ready()
+            guild_channel = bot.get_channel(guild_channel_id)
+        bot.loop.create_task(background_task(bot, guild_name, guild_channel, message, time_left, task_name, True))
         status = 'scheduled'
     elif status == 'schedule-task':
-        bot.loop.create_task(background_task(bot, guild_name, guild_channel_id, message, time_left, task_name, True))
+        await bot.wait_until_ready()
+        guild_channel = bot.get_channel(guild_channel_id)
+        bot.loop.create_task(background_task(bot, guild_name, guild_channel, message, time_left, task_name, True))
         status = 'scheduled'
     
     return status
