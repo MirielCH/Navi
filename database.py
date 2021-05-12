@@ -25,6 +25,7 @@ async def mixedCase(*args):
   return list(mixed_prefixes)
 
 
+
 # --- Database: Get Data ---
 
 # Check database for stored prefix, if none is found, a record is inserted and the default prefix - is used, return all bot prefixes
@@ -391,11 +392,11 @@ async def get_guild_leaderboard(ctx):
         record_guild_name = cur.fetchone()
         if record_guild_name:
             guild_name = record_guild_name[0]
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 30 ORDER BY energy DESC LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 40 ORDER BY energy DESC LIMIT 5', (guild_name,))
             record_leaderboard_best = cur.fetchall()
             if len(record_leaderboard_best) == 0:
                 record_leaderboard_best = None
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 30 ORDER BY energy LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 40 ORDER BY energy LIMIT 5', (guild_name,))
             record_leaderboard_worst = cur.fetchall()
             if len(record_leaderboard_worst) == 0:
                 record_leaderboard_worst = None

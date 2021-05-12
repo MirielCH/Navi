@@ -252,11 +252,13 @@ class huntCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_elapsed_seconds = time_elapsed.total_seconds()
+                if together == True and partner_donor_tier < user_donor_tier:
+                    donor_tier = partner_donor_tier
+                else:
+                    donor_tier = user_donor_tier
                 
-                if together == True and donor_affected == True:
-                    time_left = cooldown*global_data.donor_cooldowns[partner_donor_tier]-time_elapsed_seconds
-                elif together == False and donor_affected == True:
-                    time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]-time_elapsed_seconds
+                if donor_affected == True:
+                    time_left = cooldown*global_data.donor_cooldowns[donor_tier]-time_elapsed_seconds
                 else:
                     time_left = cooldown-time_elapsed_seconds
                 

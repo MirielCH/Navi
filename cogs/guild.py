@@ -112,7 +112,8 @@ class guildCog(commands.Cog):
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Guild detection: {message}')
                 
-                if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1) or (message.find('Guild successfully upgraded!') > -1)\
+                if  (message.find('Your guild was raided') > -1) or (message.find(f'**{ctx_author}** RAIDED ') > -1)\
+                or (message.find('Guild successfully upgraded!') > -1) or (message.find('Guild upgrade failed!') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('end your previous command') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('your guild has already 100') > -1))\
