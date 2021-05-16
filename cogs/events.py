@@ -140,10 +140,7 @@ class eventsCog(commands.Cog):
                                         pet_end = bot_message.find('s', pet_start) + 1
                                         tournament = bot_message[pet_start:pet_end]
                                         tournament = tournament.lower()
-                                        if default_message == None:
-                                            pet_message = global_data.default_message.replace('%','rpg pet tournament')
-                                        else:
-                                            pet_message = default_message.replace('%','rpg pet tournament')
+                                        pet_message = global_data.tournament_message
                                         cooldowns.append(['pett',tournament,pet_message,])
                                 if race_enabled == 1:
                                     if bot_message.find('race**: ') > -1:
@@ -169,7 +166,7 @@ class eventsCog(commands.Cog):
                                     if activity == 'pett':
                                         time_left = time_left + 60 #The event is somethings not perfectly on point, so I added a minute
                                     if time_left > 1:
-                                        if activity in ('bigarena','nsmb','race'):
+                                        if activity in ('bigarena','nsmb','race','pett'):
                                             write_status = await global_functions.write_reminder(self.bot, ctx, activity, time_left, message, True, True)
                                         else:
                                             write_status = await global_functions.write_reminder(self.bot, ctx, activity, time_left, message, True)

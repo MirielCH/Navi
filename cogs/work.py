@@ -162,7 +162,7 @@ class workCog(commands.Cog):
                                 time_elapsed = current_time - bot_answer_time
                                 time_elapsed_seconds = time_elapsed.total_seconds()
                                 time_left = time_left-time_elapsed_seconds
-                                write_status = await global_functions.write_reminder(self.bot, ctx, 'work', time_left, work_message, True)
+                                write_status = await global_functions.write_reminder(self.bot, ctx, 'work', time_left, work_message)
                                 if write_status in ('inserted','scheduled','updated'):
                                     await bot_answer.add_reaction(emojis.navi)
                                 else:

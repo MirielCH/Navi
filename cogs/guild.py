@@ -346,6 +346,7 @@ class guildCog(commands.Cog):
             
             if args:
                 arg = args[0]
+                arg = arg.lower()
                 if arg in ('raid', 'upgrade'):
                     try:
                         guild_data = await database.get_guild(ctx, 'member')

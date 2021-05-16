@@ -201,12 +201,10 @@ class petsCog(commands.Cog):
                             global_data.logger.error(f'Pet adventure detection error: {e}')
                             return  
                     elif arg1 in ('tournament'):
-                        command = 'rpg pet tournament'
                         try:
                             settings = await database.get_settings(ctx, 'pet')
                             if not settings == None:
                                 reminders_on = settings[0]
-                                default_message = settings[1]
                                 if not reminders_on == 0:
                                     user_donor_tier = int(settings[2])
                                     if user_donor_tier > 3:
@@ -214,10 +212,7 @@ class petsCog(commands.Cog):
                                     pet_enabled = int(settings[3])
                                     
                                     # Set message to send         
-                                    if default_message == None:
-                                        pet_message = global_data.default_message.replace('%',command)
-                                    else:
-                                        pet_message = default_message.replace('%',command)
+                                    pet_message = global_data.tournament_message
                                     
                                     if not pet_enabled == 0:
                                         task_status = self.bot.loop.create_task(self.get_pet_message(ctx))

@@ -49,6 +49,7 @@ alert_message = 'Hey! **{user}** found {lootbox} for you!' # Not changeable by u
 arena_message = 'Hey! The **big arena** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 pet_message = 'Hey! Your pet **$** is back!'
+tournament_message = 'Hey! The **pet tournament** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 race_message = 'Hey! The **horse race** just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 
 # Guild defaults
