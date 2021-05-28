@@ -766,79 +766,97 @@ async def enable(ctx, *args):
             activity_list = f'{activity_list}\n{emojis.bp} `{activity}`'
         
         if args:
-            if len(args) == 1:
-                
-                activity_aliases = {
-                    'adv': 'adventure',
-                    'lb': 'lootbox',
-                    'tr': 'training',
-                    'chop': 'work',
-                    'fish': 'work',
-                    'mine': 'work',
-                    'pickup': 'work',
-                    'axe': 'work',
-                    'net': 'work',
-                    'pickaxe': 'work',
-                    'ladder': 'work',
-                    'boat': 'work',
-                    'bowsaw': 'work',
-                    'drill': 'work',
-                    'tractor': 'work',
-                    'chainsaw': 'work',
-                    'bigboat': 'work',
-                    'dynamite': 'work',
-                    'greenhouse': 'work',
-                    'pets': 'pet',
-                    'alert': 'lootbox-alert',
-                    'lootboxalert': 'lootbox-alert',
-                    'lbalert': 'lootbox-alert',
-                    'lb-alert': 'lootbox-alert',
-                    'notsominiboss': 'nsmb',
-                    'notsomini': 'nsmb',
-                    'big': 'bigarena',
-                    'voting': 'vote',
-                    'dungeon': 'dungmb',
-                    'miniboss': 'dungmb',
-                    'mb': 'dungmb',
-                    'horserace': 'race',
-                    'horseracing': 'race',
-                    'horsebreed': 'horse',
-                    'horsebreeding': 'horse',
-                    'breed': 'horse',
-                    'breeding': 'horse',
-                    'racing': 'race',
-                    'dueling': 'duel',
-                    'duelling': 'duel',
-                    'horserace': 'race'
-                }
+            activity_aliases = {
+                'adv': 'adventure',
+                'lb': 'lootbox',
+                'tr': 'training',
+                'chop': 'work',
+                'fish': 'work',
+                'mine': 'work',
+                'pickup': 'work',
+                'axe': 'work',
+                'net': 'work',
+                'pickaxe': 'work',
+                'ladder': 'work',
+                'boat': 'work',
+                'bowsaw': 'work',
+                'drill': 'work',
+                'tractor': 'work',
+                'chainsaw': 'work',
+                'bigboat': 'work',
+                'dynamite': 'work',
+                'greenhouse': 'work',
+                'pets': 'pet',
+                'alert': 'lootbox-alert',
+                'lootboxalert': 'lootbox-alert',
+                'lbalert': 'lootbox-alert',
+                'lb-alert': 'lootbox-alert',
+                'notsominiboss': 'nsmb',
+                'notsomini': 'nsmb',
+                'big': 'bigarena',
+                'voting': 'vote',
+                'dungeon': 'dungmb',
+                'miniboss': 'dungmb',
+                'mb': 'dungmb',
+                'horserace': 'race',
+                'horseracing': 'race',
+                'horsebreed': 'horse',
+                'horsebreeding': 'horse',
+                'breed': 'horse',
+                'breeding': 'horse',
+                'racing': 'race',
+                'dueling': 'duel',
+                'duelling': 'duel',
+                'horserace': 'race'
+            }
 
-                activity = args[0]
+            action = ctx.invoked_with
+            found_wrong_activity = False
+            wrong_activities = f'**{ctx.author.name}**, couldn\'t find the following activities:'
+            status_all = f'**{ctx.author.name}**, the following reminders are now **{action}d:**'
+                                
+            for arg in args:
+                activity = arg
                 activity = activity.lower()
-                
-                action = ctx.invoked_with
-                
-                if activity == 'all' and action == 'disable':
-                    await ctx.reply(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
-                    try:
-                        answer = await bot.wait_for('message', check=check, timeout=30)
-                        if not answer.content.lower() in ['yes','y']:
-                            await ctx.send('Aborted')
-                            return
-                    except asyncio.TimeoutError as error:
-                        await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                if not activity in activity_aliases and not activity in global_data.activities:
+                    wrong_activities = f'{wrong_activities}\n{emojis.bp} `{activity}`'
+                    found_wrong_activity = True
+            if found_wrong_activity == True:
+                await ctx.reply(f'{wrong_activities}\n\n{activity_list}', mention_author=False)
+                return
+            else:
+                for arg in args:
+                    activity = arg
+                    activity = activity.lower()
+            
+                    if activity == 'all':
+                        if action == 'disable':
+                            await ctx.reply(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
+                            try:
+                                answer = await bot.wait_for('message', check=check, timeout=30)
+                                if not answer.content.lower() in ['yes','y']:
+                                    await ctx.send('Aborted')
+                                    return
+                            except asyncio.TimeoutError as error:
+                                await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                        
+                        status = await database.set_specific_reminder(ctx, activity, action)
+                        await ctx.reply(status, mention_author=False)
+                        return
 
-                if activity in activity_aliases:
-                    activity = activity_aliases[activity]
+                    if activity in activity_aliases:
+                        activity = activity_aliases[activity]
                 
-                if activity in global_data.activities:
-                    status = await database.set_specific_reminder(ctx, activity, action)
+                    if activity in global_data.activities:
+                        status = await database.set_specific_reminder(ctx, activity, action)
+                        status_all = f'{status_all}\n{emojis.bp} `{activity}`'
+                
+                if len(args) == 1:
                     await ctx.reply(status, mention_author=False)
                 else:
-                    await ctx.reply(f'There is no reminder for activity `{activity}`.\n\n{activity_list}', mention_author=False)
-                    return
-            else:
-                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}', mention_author=False)
-                return
+                    if action == 'disable':
+                        status_all = f'{status_all}\nActive reminders have been deleted.'
+                    await ctx.reply(status_all, mention_author=False)
         else:
             await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}', mention_author=False)
             return

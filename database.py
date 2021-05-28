@@ -293,6 +293,7 @@ async def get_active_reminders(ctx):
     current_time = current_time.timestamp()
     
     active_reminders = []
+    record_reminder_guild = []
     
     try:
         cur=navi_db.cursor()
@@ -899,7 +900,7 @@ async def set_specific_reminder(ctx, activity, action):
                         if not activity == 'lootbox-alert':
                             status = (
                                 f'**{ctx.author.name}**, your {activity_name} reminder is now **{action}d**.\n'
-                                f'All active {activity_name} reminders have been deleted.'
+                                f'Active {activity_name} reminders have been deleted.'
                             )
                         else:
                             status = f'**{ctx.author.name}**, your partner\'s lootbox alerts are now **{action}d**.'
