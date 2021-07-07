@@ -60,7 +60,10 @@ class customCog(commands.Cog):
                     if reminder_id.isnumeric():
                         try:
                             reminder_id = int(reminder_id)
-                            activity = f'custom{reminder_id}'
+                            if reminder_id <= 9:
+                                activity = f'custom0{reminder_id}'
+                            else:
+                                activity = f'custom{reminder_id}'
                             delete_status = await database.delete_reminder(ctx, ctx.author.id, activity)
                             task_name = f'{ctx.author.id}-{activity}'
                             if delete_status == 'deleted':

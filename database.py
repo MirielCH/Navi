@@ -423,38 +423,39 @@ async def get_guild_leaderboard_weekly_report(bot):
                 try:
                     guild_name = guild[0]
                     guild_channel_id = guild[1]
-                    energy_total = 0
-                    cur.execute('SELECT text FROM guilds_leaderboard_praises ORDER BY RANDOM() LIMIT 1')
-                    record_praise = cur.fetchone()
-                    cur.execute('SELECT text FROM guilds_leaderboard_roasts ORDER BY RANDOM() LIMIT 1')
-                    record_roast = cur.fetchone()
-                    cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy DESC LIMIT 1', (guild_name,))
-                    record_best_raid = cur.fetchone()
-                    cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy LIMIT 1', (guild_name,))
-                    record_worst_raid = cur.fetchone()
-                    cur.execute('SELECT energy FROM guilds_leaderboard WHERE guild_name = ?', (guild_name,))
-                    record_all_raids_energy = cur.fetchall()
-                    if record_all_raids_energy:
-                        for raid_energy in record_all_raids_energy:
-                            energy_total = energy_total + raid_energy[0]
-                    praise = record_praise[0]
-                    roast = record_roast[0]
-                    if record_worst_raid:
-                        raid_worst_user_id = record_worst_raid[0]
-                        raid_worst_energy = record_worst_raid[1]
-                    else:
-                        raid_worst_user_id = 0
-                        raid_worst_energy = 0
-                    if record_best_raid:
-                        raid_best_user_id = record_best_raid[0]
-                        raid_best_energy = record_best_raid[1]
-                    else:
-                        raid_best_user_id = 0
-                        raid_best_energy = 0
-                    guild_report_data.append((guild_name,guild_channel_id,energy_total,raid_worst_user_id,raid_worst_energy, roast, raid_best_user_id, raid_best_energy, praise))
+                    if guild_channel_id:
+                        energy_total = 0
+                        cur.execute('SELECT text FROM guilds_leaderboard_praises ORDER BY RANDOM() LIMIT 1')
+                        record_praise = cur.fetchone()
+                        cur.execute('SELECT text FROM guilds_leaderboard_roasts ORDER BY RANDOM() LIMIT 1')
+                        record_roast = cur.fetchone()
+                        cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy DESC LIMIT 1', (guild_name,))
+                        record_best_raid = cur.fetchone()
+                        cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? ORDER BY energy LIMIT 1', (guild_name,))
+                        record_worst_raid = cur.fetchone()
+                        cur.execute('SELECT energy FROM guilds_leaderboard WHERE guild_name = ?', (guild_name,))
+                        record_all_raids_energy = cur.fetchall()
+                        if record_all_raids_energy:
+                            for raid_energy in record_all_raids_energy:
+                                energy_total = energy_total + raid_energy[0]
+                        praise = record_praise[0]
+                        roast = record_roast[0]
+                        if record_worst_raid:
+                            raid_worst_user_id = record_worst_raid[0]
+                            raid_worst_energy = record_worst_raid[1]
+                        else:
+                            raid_worst_user_id = 0
+                            raid_worst_energy = 0
+                        if record_best_raid:
+                            raid_best_user_id = record_best_raid[0]
+                            raid_best_energy = record_best_raid[1]
+                        else:
+                            raid_best_user_id = 0
+                            raid_best_energy = 0
+                        guild_report_data.append((guild_name,guild_channel_id,energy_total,raid_worst_user_id,raid_worst_energy, roast, raid_best_user_id, raid_best_energy, praise))
 
-                except sqlite3.Error as error:
-                    global_data.logger.error(f'Error getting weekly guild report for guild {guild_name}: {error}')
+                except Exception as e:
+                    global_data.logger.error(f'Error getting weekly guild report data for guild {guild}:\n- Error: {e}\n- Full record_guilds: {record_guilds}')
 
     except sqlite3.Error as error:
         global_data.logger.error(f'Error getting guild data for guild report: {error}')
@@ -950,15 +951,31 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
     try:
         cur=navi_db.cursor()
         if activity == 'custom':
-            cur.execute('SELECT activity FROM reminders WHERE user_id = ? AND activity LIKE ? ORDER BY activity DESC LIMIT 5', (ctx.author.id,'custom%',))
-            record_highest_custom_reminder = cur.fetchone()
-            if record_highest_custom_reminder:
-                highest_custom_db = record_highest_custom_reminder[0].replace('custom','')
+            cur.execute('SELECT activity FROM reminders WHERE user_id = ? AND activity LIKE ? ORDER BY activity DESC', (ctx.author.id,'custom%',))
+            record_highest_custom_reminders = cur.fetchall()
+            if record_highest_custom_reminders:
+                record_highest_custom_reminder = record_highest_custom_reminders[0]
+                highest_custom_db = record_highest_custom_reminder[0].replace('custom0','').replace('custom','')
                 highest_custom_db = int(highest_custom_db)
-                activity = f'custom{highest_custom_db+1}'
+                if highest_custom_db > len(record_highest_custom_reminders):
+                    reminder_count = 1
+                    for reminder in reversed(record_highest_custom_reminders):
+                        reminder_number = reminder[0].replace('custom0','').replace('custom','')
+                        reminder_number = int(reminder_number)
+                        if reminder_count == reminder_number:
+                            reminder_count = reminder_count + 1
+                        else:
+                            reminder_count = reminder_count - 1
+                            break
+                else:
+                    reminder_count = highest_custom_db
+                    
+                if reminder_count < 9:
+                    activity = f'custom0{reminder_count+1}'
+                else:
+                    activity = f'custom{reminder_count+1}'
             else:
-                activity = 'custom1'
-            
+                activity = 'custom01'
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))    
         
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))

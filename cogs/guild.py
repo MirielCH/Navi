@@ -45,45 +45,48 @@ class guildCog(commands.Cog):
                 guild_report_data = await database.get_guild_leaderboard_weekly_report(bot)
                 if not len(guild_report_data) == 0:
                     for guild_report in guild_report_data:
-                        guild_name = guild_report[0]
-                        guild_channel_id = guild_report[1]
-                        energy_total = guild_report[2]
-                        raid_worst_user_id = guild_report[3]
-                        raid_worst_energy = guild_report[4]
-                        roast = guild_report[5]
-                        raid_best_user_id = guild_report[6]
-                        raid_best_energy = guild_report[7]
-                        praise = guild_report[8]
-                        await bot.wait_until_ready()
-                        guild_channel = bot.get_channel(guild_channel_id)
-                        if not raid_worst_user_id == 0:
+                        try:
+                            guild_name = guild_report[0]
+                            guild_channel_id = guild_report[1]
+                            energy_total = guild_report[2]
+                            raid_worst_user_id = guild_report[3]
+                            raid_worst_energy = guild_report[4]
+                            roast = guild_report[5]
+                            raid_best_user_id = guild_report[6]
+                            raid_best_energy = guild_report[7]
+                            praise = guild_report[8]
                             await bot.wait_until_ready()
-                            raid_worst_user = bot.get_user(raid_worst_user_id)
-                            roast = roast.format(username=raid_worst_user.name)
-                        if not raid_best_user_id == 0:
-                            await bot.wait_until_ready()
-                            raid_best_user = bot.get_user(raid_best_user_id)
-                            praise = praise.format(username=raid_best_user.name)
-                        
-                        guild_report = (
-                            f'**{guild_name} weekly guild report**\n\n'
-                            f'__Total energy from raids__: {energy_total} {emojis.energy}\n\n'
-                        )
-                        
-                        if not raid_best_user_id == 0:
-                            guild_report = f'{guild_report}{emojis.bp} {praise} (_Best raid: {raid_best_energy}_ {emojis.energy})\n'
-                        else:
-                            guild_report = f'{guild_report}{emojis.bp} There were no cool raids. That is sad.\n'
-                        if not raid_worst_user_id == 0:
+                            guild_channel = bot.get_channel(guild_channel_id)
+                            if not raid_worst_user_id == 0:
+                                await bot.wait_until_ready()
+                                raid_worst_user = bot.get_user(raid_worst_user_id)
+                                roast = roast.format(username=raid_worst_user.name)
+                            if not raid_best_user_id == 0:
+                                await bot.wait_until_ready()
+                                raid_best_user = bot.get_user(raid_best_user_id)
+                                praise = praise.format(username=raid_best_user.name)
+                            
                             guild_report = (
-                                f'{guild_report}{emojis.bp} {roast} (_Worst raid: {raid_worst_energy}_ {emojis.energy})'
+                                f'**{guild_name} weekly guild report**\n\n'
+                                f'__Total energy from raids__: {energy_total} {emojis.energy}\n\n'
                             )
-                        else:
-                            guild_report = (
-                                f'{guild_report}{emojis.bp} There were no lame raids. Lame.'
-                            )
-                        
-                        await guild_channel.send(guild_report)
+                            
+                            if not raid_best_user_id == 0:
+                                guild_report = f'{guild_report}{emojis.bp} {praise} (_Best raid: {raid_best_energy}_ {emojis.energy})\n'
+                            else:
+                                guild_report = f'{guild_report}{emojis.bp} There were no cool raids. That is sad.\n'
+                            if not raid_worst_user_id == 0:
+                                guild_report = (
+                                    f'{guild_report}{emojis.bp} {roast} (_Worst raid: {raid_worst_energy}_ {emojis.energy})'
+                                )
+                            else:
+                                guild_report = (
+                                    f'{guild_report}{emojis.bp} There were no lame raids. Lame.'
+                                )
+                            
+                            await guild_channel.send(guild_report)
+                        except Exception as e:
+                            global_data.logger.error(f'Error creating weekly guild report for guild {guild_report}:\n- Error: {e}\n- Full guild_report_data: {guild_report_data}')
 
                 # Reset guild leaderboards and reminders
                 guilds = await database.reset_guilds(bot)

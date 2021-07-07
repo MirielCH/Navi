@@ -136,16 +136,16 @@ class workCog(commands.Cog):
                                     rubies = rubies_db + int(rubies)
                                     await database.set_rubies(ctx, rubies)
                                     await bot_answer.add_reaction(emojis.navi)
-                                else:
-                                    await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
-                            elif (bot_message.find('rubies in it') > -1):
-                                rubies_start = bot_message.find('One of them had ') + 16
-                                rubies_end = bot_message.find('<:ruby:') - 1
-                                rubies = bot_message[rubies_start:rubies_end]
-                                if rubies.isnumeric():
-                                    rubies = rubies_db + int(rubies)
-                                    await database.set_rubies(ctx, rubies)
-                                    await bot_answer.add_reaction(emojis.navi)
+                                elif (bot_message.find('rubies in it') > -1):
+                                    rubies_start = bot_message.find('One of them had ') + 16
+                                    rubies_end = bot_message.find('<:ruby:') - 1
+                                    rubies = bot_message[rubies_start:rubies_end]
+                                    if rubies.isnumeric():
+                                        rubies = rubies_db + int(rubies)
+                                        await database.set_rubies(ctx, rubies)
+                                        await bot_answer.add_reaction(emojis.navi)
+                                    else:
+                                        await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                                 else:
                                     await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                             
