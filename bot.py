@@ -664,7 +664,8 @@ async def partner(ctx, *args):
                         else:
                             await ctx.reply(
                                 f'You don\'t have a lootbox alert channel set.\n'
-                                f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`',
+                                f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`\n',
+                                f'The lootbox alert channel is the channel where you get notified if your partner finds a lootbox for you while hunting.',
                                 mention_author=False
                             )
                             return
@@ -907,9 +908,8 @@ async def list_cmd(ctx):
                 # Pets
                 if activity.find('pet-') > -1:
                     pet_id = activity.replace('pet-','')
-                    activity = f'Pet {pet_id}'
-                    reminders_pets_list.append([activity, timestring])
-                
+                    reminders_pets_list.append([pet_id, timestring])
+
                 # Events
                 elif activity == 'pett':
                     activity = 'Pet tournament'
@@ -964,10 +964,33 @@ async def list_cmd(ctx):
                 reminders_events = reminders_events.strip()
                 
             if not len(reminders_pets_list) == 0:
+                
+                counter = -1
+                reminders_pets_list_cleaned = []
+                for index, reminder in enumerate(reminders_pets_list):
+                    pet_id = reminder[0]
+                    pet_timestring = reminder[1]
+                    if not index == 0:
+                        pet_last = reminders_pets_list[index-1]
+                        pet_id_last = pet_last[0]
+                        pet_timestring_last = pet_last[1]
+                    else:
+                        pet_timestring_last = ''
+                    if pet_timestring == pet_timestring_last:
+                        reminders_pets_list_cleaned[counter][0] = f'{reminders_pets_list_cleaned[counter][0]}, {pet_id}'
+                    else:
+                        reminders_pets_list_cleaned.append([pet_id, pet_timestring])
+                        counter = counter+1
+                        
+                reminders_pets_list = reminders_pets_list_cleaned
+                
                 for reminder in reminders_pets_list:
                     activity = reminder[0]
                     timestring = reminder[1]
-                    reminders_pets = f'{reminders_pets}\n{emojis.bp} **`{activity}`** (**{timestring}**)'
+                    if activity.find(',') > -1:
+                        reminders_pets = f'{reminders_pets}\n{emojis.bp} **`Pets {activity}`** (**{timestring}**)'
+                    else:
+                        reminders_pets = f'{reminders_pets}\n{emojis.bp} **`Pet {activity}`** (**{timestring}**)'
                 reminders_pets = reminders_pets.strip()
             
             if not len(reminders_custom_list) == 0:

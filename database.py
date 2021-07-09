@@ -563,7 +563,7 @@ async def set_partner(ctx, partner_id, both=False):
                 else:
                     status = 'unchanged'
             else:
-                status = f'**{ctx.author.id}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+                status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
                 
     except sqlite3.Error as error:
         await log_error(ctx, error)

@@ -272,6 +272,11 @@ class huntCog(commands.Cog):
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
                 
+                if bot_message.find(f'**{ctx.author.name}** got an OMEGA lootbox') > -1:
+                    await bot_answer.add_reaction(emojis.fire)
+                if bot_message.find(f'**{ctx.author.name}** got a GODLY lootbox') > -1:
+                    await bot_answer.add_reaction(emojis.fire)
+                
                 # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                 if not partner_id == 0:
                     partner_settings = await database.get_settings(ctx, 'partner_alert_hardmode', partner_id)
