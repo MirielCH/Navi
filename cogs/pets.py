@@ -34,7 +34,7 @@ class petsCog(commands.Cog):
                 
                 if ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot send another pet to an adventure!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what pet(s) are you trying to select?') > -1))\
-                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('this pet is already in an adventure!') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('is already in an adventure!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('pet adventure(s) cancelled') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('is not in an adventure') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -109,230 +109,234 @@ class petsCog(commands.Cog):
                         pet_id = pet_id.upper()
                     else:
                         pet_id = ''
-                    
-                    if (arg1 in ('adv', 'adventure',)) and pet_action == 'cancel' and not pet_id == '':
-                        pet_ids = args[2:]
-                        try:
-                            settings = await database.get_settings(ctx, 'pet')
-                            if not settings == None:
-                                reminders_on = settings[0]
-                                if not reminders_on == 0:
-                                    pet_enabled = int(settings[3])
-                                    if not pet_enabled == 0:
-                                        task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
-                                        bot_message = None
-                                        message_history = await ctx.channel.history(limit=50).flatten()
-                                        for msg in message_history:
-                                            if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
-                                                try:
-                                                    ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                                    message = await global_functions.encode_message(msg)
-                                                    
-                                                    if global_data.DEBUG_MODE == 'ON':
-                                                        global_data.logger.debug(f'Pet adventure detection: {message}')
-                                                    
-                                                    if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'pet adventure(s) cancelled') > -1))\
-                                                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'is not in an adventure') > -1))\
-                                                    or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                                                    or (message.find('This command is unlocked after the second `time travel`') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
-                                                        bot_answer = msg
-                                                        bot_message = message
-                                                except Exception as e:
-                                                    await ctx.send(f'Error reading message history: {e}')                  
-                                                                                              
-                                        if bot_message == None:
-                                            task_result = await task_status
-                                            if not task_result == None:
-                                                bot_answer = task_result[0]
-                                                bot_message = task_result[1]
-                                            else:
-                                                await ctx.send('Pet cancel detection timeout.')
-                                                return
-
-                                        # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
-                                        if bot_message.find('pet adventure(s) cancelled') > -1:
-                                            for pet_id in pet_ids:
-                                                pet_id = pet_id.upper()
-                                                activity = f'pet-{pet_id}'
-                                                delete_status = await database.delete_reminder(ctx, ctx.author.id, activity)
-                                                if not delete_status == 'deleted':
-                                                    if delete_status == 'notfound':
-                                                        global_data.logger.error(f'{datetime.now()}: Tried to delete pet reminder with activity {activity}, but could not find it')
-                                                    else:
-                                                        global_data.logger.error(f'{datetime.now()}: Had an error deleting the pet reminder with activity {activity}')
-                                                    if global_data.DEBUG_MODE == 'ON':
-                                                        await bot_answer.add_reaction(emojis.cross)
-                                                else:
-                                                    await bot_answer.add_reaction(emojis.navi)
-                                            return
-                                        # Ignore wrong ids
-                                        elif bot_message.find('is not in an adventure') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore error that pets are not unlocked yet
-                                        elif bot_message.find('unlocked after second') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore anti spam embed
-                                        elif bot_message.find('Huh please don\'t spam') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore failed Epic Guard event
-                                        elif bot_message.find('is now in the jail!') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            await bot_answer.add_reaction(emojis.rip)
-                                            return
-                                        # Ignore error when another command is active
-                                        elif bot_message.find('end your previous command') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                    else:
-                                        return
-                                else:
-                                    return
-                            else:
-                                return    
-                        except asyncio.TimeoutError as error:
-                            await ctx.send('Pet cancel detection timeout.')
-                            return
-                        except Exception as e:
-                            global_data.logger.error(f'Pet cancel detection error: {e}')
-                            return
-                    if (arg1 in ('adv', 'adventure',)) and pet_action in ('find', 'learn', 'drill',) and not pet_id == '':
-                        if len(args) > 3:
-                            return
                         
-                        command = 'rpg pet adventure'
-                
-                        try:
-                            settings = await database.get_settings(ctx, 'pet')
-                            if not settings == None:
-                                reminders_on = settings[0]
-                                if not reminders_on == 0:
-                                    user_donor_tier = int(settings[2])
-                                    if user_donor_tier > 3:
-                                        user_donor_tier = 3
-                                    pet_enabled = int(settings[3])
-                                    pet_message = settings[4]
-                                    
-                                    # Set message to send          
-                                    if pet_message == None:
-                                        pet_message = global_data.pet_message.replace('%',command).replace('$',pet_id)
-                                    else:
-                                        pet_message = pet_message.replace('%',command).replace('$',pet_id)
-                                    
-                                    if not pet_enabled == 0:
-                                        task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
-                                        bot_message = None
-                                        message_history = await ctx.channel.history(limit=50).flatten()
-                                        for msg in message_history:
-                                            if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
-                                                try:
-                                                    ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                                    message = await global_functions.encode_message(msg)
-                                                    
-                                                    if global_data.DEBUG_MODE == 'ON':
-                                                        global_data.logger.debug(f'Pet adventure detection: {message}')
-                                                    
-                                                    if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot send another pet to an adventure!') > -1))\
-                                                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'what pet(s) are you trying to select?') > -1))\
-                                                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'this pet is already in an adventure!') > -1))\
-                                                    or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                                                    or (message.find('Your pet has started an adventure and will be back') > -1) or ((message.find('Your pet has started an...') > -1) and (message.find('IT CAME BACK INSTANTLY!!') > -1))\
-                                                    or (message.find('This command is unlocked after the second `time travel`') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
-                                                    or (message.find('pet successfully sent to the pet tournament!') > -1) or (message.find('You cannot send another pet to the **pet tournament**!') > -1):    
-                                                        bot_answer = msg
-                                                        bot_message = message
-                                                except Exception as e:
-                                                    await ctx.send(f'Error reading message history: {e}')
-                                                            
-                                        if bot_message == None:
-                                            task_result = await task_status
-                                            if not task_result == None:
-                                                bot_answer = task_result[0]
-                                                bot_message = task_result[1]
-                                            else:
-                                                await ctx.send('Pet adventure detection timeout.')
-                                                return
+                    if (arg1 in ('adv', 'adventure',)):
+                        if pet_action == 'cancel' and not pet_id == '':
+                            pet_ids = args[2:]
+                            try:
+                                settings = await database.get_settings(ctx, 'pet')
+                                if not settings == None:
+                                    reminders_on = settings[0]
+                                    if not reminders_on == 0:
+                                        pet_enabled = int(settings[3])
+                                        if not pet_enabled == 0:
+                                            task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
+                                            bot_message = None
+                                            message_history = await ctx.channel.history(limit=50).flatten()
+                                            for msg in message_history:
+                                                if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
+                                                    try:
+                                                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                                        message = await global_functions.encode_message(msg)
+                                                        
+                                                        if global_data.DEBUG_MODE == 'ON':
+                                                            global_data.logger.debug(f'Pet adventure detection: {message}')
+                                                        
+                                                        if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'pet adventure(s) cancelled') > -1))\
+                                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'is not in an adventure') > -1))\
+                                                        or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                                                        or (message.find('This command is unlocked after the second `time travel`') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                                                            bot_answer = msg
+                                                            bot_message = message
+                                                    except Exception as e:
+                                                        await ctx.send(f'Error reading message history: {e}')                  
+                                                                                                
+                                            if bot_message == None:
+                                                task_result = await task_status
+                                                if not task_result == None:
+                                                    bot_answer = task_result[0]
+                                                    bot_message = task_result[1]
+                                                else:
+                                                    await ctx.send('Pet cancel detection timeout.')
+                                                    return
 
-                                        # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
-                                        if bot_message.find('Your pet has started an adventure and will be back') > -1:
-                                            timestring_start = bot_message.find('back in **') + 10
-                                            timestring_end = bot_message.find('**!', timestring_start)
-                                            timestring = bot_message[timestring_start:timestring_end]
-                                            timestring = timestring.lower()
-                                            time_left = await global_functions.parse_timestring(ctx, timestring)
-                                            bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
-                                            current_time = datetime.utcnow().replace(microsecond=0)
-                                            time_elapsed = current_time - bot_answer_time
-                                            time_elapsed_seconds = time_elapsed.total_seconds()
-                                            time_left = time_left-time_elapsed_seconds
-                                            write_status = await global_functions.write_reminder(self.bot, ctx, f'pet-{pet_id}', time_left, pet_message, True)
-                                            if write_status in ('inserted','scheduled','updated'):
-                                                await bot_answer.add_reaction(emojis.navi)
-                                            else:
+                                            # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
+                                            if bot_message.find('pet adventure(s) cancelled') > -1:
+                                                for pet_id in pet_ids:
+                                                    pet_id = pet_id.upper()
+                                                    activity = f'pet-{pet_id}'
+                                                    delete_status = await database.delete_reminder(ctx, ctx.author.id, activity)
+                                                    if not delete_status == 'deleted':
+                                                        if delete_status == 'notfound':
+                                                            global_data.logger.error(f'{datetime.now()}: Tried to delete pet reminder with activity {activity}, but could not find it')
+                                                        else:
+                                                            global_data.logger.error(f'{datetime.now()}: Had an error deleting the pet reminder with activity {activity}')
+                                                        if global_data.DEBUG_MODE == 'ON':
+                                                            await bot_answer.add_reaction(emojis.cross)
+                                                    else:
+                                                        await bot_answer.add_reaction(emojis.navi)
+                                                return
+                                            # Ignore wrong ids
+                                            elif bot_message.find('is not in an adventure') > 1:
                                                 if global_data.DEBUG_MODE == 'ON':
                                                     await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore error that max amount of pets is on adventures
-                                        elif bot_message.find('you cannot send another pet') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore error that ID is wrong
-                                        elif bot_message.find('what pet(s) are you trying to select?') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore error that pet is already on adventure
-                                        elif bot_message.find('this pet is already in an adventure') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore time traveler instant pet return
-                                        elif bot_message.find('IT CAME BACK INSTANTLY!') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            await bot_answer.add_reaction(emojis.timetraveler)
-                                            return
-                                        # Ignore error that pets are not unlocked yet
-                                        elif bot_message.find('unlocked after second') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore anti spam embed
-                                        elif bot_message.find('Huh please don\'t spam') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            return
-                                        # Ignore failed Epic Guard event
-                                        elif bot_message.find('is now in the jail!') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
-                                            await bot_answer.add_reaction(emojis.rip)
-                                            return
-                                        # Ignore error when another command is active
-                                        elif bot_message.find('end your previous command') > 1:
-                                            if global_data.DEBUG_MODE == 'ON':
-                                                await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore error that pets are not unlocked yet
+                                            elif bot_message.find('unlocked after second') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore anti spam embed
+                                            elif bot_message.find('Huh please don\'t spam') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore failed Epic Guard event
+                                            elif bot_message.find('is now in the jail!') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                await bot_answer.add_reaction(emojis.rip)
+                                                return
+                                            # Ignore error when another command is active
+                                            elif bot_message.find('end your previous command') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                        else:
                                             return
                                     else:
                                         return
                                 else:
-                                    return
-                            else:
-                                return    
-                        except asyncio.TimeoutError as error:
-                            await ctx.send('Pet adventure detection timeout.')
+                                    return    
+                            except asyncio.TimeoutError as error:
+                                await ctx.send('Pet cancel detection timeout.')
+                                return
+                            except Exception as e:
+                                global_data.logger.error(f'Pet cancel detection error: {e}')
+                                return
+
+                        elif pet_action in ('find', 'learn', 'drill',) and not pet_id == '':
+                            if len(args) > 3:
+                                return
+                        
+                            command = 'rpg pet adventure'
+                    
+                            try:
+                                settings = await database.get_settings(ctx, 'pet')
+                                if not settings == None:
+                                    reminders_on = settings[0]
+                                    if not reminders_on == 0:
+                                        user_donor_tier = int(settings[2])
+                                        if user_donor_tier > 3:
+                                            user_donor_tier = 3
+                                        pet_enabled = int(settings[3])
+                                        pet_message = settings[4]
+                                        
+                                        # Set message to send          
+                                        if pet_message == None:
+                                            pet_message = global_data.pet_message.replace('%',command).replace('$',pet_id)
+                                        else:
+                                            pet_message = pet_message.replace('%',command).replace('$',pet_id)
+                                        
+                                        if not pet_enabled == 0:
+                                            task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
+                                            bot_message = None
+                                            message_history = await ctx.channel.history(limit=50).flatten()
+                                            for msg in message_history:
+                                                if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
+                                                    try:
+                                                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                                        message = await global_functions.encode_message(msg)
+                                                        
+                                                        if global_data.DEBUG_MODE == 'ON':
+                                                            global_data.logger.debug(f'Pet adventure detection: {message}')
+                                                        
+                                                        if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot send another pet to an adventure!') > -1))\
+                                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'what pet(s) are you trying to select?') > -1))\
+                                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'is already in an adventure!') > -1))\
+                                                        or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                                                        or (message.find('Your pet has started an adventure and will be back') > -1) or ((message.find('Your pet has started an...') > -1) and (message.find('IT CAME BACK INSTANTLY!!') > -1))\
+                                                        or (message.find('This command is unlocked after the second `time travel`') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
+                                                        or (message.find('pet successfully sent to the pet tournament!') > -1) or (message.find('You cannot send another pet to the **pet tournament**!') > -1):    
+                                                            bot_answer = msg
+                                                            bot_message = message
+                                                    except Exception as e:
+                                                        await ctx.send(f'Error reading message history: {e}')
+                                                                
+                                            if bot_message == None:
+                                                task_result = await task_status
+                                                if not task_result == None:
+                                                    bot_answer = task_result[0]
+                                                    bot_message = task_result[1]
+                                                else:
+                                                    await ctx.send('Pet adventure detection timeout.')
+                                                    return
+
+                                            # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
+                                            if bot_message.find('Your pet has started an adventure and will be back') > -1:
+                                                timestring_start = bot_message.find('back in **') + 10
+                                                timestring_end = bot_message.find('**!', timestring_start)
+                                                timestring = bot_message[timestring_start:timestring_end]
+                                                timestring = timestring.lower()
+                                                time_left = await global_functions.parse_timestring(ctx, timestring)
+                                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                                current_time = datetime.utcnow().replace(microsecond=0)
+                                                time_elapsed = current_time - bot_answer_time
+                                                time_elapsed_seconds = time_elapsed.total_seconds()
+                                                time_left = time_left-time_elapsed_seconds
+                                                write_status = await global_functions.write_reminder(self.bot, ctx, f'pet-{pet_id}', time_left, pet_message, True)
+                                                if write_status in ('inserted','scheduled','updated'):
+                                                    await bot_answer.add_reaction(emojis.navi)
+                                                else:
+                                                    if global_data.DEBUG_MODE == 'ON':
+                                                        await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore error that max amount of pets is on adventures
+                                            elif bot_message.find('you cannot send another pet') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore error that ID is wrong
+                                            elif bot_message.find('what pet(s) are you trying to select?') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore error that pet is already on adventure
+                                            elif bot_message.find('is already in an adventure') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore time traveler instant pet return
+                                            elif bot_message.find('IT CAME BACK INSTANTLY!') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                await bot_answer.add_reaction(emojis.timetraveler)
+                                                return
+                                            # Ignore error that pets are not unlocked yet
+                                            elif bot_message.find('unlocked after second') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore anti spam embed
+                                            elif bot_message.find('Huh please don\'t spam') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                            # Ignore failed Epic Guard event
+                                            elif bot_message.find('is now in the jail!') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                await bot_answer.add_reaction(emojis.rip)
+                                                return
+                                            # Ignore error when another command is active
+                                            elif bot_message.find('end your previous command') > 1:
+                                                if global_data.DEBUG_MODE == 'ON':
+                                                    await bot_answer.add_reaction(emojis.cross)
+                                                return
+                                        else:
+                                            return
+                                    else:
+                                        return
+                                else:
+                                    return    
+                            except asyncio.TimeoutError as error:
+                                await ctx.send('Pet adventure detection timeout.')
+                                return
+                            except Exception as e:
+                                global_data.logger.error(f'Pet adventure detection error: {e}')
+                                return  
+                        else:
                             return
-                        except Exception as e:
-                            global_data.logger.error(f'Pet adventure detection error: {e}')
-                            return  
                     elif arg1 in ('tournament'):
                         try:
                             settings = await database.get_settings(ctx, 'pet')

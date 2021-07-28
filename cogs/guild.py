@@ -154,7 +154,7 @@ class guildCog(commands.Cog):
             )
             
             if args:
-                guild_data = await database.get_guild(ctx, 'leader')
+                guild_data = await database.get_guild(ctx, 'leader', ctx.author.id)
                 if not guild_data == None:
                     guild_name = guild_data[0]
                     guild_stealth = guild_data[2]
@@ -347,12 +347,15 @@ class guildCog(commands.Cog):
         else:
             prefix = ctx.prefix
             
+            if len(ctx.message.mentions) > 0:
+                return
+            
             if args:
                 arg = args[0]
                 arg = arg.lower()
                 if arg in ('raid', 'upgrade'):
                     try:
-                        guild_data = await database.get_guild(ctx, 'member')
+                        guild_data = await database.get_guild(ctx, 'member', ctx.author.id)
                         
                         if not guild_data == None:
                             guild_name = guild_data[0]
@@ -503,7 +506,7 @@ class guildCog(commands.Cog):
                         return
             else:
                 try:
-                    guild_data = await database.get_guild(ctx, 'member')
+                    guild_data = await database.get_guild(ctx, 'member', ctx.author.id)
                     
                     if not guild_data == None:
                         guild_name = guild_data[0]

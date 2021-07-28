@@ -240,7 +240,7 @@ async def settings(ctx):
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         settings = await database.get_settings(ctx, 'all')
-        guild_data = await database.get_guild(ctx, 'member')
+        guild_data = await database.get_guild(ctx, 'member', ctx.author.id)
         
         if settings == None:
             await ctx.reply(f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.', mention_author=False)
@@ -865,12 +865,39 @@ async def enable(ctx, *args):
 # Command "list" - Lists all active reminders
 @bot.command(name='list')
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
-async def list_cmd(ctx):
+async def list_cmd(ctx, *args):
     
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         
-        active_reminders = await database.get_active_reminders(ctx)
+        if args:
+            arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
+            if arg.isnumeric():
+                try:
+                    user_id = int(arg)
+                except:
+                    user_id = ctx.author.id
+            else:
+                await ctx.reply('I can not find this user.', mention_author=False)
+                return
+        else:
+            if len(ctx.message.mentions) > 0:
+                user_id = ctx.message.mentions[0].id
+            else:
+                user_id = ctx.author.id
+        await bot.wait_until_ready()
+        user = bot.get_user(user_id)
+        if user:
+            if not user.bot:
+                user_name = user.name.upper()
+            else:
+                await ctx.reply('Why would you check the reminders of a bot :face_with_raised_eyebrow:', mention_author=False)
+                return
+        else:
+            await ctx.reply('I can not find a user with this ID.', mention_author=False)
+            return
+        
+        active_reminders = await database.get_active_reminders(ctx, user_id)
         reminders_commands = ''
         reminders_commands_list = []
         reminders_events = ''
@@ -880,8 +907,6 @@ async def list_cmd(ctx):
         reminders_custom = ''
         reminders_custom_list = []
         reminder_guild = ''
-        user_name = ctx.author.name
-        user_name = user_name.upper()
         title = f'{user_name}\'S REMINDERS'
 
         if len(active_reminders) == 0:
@@ -1332,6 +1357,57 @@ async def shutdown(ctx):
                 await ctx.send(f'Phew, was afraid there for a second.')
         except asyncio.TimeoutError as error:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+
+# Reload cogs
+@bot.command(aliases=('reload_cog',))
+@commands.is_owner()
+@commands.bot_has_permissions(send_messages=True)
+async def reload(ctx, *args):
+    
+    if args:
+        actions = []
+        reloaded = []
+        for arg in args:
+            cog_name = f'cogs.{arg}'
+            try:
+                result = bot.reload_extension(cog_name)
+                if result == None:
+                    actions.append(f'Extension \'{cog_name}\' reloaded.')
+                else:
+                    actions.append(f'**{cog_name}: {result}**')
+            except Exception as e:
+                actions.append(f'**{cog_name}: {e}**')
+                
+        message = ''
+        for action in actions:
+            message = f'{message}\n{action}'
+            
+        await ctx.send(message) 
+    else:
+        await ctx.send('Uhm, what.')
+            
+# Eval
+@bot.command(aliases=('eval',))
+@commands.is_owner()
+@commands.bot_has_permissions(send_messages=True)
+async def evaluate(ctx):
+    
+    message_prefix_command = f'{ctx.prefix}{ctx.invoked_with} '
+    eval_command_start = ctx.message.content.find(message_prefix_command) + len(message_prefix_command)
+    eval_command = ctx.message.content[eval_command_start:]
+    
+    try:
+        if eval_command.startswith('await'):
+            eval_command = eval_command[6:]
+            result = await eval(eval_command)
+        else:
+            result = eval(eval_command)
+        if result:
+            await ctx.send(result)
+        else:
+            await ctx.send('No return value')
+    except Exception as e:
+        await ctx.send(e)
             
 # Sleepy potion test command
 @bot.command()

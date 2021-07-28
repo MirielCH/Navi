@@ -247,15 +247,15 @@ async def get_cooldowns(ctx):
     return cooldown_data
 
 # Get guild
-async def get_guild(ctx, type):
+async def get_guild(ctx, type, user_id):
     
     try:
         cur=navi_db.cursor()
         
         if type == 'leader':
-            cur.execute('SELECT guild_name, reminders_on, stealth_threshold, stealth_current, guild_channel_id, guild_message FROM guilds where guild_leader=?', (ctx.author.id,))
+            cur.execute('SELECT guild_name, reminders_on, stealth_threshold, stealth_current, guild_channel_id, guild_message FROM guilds where guild_leader=?', (user_id,))
         elif type == 'member':
-            cur.execute('SELECT guild_name, reminders_on, stealth_threshold, stealth_current, guild_channel_id, guild_message FROM guilds where member1_id=? or member2_id=? or member3_id=? or member4_id=? or member5_id=? or member6_id=? or member7_id=? or member8_id=? or member9_id=? or member10_id=?', (ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,ctx.author.id,))
+            cur.execute('SELECT guild_name, reminders_on, stealth_threshold, stealth_current, guild_channel_id, guild_message FROM guilds where member1_id=? or member2_id=? or member3_id=? or member4_id=? or member5_id=? or member6_id=? or member7_id=? or member8_id=? or member9_id=? or member10_id=?', (user_id,user_id,user_id,user_id,user_id,user_id,user_id,user_id,user_id,user_id,))
         record = cur.fetchone()
     
         if record:
@@ -287,7 +287,7 @@ async def get_guild_members(guild_name):
     return guild_members
 
 # Get active reminders
-async def get_active_reminders(ctx):
+async def get_active_reminders(ctx, user_id):
     
     current_time = datetime.utcnow().replace(microsecond=0)
     current_time = current_time.timestamp()
@@ -297,9 +297,9 @@ async def get_active_reminders(ctx):
     
     try:
         cur=navi_db.cursor()
-        cur.execute('SELECT activity, end_time, message FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (ctx.author.id,current_time,))
+        cur.execute('SELECT activity, end_time, message FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (user_id,current_time,))
         record_reminders_user = cur.fetchall()
-        guild_data = await get_guild(ctx,'member')
+        guild_data = await get_guild(ctx,'member',user_id)
         if not guild_data == None:
             guild_name = guild_data[0]
             cur.execute('SELECT activity, end_time, message, user_id FROM reminders WHERE user_id = ? AND end_time > ?', (guild_name,current_time,))
@@ -393,11 +393,11 @@ async def get_guild_leaderboard(ctx):
         record_guild_name = cur.fetchone()
         if record_guild_name:
             guild_name = record_guild_name[0]
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 40 ORDER BY energy DESC LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 100 ORDER BY energy DESC LIMIT 5', (guild_name,))
             record_leaderboard_best = cur.fetchall()
             if len(record_leaderboard_best) == 0:
                 record_leaderboard_best = None
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 40 ORDER BY energy LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 100 ORDER BY energy LIMIT 5', (guild_name,))
             record_leaderboard_worst = cur.fetchall()
             if len(record_leaderboard_worst) == 0:
                 record_leaderboard_worst = None

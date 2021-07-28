@@ -35,7 +35,8 @@ class huntCog(commands.Cog):
                 if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
-                    or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1):
+                    or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1)\
+                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find('is in the **jail**') > -1)):
                     correct_message = True
                 else:
                     correct_message = False
@@ -130,10 +131,10 @@ class huntCog(commands.Cog):
                                         if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                                             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
-                                            or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1):
-                                            
-                                            bot_answer = msg
-                                            bot_message = message
+                                            or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1)\
+                                            or ((message.find(f'{ctx.author.id}') > -1) and (message.find('is in the **jail**') > -1)):
+                                                bot_answer = msg
+                                                bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
                             if bot_message == None:
@@ -226,6 +227,11 @@ class huntCog(commands.Cog):
                                 return
                             # Ignore error when using "hunt t" while not married
                             elif bot_message.find('you have to be married') > -1:
+                                if global_data.DEBUG_MODE == 'ON':
+                                    await bot_answer.add_reaction(emojis.cross)
+                                return
+                            # Ignore message that partner is in jail (YES I HAD TO ADD THAT ONE BECAUSE REASONS)
+                            elif bot_message.find('is in the **jail**') > -1:
                                 if global_data.DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
                                 return
