@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class eventsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Events detection
     async def get_events_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Duel detection: {message}')
-                
+
                 if  ((message.find(f'Normal events') > -1) and (message.find(f'Guild ranking') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -40,22 +40,22 @@ class eventsCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Events (cooldown detection only)
     @commands.command(aliases=('events',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
     async def event(self, ctx, *args):
-    
+
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
             try:
@@ -71,7 +71,7 @@ class eventsCog(commands.Cog):
                         lottery_message = settings[4]
                         pet_message = settings[7]
                         race_enabled = settings[8]
-                        
+
                         if not ((bigarena_enabled == 0) and (lottery_enabled == 0) and (nsmb_enabled == 0) and (pet_enabled == 0) and (race_enabled == 0)):
                             task_status = self.bot.loop.create_task(self.get_events_message(ctx))
                             bot_message = None
@@ -81,10 +81,10 @@ class eventsCog(commands.Cog):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)
-                                        
+
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Events detection: {message}')
-                                        
+
                                         if  ((message.find(f'Normal events') > -1) and (message.find(f'Guild ranking') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                                         or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -92,7 +92,7 @@ class eventsCog(commands.Cog):
                                             bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
-                                                
+
                             if bot_message == None:
                                 task_result = await task_status
                                 if not task_result == None:
@@ -104,9 +104,9 @@ class eventsCog(commands.Cog):
 
                             # Check if event list, if yes, extract all the timestrings
                             if bot_message.find('Normal events') > 1:
-                                
+
                                 cooldowns = []
-                                
+
                                 if bigarena_enabled == 1:
                                     if bot_message.find('Big arena**: ') > -1:
                                         arena_start = bot_message.find('Big arena**: ') + 13
@@ -150,15 +150,15 @@ class eventsCog(commands.Cog):
                                         race = race.lower()
                                         race_message = global_data.race_message
                                         cooldowns.append(['race',race,race_message,])
-                                
+
                                 write_status_list = []
-                                
+
                                 for cooldown in cooldowns:
                                     activity = cooldown[0]
                                     timestring = cooldown[1]
                                     message = cooldown[2]
                                     time_left = await global_functions.parse_timestring(ctx, timestring)
-                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                     current_time = datetime.utcnow().replace(microsecond=0)
                                     time_elapsed = current_time - bot_answer_time
                                     time_elapsed_seconds = time_elapsed.total_seconds()
@@ -176,15 +176,15 @@ class eventsCog(commands.Cog):
                                             write_status_list.append('Fail')
                                     else:
                                         write_status_list.append('OK')
-                                    
-                                if not 'Fail' in write_status_list:                       
+
+                                if not 'Fail' in write_status_list:
                                     await bot_answer.add_reaction(emojis.navi)
                                 else:
                                     if global_data.DEBUG_MODE == 'ON':
                                         await ctx.send(f'Something went wrong here. {write_status_list} {cooldowns}')
                                         await bot_answer.add_reaction(emojis.error)
                                 return
-                        
+
                             # Ignore anti spam embed
                             elif bot_message.find('Huh please don\'t spam') > 1:
                                 if global_data.DEBUG_MODE == 'ON':
@@ -207,14 +207,14 @@ class eventsCog(commands.Cog):
                         return
                 else:
                     return
-            
+
             except asyncio.TimeoutError as error:
                 await ctx.send('Event detection timeout.')
                 return
             except Exception as e:
                 global_data.logger.error(f'Event detection error: {e}')
-                return 
-        
+                return
+
 # Initialization
 def setup(bot):
     bot.add_cog(eventsCog(bot))

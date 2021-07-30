@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class workCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Work detection
     async def get_work_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Work detection: {message}')
-                
+
                 if  (((message.find(f'{ctx_author}** got ') > -1) or (message.find(f'{ctx_author}** GOT ') > -1)) and ((message.find('wooden log') > -1) or (message.find('EPIC log') > -1) or (message.find('SUPER log') > -1)\
                 or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
                 or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
@@ -45,16 +45,16 @@ class workCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Work
     @commands.command(aliases=('axe','bowsaw','chainsaw','fish','net','boat','bigboat','pickup','ladder','tractor','greenhouse','mine','pickaxe','drill','dynamite',))
@@ -64,14 +64,14 @@ class workCog(commands.Cog):
         prefix = ctx.prefix
         invoked = ctx.invoked_with
         invoked = invoked.lower()
-        
+
         if prefix.lower() == 'rpg ':
             if invoked == 'ascended':
                 args = args[0]
                 command = f'rpg ascended {args[0].lower()}'
             else:
                 command = f'rpg {invoked.lower()}'
-                
+
             try:
                 settings = await database.get_settings(ctx, 'work')
                 if not settings == None:
@@ -85,7 +85,7 @@ class workCog(commands.Cog):
                         work_message = settings[4]
                         rubies_db = settings[5]
                         ruby_counter = settings[6]
-                        
+
                         task_status = self.bot.loop.create_task(self.get_work_message(ctx))
                         bot_message = None
                         message_history = await ctx.channel.history(limit=50).flatten()
@@ -94,10 +94,10 @@ class workCog(commands.Cog):
                                 try:
                                     ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                     message = await global_functions.encode_message(msg)
-                                    
+
                                     if global_data.DEBUG_MODE == 'ON':
                                         global_data.logger.debug(f'Work detection: {message}')
-                                    
+
                                     if  (((message.find(f'{ctx_author}** got ') > -1) or (message.find(f'{ctx_author}** GOT ') > -1)) and ((message.find('wooden log') > -1) or (message.find('EPIC log') > -1) or (message.find('SUPER log') > -1)\
                                     or (message.find('**MEGA** log') > -1) or (message.find('**HYPER** log') > -1) or (message.find('IS THIS A **DREAM**?????') > -1)\
                                     or (message.find('normie fish') > -1) or (message.find('golden fish') > -1) or (message.find('EPIC fish') > -1) or (message.find('coins') > -1)\
@@ -105,12 +105,12 @@ class workCog(commands.Cog):
                                     and (message.find('You have already got some resources') > -1)) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > 1))\
                                     or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
                                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
-                                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):    
+                                    or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                                         bot_answer = msg
                                         bot_message = message
                                 except Exception as e:
                                     await ctx.send(f'Error reading message history: {e}')
-                                       
+
                         if bot_message == None:
                             task_result = await task_status
                             if not task_result == None:
@@ -119,13 +119,13 @@ class workCog(commands.Cog):
                             else:
                                 await ctx.send('Work detection timeout.')
                                 return
-                        
-                        # Set message to send          
+
+                        # Set message to send
                         if work_message == None:
                             work_message = default_message.replace('%',command)
                         else:
                             work_message = work_message.replace('%',command)
-                        
+
                         # Check for rubies
                         if not ruby_counter == 0:
                             if (bot_message.lower().find('<:ruby:') > -1):
@@ -148,7 +148,7 @@ class workCog(commands.Cog):
                                         await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
                                 else:
                                     await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
-                            
+
                         if not work_enabled == 0:
                             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
                             if bot_message.find(f'\'s cooldown') > 1:
@@ -157,7 +157,7 @@ class workCog(commands.Cog):
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()
                                 time_left = await global_functions.parse_timestring(ctx, timestring)
-                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                 current_time = datetime.utcnow().replace(microsecond=0)
                                 time_elapsed = current_time - bot_answer_time
                                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -199,12 +199,12 @@ class workCog(commands.Cog):
                         return
                 else:
                     return
-                
+
                 if not work_enabled == 0:
                     # Calculate cooldown
                     cooldown_data = await database.get_cooldown(ctx, 'work')
                     cooldown = int(cooldown_data[0])
-                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                     current_time = datetime.utcnow().replace(microsecond=0)
                     time_elapsed = current_time - bot_answer_time
                     time_elapsed_seconds = time_elapsed.total_seconds()
@@ -213,10 +213,10 @@ class workCog(commands.Cog):
                         time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]-time_elapsed_seconds
                     else:
                         time_left = cooldown-time_elapsed_seconds
-                    
+
                     # Save task to database
                     write_status = await global_functions.write_reminder(self.bot, ctx, 'work', time_left, work_message)
-                
+
                     # Add reaction
                     if not write_status == 'aborted':
                         await bot_answer.add_reaction(emojis.navi)
@@ -232,7 +232,7 @@ class workCog(commands.Cog):
             except Exception as e:
                 global_data.logger.error(f'Work detection error: {e}')
                 return
-        
+
 # Initialization
 def setup(bot):
     bot.add_cog(workCog(bot))

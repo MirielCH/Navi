@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class cooldownsCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Cooldowns detection
     async def get_cooldowns_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Dungeon / Miniboss detection: {message}')
-                
+
                 if  (message.find(f'{ctx_author}\'s cooldowns') > -1) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
@@ -40,29 +40,29 @@ class cooldownsCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Cooldowns
     @commands.command(aliases=('cd','cds','cooldowns',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
     async def cooldown(self, ctx, *args):
-    
+
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
             if args:
                 arg = args[0]
                 if not arg == 'max' and not (arg.find(f'ctx.author.id') > -1):
                     return
-                
+
             try:
                 settings = await database.get_settings(ctx, 'all')
                 if not settings == None:
@@ -95,8 +95,8 @@ class cooldownsCog(commands.Cog):
                         quest_message = settings[41]
                         tr_message = settings[42]
                         vote_message = settings[43]
-                        weekly_message = settings[44] 
-                        
+                        weekly_message = settings[44]
+
                         if not ((adv_enabled == 0) and (daily_enabled == 0) and (lb_enabled == 0) and (quest_enabled == 0) and (tr_enabled == 0) and (weekly_enabled == 0) and (duel_enabled == 0) and (arena_enabled == 0) and (dungmb_enabled == 0) and (vote_enabled == 0)):
                             task_status = self.bot.loop.create_task(self.get_cooldowns_message(ctx))
                             bot_message = None
@@ -106,18 +106,18 @@ class cooldownsCog(commands.Cog):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)
-                                        
+
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Cooldowns detection: {message}')
-                                        
+
                                         if  (message.find(f'{ctx_author}\'s cooldowns') > -1) or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                                         or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):                                            
+                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
                                             bot_answer = msg
                                             bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
-                                                
+
                             if bot_message == None:
                                 task_result = await task_status
                                 if not task_result == None:
@@ -129,9 +129,9 @@ class cooldownsCog(commands.Cog):
 
                             # Check if cooldown list, if yes, extract all the timestrings
                             if bot_message.find(f'\'s cooldowns') > 1:
-                                
+
                                 cooldowns = []
-                                
+
                                 if daily_enabled == 1:
                                     if bot_message.find('Daily`** (**') > -1:
                                         daily_start = bot_message.find('Daily`** (**') + 12
@@ -284,15 +284,15 @@ class cooldownsCog(commands.Cog):
                                         else:
                                             farm_message = farm_message.replace('%','rpg farm')
                                         cooldowns.append(['farm',farm,farm_message,])
-                                
+
                                 write_status_list = []
-                                
+
                                 for cooldown in cooldowns:
                                     activity = cooldown[0]
                                     timestring = cooldown[1]
                                     message = cooldown[2]
                                     time_left = await global_functions.parse_timestring(ctx, timestring)
-                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                     current_time = datetime.utcnow().replace(microsecond=0)
                                     time_elapsed = current_time - bot_answer_time
                                     time_elapsed_seconds = time_elapsed.total_seconds()
@@ -305,15 +305,15 @@ class cooldownsCog(commands.Cog):
                                             write_status_list.append('Fail')
                                     else:
                                         write_status_list.append('OK')
-                                    
-                                if not 'Fail' in write_status_list:                       
+
+                                if not 'Fail' in write_status_list:
                                     await bot_answer.add_reaction(emojis.navi)
                                 else:
                                     if global_data.DEBUG_MODE == 'ON':
                                         await ctx.send(f'Something went wrong here. {write_status_list} {cooldowns}')
                                         await bot_answer.add_reaction(emojis.error)
                                 return
-                        
+
                             # Ignore anti spam embed
                             elif bot_message.find('Huh please don\'t spam') > 1:
                                 if global_data.DEBUG_MODE == 'ON':
@@ -336,14 +336,14 @@ class cooldownsCog(commands.Cog):
                         return
                 else:
                     return
-            
+
             except asyncio.TimeoutError as error:
                 await ctx.send('Cooldowns detection timeout.')
                 return
             except Exception as e:
                 global_data.logger.error(f'Cooldowns detection error: {e}')
                 return
-        
+
 # Initialization
 def setup(bot):
     bot.add_cog(cooldownsCog(bot))

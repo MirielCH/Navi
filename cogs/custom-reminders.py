@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,39 +19,39 @@ from datetime import datetime, timedelta
 class customCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # --- Commands ---
     # rm
     @commands.command(aliases=('reminder','remind',))
     @commands.bot_has_permissions(send_messages=True)
     async def rm(self, ctx, *args):
-        
+
         prefix = ctx.prefix
-        
+
         syntax_add = (
             f'The syntax is `{ctx.prefix}rm [time] [text]`\n'
             f'Support time codes: `d`, `h`, `m`, `s`\n\n'
             f'Example: `{ctx.prefix}rm 1h30m Coffee time!`'
         )
-        
+
         syntax_delete = (
             f'The syntax is `{ctx.prefix}rm delete [ID]`\n'
             f'You can find the ID with `{prefix}list`\n\n'
             f'Example: `{ctx.prefix}rm delete 3`'
         )
-        
+
         error_invalid_time = (
             f'Invalid time.\n\n'
             f'{syntax_add}'
         )
-        
+
         error_invalid_message_id = (
             f'Invalid message ID.\n\n'
             f'{syntax_delete}'
         )
-        
+
         error_max_time = 'The maximum time is 7d 23h 59m 59s.'
-        
+
         if args:
             arg = args[0]
             if arg in ('delete','del'):
@@ -68,7 +68,7 @@ class customCog(commands.Cog):
                             task_name = f'{ctx.author.id}-{activity}'
                             if delete_status == 'deleted':
                                 if task_name in global_data.running_tasks:
-                                    global_data.running_tasks[task_name].cancel() 
+                                    global_data.running_tasks[task_name].cancel()
                                     delete_task = global_data.running_tasks.pop(task_name, None)
                                 await ctx.message.add_reaction(emojis.navi)
                             elif delete_status == 'notfound':
@@ -181,9 +181,9 @@ class customCog(commands.Cog):
                         reminder_text = f'{reminder_text} {arg}'
                 else:
                     reminder_text = 'idk, something?'
-                
+
                 reminder_text = reminder_text.strip()
-                
+
                 time_left = await global_functions.parse_timestring(ctx, timestring)
                 if time_left < 16:
                     await ctx.reply('The time needs to be at least 16 seconds, sorry.', mention_author=False)
@@ -207,7 +207,7 @@ class customCog(commands.Cog):
                 f'{syntax_delete}',
                 mention_author=False
             )
-                 
+
 # Initialization
 def setup(bot):
     bot.add_cog(customCog(bot))

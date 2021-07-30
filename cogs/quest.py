@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class questCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Quest detection
     async def get_quest_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Quest detection: {message}')
-                
+
                 if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
@@ -46,16 +46,16 @@ class questCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Quest
     @commands.command(aliases=('quest',))
@@ -63,7 +63,7 @@ class questCog(commands.Cog):
     async def epic(self, ctx, *args):
 
         prefix = ctx.prefix
-        if prefix.lower() == 'rpg ':     
+        if prefix.lower() == 'rpg ':
             command = 'rpg quest'
             if args:
                 arg = args[0]
@@ -89,18 +89,18 @@ class questCog(commands.Cog):
                         default_message = settings[2]
                         quest_enabled = int(settings[3])
                         quest_message = settings[4]
-                        
-                        # Set message to send          
+
+                        # Set message to send
                         if quest_message == None:
                             quest_message = default_message.replace('%',command)
                         else:
                             quest_message = quest_message.replace('%',command)
-                        
+
                         # Wait for bot message
                         if not quest_enabled == 0:
                             epic_quest = False
                             quest_declined = None
-                            
+
                             task_status = self.bot.loop.create_task(self.get_quest_message(ctx))
                             bot_message = None
                             message_history = await ctx.channel.history(limit=50).flatten()
@@ -109,10 +109,10 @@ class questCog(commands.Cog):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)
-                                        
+
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Quest detection: {message}')
-                                        
+
                                         if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                                         or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                                         or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
@@ -126,7 +126,7 @@ class questCog(commands.Cog):
                                             bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
-                                                
+
                             if bot_message == None:
                                 task_result = await task_status
                                 if not task_result == None:
@@ -147,10 +147,10 @@ class questCog(commands.Cog):
                                         try:
                                             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                             message = await global_functions.encode_message(msg)
-                                            
+
                                             if global_data.DEBUG_MODE == 'ON':
                                                 global_data.logger.debug(f'Quest detection: {message}')
-                                            
+
                                             if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                                             or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                                             or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
@@ -164,7 +164,7 @@ class questCog(commands.Cog):
                                                 bot_message = message
                                         except Exception as e:
                                             await ctx.send(f'Error reading message history: {e}')
-                                                    
+
                                 if bot_message == None:
                                     task_result = await task_status
                                     if not task_result == None:
@@ -173,7 +173,7 @@ class questCog(commands.Cog):
                                     else:
                                         await ctx.send('Quest detection timeout.')
                                         return
-                                
+
                                 if bot_message.find('you did not accept the quest') > -1:
                                     quest_declined = True
                                 elif bot_message.find('got a **new quest**!') > -1:
@@ -183,7 +183,7 @@ class questCog(commands.Cog):
                                 else:
                                     if global_data.DEBUG_MODE == 'ON':
                                         await ctx.send('I could not find out if the quest was accepted or declined.')
-                                    return                   
+                                    return
                             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
                             elif bot_message.find(f'\'s cooldown') > 1:
                                 timestring_start = bot_message.find('wait at least **') + 16
@@ -191,7 +191,7 @@ class questCog(commands.Cog):
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()
                                 time_left = await global_functions.parse_timestring(ctx, timestring)
-                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                 current_time = datetime.utcnow().replace(microsecond=0)
                                 time_elapsed = current_time - bot_answer_time
                                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -250,7 +250,7 @@ class questCog(commands.Cog):
                         return
                 else:
                     return
-                
+
                 # Calculate cooldown
                 cooldown_data = await database.get_cooldown(ctx, 'quest')
                 if epic_quest == True:
@@ -263,9 +263,9 @@ class questCog(commands.Cog):
                     else:
                         global_data.logger.error(f'Quest detection error: Neither quest_declined nor epic_quest had a value that allowed me to determine what the user did. epic_quest: {epic_quest}, quest_declined: {quest_declined}')
                         return
-                
+
                 donor_affected = int(cooldown_data[1])
-                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -273,10 +273,10 @@ class questCog(commands.Cog):
                     time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]-time_elapsed_seconds
                 else:
                     time_left = cooldown-time_elapsed_seconds
-                    
+
                 # Save task to database
                 write_status = await global_functions.write_reminder(self.bot, ctx, 'quest', time_left, quest_message)
-                
+
                 # Add reaction
                 if not write_status == 'aborted':
                     await bot_answer.add_reaction(emojis.navi)
@@ -288,10 +288,10 @@ class questCog(commands.Cog):
                 return
             except Exception as e:
                 global_data.logger.error(f'Quest detection error: {e}')
-                return   
+                return
         else:
             return
-        
+
 # Initialization
 def setup(bot):
     bot.add_cog(questCog(bot))

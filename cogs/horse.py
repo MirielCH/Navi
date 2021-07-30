@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class horseCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Horse detection
     async def get_horse_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Horse detection: {message}')
-                
+
                 if  ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have used this command recently') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('registered for the next **horse race** event') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you are registered already!') > -1))\
@@ -43,26 +43,26 @@ class horseCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Horse (cooldown detection only)
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
     async def horse(self, ctx, *args):
-    
+
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
             command = 'rpg horse breed / race'
-                
+
             if args:
                 arg = args[0]
                 if arg in ('breed','race'):
@@ -79,13 +79,13 @@ class horseCog(commands.Cog):
                                 horse_message = settings[4]
                                 race_enabled = settings[5]
                                 race_message = global_data.race_message
-                                
-                                # Set message to send          
+
+                                # Set message to send
                                 if horse_message == None:
                                     horse_message = default_message.replace('%',command)
                                 else:
                                     horse_message = horse_message.replace('%',command)
-                                
+
                                 if not ((horse_enabled == 0) and (race_enabled == 0)):
                                     task_status = self.bot.loop.create_task(self.get_horse_message(ctx))
                                     bot_message = None
@@ -95,10 +95,10 @@ class horseCog(commands.Cog):
                                             try:
                                                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                                 message = await global_functions.encode_message(msg)
-                                                
+
                                                 if global_data.DEBUG_MODE == 'ON':
                                                     global_data.logger.debug(f'Horse detection: {message}')
-                                                
+
                                                 if  ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have used this command recently') > -1))\
                                                 or ((message.find(ctx_author) > -1) and (message.find('registered for the next **horse race** event') > -1))\
                                                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you are registered already!') > -1))\
@@ -109,7 +109,7 @@ class horseCog(commands.Cog):
                                                     bot_message = message
                                             except Exception as e:
                                                 await ctx.send(f'Error reading message history: {e}')
-                                                        
+
                                     if bot_message == None:
                                         task_result = await task_status
                                         if not task_result == None:
@@ -128,7 +128,7 @@ class horseCog(commands.Cog):
                                             timestring = bot_message[timestring_start:timestring_end]
                                             timestring = timestring.lower()
                                             time_left = await global_functions.parse_timestring(ctx, timestring)
-                                            bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                            bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                             current_time = datetime.utcnow().replace(microsecond=0)
                                             time_elapsed = current_time - bot_answer_time
                                             time_elapsed_seconds = time_elapsed.total_seconds()
@@ -148,7 +148,7 @@ class horseCog(commands.Cog):
                                             timestring = bot_message[timestring_start:timestring_end]
                                             timestring = timestring.lower()
                                             time_left = await global_functions.parse_timestring(ctx, timestring)
-                                            bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                            bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                             current_time = datetime.utcnow().replace(microsecond=0)
                                             time_elapsed = current_time - bot_answer_time
                                             time_elapsed_seconds = time_elapsed.total_seconds()
@@ -197,12 +197,12 @@ class horseCog(commands.Cog):
                         return
                     except Exception as e:
                         global_data.logger.error(f'Horse detection error: {e}')
-                        return   
+                        return
                 else:
                     return
             else:
                 return
-        
+
 # Initialization
 def setup(bot):
     bot.add_cog(horseCog(bot))

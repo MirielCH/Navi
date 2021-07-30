@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class huntCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Hunt detection
     async def get_hunt_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Hunt detection: {message}')
-                
+
                 if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
@@ -42,16 +42,16 @@ class huntCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Hunt
     @commands.command()
@@ -61,11 +61,11 @@ class huntCog(commands.Cog):
         prefix = ctx.prefix
         invoked = ctx.invoked_with
         invoked = invoked.lower()
-        
+
         if prefix.lower() == 'rpg ' and len(args) in (0,1,2):
             # Determine if hardmode and/or together was used
             together = False
-            
+
             if len(args) > 0:
                 if invoked == 'ascended':
                     command = 'rpg ascended hunt'
@@ -73,7 +73,7 @@ class huntCog(commands.Cog):
                     args.pop(0)
                 else:
                     command = 'rpg hunt'
-                
+
                 if len(args) > 0:
                     arg1 = args[0]
                     arg1 = arg1.lower()
@@ -90,7 +90,7 @@ class huntCog(commands.Cog):
                                 command = f'{command} together'
             else:
                 command = 'rpg hunt'
-                
+
             try:
                 settings = await database.get_settings(ctx, 'hunt')
                 if not settings == None:
@@ -108,13 +108,13 @@ class huntCog(commands.Cog):
                         hunt_enabled = int(settings[6])
                         hunt_message = settings[7]
                         dnd = settings[8]
-                        
-                        # Set message to send          
+
+                        # Set message to send
                         if hunt_message == None:
                             hunt_message = default_message.replace('%',command)
                         else:
                             hunt_message = hunt_message.replace('%',command)
-                        
+
                         if not hunt_enabled == 0:
                             task_status = self.bot.loop.create_task(self.get_hunt_message(ctx))
                             bot_message = None
@@ -124,10 +124,10 @@ class huntCog(commands.Cog):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)
-                                        
+
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Hunt detection: {message}')
-                                        
+
                                         if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                                             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
@@ -148,13 +148,13 @@ class huntCog(commands.Cog):
                             # Check if it found a cooldown embed, if yes if it is the correct one, if not, ignore it and try to wait for the bot message one more time
                             if bot_message.find(f'\'s cooldown') > 1:
                                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                if (bot_message.find(f'{ctx_author}\'s cooldown') > -1) or (bot_message.find(f'{partner_name}\'s cooldown') > -1):    
+                                if (bot_message.find(f'{ctx_author}\'s cooldown') > -1) or (bot_message.find(f'{partner_name}\'s cooldown') > -1):
                                     timestring_start = bot_message.find('wait at least **') + 16
                                     timestring_end = bot_message.find('**...', timestring_start)
                                     timestring = bot_message[timestring_start:timestring_end]
                                     timestring = timestring.lower()
                                     time_left = await global_functions.parse_timestring(ctx, timestring)
-                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                     current_time = datetime.utcnow().replace(microsecond=0)
                                     time_elapsed = current_time - bot_answer_time
                                     time_elapsed_seconds = time_elapsed.total_seconds()
@@ -165,18 +165,18 @@ class huntCog(commands.Cog):
                                     else:
                                         if global_data.DEBUG_MODE == 'ON':
                                             await bot_answer.add_reaction(emojis.cross)
-                                    
+
                                     if not partner_id == 0:
                                         partner_settings = await database.get_settings(ctx, 'partner_alert_hardmode', partner_id)
                                         partner_hardmode = partner_settings[3]
-                                    
+
                                         if together == True and partner_hardmode == 1:
                                             if dnd == 0:
                                                 hm_message = f'{ctx.author.mention} **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
                                             else:
                                                 hm_message = f'**{ctx.author.name}**, **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
                                             await ctx.send(hm_message)
-                                            
+
                                         elif together == False and partner_hardmode == 0:
                                             if dnd == 0:
                                                 hm_message = f'{ctx.author.mention} **{partner_name}** is not hardmoding, feel free to take them hunting.'
@@ -188,7 +188,7 @@ class huntCog(commands.Cog):
                                     message = await self.get_hunt_message(ctx)
                                     bot_answer = message[0]
                                     bot_message = message[1]
-                                        
+
                             # Check if partner is in the middle of a command, if yes, if it is the correct one, if not, ignore it and try to wait for the bot message one more time
                             elif bot_message.find(f'is in the middle of a command') > -1:
                                 if (bot_message.find(partner_name) > -1) and (bot_message.find(f'is in the middle of a command') > -1):
@@ -249,12 +249,12 @@ class huntCog(commands.Cog):
                         return
                 else:
                     return
-                
+
                 # Calculate cooldown
                 cooldown_data = await database.get_cooldown(ctx, 'hunt')
                 cooldown = int(cooldown_data[0])
                 donor_affected = int(cooldown_data[1])
-                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -262,38 +262,38 @@ class huntCog(commands.Cog):
                     donor_tier = partner_donor_tier
                 else:
                     donor_tier = user_donor_tier
-                
+
                 if donor_affected == True:
                     time_left = cooldown*global_data.donor_cooldowns[donor_tier]-time_elapsed_seconds
                 else:
                     time_left = cooldown-time_elapsed_seconds
-                
+
                 # Save task to database
                 write_status = await global_functions.write_reminder(self.bot, ctx, 'hunt', time_left, hunt_message)
-                
+
                 # Add reaction
                 if not write_status == 'aborted':
                     await bot_answer.add_reaction(emojis.navi)
                 else:
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-                
+
                 if bot_message.find(f'**{ctx.author.name}** got an OMEGA lootbox') > -1:
                     await bot_answer.add_reaction(emojis.fire)
                 if bot_message.find(f'**{ctx.author.name}** got a GODLY lootbox') > -1:
                     await bot_answer.add_reaction(emojis.fire)
-                
+
                 # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                 if not partner_id == 0:
                     partner_settings = await database.get_settings(ctx, 'partner_alert_hardmode', partner_id)
                     partner_hardmode = partner_settings[3]
-                
+
                     if together == True:
                         await self.bot.wait_until_ready()
                         partner = self.bot.get_user(partner_id)
                         partner_name = partner.name
                         lootbox_alert = ''
-                        
+
                         if bot_message.find(f'**{partner_name}** got a common lootbox') > -1:
                             lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbcommon} common lootbox')
                         elif bot_message.find(f'**{partner_name}** got an uncommon lootbox') > -1:
@@ -308,9 +308,9 @@ class huntCog(commands.Cog):
                             lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lobomega} OMEGA lootbox')
                         elif bot_message.find(f'**{partner_name}** got a GODLY lootbox') > -1:
                             lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbgodly} GODLY lootbox')
-                        
+
                         if not lootbox_alert == '':
-                            
+
                             partner_channel_id = partner_settings[0]
                             partner_reminders_on = partner_settings[1]
                             alert_enabled = partner_settings[2]
@@ -326,7 +326,7 @@ class huntCog(commands.Cog):
                                     await bot_answer.add_reaction(emojis.partner_alert)
                                 except Exception as e:
                                     await ctx.send(e)
-                        
+
                         if partner_hardmode == 1:
                             if dnd == 0:
                                 hm_message = f'{ctx.author.mention} **{partner_name}** is currently **hardmoding**.\nIf you want to hardmode too, please activate hardmode mode and hunt solo.'
@@ -340,11 +340,11 @@ class huntCog(commands.Cog):
                             else:
                                 hm_message = f'**{ctx.author.name}**, **{partner_name}** is not hardmoding, feel free to take them hunting.'
                             await ctx.send(hm_message)
-                                    
+
                 # Add an F if the user died
                 if (bot_message.find(f'**{ctx_author}** lost but ') > -1) or (bot_message.find('but lost fighting') > -1):
                     await bot_answer.add_reaction(emojis.rip)
-            
+
             except asyncio.TimeoutError as error:
                 await ctx.send('Hunt detection timeout.')
                 return

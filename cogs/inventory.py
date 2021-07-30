@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class inventoryCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Open detection
     async def get_inventory_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Open detection: {message}')
-                
+
                 if  (message.find(f'{ctx_author}\'s inventory') > -1)\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -41,31 +41,31 @@ class inventoryCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Inventory
     @commands.command(aliases=('i','inv',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
     async def inventory(self, ctx, *args):
-    
+
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
-            
+
             if args:
                 arg = args[0]
                 if not arg.find(f'{ctx.author.id}') > -1:
                     return
-                
-            
+
+
             settings = await database.get_settings(ctx, 'rubies')
             if not settings == None:
                 rubies_db = settings[0]
@@ -73,7 +73,7 @@ class inventoryCog(commands.Cog):
                 reminders_on = settings[2]
             else:
                 return
-            
+
             if not reminders_on == 0 and not ruby_counter == 0:
                 try:
                     task_status = self.bot.loop.create_task(self.get_inventory_message(ctx))
@@ -84,10 +84,10 @@ class inventoryCog(commands.Cog):
                             try:
                                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                 message = await global_functions.encode_message(msg)
-                                
+
                                 if global_data.DEBUG_MODE == 'ON':
                                     global_data.logger.debug(f'Inventory detection: {message}')
-                                
+
                                 if  (message.find(f'{ctx_author}\'s inventory') > -1)\
                                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1))\
                                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -96,7 +96,7 @@ class inventoryCog(commands.Cog):
                                     bot_message = message
                             except Exception as e:
                                 await ctx.send(f'Error reading message history: {e}')
-                                        
+
                     if bot_message == None:
                         task_result = await task_status
                         if not task_result == None:
@@ -105,10 +105,10 @@ class inventoryCog(commands.Cog):
                         else:
                             await ctx.send('Inventory detection timeout.')
                             return
-                    
+
                     if bot_message.find(f'\'s inventory') > -1:
                         if bot_message.find('**ruby**:') > -1:
-                            rubies_start = bot_message.find('**ruby**:') + 10                        
+                            rubies_start = bot_message.find('**ruby**:') + 10
                             rubies_end = bot_message.find(f'\\', rubies_start)
                             rubies_end_bottom = bot_message.find(f'\'', rubies_start)
                             rubies = bot_message[rubies_start:rubies_end]
@@ -143,16 +143,16 @@ class inventoryCog(commands.Cog):
                     elif bot_message.find('end your previous command') > 1:
                         if global_data.DEBUG_MODE == 'ON':
                             await bot_answer.add_reaction(emojis.cross)
-                        return 
+                        return
                 except asyncio.TimeoutError as error:
                     await ctx.send('Inventory detection timeout.')
                     return
                 except Exception as e:
                     global_data.logger.error(f'Inventory detection error: {e}')
-                    return    
+                    return
             else:
                 return
-        
+
 # Initialization
 def setup(bot):
     bot.add_cog(inventoryCog(bot))

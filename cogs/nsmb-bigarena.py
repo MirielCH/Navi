@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class nsmbbaCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Big arena / Not so mini boss detection
     async def get_nsmbba_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Big arena / Not so miniboss detection: {message}')
-                
+
                 if  ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **big arena** event') > -1))\
                 or ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **not so "mini" boss** event') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you are already registered!') > -1))\
@@ -45,46 +45,46 @@ class nsmbbaCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Big arena / Not so mini boss
     @commands.command(aliases=('not',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
     async def big(self, ctx, *args):
-    
+
         prefix = ctx.prefix
         invoked = ctx.invoked_with
         invoked = invoked.lower()
-        
+
         if prefix.lower() == 'rpg ':
-            
+
             if args:
                 full_args = ''
                 if invoked == 'ascended':
                     args = args[0]
-                    args.pop(0)     
+                    args.pop(0)
                 for arg in args:
                     if arg == 'miniboss':
                         return
                     full_args = f'{full_args}{arg}'
             else:
                 return
-                    
+
             if full_args in ('sominibossjoin','arenajoin',):
                 if full_args == 'sominibossjoin':
                     event = 'nsmb'
                 elif full_args == 'arenajoin':
                     event = 'bigarena'
-                
+
                 try:
                     settings = await database.get_settings(ctx, 'nsmb-bigarena')
                     if not settings == None:
@@ -95,11 +95,11 @@ class nsmbbaCog(commands.Cog):
                                 user_donor_tier = 3
                             arena_enabled = int(settings[2])
                             miniboss_enabled = int(settings[3])
-                            
-                            # Set message to send          
+
+                            # Set message to send
                             arena_message = global_data.arena_message
                             miniboss_message = global_data.miniboss_message
-                            
+
                             if not ((event == 'nsmb') and (miniboss_enabled == 0)) or ((event == 'bigarena') and (miniboss_enabled == 0)):
                                 task_status = self.bot.loop.create_task(self.get_nsmbba_message(ctx))
                                 bot_message = None
@@ -109,10 +109,10 @@ class nsmbbaCog(commands.Cog):
                                         try:
                                             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                             message = await global_functions.encode_message(msg)
-                                            
+
                                             if global_data.DEBUG_MODE == 'ON':
                                                 global_data.logger.debug(f'Big arena / Not so mini boss detection: {message}')
-                                            
+
                                             if  ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **big arena** event') > -1))\
                                             or ((message.find(f'{ctx_author}') > -1) and (message.find(f'successfully registered for the next **not so "mini" boss** event') > -1))\
                                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you are already registered!') > -1))\
@@ -125,7 +125,7 @@ class nsmbbaCog(commands.Cog):
                                                 bot_message = message
                                         except Exception as e:
                                             await ctx.send(f'Error reading message history: {e}')
-                                                    
+
                                 if bot_message == None:
                                     task_result = await task_status
                                     if not task_result == None:
@@ -142,7 +142,7 @@ class nsmbbaCog(commands.Cog):
                                     timestring = bot_message[timestring_start:timestring_end]
                                     timestring = timestring.lower()
                                     time_left = await global_functions.parse_timestring(ctx, timestring)
-                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                     current_time = datetime.utcnow().replace(microsecond=0)
                                     time_elapsed = current_time - bot_answer_time
                                     time_elapsed_seconds = time_elapsed.total_seconds()
@@ -194,14 +194,14 @@ class nsmbbaCog(commands.Cog):
                             return
                     else:
                         return
-                    
+
                 except asyncio.TimeoutError as error:
                     await ctx.send('Big arena / Not so mini boss detection timeout.')
                     return
                 except Exception as e:
                     global_data.logger.error(f'Big arena / Not so mini boss detection error: {e}')
-                    return    
-        
+                    return
+
 # Initialization
 def setup(bot):
     bot.add_cog(nsmbbaCog(bot))

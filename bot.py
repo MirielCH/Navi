@@ -19,41 +19,41 @@ from discord.ext import commands, tasks
 from discord.ext.commands import CommandNotFound
 from math import ceil
 from operator import itemgetter
-    
-    
+
+
 
 # --- Tasks ---
 
 # Task to read all due reminders from the database and schedule them
 @tasks.loop(seconds=10.0)
 async def schedule_reminders(bot):
-    
+
     due_reminders = await database.get_due_reminders()
-    
+
     if due_reminders == 'None':
         return
     else:
-        for reminder in due_reminders:    
+        for reminder in due_reminders:
             try:
                 user_id = reminder[0]
                 activity = reminder[1]
                 end_time = float(reminder[2])
                 channel_id = int(reminder[3])
                 message = reminder[4]
-                
+
                 await bot.wait_until_ready()
                 channel = bot.get_channel(channel_id)
                 if not activity == 'guild':
                     await bot.wait_until_ready()
                     user = bot.get_user(user_id)
-                
+
                 current_time = datetime.utcnow().replace(microsecond=0)
                 end_time_datetime = datetime.fromtimestamp(end_time)
                 end_time_difference = end_time_datetime - current_time
                 time_left = end_time_difference.total_seconds()
-                
-                task_name = f'{user_id}-{activity}'    
-                
+
+                task_name = f'{user_id}-{activity}'
+
                 if not activity == 'guild':
                     if activity.find('custom') > -1:
                         message = global_data.default_custom_message.replace('%',message)
@@ -61,7 +61,7 @@ async def schedule_reminders(bot):
                 else:
                     task = bot.loop.create_task(global_functions.background_task(bot, user_id, channel, message, time_left, task_name, True))
                 global_data.running_tasks[task_name] = task
-                
+
                 await database.set_reminder_triggered(None, user_id, activity)
             except Exception as e:
                 global_data.logger.error(f'{datetime.now()}: Error scheduling reminder {reminder}: {e}')
@@ -69,13 +69,13 @@ async def schedule_reminders(bot):
 # Task to delete old reminders
 @tasks.loop(minutes=2.0)
 async def delete_old_reminders(bot):
-    
+
     old_reminders = await database.get_old_reminders()
-    
+
     if old_reminders == 'None':
         return
     else:
-        for reminder in old_reminders:    
+        for reminder in old_reminders:
             try:
                 try:
                     user_id = int(reminder[0])
@@ -96,7 +96,7 @@ async def delete_old_reminders(bot):
                         global_data.logger.error(f'{datetime.now()}: Had an error deleting this reminder: {reminder}')
             except:
                 global_data.logger.error(f'{datetime.now()}: Error deleting old reminder {reminder}')
-            
+
 
 
 # --- Command Initialization ---
@@ -125,7 +125,9 @@ cog_extensions = ['cogs.adventure',
                   'cogs.trade',
                   'cogs.training',
                   'cogs.weekly',
-                  'cogs.work']
+                  'cogs.work',
+                  'cogs.dev'
+                  ]
 if __name__ == '__main__':
     for extension in cog_extensions:
         bot.load_extension(extension)
@@ -136,24 +138,24 @@ if __name__ == '__main__':
 # Set bot status when ready
 @bot.event
 async def on_ready():
-    
+
     print(f'{bot.user.name} has connected to Discord!')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name='your commands'))
     schedule_reminders.start(bot)
     delete_old_reminders.start(bot)
-    
+
 # Send message to system channel when joining a server
 @bot.event
 async def on_guild_join(guild):
-    
+
     try:
         prefix = await database.get_prefix(guild, True)
-        
+
         welcome_message =   f'Hey! **{guild.name}**! I\'m here to remind you to do your Epic RPG commands!\n\n'\
                             f'Note that reminders are off by default. If you want to get reminded, please use `{prefix}on` to activate me.\n'\
                             f'If you don\'t like this prefix, use `{prefix}setprefix` to change it.\n\n'\
                             f'Tip: If you ever forget the prefix, simply ping me with a command.\n\n'\
-        
+
         await guild.system_channel.send(welcome_message)
     except:
         return
@@ -189,19 +191,21 @@ async def on_command_error(ctx, error):
         return
     elif isinstance(error, commands.MissingRequiredArgument):
         await ctx.reply(f'You\'re missing some arguments.', mention_author=False)
+    elif isinstance(error, commands.DisabledCommand):
+        await ctx.reply(f'This command is currently disabled.', mention_author=False)
     else:
         await database.log_error(ctx, error) # To the database you go
-       
+
 
 
 # --- Server Settings ---
-   
+
 # Command "setprefix" - Sets new prefix (if user has "manage server" permission)
 @bot.command()
 @commands.has_permissions(manage_guild=True)
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def setprefix(ctx, *new_prefix):
-    
+
     if not ctx.prefix == 'rpg ':
         if new_prefix:
             if len(new_prefix)>1:
@@ -224,7 +228,7 @@ async def setprefix(ctx, *new_prefix):
 @bot.command()
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def prefix(ctx):
-    
+
     if not ctx.prefix == 'rpg ':
         current_prefix = await database.get_prefix(ctx)
         await ctx.reply(f'The prefix for this server is `{current_prefix}`\nTo change the prefix use `{current_prefix}setprefix`.', mention_author=False)
@@ -237,18 +241,18 @@ async def prefix(ctx):
 @bot.command(aliases=('me',))
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def settings(ctx):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         settings = await database.get_settings(ctx, 'all')
         guild_data = await database.get_guild(ctx, 'member', ctx.author.id)
-        
+
         if settings == None:
             await ctx.reply(f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.', mention_author=False)
             return
         else:
             settings = list(settings)
-            
+
             for index in range(7, len(settings)):
                 setting = settings[index]
                 if setting == 1:
@@ -259,7 +263,7 @@ async def settings(ctx):
                 setting = settings[index]
                 if setting == None:
                     settings[index] = '<Default>'
-                      
+
             reminders_on = settings[1]
             if reminders_on == 1:
                 reminders_on = 'Enabled'
@@ -311,12 +315,12 @@ async def settings(ctx):
             dnd = settings[47]
             ruby_counter = settings[48]
             rubies = settings[49]
-            
+
             if not partner_id == 0:
                 hardmode_partner = settings[96]
             else:
                 hardmode_partner = 'N/A'
-        
+
             if not guild_data == None:
                 guild_name = guild_data[0]
                 guild_reminders_on = guild_data[1]
@@ -331,10 +335,10 @@ async def settings(ctx):
                 guild_reminders_on = 'Disabled'
                 guild_stealth = 'N/A'
                 guild_channel = None
-        
+
             user_name = ctx.author.name
             user_name = user_name.upper()
-            
+
             await bot.wait_until_ready()
             if not partner_id == 0:
                 partner = bot.get_user(partner_id)
@@ -344,20 +348,20 @@ async def settings(ctx):
                     partner_name = 'None'
             else:
                 partner_name = 'None'
-            
+
             if not partner_channel == None:
                 await bot.wait_until_ready()
                 partner_channel_name = bot.get_channel(partner_channel)
             else:
                 partner_channel_name = 'None'
-            
+
             if not guild_channel == None:
                 await bot.wait_until_ready()
                 guild_channel_name = bot.get_channel(guild_channel)
             else:
                 guild_channel_name = 'None'
-            
-        
+
+
             general = (
                 f'{emojis.bp} Reminders: `{reminders_on}`\n'
                 f'{emojis.bp} Donator tier: `{user_donor_tier}` ({global_data.donor_tiers[user_donor_tier]})\n'
@@ -365,21 +369,21 @@ async def settings(ctx):
                 f'{emojis.bp} Hardmode mode: `{hardmode}`\n'
                 f'{emojis.bp} Ruby counter: `{ruby_counter}`'
             )
-            
+
             partner = (
                 f'{emojis.bp} Name: `{partner_name}`\n'
                 f'{emojis.bp} Hardmode mode: `{hardmode_partner}`\n'
                 f'{emojis.bp} Donator tier: `{partner_donor_tier}` ({global_data.donor_tiers[partner_donor_tier]})\n'
                 f'{emojis.bp} Lootbox alert channel: `{partner_channel_name}`'
             )
-            
+
             guild = (
                 f'{emojis.bp} Name: `{guild_name}`\n'
                 f'{emojis.bp} Reminders: `{guild_reminders_on}`\n'
                 f'{emojis.bp} Alert channel: `{guild_channel_name}`\n'
                 f'{emojis.bp} Stealth threshold: `{guild_stealth}`'
             )
-            
+
             enabled_reminders = (
                 f'{emojis.bp} Adventure: `{adv_enabled}`\n'
                 f'{emojis.bp} Arena: `{arena_enabled}`\n'
@@ -399,16 +403,16 @@ async def settings(ctx):
                 f'{emojis.bp} Weekly: `{weekly_enabled}`\n'
                 f'{emojis.bp} Work: `{work_enabled}`'
             )
-            
+
             enabled_event_reminders = (
                 f'{emojis.bp} Big arena: `{bigarena_enabled}`\n'
                 f'{emojis.bp} Horse race: `{race_enabled}`\n'
                 f'{emojis.bp} Not so mini boss: `{nsmb_enabled}`\n'
             )
-            
+
             if reminders_on == 'Disabled':
                 enabled_reminders = f'**These settings are ignored because your reminders are off.**\n{enabled_reminders}'
-            
+
             reminder_messages = (
                 f'{emojis.bp} Default message: `{default_message}`\n'
                 f'{emojis.bp} Adventure: `{adv_message}`\n'
@@ -428,41 +432,41 @@ async def settings(ctx):
                 f'{emojis.bp} Weekly: `{weekly_message}`\n'
                 f'{emojis.bp} Work: `{work_message}`'
             )
-        
+
             embed = discord.Embed(
                 color = global_data.color,
                 title = f'{user_name}\'S SETTINGS',
-            )    
+            )
             embed.add_field(name='USER', value=general, inline=False)
             embed.add_field(name='PARTNER', value=partner, inline=False)
             embed.add_field(name='GUILD', value=guild, inline=False)
             embed.add_field(name='COOLDOWN REMINDERS', value=enabled_reminders, inline=False)
             embed.add_field(name='EVENT REMINDERS', value=enabled_event_reminders, inline=False)
             #embed.add_field(name='REMINDER MESSAGES', value=reminder_messages, inline=False)
-        
+
             await ctx.reply(embed=embed, mention_author=False)
 
 # Command "on" - Activates bot
 @bot.command(aliases=('start',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def on(ctx, *args):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         status = await database.set_reminders(ctx, 'on')
         await ctx.reply(status, mention_author=False)
-        
+
 # Command "off" - Deactivates bot
 @bot.command(aliases=('stop',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def off(ctx, *args):
-    
+
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         await ctx.reply(f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
         try:
             answer = await bot.wait_for('message', check=check, timeout=30)
@@ -473,12 +477,12 @@ async def off(ctx, *args):
                 await ctx.send('Aborted.')
         except asyncio.TimeoutError as error:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-        
+
 # Command "donator" - Sets user donor tier
 @bot.command(aliases=('donator',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def donor(ctx, *args):
-    
+
     possible_tiers = (
         f'Possible tiers:\n'
         f'{emojis.bp}`0` : {global_data.donor_tiers[0]}\n'
@@ -490,10 +494,10 @@ async def donor(ctx, *args):
         f'{emojis.bp}`6` : {global_data.donor_tiers[6]}\n'
         f'{emojis.bp}`7` : {global_data.donor_tiers[7]}\n'
     )
-    
+
     settings = await database.get_settings(ctx, 'donor')
     user_donor_tier = int(settings[0])
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         if args:
@@ -536,7 +540,7 @@ async def donor(ctx, *args):
             else:
                 await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [tier]` or `{ctx.prefix}{ctx.invoked_with} partner [tier]`.\n\n{possible_tiers}', mention_author=False)
                 return
-                    
+
         else:
             await ctx.reply(
                 f'**{ctx.author.name}**, your current EPIC RPG donator tier is **{user_donor_tier}** ({global_data.donor_tiers[user_donor_tier]}).\n'
@@ -548,13 +552,13 @@ async def donor(ctx, *args):
 @bot.command()
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def partner(ctx, *args):
-    
+
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
-    
+
     def partner_check(m):
         return m.author in ctx.message.mentions and m.channel == ctx.channel
-    
+
     possible_tiers = (
         f'Possible tiers:\n'
         f'{emojis.bp}`0` : {global_data.donor_tiers[0]}\n'
@@ -566,12 +570,12 @@ async def partner(ctx, *args):
         f'{emojis.bp}`6` : {global_data.donor_tiers[6]}\n'
         f'{emojis.bp}`7` : {global_data.donor_tiers[7]}\n'
     )
-    
+
     settings = await database.get_settings(ctx, 'partner')
     partner_donor_tier = int(settings[0])
     partner_id = settings[1]
     partner_channel = settings[2]
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         if args:
@@ -634,7 +638,7 @@ async def partner(ctx, *args):
                                     channel_name = 'Invalid channel'
                                 else:
                                     channel_name = channel.name
-                                    
+
                                 await ctx.reply(f'**{ctx.author.name}**, do you want to remove **{channel_name}** as your lootbox alert channel? `[yes/no]`', mention_author=False)
                                 answer = await bot.wait_for('message', check=check, timeout=30)
                                 if answer.content.lower() in ['yes','y']:
@@ -677,7 +681,7 @@ async def partner(ctx, *args):
                     answer = await bot.wait_for('message', check=check, timeout=30)
                     if answer.content.lower() in ['yes','y']:
                         status = await database.reset_partner(ctx)
-                        
+
                         if status == 'updated':
                             await ctx.send(f'Your partner settings were reset.\n')
                             return
@@ -695,7 +699,7 @@ async def partner(ctx, *args):
                                 mention_author=False
                             )
                             return
-                        
+
                         new_partner = ctx.message.mentions[0]
                         new_partner_id = new_partner.id
                         new_partner_name = f'{new_partner.name}#{new_partner.discriminator}'
@@ -742,21 +746,21 @@ async def partner(ctx, *args):
                     mention_author=False
                 )
                 return
-                         
+
 # Command "enable/disable" - Enables/disables specific reminders
 @bot.command(aliases=('disable',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def enable(ctx, *args):
-    
+
     def check(m):
         return m.author == ctx.author and m.channel == ctx.channel
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         activity_list = 'Possible activities:'
-        for index in range(len(global_data.activities)):    
-            
+        for index in range(len(global_data.activities)):
+
             activity = global_data.activities[index]
             if activity == 'dungmb':
                 activity = 'dungeon'
@@ -764,9 +768,9 @@ async def enable(ctx, *args):
                 activity = 'notsominiboss'
             elif activity == 'race':
                 activity = 'horserace'
-            
+
             activity_list = f'{activity_list}\n{emojis.bp} `{activity}`'
-        
+
         if args:
             activity_aliases = {
                 'adv': 'adventure',
@@ -816,7 +820,7 @@ async def enable(ctx, *args):
             found_wrong_activity = False
             wrong_activities = f'**{ctx.author.name}**, couldn\'t find the following activities:'
             status_all = f'**{ctx.author.name}**, the following reminders are now **{action}d:**'
-                                
+
             for arg in args:
                 activity = arg
                 activity = activity.lower()
@@ -830,7 +834,7 @@ async def enable(ctx, *args):
                 for arg in args:
                     activity = arg
                     activity = activity.lower()
-            
+
                     if activity == 'all':
                         if action == 'disable':
                             await ctx.reply(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
@@ -841,18 +845,18 @@ async def enable(ctx, *args):
                                     return
                             except asyncio.TimeoutError as error:
                                 await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                        
+
                         status = await database.set_specific_reminder(ctx, activity, action)
                         await ctx.reply(status, mention_author=False)
                         return
 
                     if activity in activity_aliases:
                         activity = activity_aliases[activity]
-                
+
                     if activity in global_data.activities:
                         status = await database.set_specific_reminder(ctx, activity, action)
                         status_all = f'{status_all}\n{emojis.bp} `{activity}`'
-                
+
                 if len(args) == 1:
                     await ctx.reply(status, mention_author=False)
                 else:
@@ -862,15 +866,15 @@ async def enable(ctx, *args):
         else:
             await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity]`.\n\n{activity_list}', mention_author=False)
             return
-        
+
 # Command "list" - Lists all active reminders
 @bot.command(name='list')
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def list_cmd(ctx, *args):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         if args:
             arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
             if arg.isnumeric():
@@ -897,7 +901,7 @@ async def list_cmd(ctx, *args):
         else:
             await ctx.reply('I can not find a user with this ID.', mention_author=False)
             return
-        
+
         active_reminders = await database.get_active_reminders(ctx, user_id)
         reminders_commands = ''
         reminders_commands_list = []
@@ -921,7 +925,7 @@ async def list_cmd(ctx, *args):
                 color = global_data.color,
                 title = title
             )
-            
+
             for reminder in active_reminders:
                 activity = reminder[0]
                 end_time = reminder[1]
@@ -930,7 +934,7 @@ async def list_cmd(ctx, *args):
                 end_time_difference = end_time_datetime - current_time
                 time_left = end_time_difference.total_seconds()
                 timestring = await global_functions.parse_seconds(time_left)
-                
+
                 # Pets
                 if activity.find('pet-') > -1:
                     pet_id = activity.replace('pet-','')
@@ -952,7 +956,7 @@ async def list_cmd(ctx, *args):
                 elif activity == 'lottery':
                     activity = activity.capitalize()
                     reminders_events_list.append([activity, timestring])
-                
+
                 # Custom reminders
                 elif activity.find('custom') > -1:
                     reminder_id = activity.capitalize().replace('Custom','')
@@ -960,12 +964,12 @@ async def list_cmd(ctx, *args):
                     if len(reminder_message) > 40:
                         reminder_message = f'{reminder_message[0:37]}...'
                     reminders_custom_list.append([reminder_id, timestring, reminder_message,])
-                
+
                 # Guild reminder
                 elif activity == 'guild':
                     guild_name = reminder[3]
                     reminder_guild = f'{emojis.bp} **`{guild_name}`** (**{timestring}**)'
-                
+
                 # Commands
                 elif activity == 'dungmb':
                     activity = 'Dungeon / Miniboss'
@@ -973,7 +977,7 @@ async def list_cmd(ctx, *args):
                 else:
                     activity = activity.capitalize()
                     reminders_commands_list.append([activity, timestring])
-        
+
             # Create lists
             if not len(reminders_commands_list) == 0:
                 for reminder in reminders_commands_list:
@@ -981,16 +985,16 @@ async def list_cmd(ctx, *args):
                     timestring = reminder[1]
                     reminders_commands = f'{reminders_commands}\n{emojis.bp} **`{activity}`** (**{timestring}**)'
                 reminders_commands = reminders_commands.strip()
-            
+
             if not len(reminders_events_list) == 0:
                 for reminder in reminders_events_list:
                     activity = reminder[0]
                     timestring = reminder[1]
                     reminders_events = f'{reminders_events}\n{emojis.bp} **`{activity}`** (**{timestring}**)'
                 reminders_events = reminders_events.strip()
-                
+
             if not len(reminders_pets_list) == 0:
-                
+
                 counter = -1
                 reminders_pets_list_cleaned = []
                 for index, reminder in enumerate(reminders_pets_list):
@@ -1007,9 +1011,9 @@ async def list_cmd(ctx, *args):
                     else:
                         reminders_pets_list_cleaned.append([pet_id, pet_timestring])
                         counter = counter+1
-                        
+
                 reminders_pets_list = reminders_pets_list_cleaned
-                
+
                 for reminder in reminders_pets_list:
                     activity = reminder[0]
                     timestring = reminder[1]
@@ -1018,7 +1022,7 @@ async def list_cmd(ctx, *args):
                     else:
                         reminders_pets = f'{reminders_pets}\n{emojis.bp} **`Pet {activity}`** (**{timestring}**)'
                 reminders_pets = reminders_pets.strip()
-            
+
             if not len(reminders_custom_list) == 0:
                 reminders_custom_list = sorted(reminders_custom_list, key=itemgetter(0))
                 for reminder in reminders_custom_list:
@@ -1027,7 +1031,7 @@ async def list_cmd(ctx, *args):
                     reminder_message = reminder[2]
                     reminders_custom = f'{reminders_custom}\n{emojis.bp} **`{reminder_id}`** (**{timestring}**) - {reminder_message}'
                 reminders_custom = reminders_custom.strip()
-        
+
         if not len(reminders_commands_list) == 0:
             embed.add_field(name='COMMANDS', value=reminders_commands, inline=False)
         if not len(reminders_events_list) == 0:
@@ -1044,10 +1048,10 @@ async def list_cmd(ctx, *args):
 @bot.command(aliases=('hm',))
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def hardmode(ctx, *args):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         if args:
             arg = args[0]
             if arg in ('on','enable','start'):
@@ -1070,10 +1074,10 @@ async def hardmode(ctx, *args):
 @bot.command()
 @commands.bot_has_permissions(send_messages=True, embed_links=True)
 async def dnd(ctx, *args):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         if args:
             arg = args[0]
             if arg in ('on','enable','start'):
@@ -1096,10 +1100,10 @@ async def dnd(ctx, *args):
 @bot.command(aliases=('rubies',))
 @commands.bot_has_permissions(send_messages=True, embed_links=True)
 async def ruby(ctx, *args):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         if args:
             arg = args[0]
             if arg in ('on','enable','start'):
@@ -1129,18 +1133,18 @@ async def on_message_edit(message_before, message_after):
             message_guild_name = str(message_after.embeds[0].fields[0].name)
             message_guild_members = str(message_after.embeds[0].fields[0].value)
             message_guild_leader = str(message_after.embeds[0].footer.text)
-            
+
             guild_name = message_guild_name.replace(' members','').replace('**','')
             guild_leader = message_guild_leader.replace('Owner: ','')
             guild_members = message_guild_members.replace('ID: ','').replace('**','')
             guild_members_list_raw = guild_members.split('\n')
             guild_members_list = []
-            
+
             # Get members of current server
             message_guild = message_after.guild
             message_guild_members = message_guild.members
-            
-            # Get user id of the leader if necessary 
+
+            # Get user id of the leader if necessary
             if guild_leader.isnumeric():
                 guild_leader = int(guild_leader)
             else:
@@ -1149,7 +1153,7 @@ async def on_message_edit(message_before, message_after):
                     if full_name == guild_leader:
                         guild_leader = guild_member.id
                         break
-            
+
             # Get all user ids of all guild members
             for member in guild_members_list_raw:
                 if member.isnumeric():
@@ -1160,12 +1164,12 @@ async def on_message_edit(message_before, message_after):
                         if full_name == member:
                             guild_members_list.append(guild_member.id)
                             break
-            
+
             if len(guild_members_list) < 10:
                 missing_members = 10 - len(guild_members_list)
                 for x in range(0, missing_members):
                     guild_members_list.append(None)
-            
+
             await database.update_guild(guild_name, guild_leader, guild_members_list)
             await message_after.add_reaction(emojis.navi)
 
@@ -1175,16 +1179,16 @@ async def on_message_edit(message_before, message_after):
 @bot.command(aliases=('h',))
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def help(ctx):
-    
+
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
         prefix = await database.get_prefix(ctx)
-        
+
         reminder_management = (
             f'{emojis.bp} `{prefix}list` : List all your active reminders\n'
             f'{emojis.bp} `{prefix}rm` : Manage custom reminders'
         )
-                    
+
         user_settings = (
             f'{emojis.bp} `{prefix}on` / `off` : Turn the bot on/off\n'
             f'{emojis.bp} `{prefix}settings` : Check your settings\n'
@@ -1195,13 +1199,13 @@ async def help(ctx):
             f'{emojis.bp} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
             f'{emojis.bp} `{prefix}ruby` : Check your current ruby count'
         )
-        
+
         partner_settings = (
             f'{emojis.bp} `{prefix}partner` : Set your marriage partner\n'
             f'{emojis.bp} `{prefix}partner donator` : Set your partner\'s EPIC RPG donator tier\n'
             f'{emojis.bp} `{prefix}partner channel` : Set the channel for incoming lootbox alerts'
         )
-        
+
         guild_settings = (
             f'{emojis.bp} `{prefix}guild leaderboard` : Check the weekly raid leaderboard\n'
             f'{emojis.bp} `rpg guild list` : Add/update your guild\n'
@@ -1209,28 +1213,28 @@ async def help(ctx):
             f'{emojis.bp} `{prefix}guild on` / `off` : Turn guild reminders on or off\n'
             f'{emojis.bp} `{prefix}guild stealth` : Set your stealth threshold'
         )
-        
+
         server_settings = (
             f'{emojis.bp} `{prefix}prefix` : Check the bot prefix\n'
             f'{emojis.bp} `{prefix}setprefix` / `{prefix}sp` : Set the bot prefix'
         )
-        
+
         embed = discord.Embed(
             color = global_data.color,
             title = 'NAVI',
             description =   f'Hey! **{ctx.author.name}**! Hello!'
-        )    
+        )
         embed.add_field(name='REMINDERS', value=reminder_management, inline=False)
         embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
         embed.add_field(name='PARTNER SETTINGS', value=partner_settings, inline=False)
         embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)
         embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
-        
+
         await ctx.reply(embed=embed, mention_author=False)
 
 
 
-# --- Command detection --- 
+# --- Command detection ---
 # Ascended commands
 @bot.command()
 @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
@@ -1238,10 +1242,10 @@ async def ascended(ctx, *args):
 
     prefix = ctx.prefix
     if prefix.lower() == 'rpg ' and len(args) >= 1:
-        
+
         arg1 = args[0].lower()
         args = list(args)
-        
+
         if arg1 == 'hunt':
             command = bot.get_command(name='hunt')
         elif arg1 in ('adventure','adv',):
@@ -1256,7 +1260,7 @@ async def ascended(ctx, *args):
             command = bot.get_command(name='farm')
         else:
             command = None
-        
+
         if not command == None:
             await command.callback(command.cog, ctx, args)
 
@@ -1273,7 +1277,7 @@ async def devstats(ctx):
         guilds = len(list(bot.guilds))
         user_number = await database.get_user_number(ctx)
         latency = bot.latency
-        
+
         embed = discord.Embed(
             color = global_data.color,
             title = 'BOT STATISTICS',
@@ -1281,7 +1285,7 @@ async def devstats(ctx):
                             f'{emojis.bp} {user_number[0]:,} users\n'\
                             f'{emojis.bp} {round(latency*1000):,} ms latency'
         )
-        
+
         await ctx.reply(embed=embed, mention_author=False)
 
 # Test command
@@ -1292,7 +1296,7 @@ async def test(ctx):
 
     prefix = ctx.prefix
     if not prefix.lower() == 'rpg ':
-        
+
         items = (
             f'Test\n'
             f'Test\n'
@@ -1308,387 +1312,30 @@ async def test(ctx):
             f'Test\n'
             f'Test\n'
         )
-        
+
         items2 = (
             f'Test\n'
         )
-        
+
         embed = discord.Embed(
             color = global_data.color,
             title = 'TEST EMBED'
         )
-        
+
         embed.add_field(name='Items', value=items, inline=True)
         embed.add_field(name='Consumables', value=items2, inline=True)
         embed.add_field(name='Event items', value=items2, inline=True)
         embed.add_field(name='More items', value=items2, inline=True)
-        
+
         await ctx.reply(embed=embed, mention_author=False)
 
 # Hey! Listen!
 @bot.command(aliases=('listen',))
 @commands.bot_has_permissions(send_messages=True, read_message_history=True)
 async def hey(ctx):
-    
+
     if not ctx.prefix == 'rpg ':
         await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431', mention_author=False)
-    
-
-
-
-# --- Owner Commands ---
-# Shutdown command (only I can use it obviously)
-@bot.command()
-@commands.is_owner()
-@commands.bot_has_permissions(send_messages=True, read_message_history=True)
-async def shutdown(ctx):
-
-    def check(m):
-        return m.author == ctx.author and m.channel == ctx.channel
-
-    prefix = ctx.prefix
-    if not prefix.lower() == 'rpg ':    
-        try:
-            await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`', mention_author=False)
-            answer = await bot.wait_for('message', check=check, timeout=30)
-            if answer.content.lower() in ['yes','y']:
-                await ctx.send(f'Shutting down.')
-                await ctx.bot.logout()
-            else:
-                await ctx.send(f'Phew, was afraid there for a second.')
-        except asyncio.TimeoutError as error:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-
-# Reload cogs & modules
-@bot.command(aliases=('reload_cog',))
-@commands.is_owner()
-@commands.bot_has_permissions(send_messages=True)
-async def reload(ctx, *args):
-    
-    if args:
-        arg = args[0].lower()
-        if arg in ('lib','libs','modules','module'):
-            importlib.reload(database)
-            importlib.reload(emojis)
-            importlib.reload(global_data)
-            importlib.reload(global_functions)
-            await ctx.send('Modules reloaded.')
-        else:
-            actions = []
-            reloaded = []
-            for arg in args:
-                cog_name = f'cogs.{arg}'
-                try:
-                    result = bot.reload_extension(cog_name)
-                    if result == None:
-                        actions.append(f'Extension \'{cog_name}\' reloaded.')
-                    else:
-                        actions.append(f'{cog_name}: {result}')
-                except Exception as e:
-                    actions.append(f'{cog_name}: {e}')
-                    
-            message = ''
-            for action in actions:
-                message = f'{message}\n{action}'
-                
-            await ctx.send(message) 
-    else:
-        await ctx.send('Uhm, what.')
-            
-# Eval
-@bot.command(aliases=('eval',))
-@commands.is_owner()
-@commands.bot_has_permissions(send_messages=True)
-async def evaluate(ctx):
-    
-    message_prefix_command = f'{ctx.prefix}{ctx.invoked_with} '
-    eval_command_start = ctx.message.content.find(message_prefix_command) + len(message_prefix_command)
-    eval_command = ctx.message.content[eval_command_start:]
-    
-    try:
-        if eval_command.startswith('await '):
-            eval_command = eval_command[6:]
-            result = await eval(eval_command)
-        else:
-            result = eval(eval_command)
-        if result:
-            await ctx.send(result)
-        else:
-            await ctx.send('No return value')
-    except Exception as e:
-        await ctx.send(e)
-
-            
-# Sleepy potion test command
-@bot.command()
-@commands.is_owner()
-@commands.bot_has_permissions(send_messages=True, read_message_history=True)
-async def sleepy(ctx, arg):
-    
-    prefix = ctx.prefix
-    
-    if arg:
-        try:
-            arg = int(arg)
-        except:
-            await ctx.send(f'Syntax: `{prefix}sleepy [seconds]`')
-            return
-        status = await global_functions.reduce_reminder_time(ctx, arg)
-        await ctx.send(status)
-    else:
-        await ctx.send(f'Syntax: `{prefix}sleepy [seconds]`')
-        return
-
-# Command "cooldowns" - Sets cooldowns of all activities
-@bot.command(aliases=('cd-setup','setup-cd','setup-cooldown','cd-s',))
-@commands.bot_has_permissions(send_messages=True, read_message_history=True)
-async def setup_cooldown(ctx, *args):
-    
-    def check(m):
-        return m.author == ctx.author and m.channel == ctx.channel
-    
-    prefix = ctx.prefix
-    if not prefix.lower() == 'rpg ':
-        if not ctx.author.id in (285399610032390146, 619879176316649482):
-            await ctx.reply('You are not allowed to use this command.', mention_author=False)
-            return
-        
-        activity_list = 'Possible activities:'
-        for index in range(len(global_data.cooldown_activities)):
-            activity_list = f'{activity_list}\n{emojis.bp} `{global_data.cooldown_activities[index]}`'
-        
-        if args:
-            if len(args) in (1,2):
-                
-                activity_aliases = {
-                    'adv': 'adventure',
-                    'lb': 'lootbox',
-                    'tr': 'training',
-                    'chop': 'work',
-                    'farming': 'farm',
-                    'fish': 'work',
-                    'mine': 'work',
-                    'pickup': 'work',
-                    'axe': 'work',
-                    'net': 'work',
-                    'pickaxe': 'work',
-                    'ladder': 'work',
-                    'boat': 'work',
-                    'bowsaw': 'work',
-                    'drill': 'work',
-                    'tractor': 'work',
-                    'chainsaw': 'work',
-                    'bigboat': 'work',
-                    'dynamite': 'work',
-                    'greenhouse': 'work',
-                    'mb': 'miniboss'
-                }
-
-                activity = args[0]
-                activity = activity.lower()
-                
-                action = ctx.invoked_with
-                
-                if len(args) == 2:
-                    seconds = args[1]
-                    if seconds.isnumeric():
-                        seconds = int(seconds)
-                    else:
-                        if activity.isnumeric():
-                            seconds = int(activity)
-                            activity = args[1]
-                
-                    if activity in activity_aliases:
-                        activity = activity_aliases[activity]
-                    
-                    if activity in global_data.cooldown_activities:
-                        await ctx.reply(f'**{ctx.author.name}**, this will change the base cooldown (before donor reduction!) of activity **{activity}** to **{seconds:,}** seconds. Continue? [`yes/no`]', mention_author=False)
-                        try:
-                            answer = await bot.wait_for('message', check=check, timeout=30)
-                            if not answer.content.lower() in ['yes','y']:
-                                await ctx.send('Aborted')
-                                return
-                        except asyncio.TimeoutError as error:
-                            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                        
-                        status = await database.set_cooldown(ctx, activity, seconds)
-                        await ctx.reply(status, mention_author=False)
-                
-                else:
-                    cooldown_data = await database.get_cooldowns(ctx)
-                    message = 'Current cooldowns:'
-                    for cd in cooldown_data:
-                        message = f'{message}\n{emojis.bp} {cd[0]}: {cd[1]:,}s'
-                        
-                    message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]` to change a cooldown.'
-                    await ctx.reply(message, mention_author=False)
-            else:
-                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]`.\n\n{activity_list}', mention_author=False)
-                return
-        else:
-            cooldown_data = await database.get_cooldowns(ctx)
-            message = 'Current cooldowns:'
-            for cd in cooldown_data:
-                message = f'{message}\n{emojis.bp} {cd[0]}: {cd[1]:,}s'
-                
-            message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [seconds]` to change a cooldown.'
-            await ctx.reply(message, mention_author=False)
-            
-# Command "event-reduction" - Sets event reductions of all activities
-@bot.command(aliases=('er','event-r','e-r','reduction',))
-@commands.bot_has_permissions(send_messages=True, read_message_history=True)
-async def setup_event_reduction(ctx, *args):
-    
-    def check(m):
-        return m.author == ctx.author and m.channel == ctx.channel
-    
-    prefix = ctx.prefix
-    if not prefix.lower() == 'rpg ':
-        if not ctx.author.id in (285399610032390146, 619879176316649482):
-            await ctx.reply('You are not allowed to use this command.', mention_author=False)
-            return
-        
-        activity_list = 'Possible activities:'
-        for index in range(len(global_data.cooldown_activities)):
-            activity_list = f'{activity_list}\n{emojis.bp} `{global_data.cooldown_activities[index]}`'
-        
-        if args:
-            if len(args) in (1,2):
-                
-                activity_aliases = {
-                    'adv': 'adventure',
-                    'lb': 'lootbox',
-                    'tr': 'training',
-                    'chop': 'work',
-                    'farming': 'farm',
-                    'fish': 'work',
-                    'mine': 'work',
-                    'pickup': 'work',
-                    'axe': 'work',
-                    'net': 'work',
-                    'pickaxe': 'work',
-                    'ladder': 'work',
-                    'boat': 'work',
-                    'bowsaw': 'work',
-                    'drill': 'work',
-                    'tractor': 'work',
-                    'chainsaw': 'work',
-                    'bigboat': 'work',
-                    'dynamite': 'work',
-                    'greenhouse': 'work',
-                    'mb': 'miniboss'
-                }
-
-                activity = args[0]
-                activity = activity.lower()
-                
-                action = ctx.invoked_with
-                
-                if activity == 'reset':
-                    await ctx.reply(f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]', mention_author=False)
-                    try:
-                        answer = await bot.wait_for('message', check=check, timeout=30)
-                        if not answer.content.lower() in ['yes','y']:
-                            await ctx.send('Aborted')
-                            return
-                    except asyncio.TimeoutError as error:
-                        await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                        
-                    status = await database.set_event_reduction(ctx, 'all', 0.0)
-                    await ctx.reply(status, mention_author=False)
-                    return
-                
-                if len(args) == 2:
-                    reduction = args[1]
-                    reduction = reduction.replace('%','')
-                    try:
-                        reduction = float(reduction)
-                    except:
-                        try:
-                            reduction = float(activity)
-                            activity = args[1]
-                        except:
-                            await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]`.\n\n{activity_list}', mention_author=False)
-                            return
-                        
-                    if not 0 <= reduction <= 99:
-                        await ctx.reply(f'**{ctx.author.name}**, a reduction of **{reduction}%** doesn\'t make much sense, does it.', mention_author=False)
-                        return
-                
-                    if activity in activity_aliases:
-                        activity = activity_aliases[activity]
-                    
-                    if activity in global_data.cooldown_activities:
-                        await ctx.reply(f'**{ctx.author.name}**, this will change the event reduction of activity **{activity}** to **{reduction}%**. Continue? [`yes/no`]', mention_author=False)
-                        try:
-                            answer = await bot.wait_for('message', check=check, timeout=30)
-                            if not answer.content.lower() in ['yes','y']:
-                                await ctx.send('Aborted')
-                                return
-                        except asyncio.TimeoutError as error:
-                            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                        
-                        status = await database.set_event_reduction(ctx, activity, reduction)
-                        await ctx.reply(status, mention_author=False)
-                
-                else:
-                    cooldown_data = await database.get_cooldowns(ctx)
-                    message = 'Current event reductions:'
-                    for cd in cooldown_data:
-                        cooldown = cd[1]
-                        reduction = cd[2]
-                        cooldown = int(ceil(cooldown*((100-reduction)/100)))
-                        if not reduction == 0:
-                            message = f'{message}\n{emojis.bp} **{cd[0]}: {reduction}% ({cooldown:,}s)**'
-                        else:
-                            message = f'{message}\n{emojis.bp} {cd[0]}: {reduction}% ({cooldown:,}s)'
-                        
-                    message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]` to change an event reduction.'
-                    await ctx.reply(message, mention_author=False)
-            else:
-                await ctx.reply(f'The syntax is `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]`.\n\n{activity_list}', mention_author=False)
-                return
-        else:
-            cooldown_data = await database.get_cooldowns(ctx)
-            message = 'Current event reductions:'
-            for cd in cooldown_data:
-                cooldown = cd[1]
-                reduction = cd[2]
-                cooldown = int(ceil(cooldown*((100-reduction)/100)))
-                if not reduction == 0:
-                    message = f'{message}\n{emojis.bp} **{cd[0]}: {reduction}% ({cooldown:,}s)**'
-                else:
-                    message = f'{message}\n{emojis.bp} {cd[0]}: {reduction}% ({cooldown:,}s)'
-                
-            message = f'{message}\n\nUse `{ctx.prefix}{ctx.invoked_with} [activity] [reduction in %]` to change a cooldown.'
-            await ctx.reply(message, mention_author=False)
-
-# Command timestring to calculate a time left from a timestamp
-@bot.command(aliases=('ts',))
-@commands.is_owner()
-@commands.bot_has_permissions(send_messages=True, read_message_history=True)
-async def timestring(ctx, *args):
-
-    error_syntax = f'It\'s `{ctx.prefix}timestring [timestamp]`, you dummy.'
-
-    if args:
-        timestamp = args[0]
-        if timestamp.isnumeric():
-            try:
-                timestamp = float(timestamp)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                end_time_datetime = datetime.fromtimestamp(timestamp)
-                end_time_difference = end_time_datetime - current_time
-                time_left = end_time_difference.total_seconds()
-                timestring = await global_functions.parse_seconds(time_left)
-                await ctx.reply(f'That is **{timestring}** from now.', mention_author=False)
-            except:
-                await ctx.reply(f'That really didn\'t calculate to anything useful.', mention_author=False)
-                return
-        else:
-            await ctx.reply(error_syntax, mention_author=False)    
-    else:
-        await ctx.reply(error_syntax, mention_author=False)
 
 
 bot.run(global_data.TOKEN)

@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class lotteryCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Work detection
     async def get_lottery_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Work detection: {message}')
-                
+
                 if  (message.find(f'Join with `rpg lottery buy [amount]`') > -1) or ((message.find(f'{ctx_author}') > -1) and (message.find(f'lottery ticket successfully bought') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot buy more than 10 tickets per lottery') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -42,16 +42,16 @@ class lotteryCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Lottery
     @commands.command()
@@ -61,7 +61,7 @@ class lotteryCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
             command = 'rpg buy lottery ticket'
-                
+
             try:
                 settings = await database.get_settings(ctx, 'lottery')
                 if not settings == None:
@@ -73,13 +73,13 @@ class lotteryCog(commands.Cog):
                         default_message = settings[2]
                         lottery_enabled = int(settings[3])
                         lottery_message = settings[4]
-                        
-                        # Set message to send          
+
+                        # Set message to send
                         if lottery_message == None:
                             lottery_message = default_message.replace('%',command)
                         else:
                             lottery_message = lottery_message.replace('%',command)
-                        
+
                         if not lottery_enabled == 0:
                             task_status = self.bot.loop.create_task(self.get_lottery_message(ctx))
                             bot_message = None
@@ -89,10 +89,10 @@ class lotteryCog(commands.Cog):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message(msg)
-                                        
+
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Hunt detection: {message}')
-                                        
+
                                         if  (message.find(f'Join with `rpg lottery buy [amount]`') > -1) or ((message.find(f'{ctx_author}') > -1) and (message.find(f'lottery ticket successfully bought') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you cannot buy more than 10 tickets per lottery') > -1))\
                                         or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -102,7 +102,7 @@ class lotteryCog(commands.Cog):
                                             bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
-                                                
+
                             if bot_message == None:
                                 task_result = await task_status
                                 if not task_result == None:
@@ -119,7 +119,7 @@ class lotteryCog(commands.Cog):
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()
                                 time_left = await global_functions.parse_timestring(ctx, timestring)
-                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                 current_time = datetime.utcnow().replace(microsecond=0)
                                 time_elapsed = current_time - bot_answer_time
                                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -138,7 +138,7 @@ class lotteryCog(commands.Cog):
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()
                                 time_left = await global_functions.parse_timestring(ctx, timestring)
-                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                 current_time = datetime.utcnow().replace(microsecond=0)
                                 time_elapsed = current_time - bot_answer_time
                                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -187,8 +187,8 @@ class lotteryCog(commands.Cog):
                 return
             except Exception as e:
                 global_data.logger.error(f'Lottery detection error: {e}')
-                return    
-        
+                return
+
 # Initialization
 def setup(bot):
     bot.add_cog(lotteryCog(bot))

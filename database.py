@@ -11,7 +11,7 @@ from math import ceil
 # Set name of database files
 dbfile = global_data.dbfile
 
-# Open connection to the local database    
+# Open connection to the local database
 navi_db = sqlite3.connect(dbfile, isolation_level=None)
 
 # Mixed Case prefix
@@ -30,12 +30,12 @@ async def mixedCase(*args):
 
 # Check database for stored prefix, if none is found, a record is inserted and the default prefix - is used, return all bot prefixes
 async def get_prefix_all(bot, ctx):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT prefix FROM settings_guild where guild_id=?', (ctx.guild.id,))
         record = cur.fetchone()
-        
+
         if record:
             prefix_db = record[0].replace('"','')
             prefix_db_mixed_case = await mixedCase(prefix_db)
@@ -47,26 +47,26 @@ async def get_prefix_all(bot, ctx):
             prefixes = ['rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ']
             for prefix in prefix_mixed_case:
                 prefixes.append(prefix)
-            
+
             cur.execute('INSERT INTO settings_guild VALUES (?, ?)', (ctx.guild.id, global_data.default_prefix,))
     except sqlite3.Error as error:
         await log_error(ctx, error)
-        
+
     return commands.when_mentioned_or(*prefixes)(bot, ctx)
 
 # Check database for stored prefix, if none is found, the default prefix - is used, return only the prefix (returning the default prefix this is pretty pointless as the first command invoke already inserts the record)
 async def get_prefix(ctx, guild_join=False):
-    
+
     if guild_join == False:
         guild = ctx.guild
     else:
         guild = ctx
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT prefix FROM settings_guild where guild_id=?', (guild.id,))
         record = cur.fetchone()
-        
+
         if record:
             prefix = record[0]
         else:
@@ -76,26 +76,26 @@ async def get_prefix(ctx, guild_join=False):
             await log_error(ctx, error)
         else:
             await log_error(ctx, error, True)
-        
+
     return prefix
 
 # Get user count
 async def get_user_number(ctx):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT COUNT(*) FROM settings_user')
         record = cur.fetchone()
-        
+
         if record:
             user_number = record
         else:
             await log_error(ctx, 'No user data found in database.')
     except sqlite3.Error as error:
         await log_error(ctx, error)
-        
+
     return user_number
-   
+
 # Get dnd state from user id
 async def get_dnd(user_id):
 
@@ -106,10 +106,10 @@ async def get_dnd(user_id):
 
         if record:
             setting_dnd = record[0]
-    
+
     except sqlite3.Error as error:
         global_data.logger.error(f'Unable to get dnd mode setting: {error}')
-  
+
     return setting_dnd
 
 # Get ruby count
@@ -122,17 +122,17 @@ async def get_rubies(ctx):
 
         if record:
             rubies = record[0]
-    
+
     except sqlite3.Error as error:
         global_data.logger.error(f'Unable to get ruby count: {error}')
-  
+
     return rubies
 
 # Get user settings
 async def get_settings(ctx, setting='all', partner_id=None):
-    
+
     current_settings = None
-    
+
     if setting == 'all':
         sql = 'SELECT * FROM settings_user s1 INNER JOIN settings_user s2 ON s2.user_id = s1.partner_id where s1.user_id=?'
     elif setting == 'adventure':
@@ -185,7 +185,7 @@ async def get_settings(ctx, setting='all', partner_id=None):
         sql = 'SELECT dnd FROM settings_user where user_id=?'
     elif setting == 'rubies':
         sql = 'SELECT rubies, ruby_counter, reminders_on FROM settings_user where user_id=?'
-    
+
     try:
         cur=navi_db.cursor()
         if not setting == 'partner_alert_hardmode':
@@ -197,23 +197,23 @@ async def get_settings(ctx, setting='all', partner_id=None):
                 await log_error(ctx, f'Invalid partner_id {partner_id} in get_settings')
                 return
         record = cur.fetchone()
-    
+
         if record:
             current_settings = record
-    
+
     except sqlite3.Error as error:
-        await log_error(ctx, error)    
-  
+        await log_error(ctx, error)
+
     return current_settings
 
 # Get cooldown (event reduction already calculated because I would have to change a lot of code otherwise)
 async def get_cooldown(ctx, activity):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT cooldown, donor_affected, event_reduction FROM cooldowns where activity=?', (activity,))
         record = cur.fetchone()
-    
+
         if record:
             cooldown = record[0]
             donor_affected = record[1]
@@ -222,79 +222,79 @@ async def get_cooldown(ctx, activity):
             cooldown_data = (int(cooldown),donor_affected,)
         else:
             await log_error(ctx, f'No cooldown data found for activity \'{activity}\'.')
-    
+
     except sqlite3.Error as error:
-        await log_error(ctx, error)    
-  
+        await log_error(ctx, error)
+
     return cooldown_data
 
 # Get all cooldowns
 async def get_cooldowns(ctx):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT activity, cooldown, event_reduction FROM cooldowns ORDER BY activity ASC')
         record = cur.fetchall()
-    
+
         if record:
             cooldown_data = record
         else:
             await log_error(ctx, f'No cooldown data found in get_cooldowns.')
-    
+
     except sqlite3.Error as error:
-        await log_error(ctx, error)    
-  
+        await log_error(ctx, error)
+
     return cooldown_data
 
 # Get guild
 async def get_guild(ctx, type, user_id):
-    
+
     try:
         cur=navi_db.cursor()
-        
+
         if type == 'leader':
             cur.execute('SELECT guild_name, reminders_on, stealth_threshold, stealth_current, guild_channel_id, guild_message FROM guilds where guild_leader=?', (user_id,))
         elif type == 'member':
             cur.execute('SELECT guild_name, reminders_on, stealth_threshold, stealth_current, guild_channel_id, guild_message FROM guilds where member1_id=? or member2_id=? or member3_id=? or member4_id=? or member5_id=? or member6_id=? or member7_id=? or member8_id=? or member9_id=? or member10_id=?', (user_id,user_id,user_id,user_id,user_id,user_id,user_id,user_id,user_id,user_id,))
         record = cur.fetchone()
-    
+
         if record:
             guild_data = record
         else:
             guild_data = None
-    
+
     except sqlite3.Error as error:
-        await log_error(ctx, error)    
-  
+        await log_error(ctx, error)
+
     return guild_data
 
 # Get guild members
 async def get_guild_members(guild_name):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT member1_id, member2_id, member3_id, member4_id, member5_id, member6_id, member7_id, member8_id, member9_id, member10_id FROM guilds WHERE guild_name=?', (guild_name,))
         record = cur.fetchone()
-    
+
         if record:
             guild_members = record
         else:
             guild_members = None
-    
+
     except sqlite3.Error as error:
         global_data.logger.error(f'Unable to get guild members: {error}')
-  
+
     return guild_members
 
 # Get active reminders
 async def get_active_reminders(ctx, user_id):
-    
+
     current_time = datetime.utcnow().replace(microsecond=0)
     current_time = current_time.timestamp()
-    
+
     active_reminders = []
     record_reminder_guild = []
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT activity, end_time, message FROM reminders WHERE user_id = ? AND end_time > ? ORDER BY end_time', (user_id,current_time,))
@@ -304,87 +304,87 @@ async def get_active_reminders(ctx, user_id):
             guild_name = guild_data[0]
             cur.execute('SELECT activity, end_time, message, user_id FROM reminders WHERE user_id = ? AND end_time > ?', (guild_name,current_time,))
             record_reminder_guild = cur.fetchone()
-        
+
         if record_reminders_user:
             active_reminders = record_reminders_user
         if record_reminder_guild:
             active_reminders.append(record_reminder_guild)
-        
+
     except sqlite3.Error as error:
         global_data.logger.error(f'Routine \'get_active_reminders\' had the following error: {error}')
-    
+
     return active_reminders
 
 # Get due reminders
 async def get_due_reminders():
-    
+
     current_time = datetime.utcnow().replace(microsecond=0)
     end_time = current_time + timedelta(seconds=15)
     end_time = end_time.timestamp()
     current_time = current_time.timestamp()
     triggered = 0
-    
+
     due_reminders = 'None'
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT user_id, activity, end_time, channel_id, message, triggered FROM reminders WHERE triggered = ? AND end_time BETWEEN ? AND ?', (triggered, current_time, end_time,))
         record = cur.fetchall()
-        
+
         if record:
             due_reminders = record
         else:
             due_reminders = 'None'
     except sqlite3.Error as error:
         global_data.logger.error(f'Routine \'get_due_reminders\' had the following error: {error}')
-    
+
     return due_reminders
 
 # Get all reminders of a user
 async def get_all_reminders(ctx):
-    
+
     reminders = 'None'
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT user_id, activity, end_time FROM reminders WHERE user_id = ?', (ctx.author.id,))
         record = cur.fetchall()
-        
+
         if record:
             reminders = record
         else:
             reminders = 'None'
     except sqlite3.Error as error:
         global_data.logger.error(f'Routine \'get_all_reminders\' had the following error: {error}')
-    
+
     return reminders
 
 # Get old reminders
 async def get_old_reminders():
-    
+
     current_time = datetime.utcnow().replace(microsecond=0)
     delete_time = current_time - timedelta(seconds=20) # This ensures that no reminders get deleted that are triggered but not yet fired.
     delete_time = delete_time.timestamp()
-    
+
     due_reminders = 'None'
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT user_id, activity, triggered FROM reminders WHERE end_time < ?', (delete_time,))
         record = cur.fetchall()
-        
+
         if record:
             old_reminders = record
         else:
             old_reminders = 'None'
     except sqlite3.Error as error:
         global_data.logger.error(f'Routine \'get_old_reminders\' had the following error: {error}')
-    
+
     return old_reminders
 
 # Get guild leaderboard
 async def get_guild_leaderboard(ctx):
-    
+
     try:
         record_leaderboard_worst = None
         record_leaderboard_best = None
@@ -406,12 +406,12 @@ async def get_guild_leaderboard(ctx):
 
     except sqlite3.Error as error:
         global_data.logger.error(f'Routine \'get_guild_leaderboard\' had the following error: {error}')
-    
+
     return (guild_name, record_leaderboard_best, record_leaderboard_worst)
 
 # Get guild weekly report
 async def get_guild_leaderboard_weekly_report(bot):
-    
+
     try:
         guild_report_data = []
         energy_total = 0
@@ -459,7 +459,7 @@ async def get_guild_leaderboard_weekly_report(bot):
 
     except sqlite3.Error as error:
         global_data.logger.error(f'Error getting guild data for guild report: {error}')
-        
+
     return guild_report_data
 
 
@@ -473,9 +473,9 @@ async def set_prefix(bot, ctx, new_prefix):
         cur=navi_db.cursor()
         cur.execute('SELECT * FROM settings_guild where guild_id=?', (ctx.guild.id,))
         record = cur.fetchone()
-        
+
         if record:
-            cur.execute('UPDATE settings_guild SET prefix = ? where guild_id = ?', (new_prefix, ctx.guild.id,))           
+            cur.execute('UPDATE settings_guild SET prefix = ? where guild_id = ?', (new_prefix, ctx.guild.id,))
         else:
             cur.execute('INSERT INTO settings_guild VALUES (?, ?)', (ctx.guild.id, new_prefix,))
     except sqlite3.Error as error:
@@ -483,9 +483,9 @@ async def set_prefix(bot, ctx, new_prefix):
 
 # Toggle reminders on or off
 async def set_reminders(ctx, action):
-    
+
     status = 'Whoops, something went wrong here.'
-    
+
     if action == 'on':
         reminders_on = 1
     elif action == 'off':
@@ -493,12 +493,12 @@ async def set_reminders(ctx, action):
     else:
         await log_error(ctx, f'Unknown action in routine toggle_reminders.')
         return
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT reminders_on FROM settings_user where user_id=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             reminders_status = int(record[0])
             if reminders_status == 1 and reminders_on == 1:
@@ -512,7 +512,7 @@ async def set_reminders(ctx, action):
                 else:
                     cur.execute('UPDATE settings_user SET reminders_on = ? where user_id = ?', (reminders_on, ctx.author.id,))
                     cur.execute('DELETE FROM reminders WHERE user_id = ?', (ctx.author.id,))
-                
+
                     status = (
                         f'**{ctx.author.name}**, your reminders are now turned **off**. All active reminders were deleted.\n'
                         f'Please note that reminders that are about to end within the next ~15s will still trigger.'
@@ -525,12 +525,12 @@ async def set_reminders(ctx, action):
                 status = f'Hey! **{ctx.author.name}**! Welcome! Your reminders are now turned **on**.\nDon\'t forget to set your donor tier with `{ctx.prefix}donator`.\nYou can check all of your settings with `{ctx.prefix}settings` or `{ctx.prefix}me`.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set partner
 async def set_partner(ctx, partner_id, both=False):
-    
+
     try:
         if both == True:
             cur=navi_db.cursor()
@@ -564,15 +564,15 @@ async def set_partner(ctx, partner_id, both=False):
                     status = 'unchanged'
             else:
                 status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
-                
+
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Reset partner
 async def reset_partner(ctx):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT partner_id FROM settings_user WHERE user_id=?', (ctx.author.id,))
@@ -586,24 +586,24 @@ async def reset_partner(ctx):
             status = 'updated'
         else:
             status = f'**{ctx.author.id}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
-                
+
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set partner for hunt together detection
 async def set_hunt_partner(ctx, partner_name):
-    
+
     if partner_name == None:
         await log_error(ctx, f'Can not write an empty partner name.')
         return
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT partner_name FROM settings_user WHERE user_id=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             partner_db = record[0]
             if partner_db == None or (partner_db != partner_name):
@@ -614,15 +614,15 @@ async def set_hunt_partner(ctx, partner_name):
             return
     except sqlite3.Error as error:
         await log_error(ctx, error)
-        
+
 # Set lootbox alert channel
 async def set_partner_channel(ctx, partner_channel_id):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT partner_channel_id FROM settings_user WHERE user_id=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             partner_channel_id_db = record[0]
             if partner_channel_id_db != partner_channel_id:
@@ -634,21 +634,21 @@ async def set_partner_channel(ctx, partner_channel_id):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
-        
+
 # Set donor tier
 async def set_donor_tier(ctx, donor_tier, partner=False):
-    
+
     if not 0 <= donor_tier <= 7:
         await log_error(ctx, f'Invalid donor tier {donor_tier}, can\'t write that to database.')
         return
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT user_donor_tier, partner_donor_tier FROM settings_user WHERE user_id=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             user_donor_tier = record[0]
             partner_donor_tier = record[1]
@@ -668,18 +668,18 @@ async def set_donor_tier(ctx, donor_tier, partner=False):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set hardmode state
 async def set_hardmode(bot, ctx, state):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT s1.partner_id, s1.hardmode, s2.partner_channel_id, s2.dnd FROM settings_user s1 INNER JOIN settings_user s2 ON s2.user_id = s1.partner_id where s1.user_id=?', (ctx.author.id,))
         record = cur.fetchone()
         status = ''
-        
+
         if record:
             partner_id_db = record[0]
             hardmode_state_db = record[1]
@@ -714,21 +714,21 @@ async def set_hardmode(bot, ctx, state):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set dnd state
 async def set_dnd(ctx, state):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT dnd FROM settings_user WHERE user_id=?', (ctx.author.id,))
         record = cur.fetchone()
         status = ''
-        
+
         if record:
             dnd_state_db = record[0]
-            
+
             if dnd_state_db == 1 and state == 1:
                 status = f'**{ctx.author.name}**, DND mode is already turned **on**.'
             elif dnd_state_db == 0 and state == 0:
@@ -743,21 +743,21 @@ async def set_dnd(ctx, state):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Turn ruby counter on/off
 async def set_ruby_counter(ctx, state):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT ruby_counter FROM settings_user WHERE user_id=?', (ctx.author.id,))
         record = cur.fetchone()
         status = ''
-        
+
         if record:
             ruby_counter_db = record[0]
-            
+
             if ruby_counter_db == 1 and state == 1:
                 status = f'**{ctx.author.name}**, the ruby counter is already turned **on**.'
             elif ruby_counter_db == 0 and state == 0:
@@ -772,12 +772,12 @@ async def set_ruby_counter(ctx, state):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set ruby count
 async def set_rubies(ctx, rubies):
-    
+
     try:
         cur=navi_db.cursor()
         status = ''
@@ -787,7 +787,7 @@ async def set_rubies(ctx, rubies):
 
 # Set cooldown of activities
 async def set_cooldown(ctx, activity, seconds):
-    
+
     try:
         cur=navi_db.cursor()
         status = ''
@@ -795,12 +795,12 @@ async def set_cooldown(ctx, activity, seconds):
         status = f'**{ctx.author.name}**, the cooldown for activity **{activity}** is now set to **{seconds}**'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set event reduction of activities
 async def set_event_reduction(ctx, activity, reduction):
-    
+
     try:
         cur=navi_db.cursor()
         status = ''
@@ -812,12 +812,12 @@ async def set_event_reduction(ctx, activity, reduction):
             status = f'**{ctx.author.name}**, the event reduction for **all** activities is now set to **{reduction}%**.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Enable/disable specific reminder
 async def set_specific_reminder(ctx, activity, action):
-    
+
     if action == 'enable':
         enabled = 1
     elif action == 'disable':
@@ -827,9 +827,9 @@ async def set_specific_reminder(ctx, activity, action):
         if global_data.DEBUG_MODE == 'ON':
             status = 'Something went wrong here. Check the error log.'
         return
-    
+
     column = ''
-    
+
     activity_columns = {
         'all': 'hunt_enabled',
         'adventure': 'adv_enabled',
@@ -853,7 +853,7 @@ async def set_specific_reminder(ctx, activity, action):
         'weekly': 'weekly_enabled',
         'work': 'work_enabled',
     }
-    
+
     if activity in activity_columns:
         column = activity_columns[activity]
     else:
@@ -861,7 +861,7 @@ async def set_specific_reminder(ctx, activity, action):
         if global_data.DEBUG_MODE == 'ON':
             status = f'Something went wrong here. Check the error log.'
         return
-    
+
     if activity == 'nsmb':
         activity_name = 'not so mini boss'
     elif activity == 'bigarena':
@@ -872,13 +872,13 @@ async def set_specific_reminder(ctx, activity, action):
         activity_name = 'horse race'
     else:
         activity_name = activity
-    
+
     try:
         cur=navi_db.cursor()
-        
+
         cur.execute(f'SELECT {column} FROM settings_user WHERE user_id=?', (ctx.author.id,))
-        record = cur.fetchone()        
-        
+        record = cur.fetchone()
+
         if record:
             if not activity == 'all':
                 enabled_db = record[0]
@@ -896,7 +896,7 @@ async def set_specific_reminder(ctx, activity, action):
                                         pet_reminders.append(active_activity)
                                 for index in range(len(pet_reminders)):
                                     cur.execute('DELETE FROM reminders WHERE user_id = ? and activity = ?', (ctx.author.id,pet_reminders[index],))
-                        else:        
+                        else:
                             cur.execute('DELETE FROM reminders WHERE user_id = ? and activity = ?', (ctx.author.id,activity,))
                         if not activity == 'lootbox-alert':
                             status = (
@@ -923,7 +923,7 @@ async def set_specific_reminder(ctx, activity, action):
                 if enabled == 0:
                     cur.execute(f'DELETE FROM reminders WHERE user_id=?', (ctx.author.id,))
                     status = (
-                        f'**{ctx.author.name}**, all of your reminders are now **{action}d**.\n'        
+                        f'**{ctx.author.name}**, all of your reminders are now **{action}d**.\n'
                         f'All active reminders have been deleted.'
                     )
                 else:
@@ -932,22 +932,22 @@ async def set_specific_reminder(ctx, activity, action):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
-        
+
 # Write reminder
 async def write_reminder(ctx, activity, time_left, message, cooldown_update=False, no_insert=False):
-    
+
     current_time = datetime.utcnow().replace(microsecond=0)
     status = 'aborted'
-    
+
     if not time_left == 0:
         end_time = current_time + timedelta(seconds=time_left)
         end_time = end_time.timestamp()
         triggered = 0
     else:
         return
-    
+
     try:
         cur=navi_db.cursor()
         if activity == 'custom':
@@ -969,18 +969,18 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
                             break
                 else:
                     reminder_count = highest_custom_db
-                    
+
                 if reminder_count < 9:
                     activity = f'custom0{reminder_count+1}'
                 else:
                     activity = f'custom{reminder_count+1}'
             else:
                 activity = 'custom01'
-        cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))    
-        
+        cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
+
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
         record = cur.fetchone()
-        
+
         if record:
             db_time = float(record[0])
             db_time_datetime = datetime.fromtimestamp(db_time)
@@ -1007,30 +1007,30 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
                     status = 'schedule-task'
                 else:
                     status = 'ignored'
-                    
+
     except sqlite3.Error as error:
         await log_error(ctx, error)
-        
+
     return status
 
 # Update end time of reminder
 async def update_reminder_time(ctx, activity, time_left):
-    
+
     current_time = datetime.utcnow().replace(microsecond=0)
     status = 'aborted'
-    
+
     if not time_left == 0:
         end_time = current_time + timedelta(seconds=time_left)
         end_time = end_time.timestamp()
         triggered = 0
     else:
         return
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
         record = cur.fetchone()
-        
+
         if record:
             db_time = float(record[0])
             db_time_datetime = datetime.fromtimestamp(db_time)
@@ -1040,30 +1040,30 @@ async def update_reminder_time(ctx, activity, time_left):
             status = 'updated'
         else:
             status = f'There was an error in update_reminder_time when updating the {activity }reminder for user {ctx.author.name} (time left: {time_left} seconds)'
-                    
+
     except sqlite3.Error as error:
         await log_error(ctx, error)
-        
+
     return status
 
 # Write guild reminder
 async def write_guild_reminder(ctx, guild_name, guild_channel_id, time_left, message, cooldown_update=False):
-    
+
     current_time = datetime.utcnow().replace(microsecond=0)
     status = 'aborted'
-    
+
     if not time_left == 0:
         end_time = current_time + timedelta(seconds=time_left)
         end_time = end_time.timestamp()
         triggered = 0
     else:
         return
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (guild_name, 'guild',))
         record = cur.fetchone()
-        
+
         if record:
             db_time = float(record[0])
             db_time_datetime = datetime.fromtimestamp(db_time)
@@ -1084,15 +1084,15 @@ async def write_guild_reminder(ctx, guild_name, guild_channel_id, time_left, mes
             else:
                 cur.execute('INSERT INTO reminders (user_id, activity, end_time, channel_id, message, triggered) VALUES (?, ?, ?, ?, ?, ?)', (guild_name, 'guild', end_time, guild_channel_id, message,1))
                 status = 'schedule-task'
-                    
+
     except sqlite3.Error as error:
         await log_error(ctx, error)
-        
+
     return status
 
 # Set reminder triggered state
 async def set_reminder_triggered(ctx, user_id, activity, triggered=1):
-    
+
     try:
         cur=navi_db.cursor()
         if activity == 'all':
@@ -1100,15 +1100,15 @@ async def set_reminder_triggered(ctx, user_id, activity, triggered=1):
             record = cur.fetchall()
         else:
             cur.execute('SELECT triggered FROM reminders WHERE user_id=? AND activity=?', (user_id, activity,))
-            record = cur.fetchone() 
-        
+            record = cur.fetchone()
+
         if record:
             if activity == 'all':
                 cur.execute('UPDATE reminders SET triggered = ? WHERE user_id = ?', (triggered, user_id,))
             else:
                 if int(record[0]) != triggered:
                     cur.execute('UPDATE reminders SET triggered = ? WHERE user_id = ? AND activity = ?', (triggered, user_id, activity,))
-                
+
     except sqlite3.Error as error:
             if ctx == None:
                 global_data.logger.error(f'Routine \'set_reminder_triggered\' had the following error: {error}')
@@ -1117,9 +1117,9 @@ async def set_reminder_triggered(ctx, user_id, activity, triggered=1):
 
 # Delete reminder
 async def delete_reminder(ctx, user_id, activity):
-    
+
     status = 'error'
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT activity FROM reminders WHERE user_id = ? AND activity = ?', (user_id, activity,))
@@ -1134,7 +1134,7 @@ async def delete_reminder(ctx, user_id, activity):
             global_data.logger.error(f'Routine \'delete_reminder\' had the following error: {error}')
         else:
             await log_error(ctx, error)
-    
+
     return status
 
 # Update guild
@@ -1144,7 +1144,7 @@ async def update_guild(guild_name, guild_leader, guild_members):
         cur=navi_db.cursor()
         cur.execute('SELECT * FROM guilds where guild_name=?', (guild_name,))
         record = cur.fetchone()
-        
+
         if record:
             cur.execute('UPDATE guilds SET guild_leader = ?, member1_id = ?, member2_id = ?, member3_id = ?, member4_id = ?, member5_id = ?, member6_id = ?, member7_id = ?, member8_id = ?, member9_id = ?, member10_id = ? where guild_name = ?', (guild_leader, guild_members[0], guild_members[1], guild_members[2], guild_members[3], guild_members[4], guild_members[5], guild_members[6], guild_members[7], guild_members[8], guild_members[9], guild_name,))
         else:
@@ -1154,12 +1154,12 @@ async def update_guild(guild_name, guild_leader, guild_members):
 
 # Set guild alert channel
 async def set_guild_channel(ctx, guild_channel_id):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT guild_channel_id FROM guilds WHERE guild_leader=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             guild_channel_id_db = record[0]
             if guild_channel_id_db != guild_channel_id:
@@ -1171,17 +1171,17 @@ async def set_guild_channel(ctx, guild_channel_id):
             status = f'**{ctx.author.name}**, couldn\'t find your guild.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set guild stealth threshold
 async def set_guild_stealth_threshold(ctx, guild_stealth):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT stealth_threshold FROM guilds WHERE guild_leader=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             cur.execute('UPDATE guilds SET stealth_threshold = ? WHERE guild_leader = ?', (guild_stealth, ctx.author.id,))
             status = 'updated'
@@ -1189,17 +1189,17 @@ async def set_guild_stealth_threshold(ctx, guild_stealth):
             status = f'**{ctx.author.name}**, couldn\'t find your guild.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set current guild stealth
 async def set_guild_stealth_current(ctx, guild_name, guild_stealth):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT stealth_current FROM guilds WHERE guild_name=?', (guild_name,))
         record = cur.fetchone()
-        
+
         if record:
             cur.execute('UPDATE guilds SET stealth_current = ? WHERE guild_name = ?', (guild_stealth, guild_name,))
             status = 'updated'
@@ -1207,17 +1207,17 @@ async def set_guild_stealth_current(ctx, guild_name, guild_stealth):
             status = f'**{ctx.author.name}**, couldn\'t find your guild.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Set rubies
 async def set_rubies(ctx, rubies):
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT rubies FROM settings_user WHERE user_id=?', (ctx.author.id,))
         record = cur.fetchone()
-        
+
         if record:
             cur.execute('UPDATE settings_user SET rubies = ? WHERE user_id = ?', (rubies, ctx.author.id,))
             status = 'updated'
@@ -1225,14 +1225,14 @@ async def set_rubies(ctx, rubies):
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Toggle guild reminders on or off
 async def set_guild_reminders(ctx, guild_name, action):
-    
+
     status = 'Whoops, something went wrong here.'
-    
+
     if action == 'on':
         reminders_on = 1
     elif action == 'off':
@@ -1240,12 +1240,12 @@ async def set_guild_reminders(ctx, guild_name, action):
     else:
         await log_error(ctx, f'Unknown action in routine toggle_reminders.')
         return
-    
+
     try:
         cur=navi_db.cursor()
         cur.execute('SELECT reminders_on, guild_channel_id FROM guilds where guild_name=?', (guild_name,))
         record = cur.fetchone()
-        
+
         if record:
             guild_channel_id = record[1]
             if guild_channel_id == None:
@@ -1263,7 +1263,7 @@ async def set_guild_reminders(ctx, guild_name, action):
             status = f'**{ctx.author.name}**, couldn\'t find your guild.'
     except sqlite3.Error as error:
         await log_error(ctx, error)
-    
+
     return status
 
 # Weekly guild reset
@@ -1275,22 +1275,22 @@ async def reset_guilds(bot):
         cur.execute('UPDATE guilds SET stealth_current = ?', (1,))
         cur.execute('SELECT guild_name, guild_channel_id, guild_message FROM guilds')
         records = cur.fetchall()
-        if records:    
+        if records:
             guilds = records
         else:
             guilds = None
-            
+
     except sqlite3.Error as error:
         global_data.logger.error('Error resetting guilds.')
-        
+
     return guilds
 
 # Write raid to leaderboard
 async def write_raid_energy(ctx, guild_name, energy):
-    
+
     datetime = ctx.message.created_at
     timestamp = datetime.timestamp()
-    
+
     try:
         cur=navi_db.cursor()
         status = ''
@@ -1298,13 +1298,13 @@ async def write_raid_energy(ctx, guild_name, energy):
     except sqlite3.Error as error:
         await log_error(ctx, error)
 
-        
+
 
 # --- Error Logging ---
 
 # Error logging
 async def log_error(ctx, error, guild_join=False):
-    
+
     if guild_join == False:
         try:
             settings = ''

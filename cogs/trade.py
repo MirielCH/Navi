@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class tradeCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Trade detection
     async def get_trade_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_with_fields_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Trade detection: {message}')
-                
+
                 if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('duh the amount has to be') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot trade rubies if you did not unlock area 5') > -1))\
@@ -43,25 +43,25 @@ class tradeCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message_with_fields(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Trade
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
     async def trade(self, ctx, *args):
-    
+
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
-            
+
             if args:
                 trade_id = args[0]
                 trade_id = trade_id.lower()
@@ -73,7 +73,7 @@ class tradeCog(commands.Cog):
                         reminders_on = settings[2]
                     else:
                         return
-            
+
                     if not reminders_on == 0 and not ruby_counter == 0:
                         try:
                             task_status = self.bot.loop.create_task(self.get_trade_message(ctx))
@@ -84,10 +84,10 @@ class tradeCog(commands.Cog):
                                     try:
                                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                         message = await global_functions.encode_message_with_fields(msg)
-                                        
+
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Trade detection: {message}')
-                                        
+
                                         if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('duh the amount has to be') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot trade rubies if you did not unlock area 5') > -1))\
@@ -98,7 +98,7 @@ class tradeCog(commands.Cog):
                                             bot_message = message
                                     except Exception as e:
                                         await ctx.send(f'Error reading message history: {e}')
-                                                
+
                             if bot_message == None:
                                 task_result = await task_status
                                 if not task_result == None:
@@ -107,7 +107,7 @@ class tradeCog(commands.Cog):
                                 else:
                                     await ctx.send('Trade detection timeout.')
                                     return
-                            
+
                             if bot_message.find('Our trade is done then') > -1:
                                 rubies_start = bot_message.find('<:ruby:') + 28
                                 if trade_id == 'f':
@@ -126,7 +126,7 @@ class tradeCog(commands.Cog):
                                     await database.set_rubies(ctx, rubies)
                                 else:
                                     await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')
-                            
+
                             # Ignore failed trades
                             elif (bot_message.find('duh the amount has to be') > -1) or (bot_message.find(f'you don\'t have enough') > -1) or (bot_message.find(f'you cannot trade rubies if you did not unlock area 5') > -1):
                                 if global_data.DEBUG_MODE == 'ON':
@@ -147,22 +147,22 @@ class tradeCog(commands.Cog):
                             elif bot_message.find('end your previous command') > 1:
                                 if global_data.DEBUG_MODE == 'ON':
                                     await bot_answer.add_reaction(emojis.cross)
-                                return 
-                            
+                                return
+
                         except asyncio.TimeoutError as error:
                             await ctx.send('Trade detection timeout.')
                             return
                         except Exception as e:
                             global_data.logger.error(f'Trade detection error: {e}')
-                            return    
+                            return
                     else:
                         return
                 else:
                     return
-                
+
                 # Add reaction
                 await bot_answer.add_reaction(emojis.navi)
-        
+
 # Initialization
 def setup(bot):
     bot.add_cog(tradeCog(bot))

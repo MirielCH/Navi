@@ -3,7 +3,7 @@
 import os,sys,inspect
 current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir) 
+sys.path.insert(0, parent_dir)
 import discord
 import emojis
 import global_data
@@ -19,19 +19,19 @@ from datetime import datetime, timedelta
 class trainingCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-    
+
     # Training detection
     async def get_training_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Training detection: {message}')
-                
+
                 if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
                 or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
@@ -43,42 +43,42 @@ class trainingCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-    
+
     # Training answer detection
     async def get_training_answer_message(self, ctx):
-        
+
         def epic_rpg_check(m):
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 message = global_functions.encode_message_non_async(m)
-                
+
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Training detection: {message}')
-                
+
                 if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1):
                     correct_message = True
                 else:
                     correct_message = False
             except:
                 correct_message = False
-            
+
             return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
 
         bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout_longer)
         bot_message = await global_functions.encode_message(bot_answer)
-            
+
         return (bot_answer, bot_message,)
-            
-    
-    
+
+
+
     # --- Commands ---
     # Training
     @commands.command(aliases=('tr','ultraining','ultr',))
@@ -88,7 +88,7 @@ class trainingCog(commands.Cog):
         prefix = ctx.prefix
         invoked = ctx.invoked_with
         invoked = invoked.lower()
-        
+
         if prefix.lower() == 'rpg ':
             if args:
                 if invoked == 'ascended':
@@ -98,14 +98,14 @@ class trainingCog(commands.Cog):
                         command = 'rpg ascended training'
                     elif arg_command in ('ultr', 'ultraining',):
                         command = 'rpg ascended ultraining'
-                        
-                    args.pop(0)   
+
+                    args.pop(0)
                 else:
                     if invoked in ('tr', 'training',):
                         command = 'rpg training'
                     elif invoked in ('ultr', 'ultraining',):
                         command = 'rpg ultraining'
-                    
+
                         if len(args) >= 1 and command.find('ultraining') > -1:
                             arg = args[0]
                             if arg in ('p','progress',):
@@ -115,7 +115,7 @@ class trainingCog(commands.Cog):
                     command = 'rpg training'
                 elif invoked in ('ultr', 'ultraining',):
                     command = 'rpg ultraining'
-                
+
             try:
                 settings = await database.get_settings(ctx, 'training')
                 if not settings == None:
@@ -129,13 +129,13 @@ class trainingCog(commands.Cog):
                         tr_message = settings[4]
                         rubies = settings[5]
                         ruby_counter = settings[6]
-                        
-                        # Set message to send          
+
+                        # Set message to send
                         if tr_message == None:
                             tr_message = default_message.replace('%',command)
                         else:
                             tr_message = tr_message.replace('%',command)
-                        
+
                         task_status = self.bot.loop.create_task(self.get_training_message(ctx))
                         bot_message = None
                         message_history = await ctx.channel.history(limit=50).flatten()
@@ -144,10 +144,10 @@ class trainingCog(commands.Cog):
                                 try:
                                     ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                     message = await global_functions.encode_message(msg)
-                                    
+
                                     if global_data.DEBUG_MODE == 'ON':
                                         global_data.logger.debug(f'Training detection: {message}')
-                                    
+
                                     if (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1) \
                                     or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have trained already') > -1)) or ((message.find(ctx_author) > 1) and (message.find('Huh please don\'t spam') > -1))\
                                     or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1)) or (message.find('This command is unlocked in') > -1)\
@@ -158,7 +158,7 @@ class trainingCog(commands.Cog):
                                         bot_message = message
                                 except Exception as e:
                                     await ctx.send(f'Error reading message history: {e}')
-                                       
+
                         if bot_message == None:
                             task_result = await task_status
                             if not task_result == None:
@@ -183,16 +183,16 @@ class trainingCog(commands.Cog):
                                         try:
                                             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                                             message = await global_functions.encode_message(msg)
-                                            
+
                                             if global_data.DEBUG_MODE == 'ON':
                                                 global_data.logger.debug(f'Training detection (2nd message): {message}')
-                                            
+
                                             if  (message.find(f'Well done, **{ctx_author}**') > -1) or (message.find(f'Better luck next time, **{ctx_author}**') > -1):
                                                 bot_answer = msg
                                                 bot_message = message
                                         except Exception as e:
                                             await ctx.send(f'Error reading message history: {e}')
-                                
+
                                 if bot_message == None:
                                     task_result = await task_status
                                     if not task_result == None:
@@ -210,7 +210,7 @@ class trainingCog(commands.Cog):
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()
                                 time_left = await global_functions.parse_timestring(ctx, timestring)
-                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                                 current_time = datetime.utcnow().replace(microsecond=0)
                                 time_elapsed = current_time - bot_answer_time
                                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -254,12 +254,12 @@ class trainingCog(commands.Cog):
                         return
                 else:
                     return
-                
+
                 # Calculate cooldown
                 cooldown_data = await database.get_cooldown(ctx, 'training')
                 cooldown = int(cooldown_data[0])
                 donor_affected = int(cooldown_data[1])
-                bot_answer_time = bot_answer.created_at.replace(microsecond=0)                
+                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_elapsed_seconds = time_elapsed.total_seconds()
@@ -267,24 +267,24 @@ class trainingCog(commands.Cog):
                     time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]-time_elapsed_seconds
                 else:
                     time_left = cooldown-time_elapsed_seconds
-                
+
                 # Save task to database
                 write_status = await global_functions.write_reminder(self.bot, ctx, 'training', time_left, tr_message)
-                
+
                 # Add reaction
                 if not write_status == 'aborted':
                     await bot_answer.add_reaction(emojis.navi)
                 else:
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-            
+
             except asyncio.TimeoutError as error:
                 await ctx.send('Training detection timeout.')
                 return
             except Exception as e:
                 global_data.logger.error(f'Training detection error: {e}')
-                return     
-        
+                return
+
 # Initialization
 def setup(bot):
     bot.add_cog(trainingCog(bot))
