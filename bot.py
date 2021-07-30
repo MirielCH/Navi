@@ -7,6 +7,8 @@ import global_data
 import global_functions
 import emojis
 import database
+import importlib
+import sys
 
 from emoji import demojize
 from emoji import emojize
@@ -17,7 +19,6 @@ from discord.ext import commands, tasks
 from discord.ext.commands import CommandNotFound
 from math import ceil
 from operator import itemgetter
-
     
     
 
@@ -1358,31 +1359,39 @@ async def shutdown(ctx):
         except asyncio.TimeoutError as error:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
 
-# Reload cogs
+# Reload cogs & modules
 @bot.command(aliases=('reload_cog',))
 @commands.is_owner()
 @commands.bot_has_permissions(send_messages=True)
 async def reload(ctx, *args):
     
     if args:
-        actions = []
-        reloaded = []
-        for arg in args:
-            cog_name = f'cogs.{arg}'
-            try:
-                result = bot.reload_extension(cog_name)
-                if result == None:
-                    actions.append(f'Extension \'{cog_name}\' reloaded.')
-                else:
-                    actions.append(f'**{cog_name}: {result}**')
-            except Exception as e:
-                actions.append(f'**{cog_name}: {e}**')
+        arg = args[0].lower()
+        if arg in ('lib','libs','modules','module'):
+            importlib.reload(database)
+            importlib.reload(emojis)
+            importlib.reload(global_data)
+            importlib.reload(global_functions)
+            await ctx.send('Modules reloaded.')
+        else:
+            actions = []
+            reloaded = []
+            for arg in args:
+                cog_name = f'cogs.{arg}'
+                try:
+                    result = bot.reload_extension(cog_name)
+                    if result == None:
+                        actions.append(f'Extension \'{cog_name}\' reloaded.')
+                    else:
+                        actions.append(f'{cog_name}: {result}')
+                except Exception as e:
+                    actions.append(f'{cog_name}: {e}')
+                    
+            message = ''
+            for action in actions:
+                message = f'{message}\n{action}'
                 
-        message = ''
-        for action in actions:
-            message = f'{message}\n{action}'
-            
-        await ctx.send(message) 
+            await ctx.send(message) 
     else:
         await ctx.send('Uhm, what.')
             
@@ -1397,7 +1406,7 @@ async def evaluate(ctx):
     eval_command = ctx.message.content[eval_command_start:]
     
     try:
-        if eval_command.startswith('await'):
+        if eval_command.startswith('await '):
             eval_command = eval_command[6:]
             result = await eval(eval_command)
         else:
@@ -1408,6 +1417,7 @@ async def evaluate(ctx):
             await ctx.send('No return value')
     except Exception as e:
         await ctx.send(e)
+
             
 # Sleepy potion test command
 @bot.command()

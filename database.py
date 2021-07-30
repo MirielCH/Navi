@@ -127,8 +127,8 @@ async def get_rubies(ctx):
         global_data.logger.error(f'Unable to get ruby count: {error}')
   
     return rubies
-   
-# Get settings
+
+# Get user settings
 async def get_settings(ctx, setting='all', partner_id=None):
     
     current_settings = None
@@ -393,11 +393,11 @@ async def get_guild_leaderboard(ctx):
         record_guild_name = cur.fetchone()
         if record_guild_name:
             guild_name = record_guild_name[0]
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 100 ORDER BY energy DESC LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 50 ORDER BY energy DESC LIMIT 5', (guild_name,))
             record_leaderboard_best = cur.fetchall()
             if len(record_leaderboard_best) == 0:
                 record_leaderboard_best = None
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 100 ORDER BY energy LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 50 ORDER BY energy LIMIT 5', (guild_name,))
             record_leaderboard_worst = cur.fetchall()
             if len(record_leaderboard_worst) == 0:
                 record_leaderboard_worst = None
