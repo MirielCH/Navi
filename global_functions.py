@@ -18,6 +18,15 @@ async def parse_timestring(ctx, timestring):
 
     time_left = 0
 
+    if timestring.find('w') > -1:
+        weeks_start = 0
+        weeks_end = timestring.find('w')
+        weeks = timestring[weeks_start:weeks_end]
+        timestring = timestring[weeks_end+1:].strip()
+        try:
+            time_left = time_left + (int(weeks) * 604800)
+        except:
+            await database.log_error(ctx, f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer')
     if timestring.find('d') > -1:
         days_start = 0
         days_end = timestring.find('d')
@@ -63,7 +72,9 @@ async def parse_timestring(ctx, timestring):
 # Parse seconds to timestring
 async def parse_seconds(time_left):
 
-    days = time_left // 86400
+    weeks = time_left // 604800
+    weeks = int(weeks)
+    days = (time_left % 604800) // 86400
     days = int(days)
     hours = (time_left % 86400) // 3600
     hours = int(hours)
@@ -73,6 +84,8 @@ async def parse_seconds(time_left):
     seconds = int(seconds)
 
     timestring = ''
+    if not weeks == 0:
+        timestring = f'{timestring}{weeks}w '
     if not days == 0:
         timestring = f'{timestring}{days}d '
     if not hours == 0:

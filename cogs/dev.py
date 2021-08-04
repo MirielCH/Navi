@@ -30,6 +30,7 @@ class DevCog(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=True)
+    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def dev(self, ctx, *args):
         """Dev command group"""

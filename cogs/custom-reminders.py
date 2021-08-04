@@ -30,7 +30,7 @@ class customCog(commands.Cog):
 
         syntax_add = (
             f'The syntax is `{ctx.prefix}rm [time] [text]`\n'
-            f'Support time codes: `d`, `h`, `m`, `s`\n\n'
+            f'Support time codes: `w`, `d`, `h`, `m`, `s`\n\n'
             f'Example: `{ctx.prefix}rm 1h30m Coffee time!`'
         )
 
@@ -50,7 +50,7 @@ class customCog(commands.Cog):
             f'{syntax_delete}'
         )
 
-        error_max_time = 'The maximum time is 7d 23h 59m 59s.'
+        error_max_time = 'The maximum time is 4w6d23h59m59s.'
 
         if args:
             arg = args[0]
@@ -94,27 +94,44 @@ class customCog(commands.Cog):
                 timestring_complete = False
                 timestring = ''
                 current_number = ''
-                arg_time = args[0]
+                arg_time = args[0].lower()
                 pos = 0
                 while not pos == len(arg_time):
                     slice = arg_time[pos:pos+1]
                     pos = pos+1
                     allowedcharacters_numbers = set('1234567890')
-                    allowedcharacters_timecode = set('dhms')
+                    allowedcharacters_timecode = set('wdhms')
                     if set(slice).issubset(allowedcharacters_numbers):
                         timestring = f'{timestring}{slice}'
                         current_number = f'{current_number}{slice}'
                         last_char_was_number = True
                     elif set(slice).issubset(allowedcharacters_timecode) and last_char_was_number == True:
-                        if slice == 'd':
+                        if slice == 'w':
                             if last_time_code == None:
+                                timestring = f'{timestring}w'
+                                try:
+                                    current_number_numeric = int(current_number)
+                                except Exception as e:
+                                    await ctx.send(f'Error: {e}')
+                                    return
+                                if current_number_numeric > 4:
+                                    await ctx.reply(error_max_time, mention_author=False)
+                                    return
+                                last_time_code = 'weeks'
+                                last_char_was_number = False
+                                current_number = ''
+                            else:
+                                await ctx.reply(error_invalid_time, mention_author=False)
+                                return
+                        elif slice == 'd':
+                            if last_time_code in ('weeks', None):
                                 timestring = f'{timestring}d'
                                 try:
                                     current_number_numeric = int(current_number)
                                 except Exception as e:
                                     await ctx.send(f'Error: {e}')
                                     return
-                                if current_number_numeric > 7:
+                                if current_number_numeric > 34:
                                     await ctx.reply(error_max_time, mention_author=False)
                                     return
                                 last_time_code = 'days'
@@ -188,7 +205,7 @@ class customCog(commands.Cog):
                 if time_left < 16:
                     await ctx.reply('The time needs to be at least 16 seconds, sorry.', mention_author=False)
                     return
-                if time_left > 691199:
+                if time_left > 3023999:
                     await ctx.reply(error_max_time, mention_author=False)
                     return
                 write_status = await global_functions.write_reminder(self.bot, ctx, 'custom', time_left, reminder_text)

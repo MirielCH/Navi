@@ -62,32 +62,23 @@ class huntCog(commands.Cog):
         invoked = ctx.invoked_with
         invoked = invoked.lower()
 
-        if prefix.lower() == 'rpg ' and len(args) in (0,1,2):
-            # Determine if hardmode and/or together was used
+        if prefix.lower() == 'rpg ':
             together = False
-
-            if len(args) > 0:
+            if args:
+                args = [arg.lower() for arg in args]
                 if invoked == 'ascended':
                     command = 'rpg ascended hunt'
                     args = args[0]
                     args.pop(0)
                 else:
                     command = 'rpg hunt'
-
-                if len(args) > 0:
-                    arg1 = args[0]
-                    arg1 = arg1.lower()
-                    if arg1 in ('t', 'together'):
-                        together = True
-                        command = f'{command} together'
-                    elif arg1 in ('h', 'hardmode'):
-                        command = f'{command} hardmode'
-                        if len(args) > 1:
-                            arg2 = args[1]
-                            arg2 = arg2.lower()
-                            if arg2 in ('t', 'together'):
-                                together = True
-                                command = f'{command} together'
+                if ('hardmode' in args) or ('h' in args):
+                    command = f'{command} hardmode'
+                if ('together' in args) or ('t' in args):
+                    command = f'{command} together'
+                    together = True
+                if ('alone' in args):
+                    command = f'{command} alone'
             else:
                 command = 'rpg hunt'
 

@@ -1261,7 +1261,7 @@ async def ascended(ctx, *args):
         else:
             command = None
 
-        if not command == None:
+        if command is not None:
             await command.callback(command.cog, ctx, args)
 
 
