@@ -921,7 +921,7 @@ async def set_specific_reminder(ctx, activity, action):
                     arena_enabled = ?, dungmb_enabled = ?, bigarena_enabled = ?, nsmb_enabled = ?, race_enabled = ?, vote_enabled = ?, horse_enabled = ?\
                     WHERE user_id = ?', (enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, enabled, ctx.author.id,))
                 if enabled == 0:
-                    cur.execute(f'DELETE FROM reminders WHERE user_id=?', (ctx.author.id,))
+                    cur.execute(f'DELETE FROM reminders WHERE user_id = ? AND activity NOT IN (SELECT activity FROM reminders WHERE activity LIKE \'custom%\')', (ctx.author.id,))
                     status = (
                         f'**{ctx.author.name}**, all of your reminders are now **{action}d**.\n'
                         f'All active reminders have been deleted.'

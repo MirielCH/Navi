@@ -65,16 +65,16 @@ class huntCog(commands.Cog):
         if prefix.lower() == 'rpg ':
             together = False
             if args:
-                args = [arg.lower() for arg in args]
                 if invoked == 'ascended':
                     command = 'rpg ascended hunt'
                     args = args[0]
                     args.pop(0)
                 else:
                     command = 'rpg hunt'
-                if ('hardmode' in args) or ('h' in args):
+                args = [arg.lower() for arg in args]
+                if any(arg in ['hardmode','h'] for arg in args):
                     command = f'{command} hardmode'
-                if ('together' in args) or ('t' in args):
+                if any(arg in ['together','t'] for arg in args):
                     command = f'{command} together'
                     together = True
                 if ('alone' in args):
