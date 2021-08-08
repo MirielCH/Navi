@@ -1271,22 +1271,36 @@ async def ascended(ctx, *args):
 @bot.command(aliases=('statistic','statistics,','devstat','ping','about','info','stats'))
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def devstats(ctx):
-
-    prefix = ctx.prefix
-    if not prefix.lower() == 'rpg ':
-        guilds = len(list(bot.guilds))
-        user_number = await database.get_user_number(ctx)
-        latency = bot.latency
-
-        embed = discord.Embed(
-            color = global_data.color,
-            title = 'BOT STATISTICS',
-            description =   f'{emojis.bp} {guilds:,} servers\n'\
-                            f'{emojis.bp} {user_number[0]:,} users\n'\
-                            f'{emojis.bp} {round(latency*1000):,} ms latency'
+    """Shows some bot info"""
+    user_count, *_ = await database.get_user_number(ctx)
+    start_time = datetime.utcnow()
+    message = await ctx.send('Testing API latency...')
+    end_time = datetime.utcnow()
+    elapsed_time = end_time - start_time
+    bot_status = (
+        f'{emojis.bp} {len(bot.guilds):,} servers\n'
+        f'{emojis.bp} {user_count:,} users\n'\
+        f'{emojis.bp} Bot latency: {round(bot.latency*1000):,} ms\n'
+        f'{emojis.bp} API latency: {round(elapsed_time.total_seconds()*1000):,} ms'
         )
+    creator = f'{emojis.bp} Miriel#0001'
+    embed = discord.Embed(color = global_data.color, title = 'ABOUT NAVI')
+    embed.add_field(name='BOT STATS', value=bot_status, inline=False)
+    embed.add_field(name='CREATOR', value=creator, inline=False)
+    await message.edit(content=None, embed=embed)
 
-        await ctx.reply(embed=embed, mention_author=False)
+# Print Guilds
+@bot.command()
+@commands.is_owner()
+@commands.bot_has_permissions(send_messages=True)
+async def servers(ctx):
+    """Shows names of all guilds the bot is in"""
+    all_servers = await database.get_servers(ctx)
+    server_list = ''
+    for server in all_servers:
+        server_list = f'{server_list}\n{emojis.bp} {bot.get_guild(server[0]).name}'
+
+    await ctx.reply(server_list, mention_author=False)
 
 # Test command
 @bot.command()

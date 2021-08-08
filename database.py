@@ -96,6 +96,23 @@ async def get_user_number(ctx):
 
     return user_number
 
+# Get all servers
+async def get_servers(ctx):
+
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT * FROM settings_guild')
+        record = cur.fetchall()
+
+        if record:
+            all_servers = record
+        else:
+            await log_error(ctx, 'No server data found in database.')
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+
+    return all_servers
+
 # Get dnd state from user id
 async def get_dnd(user_id):
 

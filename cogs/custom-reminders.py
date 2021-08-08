@@ -124,7 +124,7 @@ class customCog(commands.Cog):
                                 await ctx.reply(error_invalid_time, mention_author=False)
                                 return
                         elif slice == 'd':
-                            if last_time_code in ('weeks', None):
+                            if last_time_code in ('weeks',None):
                                 timestring = f'{timestring}d'
                                 try:
                                     current_number_numeric = int(current_number)
@@ -141,7 +141,7 @@ class customCog(commands.Cog):
                                 await ctx.reply(error_invalid_time, mention_author=False)
                                 return
                         elif slice == 'h':
-                            if last_time_code in ('days',None):
+                            if last_time_code in ('weeks','days',None):
                                 timestring = f'{timestring}h'
                                 try:
                                     current_number_numeric = int(current_number)
@@ -155,7 +155,7 @@ class customCog(commands.Cog):
                                 await ctx.reply(error_invalid_time, mention_author=False)
                                 return
                         elif slice == 'm':
-                                if last_time_code in ('days','hours',None):
+                                if last_time_code in ('weeks','days','hours',None):
                                     timestring = f'{timestring}m'
                                     try:
                                         current_number_numeric = int(current_number)
@@ -169,7 +169,7 @@ class customCog(commands.Cog):
                                     await ctx.reply(error_invalid_time, mention_author=False)
                                     return
                         elif slice == 's':
-                            if last_time_code in ('days','hours','minutes',None):
+                            if last_time_code in ('weeks','days','hours','minutes',None):
                                 timestring = f'{timestring}s'
                                 try:
                                     current_number_numeric = int(current_number)
@@ -205,7 +205,7 @@ class customCog(commands.Cog):
                 if time_left < 16:
                     await ctx.reply('The time needs to be at least 16 seconds, sorry.', mention_author=False)
                     return
-                if time_left > 3023999:
+                if time_left > 3_023_999:
                     await ctx.reply(error_max_time, mention_author=False)
                     return
                 write_status = await global_functions.write_reminder(self.bot, ctx, 'custom', time_left, reminder_text)
