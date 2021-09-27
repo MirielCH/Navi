@@ -26,7 +26,7 @@ async def parse_timestring(ctx, timestring):
         try:
             time_left = time_left + (int(weeks) * 604800)
         except:
-            await database.log_error(ctx, f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer')
+            await database.log_error(ctx, f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{weeks}\' to an integer')
     if timestring.find('d') > -1:
         days_start = 0
         days_end = timestring.find('d')
@@ -183,7 +183,8 @@ async def reduce_reminder_time(ctx, time_reduction):
             reminder_end_time = reminder[2]
             reminder_end_time_datetime = datetime.fromtimestamp(reminder_end_time)
             time_difference = reminder_end_time_datetime - current_time
-            if not (reminder_activity.find('pet') > -1) and not (reminder_activity in ('vote','bigarena','nsmb','lottery','race',)):
+            if not (reminder_activity.find('pet') > -1) and not (reminder_activity in ('vote','bigarena','nsmb','lottery','race',))\
+                and not (reminder_activity.find('custom') > -1):
                 if time_difference.total_seconds() <= time_reduction:
                     delete_status = await database.delete_reminder(ctx, ctx.author.id, reminder_activity)
                     if not delete_status == 'deleted':

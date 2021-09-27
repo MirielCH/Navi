@@ -993,7 +993,6 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
                     activity = f'custom{reminder_count+1}'
             else:
                 activity = 'custom01'
-        cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
 
         cur.execute('SELECT end_time, triggered FROM reminders WHERE user_id=? AND activity=?', (ctx.author.id, activity,))
         record = cur.fetchone()
@@ -1004,7 +1003,8 @@ async def write_reminder(ctx, activity, time_left, message, cooldown_update=Fals
             db_triggered = int(record[1])
             time_difference = db_time_datetime - current_time
             if 0 <= time_difference.total_seconds() <= 15 and db_triggered == 1:
-                status = 'delete-schedule-task'
+                #status = 'delete-schedule-task'
+                status = 'do-nothing' # For debugging. Let's see what happens if I don't recreate those
             else:
                 if cooldown_update == True:
                     cur.execute('UPDATE reminders SET end_time = ?, channel_id = ?, triggered = ? WHERE user_id = ? AND activity = ?', (end_time, ctx.channel.id, triggered, ctx.author.id, activity,))

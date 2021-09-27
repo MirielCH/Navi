@@ -32,7 +32,7 @@ class questCog(commands.Cog):
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Quest detection: {message}')
 
-                if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
+                if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('WAVE #1') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
                 or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
@@ -113,7 +113,7 @@ class questCog(commands.Cog):
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Quest detection: {message}')
 
-                                        if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
+                                        if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('WAVE #1') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                                         or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                                         or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
                                         or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
@@ -151,7 +151,7 @@ class questCog(commands.Cog):
                                             if global_data.DEBUG_MODE == 'ON':
                                                 global_data.logger.debug(f'Quest detection: {message}')
 
-                                            if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('FIRST WAVE') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
+                                            if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('WAVE #1') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
                                             or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
                                             or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
                                             or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
@@ -178,7 +178,7 @@ class questCog(commands.Cog):
                                     quest_declined = True
                                 elif bot_message.find('got a **new quest**!') > -1:
                                     quest_declined = False
-                                elif bot_message.find('FIRST WAVE') > -1:
+                                elif bot_message.find('WAVE #1') > -1:
                                     epic_quest = True
                                 else:
                                     if global_data.DEBUG_MODE == 'ON':

@@ -32,7 +32,11 @@ class huntCog(commands.Cog):
                 if global_data.DEBUG_MODE == 'ON':
                     global_data.logger.debug(f'Hunt detection: {message}')
 
-                if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
+                if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1)))\
+                    or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
+                    or ((message.find(ctx_author) > -1) and (message.find('pretends to be a zombie') > -1))\
+                    or ((message.find(ctx_author) > -1) and (message.find('fights the horde') > -1))\
+                    or ((message.find(ctx_author) > -1) and (message.find('Thankfully, the horde did not notice') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
                     or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1)\
@@ -119,7 +123,11 @@ class huntCog(commands.Cog):
                                         if global_data.DEBUG_MODE == 'ON':
                                             global_data.logger.debug(f'Hunt detection: {message}')
 
-                                        if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1))) or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
+                                        if  ((message.find(ctx_author) > -1) and ((message.find('found a') > -1) or (message.find(f'are hunting together!') > -1)))\
+                                            or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
+                                            or ((message.find(ctx_author) > -1) and (message.find('pretends to be a zombie') > -1))\
+                                            or ((message.find(ctx_author) > -1) and (message.find('fights the horde') > -1))\
+                                            or ((message.find(ctx_author) > -1) and (message.find('Thankfully, the horde did not notice') > -1))\
                                             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
                                             or (message.find('This command is unlocked in') > -1) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)) or (message.find(f'is in the middle of a command') > -1)\
@@ -149,7 +157,16 @@ class huntCog(commands.Cog):
                                     current_time = datetime.utcnow().replace(microsecond=0)
                                     time_elapsed = current_time - bot_answer_time
                                     time_elapsed_seconds = time_elapsed.total_seconds()
-                                    time_left = time_left-time_elapsed_seconds
+                                    if partner_name is not None and ctx_author in bot_message:
+                                        if partner_donor_tier < user_donor_tier:
+                                            time_left = (time_left / global_data.donor_cooldowns[user_donor_tier]
+                                                         * global_data.donor_cooldowns[partner_donor_tier]
+                                                         - time_elapsed_seconds
+                                                         + 1)
+                                        else:
+                                            time_left = time_left - time_elapsed_seconds
+                                    else:
+                                        time_left = time_left - time_elapsed_seconds
                                     write_status = await global_functions.write_reminder(self.bot, ctx, 'hunt', time_left, hunt_message)
                                     if write_status in ('inserted','scheduled','updated'):
                                         await bot_answer.add_reaction(emojis.navi)
@@ -228,10 +245,11 @@ class huntCog(commands.Cog):
                                 return
                             # Read partner name from hunt together message and save it to database if necessary (to make the bot check safer)
                             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                            if together == True:
-                                partner_name_start = bot_message.find(f'{ctx_author} and ') + len(ctx_author) + 12
-                                partner_name_end = bot_message.find('are hunting together!', partner_name_start) - 3
-                                partner_name = str(bot_message[partner_name_start:partner_name_end]).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if together:
+                                partner_search_string = f'** and **'
+                                partner_name_start = bot_message.find(partner_search_string) + len(partner_search_string)
+                                partner_name_end = bot_message.find('** are hunting together!', partner_name_start)
+                                partner_name = bot_message[partner_name_start:partner_name_end]
                                 if not partner_name == '':
                                     await database.set_hunt_partner(ctx, partner_name)
                         else:
@@ -249,15 +267,16 @@ class huntCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_elapsed_seconds = time_elapsed.total_seconds()
-                if together == True and partner_donor_tier < user_donor_tier:
+                if together and partner_donor_tier < user_donor_tier:
                     donor_tier = partner_donor_tier
                 else:
                     donor_tier = user_donor_tier
 
-                if donor_affected == True:
+                if donor_affected:
                     time_left = cooldown*global_data.donor_cooldowns[donor_tier]-time_elapsed_seconds
                 else:
                     time_left = cooldown-time_elapsed_seconds
+
 
                 # Save task to database
                 write_status = await global_functions.write_reminder(self.bot, ctx, 'hunt', time_left, hunt_message)
@@ -269,12 +288,12 @@ class huntCog(commands.Cog):
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
 
-                if bot_message.find(f'**{ctx.author.name}** got an OMEGA lootbox') > -1:
-                    await bot_answer.add_reaction(emojis.fire)
-                if bot_message.find(f'**{ctx.author.name}** got a GODLY lootbox') > -1:
-                    await bot_answer.add_reaction(emojis.fire)
-
                 # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
+                if together and (f'**{partner_name}** got ' in bot_message):
+                    partner_start = bot_message.find(f'**{partner_name}** got ')
+                else:
+                    partner_start = len(bot_message)
+
                 if not partner_id == 0:
                     partner_settings = await database.get_settings(ctx, 'partner_alert_hardmode', partner_id)
                     partner_hardmode = partner_settings[3]
@@ -282,26 +301,23 @@ class huntCog(commands.Cog):
                     if together == True:
                         await self.bot.wait_until_ready()
                         partner = self.bot.get_user(partner_id)
-                        partner_name = partner.name
                         lootbox_alert = ''
 
-                        if bot_message.find(f'**{partner_name}** got a common lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbcommon} common lootbox')
-                        elif bot_message.find(f'**{partner_name}** got an uncommon lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbuncommon} uncommon lootbox')
-                        elif bot_message.find(f'**{partner_name}** got a rare lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbrare} rare lootbox')
-                        elif bot_message.find(f'**{partner_name}** got an EPIC lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbepic} EPIC lootbox')
-                        elif bot_message.find(f'**{partner_name}** got an EDGY lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lbedgy} EDGY lootbox')
-                        elif bot_message.find(f'**{partner_name}** got an OMEGA lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'an {emojis.lobomega} OMEGA lootbox')
-                        elif bot_message.find(f'**{partner_name}** got a GODLY lootbox') > -1:
-                            lootbox_alert = global_data.alert_message.format(user=ctx.author.name, lootbox=f'a {emojis.lbgodly} GODLY lootbox')
-
-                        if not lootbox_alert == '':
-
+                        if f'**{partner_name}** got ' in bot_message:
+                            lootboxes = {
+                                'common lootbox': emojis.lbcommon,
+                                'uncommon lootbox': emojis.lbuncommon,
+                                'rare lootbox': emojis.lbrare,
+                                'EPIC lootbox': emojis.lbepic,
+                                'EDGY lootbox': emojis.lbedgy,
+                                'OMEGA lootbox': emojis.lbomega,
+                                'GODLY lootbox': emojis.lbgodly
+                            }
+                            for lootbox_name, lootbox_emoji in lootboxes.items():
+                                if (lootbox_name in bot_message) and (bot_message.rfind(lootbox_name) > partner_start):
+                                    lootbox_alert = global_data.alert_message.format(user=ctx.author.name,
+                                                                                     lootbox=f'a {lootbox_emoji} {lootbox_name}')
+                        if lootbox_alert != '':
                             partner_channel_id = partner_settings[0]
                             partner_reminders_on = partner_settings[1]
                             alert_enabled = partner_settings[2]
@@ -331,6 +347,15 @@ class huntCog(commands.Cog):
                             else:
                                 hm_message = f'**{ctx.author.name}**, **{partner_name}** is not hardmoding, feel free to take them hunting.'
                             await ctx.send(hm_message)
+
+                if f'**{ctx.author.name}** got' in bot_message:
+                    good_lootboxes = {
+                        'OMEGA lootbox': emojis.lbomega,
+                        'GODLY lootbox': emojis.lbgodly
+                    }
+                    for lootbox_name, lootbox_emoji in good_lootboxes.items():
+                        if (lootbox_name in bot_message) and (bot_message.rfind(lootbox_name) < partner_start):
+                            await bot_answer.add_reaction(emojis.fire)
 
                 # Add an F if the user died
                 if (bot_message.find(f'**{ctx_author}** lost but ') > -1) or (bot_message.find('but lost fighting') > -1):

@@ -373,6 +373,8 @@ class DevCog(commands.Cog):
                 actions.append(f'Module \'emojis\' reloaded.')
                 importlib.reload(global_data)
                 actions.append(f'Module \'global_data\' reloaded.')
+                importlib.reload(global_functions)
+                actions.append(f'Module \'global_functions\' reloaded.')
             else:
                 for arg in args:
                     cog_name = f'cogs.{arg}'

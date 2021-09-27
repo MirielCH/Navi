@@ -33,6 +33,7 @@ class tradeCog(commands.Cog):
                     global_data.logger.debug(f'Trade detection: {message}')
 
                 if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough') > -1))\
+                or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what are you doing??') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('duh the amount has to be') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot trade rubies if you did not unlock area 5') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Alright! Our trade is done then') > -1))\
@@ -89,6 +90,7 @@ class tradeCog(commands.Cog):
                                             global_data.logger.debug(f'Trade detection: {message}')
 
                                         if ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have enough') > -1))\
+                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find('what are you doing??') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('duh the amount has to be') > -1))\
                                         or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you cannot trade rubies if you did not unlock area 5') > -1))\
                                         or ((message.find(ctx_author) > -1) and (message.find('Alright! Our trade is done then') > -1))\

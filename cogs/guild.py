@@ -58,9 +58,12 @@ class guildCog(commands.Cog):
                             await bot.wait_until_ready()
                             guild_channel = bot.get_channel(guild_channel_id)
                             if not raid_worst_user_id == 0:
-                                await bot.wait_until_ready()
-                                raid_worst_user = bot.get_user(raid_worst_user_id)
-                                roast = roast.format(username=raid_worst_user.name)
+                                if raid_worst_energy == 0:
+                                    roast = global_data.roast_zero
+                                else:
+                                    await bot.wait_until_ready()
+                                    raid_worst_user = bot.get_user(raid_worst_user_id)
+                                    roast = roast.format(username=raid_worst_user.name)
                             if not raid_best_user_id == 0:
                                 await bot.wait_until_ready()
                                 raid_best_user = bot.get_user(raid_best_user_id)
@@ -74,7 +77,7 @@ class guildCog(commands.Cog):
                             if not raid_best_user_id == 0:
                                 guild_report = f'{guild_report}{emojis.bp} {praise} (_Best raid: {raid_best_energy}_ {emojis.energy})\n'
                             else:
-                                guild_report = f'{guild_report}{emojis.bp} There were no cool raids. That is sad.\n'
+                                guild_report = f'{guild_report}{emojis.bp} There were no cool raids. Not cool.\n'
                             if not raid_worst_user_id == 0:
                                 guild_report = (
                                     f'{guild_report}{emojis.bp} {roast} (_Worst raid: {raid_worst_energy}_ {emojis.energy})'
@@ -572,7 +575,7 @@ class guildCog(commands.Cog):
                                         guild_message = guild_message.replace('%','rpg guild upgrade')
 
                                 # Update reminder
-                                timestring_start = bot_message.find(':clock4: ') + 9
+                                timestring_start = bot_message.find(':clock4: ') + 11
                                 timestring_end = bot_message.find('**', timestring_start)
                                 timestring = bot_message[timestring_start:timestring_end]
                                 timestring = timestring.lower()

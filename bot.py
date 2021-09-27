@@ -669,7 +669,7 @@ async def partner(ctx, *args):
                         else:
                             await ctx.reply(
                                 f'You don\'t have a lootbox alert channel set.\n'
-                                f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`\n',
+                                f'If you want to set one, use `{ctx.prefix}{ctx.invoked_with} channel set`\n'
                                 f'The lootbox alert channel is the channel where you get notified if your partner finds a lootbox for you while hunting.',
                                 mention_author=False
                             )
@@ -821,9 +821,9 @@ async def enable(ctx, *args):
             wrong_activities = f'**{ctx.author.name}**, couldn\'t find the following activities:'
             status_all = f'**{ctx.author.name}**, the following reminders are now **{action}d:**'
 
+            args = [arg.lower() for arg in args]
             for arg in args:
                 activity = arg
-                activity = activity.lower()
                 if not activity in activity_aliases and not activity in global_data.activities:
                     wrong_activities = f'{wrong_activities}\n{emojis.bp} `{activity}`'
                     found_wrong_activity = True
@@ -833,8 +833,6 @@ async def enable(ctx, *args):
             else:
                 for arg in args:
                     activity = arg
-                    activity = activity.lower()
-
                     if activity == 'all':
                         if action == 'disable':
                             await ctx.reply(f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. Are you sure? `[yes/no]`', mention_author=False)
@@ -1053,7 +1051,7 @@ async def hardmode(ctx, *args):
     if not prefix.lower() == 'rpg ':
 
         if args:
-            arg = args[0]
+            arg = args[0].lower()
             if arg in ('on','enable','start'):
                 status = await database.set_hardmode(bot, ctx, 1)
             elif arg in ('off','disable','stop'):
@@ -1079,7 +1077,7 @@ async def dnd(ctx, *args):
     if not prefix.lower() == 'rpg ':
 
         if args:
-            arg = args[0]
+            arg = args[0].lower()
             if arg in ('on','enable','start'):
                 status = await database.set_dnd(ctx, 1)
             elif arg in ('off','disable','stop'):
@@ -1105,7 +1103,7 @@ async def ruby(ctx, *args):
     if not prefix.lower() == 'rpg ':
 
         if args:
-            arg = args[0]
+            arg = args[0].lower()
             if arg in ('on','enable','start'):
                 status = await database.set_ruby_counter(ctx, 1)
             elif arg in ('off','disable','stop'):
@@ -1265,29 +1263,30 @@ async def ascended(ctx, *args):
             await command.callback(command.cog, ctx, args)
 
 
-
 # --- Miscellaneous ---
 # Statistics command
 @bot.command(aliases=('statistic','statistics,','devstat','ping','about','info','stats'))
 @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
 async def devstats(ctx):
-    """Shows some bot info"""
-    user_count, *_ = await database.get_user_number(ctx)
-    start_time = datetime.utcnow()
-    message = await ctx.send('Testing API latency...')
-    end_time = datetime.utcnow()
-    elapsed_time = end_time - start_time
-    bot_status = (
-        f'{emojis.bp} {len(bot.guilds):,} servers\n'
-        f'{emojis.bp} {user_count:,} users\n'\
-        f'{emojis.bp} Bot latency: {round(bot.latency*1000):,} ms\n'
-        f'{emojis.bp} API latency: {round(elapsed_time.total_seconds()*1000):,} ms'
-        )
-    creator = f'{emojis.bp} Miriel#0001'
-    embed = discord.Embed(color = global_data.color, title = 'ABOUT NAVI')
-    embed.add_field(name='BOT STATS', value=bot_status, inline=False)
-    embed.add_field(name='CREATOR', value=creator, inline=False)
-    await message.edit(content=None, embed=embed)
+    prefix = ctx.prefix
+    if not prefix.lower() == 'rpg ':
+        """Shows some bot info"""
+        user_count, *_ = await database.get_user_number(ctx)
+        start_time = datetime.utcnow()
+        message = await ctx.send('Testing API latency...')
+        end_time = datetime.utcnow()
+        elapsed_time = end_time - start_time
+        bot_status = (
+            f'{emojis.bp} {len(bot.guilds):,} servers\n'
+            f'{emojis.bp} {user_count:,} users\n'\
+            f'{emojis.bp} Bot latency: {round(bot.latency*1000):,} ms\n'
+            f'{emojis.bp} API latency: {round(elapsed_time.total_seconds()*1000):,} ms'
+            )
+        creator = f'{emojis.bp} Miriel#0001'
+        embed = discord.Embed(color = global_data.color, title = 'ABOUT NAVI')
+        embed.add_field(name='BOT STATS', value=bot_status, inline=False)
+        embed.add_field(name='CREATOR', value=creator, inline=False)
+        await message.edit(content=None, embed=embed)
 
 # Print Guilds
 @bot.command()

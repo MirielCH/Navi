@@ -65,6 +65,9 @@ class inventoryCog(commands.Cog):
                 if not arg.find(f'{ctx.author.id}') > -1:
                     return
 
+            if len(ctx.message.mentions) > 0:
+                if ctx.message.mentions[0].id != ctx.author.id:
+                    return
 
             settings = await database.get_settings(ctx, 'rubies')
             if not settings == None:

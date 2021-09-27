@@ -18,7 +18,7 @@ running_tasks = {}
 dbfile = os.path.join(bot_dir, 'database/navi_db.db')
 
 # Donor tier reductions
-donor_cooldowns = (1,0.9,0.8,0.65,)
+donor_cooldowns = (1, 0.9, 0.8, 0.65)
 
 # Prefix
 default_prefix = 'navi '
@@ -51,9 +51,10 @@ miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can
 pet_message = 'Hey! Your pet **$** is back!'
 tournament_message = 'Hey! The **pet tournament** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 race_message = 'Hey! The **horse race** just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
+roast_zero = "<:amongus_sus:875996946903478292> There is one player among us that wants us to believe he is not an impostor."
 
 # Guild defaults
-guild_reset = (5,21,59) # Weekday, hour, minute (UTC, weekday starts from 0)
+guild_reset = (5, 21, 59) # Weekday, hour, minute (UTC, weekday starts from 0)
 guild_stealth = 90
 
 # Embed color

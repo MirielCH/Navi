@@ -52,9 +52,9 @@ class sleepypotionCog(commands.Cog):
 
     # --- Commands ---
     # Sleepy potion (change command name according to event)
-    @commands.command(aliases=('easter',))
+    @commands.command(aliases=('horsefestival',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def egg(self, ctx, *args):
+    async def hf(self, ctx, *args):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
@@ -66,10 +66,12 @@ class sleepypotionCog(commands.Cog):
 
                 if args_full == 'usesleepypotion':
                     settings = await database.get_settings(ctx, 'hunt') # Only need reminders_on
-                    if not settings == None:
+                    if settings is not None:
                         reminders_on = settings[0]
                     else:
                         return
+                else:
+                    return
 
                 if not reminders_on == 0:
                     try:
