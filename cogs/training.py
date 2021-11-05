@@ -129,6 +129,7 @@ class trainingCog(commands.Cog):
                         tr_message = settings[4]
                         rubies = settings[5]
                         ruby_counter = settings[6]
+                        tr_helper = settings[7]
 
                         # Set message to send
                         if tr_message == None:
@@ -168,11 +169,26 @@ class trainingCog(commands.Cog):
                                 await ctx.send('Training detection timeout.')
                                 return
 
-                        # Trigger ruby counter if necessary
+                        # Trigger training helper if necessary
                         if bot_message.find('is training in') > -1:
-                            if bot_message.find('training in the mine') > -1:
-                                if not ruby_counter == 0:
-                                    await ctx.send(f'**{ctx.author.name}**, you have {rubies} {emojis.ruby} rubies.')
+                            if bot_message.find('training in the mine') > -1 and ruby_counter != 0:
+                                ruby_start = bot_message.find('more than ') + 10
+                                ruby_end = bot_message.find('<:ruby') - 1
+                                ruby_count = bot_message[ruby_start:ruby_end]
+                                try:
+                                    ruby_count = int(ruby_count)
+                                    if rubies > ruby_count:
+                                        answer = 'YES'
+                                    else:
+                                        answer = 'NO'
+                                except:
+                                    answer = 'ERROR'
+                                await ctx.send(f'`{answer}` (you have {rubies} {emojis.ruby})')
+                            else:
+                                if tr_helper != 0:
+                                    answer = global_functions.get_training_answer(bot_message.lower())
+                                    if answer is not None:
+                                        await ctx.send(f'`{answer}`')
                             if not tr_enabled == 0:
                                 task_status = self.bot.loop.create_task(self.get_training_answer_message(ctx))
                                 bot_first_answer = bot_answer

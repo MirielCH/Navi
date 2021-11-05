@@ -310,3 +310,68 @@ def encode_message_with_fields_non_async(bot_message):
         message = str(bot_message.content).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
 
     return message
+
+def get_training_answer(message_content):
+    """Runs when a training message is found in a channel."""
+    answer = None
+    if 'river!' in message_content:
+        if '<:epicfish' in message_content:
+            answer = '3'
+        elif '<:goldenfish' in message_content:
+            answer = '2'
+        elif '<:normiefish' in message_content:
+            answer = '1'
+    elif 'field!' in message_content:
+        if '<:apple' in message_content:
+            if '**first**' in message_content:
+                answer = 'A'
+            elif '**second**' in message_content:
+                answer = 'P'
+            elif '**third**' in message_content:
+                answer = 'P'
+            elif '**fourth**' in message_content:
+                answer = 'L'
+            elif '**fifth**' in message_content:
+                answer = 'E'
+        elif '<:banana' in message_content:
+            if '**first**' in message_content:
+                answer = 'B'
+            elif '**second**' in message_content:
+                answer = 'A'
+            elif '**third**' in message_content:
+                answer = 'N'
+            elif '**fourth**' in message_content:
+                answer = 'A'
+            elif '**fifth**' in message_content:
+                answer = 'N'
+            elif '**sixth**' in message_content:
+                answer = 'A'
+    elif 'casino?' in message_content:
+        if ':gem:' in message_content and '**diamond**' in message_content:
+            answer = 'YES'
+        elif ':gift:' in message_content and '**gift**' in message_content:
+            answer = 'YES'
+        elif ':game_die:' in message_content and '**dice**' in message_content:
+            answer = 'YES'
+        elif ':coin:' in message_content and '**coin**' in message_content:
+            answer = 'YES'
+        elif ':four_leaf_clover:' in message_content and '**four leaf clover**' in message_content:
+            answer = 'YES'
+        else:
+            answer = 'NO'
+    elif 'forest!' in message_content:
+        if 'many <:wooden' in message_content:
+            emoji = '<:wooden'
+        elif 'many <:epic' in message_content:
+            emoji = '<:epic'
+        elif 'many <:super' in message_content:
+            emoji = '<:super'
+        elif 'many <:mega' in message_content:
+            emoji = '<:mega'
+        elif 'many <:hyper' in message_content:
+            emoji = '<:hyper'
+        start_question = message_content.find('how many ')
+        message_content_list = message_content[0:start_question]
+        answer = message_content_list.count(emoji)
+
+    return answer

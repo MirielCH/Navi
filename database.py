@@ -181,7 +181,7 @@ async def get_settings(ctx, setting='all', partner_id=None):
     elif setting == 'quest':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, quest_enabled, quest_message FROM settings_user where user_id=?'
     elif setting == 'training':
-        sql = 'SELECT reminders_on, user_donor_tier, default_message, tr_enabled, tr_message, rubies, ruby_counter FROM settings_user where user_id=?'
+        sql = 'SELECT reminders_on, user_donor_tier, default_message, tr_enabled, tr_message, rubies, ruby_counter, tr_helper FROM settings_user where user_id=?'
     elif setting == 'vote':
         sql = 'SELECT reminders_on, user_donor_tier, default_message, vote_enabled, vote_message FROM settings_user where user_id=?'
     elif setting == 'weekly':
@@ -410,11 +410,11 @@ async def get_guild_leaderboard(ctx):
         record_guild_name = cur.fetchone()
         if record_guild_name:
             guild_name = record_guild_name[0]
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 50 ORDER BY energy DESC LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy >= 100 ORDER BY energy DESC LIMIT 5', (guild_name,))
             record_leaderboard_best = cur.fetchall()
             if len(record_leaderboard_best) == 0:
                 record_leaderboard_best = None
-            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 50 ORDER BY energy LIMIT 5', (guild_name,))
+            cur.execute('SELECT user_id, energy FROM guilds_leaderboard WHERE guild_name = ? AND energy < 100 ORDER BY energy LIMIT 5', (guild_name,))
             record_leaderboard_worst = cur.fetchall()
             if len(record_leaderboard_worst) == 0:
                 record_leaderboard_worst = None
@@ -597,9 +597,9 @@ async def reset_partner(ctx):
 
         if record:
             partner_id = record[0]
-            cur.execute('UPDATE settings_user SET partner_id = ?, partner_donor_tier = ? WHERE user_id = ?', (None, 0, ctx.author.id,))
+            cur.execute('UPDATE settings_user SET partner_id = ?, partner_donor_tier = ? WHERE user_id = ?', (0, 0, ctx.author.id,))
             if not partner_id == 0:
-                cur.execute('UPDATE settings_user SET partner_id = ?, partner_donor_tier = ? WHERE user_id = ?', (None, 0, partner_id,))
+                cur.execute('UPDATE settings_user SET partner_id = ?, partner_donor_tier = ? WHERE user_id = ?', (0, 0, partner_id,))
             status = 'updated'
         else:
             status = f'**{ctx.author.id}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
@@ -782,9 +782,47 @@ async def set_ruby_counter(ctx, state):
             else:
                 cur.execute('UPDATE settings_user SET ruby_counter = ? WHERE user_id = ?', (state, ctx.author.id,))
                 if state == 1:
-                    status = f'**{ctx.author.name}**, the ruby counter is now turned **on**.'
+                    status = (
+                        f'**{ctx.author.name}**, the ruby counter is now turned **on**.\n'
+                        f'Note:\n'
+                        f'• The ruby training helper only works if training reminders are enabled.\n'
+                    )
                 elif state == 0:
                     status = f'**{ctx.author.name}**, the ruby counter is now turned **off**.'
+        else:
+            status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
+    except sqlite3.Error as error:
+        await log_error(ctx, error)
+
+    return status
+
+# Turn training helper on/off
+async def set_tr_helper(ctx, state):
+
+    try:
+        cur=navi_db.cursor()
+        cur.execute('SELECT tr_helper FROM settings_user WHERE user_id=?', (ctx.author.id,))
+        record = cur.fetchone()
+        status = ''
+
+        if record:
+            tr_helper_db = record[0]
+
+            if tr_helper_db == 1 and state == 1:
+                status = f'**{ctx.author.name}**, the training helper is already turned **on**.'
+            elif tr_helper_db == 0 and state == 0:
+                status = f'**{ctx.author.name}**, the training helper is already turned **off**.'
+            else:
+                cur.execute('UPDATE settings_user SET tr_helper = ? WHERE user_id = ?', (state, ctx.author.id,))
+                if state == 1:
+                    status = (
+                        f'**{ctx.author.name}**, the training helper is now turned **on**.\n'
+                        f'Note:\n'
+                        f'• The training helper only works if training reminders are enabled.\n'
+                        f'• The **ruby** training helper only works if the ruby counter is enabled.\n'
+                    )
+                elif state == 0:
+                    status = f'**{ctx.author.name}**, the training helper is now turned **off**.'
         else:
             status = f'**{ctx.author.name}**, you are not registered with this bot yet. Use `{ctx.prefix}on` to activate me first.'
     except sqlite3.Error as error:

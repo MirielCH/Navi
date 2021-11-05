@@ -7,6 +7,7 @@ import inspect
 import os
 import sys
 from datetime import datetime
+from datetime import timedelta
 from math import ceil, floor
 
 import discord
@@ -56,22 +57,27 @@ class DevCog(commands.Cog):
     async def timestring(self, ctx, *args):
         """calculate time left from a timestamp"""
         error_syntax = f'It\'s `{ctx.prefix}timestring [timestamp]`, you dummy.'
+        negative_value = False
         if args:
             timestamp = args[0]
-            if timestamp.isnumeric():
-                try:
-                    timestamp = float(timestamp)
-                    current_time = datetime.utcnow().replace(microsecond=0)
-                    end_time_datetime = datetime.fromtimestamp(timestamp)
-                    end_time_difference = end_time_datetime - current_time
-                    time_left = end_time_difference.total_seconds()
-                    timestring = await global_functions.parse_seconds(time_left)
-                    await ctx.reply(f'That is **{timestring}** from now.', mention_author=False)
-                except:
-                    await ctx.reply(f'That really didn\'t calculate to anything useful.', mention_author=False)
-                    return
-            else:
+            try:
+                timestamp = float(timestamp)
+            except:
                 await ctx.reply(error_syntax, mention_author=False)
+                return
+            try:
+                current_time = datetime.utcnow().replace(microsecond=0)
+                end_time_datetime = datetime.fromtimestamp(timestamp).replace(microsecond=0)
+                end_time_difference = (end_time_datetime - current_time).total_seconds()
+                if end_time_difference < 0:
+                    negative_value = True
+                    end_time_difference = end_time_difference * -1
+                timestring = await global_functions.parse_seconds(end_time_difference)
+                if negative_value: timestring = f'-{timestring}'
+                await ctx.reply(f'That is **{timestring}** from now.', mention_author=False)
+            except:
+                await ctx.reply(f'That really didn\'t calculate to anything useful.', mention_author=False)
+                return
         else:
             await ctx.reply(error_syntax, mention_author=False)
 
@@ -358,40 +364,53 @@ class DevCog(commands.Cog):
         except Exception as error:
             await ctx.send(error)
 
-    @dev.command()
+    @dev.command(aliases=('unload','reload',))
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
-    async def reload(self, ctx, *args):
-        """Reloads modules or cogs"""
-        if args:
-            actions = []
-            arg = args[0].lower()
-            if arg in ('lib','libs','modules','module'):
-                importlib.reload(database)
-                actions.append(f'Module \'database\' reloaded.')
-                importlib.reload(emojis)
-                actions.append(f'Module \'emojis\' reloaded.')
-                importlib.reload(global_data)
-                actions.append(f'Module \'global_data\' reloaded.')
-                importlib.reload(global_functions)
-                actions.append(f'Module \'global_functions\' reloaded.')
-            else:
-                for arg in args:
-                    cog_name = f'cogs.{arg}'
-                    try:
-                        result = self.bot.reload_extension(cog_name)
-                        if result is None:
-                            actions.append(f'Extension \'{cog_name}\' reloaded.')
-                        else:
-                            actions.append(f'{cog_name}: {result}')
-                    except Exception as error:
-                        actions.append(f'{cog_name}: {error}')
-            message = ''
-            for action in actions:
-                message = f'{message}\n{action}'
-            await ctx.send(message)
-        else:
-            await ctx.send('Uhm, what.')
+    async def load(self, ctx: commands.Context, *args: str) -> None:
+        """Loads/unloads cogs and reloads cogs or modules"""
+        action = ctx.invoked_with
+        message_syntax = f'The syntax is `{ctx.prefix}dev {action} [name(s)]`'
+        if not args:
+            await ctx.send(message_syntax)
+            return
+        args = [arg.lower() for arg in args]
+        actions = []
+        for mod_or_cog in args:
+            name_found = False
+            if not 'cogs.' in mod_or_cog:
+                cog_name = f'cogs.{mod_or_cog}'
+            try:
+                if action == 'load':
+                    cog_status = self.bot.load_extension(cog_name)
+                elif action == 'reload':
+                    cog_status = self.bot.reload_extension(cog_name)
+                else:
+                    cog_status = self.bot.unload_extension(cog_name)
+            except:
+                cog_status = 'Error'
+            if cog_status is None:
+                actions.append(f'+ Extension \'{cog_name}\' {action}ed.')
+                name_found = True
+            if not name_found:
+                if action == 'reload':
+                    for module_name in sys.modules.copy():
+                        if mod_or_cog in module_name:
+                            module = sys.modules.get(module_name)
+                            if module is not None:
+                                importlib.reload(module)
+                                actions.append(f'+ Module \'{module_name}\' reloaded.')
+                                name_found = True
+            if not name_found:
+                if action == 'reload':
+                    actions.append(f'- No cog with the name \'{mod_or_cog}\' found or cog not loaded.')
+                else:
+                    actions.append(f'- No cog with the name \'{mod_or_cog}\' found or cog already {action}ed.')
+
+        message = ''
+        for action in actions:
+            message = f'{message}\n{action}'
+        await ctx.send(f'```diff\n{message}\n```')
 
     # Enable/disable commands
     @dev.command(aliases=('disable',))

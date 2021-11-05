@@ -315,9 +315,10 @@ async def settings(ctx):
             dnd = settings[47]
             ruby_counter = settings[48]
             rubies = settings[49]
+            tr_helper = settings[50]
 
             if not partner_id == 0:
-                hardmode_partner = settings[96]
+                hardmode_partner = settings[97]
             else:
                 hardmode_partner = 'N/A'
 
@@ -367,7 +368,8 @@ async def settings(ctx):
                 f'{emojis.bp} Donator tier: `{user_donor_tier}` ({global_data.donor_tiers[user_donor_tier]})\n'
                 f'{emojis.bp} DND mode: `{dnd}`\n'
                 f'{emojis.bp} Hardmode mode: `{hardmode}`\n'
-                f'{emojis.bp} Ruby counter: `{ruby_counter}`'
+                f'{emojis.bp} Ruby counter: `{ruby_counter}`\n'
+                f'{emojis.bp} Training helper: `{tr_helper}`\n'
             )
 
             partner = (
@@ -1123,6 +1125,28 @@ async def ruby(ctx, *args):
             elif ruby_counter == 0:
                 await ctx.reply(f'**{ctx.author.name}**, the ruby counter is currently turned **off**.\nUse `{prefix}ruby on` to turn it on.', mention_author=False)
 
+# Command "training" - Turns training helper on or off
+@bot.command(aliases=('tr-helper','traininghelper','training-helper'))
+@commands.bot_has_permissions(send_messages=True, embed_links=True)
+async def trhelper(ctx, *args):
+
+    prefix = ctx.prefix
+    message_syntax = f'**{ctx.author.name}**, the correct syntax is `{prefix}training on` / `off`.'
+
+    if not prefix.lower() == 'rpg ':
+
+        if args:
+            arg = args[0].lower()
+            if arg in ('on','enable','start'):
+                status = await database.set_tr_helper(ctx, 1)
+            elif arg in ('off','disable','stop'):
+                status = await database.set_tr_helper(ctx, 0)
+            else:
+                status = message_syntax
+        else:
+            status = message_syntax
+        await ctx.reply(status, mention_author=False)
+
 # Update guild
 @bot.event
 async def on_message_edit(message_before, message_after):
@@ -1195,6 +1219,7 @@ async def help(ctx):
             f'{emojis.bp} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
             f'{emojis.bp} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
             f'{emojis.bp} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
+            f'{emojis.bp} `{prefix}tr-helper on` / `off` : Turn the training helper on/off\n'
             f'{emojis.bp} `{prefix}ruby` : Check your current ruby count'
         )
 

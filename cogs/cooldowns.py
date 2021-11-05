@@ -299,7 +299,7 @@ class cooldownsCog(commands.Cog):
                                     time_left = time_left-time_elapsed_seconds
                                     if time_left > 1:
                                         write_status = await global_functions.write_reminder(self.bot, ctx, activity, time_left, message, True)
-                                        if write_status in ('inserted','scheduled','updated'):
+                                        if write_status in ('inserted','scheduled','updated','do-nothing'):
                                             write_status_list.append('OK')
                                         else:
                                             write_status_list.append('Fail')
