@@ -183,12 +183,12 @@ class trainingCog(commands.Cog):
                                         answer = 'NO'
                                 except:
                                     answer = 'ERROR'
-                                await ctx.send(f'`{answer}` (you have {rubies} {emojis.ruby})')
+                                await bot_answer.reply(f'`{answer}` (you have {rubies} {emojis.ruby})', mention_author=False)
                             else:
                                 if tr_helper != 0:
                                     answer = global_functions.get_training_answer(bot_message.lower())
                                     if answer is not None:
-                                        await ctx.send(f'`{answer}`')
+                                        await bot_answer.reply(f'`{answer}`', mention_author=False)
                             if not tr_enabled == 0:
                                 task_status = self.bot.loop.create_task(self.get_training_answer_message(ctx))
                                 bot_first_answer = bot_answer
@@ -290,6 +290,8 @@ class trainingCog(commands.Cog):
                 # Add reaction
                 if not write_status == 'aborted':
                     await bot_answer.add_reaction(emojis.navi)
+                    if 'Better luck next time,' in bot_message:
+                        await bot_answer.add_reaction(emojis.LAUGH)
                 else:
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')

@@ -84,9 +84,9 @@ class sleepypotionCog(commands.Cog):
 
     # --- Commands ---
     # Sleepy potion (change command name according to event)
-    @commands.command(aliases=('halloween',))
+    @commands.command(aliases=('christmas',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def hal(self, ctx, *args):
+    async def xmas(self, ctx, *args):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ':
@@ -94,9 +94,11 @@ class sleepypotionCog(commands.Cog):
             if args:
                 args_full = ''
                 for arg in args:
-                    args_full = f'{args_full}{arg}'
+                    args_full = f'{args_full} {arg}'
 
-                if args_full == 'usesleepypotion':
+                args_full = args_full.strip()
+
+                if args_full == 'use sleepy potion':
                     settings = await database.get_settings(ctx, 'hunt') # Only need reminders_on
                     if settings is not None:
                         reminders_on = settings[0]
@@ -174,125 +176,29 @@ class sleepypotionCog(commands.Cog):
                             global_data.logger.error(f'Sleepy potion detection error: {e}')
                             return
 
-                if args_full.startswith('boo') and ctx.message.mentions:
+                elif args_full == 'calendar' or args_full.startswith('calendar '):
                     settings = await database.get_settings(ctx, 'hunt') # Only need reminders_on
                     if settings is not None:
                         reminders_on = settings[0]
-                        user_donor_tier = int(settings[1])
-                        boo_message = 'Hey! It\'s time for `rpg hal boo`!'
                     else:
                         return
                     if reminders_on != 0:
-                        try:
-                            task_status = self.bot.loop.create_task(self.get_boo_message(ctx))
-                            bot_message = None
-                            message_history = await ctx.channel.history(limit=50).flatten()
-                            for msg in message_history:
-                                if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
-                                    try:
-                                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                        message = await global_functions.encode_message(msg)
+                        calendar_message = 'Hey! It\'s time for `rpg xmas calendar`!'
+                        # Calculate cooldown
+                        current_time = datetime.utcnow().replace(microsecond=0)
+                        midnight_tomorrow = datetime.utcnow().replace(day=current_time.day+1, hour=0, minute=2, microsecond=0)
+                        time_to_midnight = midnight_tomorrow - current_time
+                        time_left = time_to_midnight.total_seconds()
 
-                                        if global_data.DEBUG_MODE == 'ON':
-                                            global_data.logger.debug(f'Boo detection: {message}')
+                        # Save task to database
+                        write_status = await global_functions.write_reminder(self.bot, ctx, 'xmas', time_left, calendar_message)
 
-                                        if ((message.find(ctx_author) > -1) and (message.find('failed to scare') > -1))\
-                                        or ((message.find(ctx_author) > -1) and (message.find('scared') > -1))\
-                                        or ('bots cannot be scared' in message)\
-                                        or ('you can\'t scare yourself lol' in message)\
-                                        or ('so no chance to scare lol' in message)\
-                                        or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have scared someone recently') > -1))\
-                                        or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
-                                            bot_answer = msg
-                                            bot_message = message
-                                    except Exception as e:
-                                        await ctx.send(f'Error reading message history: {e}')
-
-                            if bot_message == None:
-                                task_result = await task_status
-                                if not task_result == None:
-                                    bot_answer = task_result[0]
-                                    bot_message = task_result[1]
-                                else:
-                                    await ctx.send('Boo detection timeout.')
-                                    return
-
-                            # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
-                            if bot_message.find(f'\'s cooldown') > 1:
-                                timestring_start = bot_message.find('wait at least **') + 16
-                                timestring_end = bot_message.find('**...', timestring_start)
-                                timestring = bot_message[timestring_start:timestring_end]
-                                timestring = timestring.lower()
-                                time_left = await global_functions.parse_timestring(ctx, timestring)
-                                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
-                                current_time = datetime.utcnow().replace(microsecond=0)
-                                time_elapsed = current_time - bot_answer_time
-                                time_elapsed_seconds = time_elapsed.total_seconds()
-                                time_left = time_left-time_elapsed_seconds
-                                write_status = await global_functions.write_reminder(self.bot, ctx, 'boo', time_left, boo_message, True)
-                                if write_status in ('inserted','scheduled','updated'):
-                                    await bot_answer.add_reaction(emojis.navi)
-                                else:
-                                    if global_data.DEBUG_MODE == 'ON':
-                                        await bot_answer.add_reaction(emojis.cross)
-                                return
-
-                            # Ignore bots
-                            elif bot_message.find('bots cannot be scared') > -1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-                            # Ignore self scare
-                            elif bot_message.find('you can\'t scare yourself lol') > -1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-                            # Ignore anti spam embed
-                            elif bot_message.find('Huh please don\'t spam') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-                            # Ignore failed Epic Guard event
-                            elif bot_message.find('is now in the jail!') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                await bot_answer.add_reaction(emojis.rip)
-                                return
-                            # Ignore error when another command is active
-                            elif bot_message.find('end your previous command') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-
-                            # Calculate cooldown
-                            cooldown = 7200
-                            donor_affected = 0
-                            bot_answer_time = bot_answer.created_at.replace(microsecond=0)
-                            current_time = datetime.utcnow().replace(microsecond=0)
-                            time_elapsed = current_time - bot_answer_time
-                            time_elapsed_seconds = time_elapsed.total_seconds()
-                            if donor_affected == 1:
-                                time_left = cooldown*global_data.donor_cooldowns[user_donor_tier]-time_elapsed_seconds
-                            else:
-                                time_left = cooldown-time_elapsed_seconds
-
-                            # Save task to database
-                            write_status = await global_functions.write_reminder(self.bot, ctx, 'boo', time_left, boo_message)
-
-                            # Add reaction
-                            if not write_status == 'aborted':
-                                await bot_answer.add_reaction(emojis.navi)
-                            else:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
-
-                        except asyncio.TimeoutError as error:
-                            await ctx.send('Boo detection timeout.')
-                            return
-                        except Exception as e:
-                            global_data.logger.error(f'Boo detection error: {e}')
-                            return
+                        # Add reaction
+                        if not write_status == 'aborted':
+                            await ctx.message.add_reaction(emojis.navi)
+                        else:
+                            if global_data.DEBUG_MODE == 'ON':
+                                await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
 
 # Initialization
 def setup(bot):

@@ -223,6 +223,13 @@ class farmCog(commands.Cog):
                 # Add reaction
                 if not write_status == 'aborted':
                     await bot_answer.add_reaction(emojis.navi)
+                    if 'also got' in bot_message:
+                        if 'potato seed' in bot_message:
+                            await bot_answer.add_reaction(emojis.SEED_POTATO)
+                        elif 'carrot seed' in bot_message:
+                            await bot_answer.add_reaction(emojis.SEED_CARROT)
+                        elif 'bread seed' in bot_message:
+                            await bot_answer.add_reaction(emojis.SEED_BREAD)
                 else:
                     if global_data.DEBUG_MODE == 'ON':
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')

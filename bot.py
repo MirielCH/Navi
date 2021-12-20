@@ -534,7 +534,7 @@ async def donor(ctx, *args):
                         return
                     if 0 <= donor_tier <= 7:
                         status = await database.set_donor_tier(ctx, donor_tier)
-                        await ctx.reply(status, mention_author=False)
+                        await ctx.reply(f'{status}\n\nPlease note that the `hunt together` cooldown can only be accurately calculated if `navi partner donator` is set correctly as well.', mention_author=False)
                         return
                     else:
                         await ctx.reply(f'This is not a valid tier.\n\n{possible_tiers}', mention_author=False)
@@ -973,6 +973,9 @@ async def list_cmd(ctx, *args):
                 # Commands
                 elif activity == 'dungmb':
                     activity = 'Dungeon / Miniboss'
+                    reminders_commands_list.append([activity, timestring])
+                elif activity == 'xmas':
+                    activity = 'XMAS calendar'
                     reminders_commands_list.append([activity, timestring])
                 else:
                     activity = activity.capitalize()

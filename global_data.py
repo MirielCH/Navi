@@ -45,7 +45,7 @@ DEBUG_MODE = os.getenv('DEBUG_MODE')
 # Default messages
 default_message = 'Hey! It\'s time for `%`!'
 default_custom_message = 'Hey! This is your reminder for **%**!'
-alert_message = 'Hey! **{user}** found {lootbox} for you!' # Not changeable by user
+alert_message = '**{user}** found {lootbox} for you!' # Not changeable by user
 arena_message = 'Hey! The **big arena** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 miniboss_message = 'Hey! The **not so "mini" boss** event just finished! You can check the results in <#604410216385085485> on the official EPIC RPG server.'
 pet_message = 'Hey! Your pet **$** is back!'

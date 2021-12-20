@@ -123,8 +123,7 @@ class tradeCog(commands.Cog):
                                         rubies = rubies_db + int(rubies)
                                     else:
                                         rubies = rubies_db - int(rubies)
-                                        if rubies < 0:
-                                            rubies == 0
+                                        if rubies < 0: rubies = 0
                                     await database.set_rubies(ctx, rubies)
                                 else:
                                     await ctx.send(f'Something went wrong here, wanted to read ruby count, found this instead: {rubies}')

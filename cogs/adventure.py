@@ -204,9 +204,9 @@ class adventureCog(commands.Cog):
                         await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
 
                 if bot_message.find('OMEGA lootbox') > -1:
-                    await bot_answer.add_reaction(emojis.fire)
+                    await bot_answer.add_reaction(emojis.SURPRISE)
                 if bot_message.find('GODLY lootbox') > -1:
-                    await bot_answer.add_reaction(emojis.fire)
+                    await bot_answer.add_reaction(emojis.SURPRISE)
 
                 # Add an F if the user died
                 if bot_message.find('but lost fighting') > -1:

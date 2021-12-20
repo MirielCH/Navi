@@ -300,7 +300,6 @@ class petsCog(commands.Cog):
                                             elif bot_message.find('IT CAME BACK INSTANTLY!') > 1:
                                                 if global_data.DEBUG_MODE == 'ON':
                                                     await bot_answer.add_reaction(emojis.cross)
-                                                await bot_answer.add_reaction(emojis.timetraveler)
                                                 return
                                             # Ignore error that pets are not unlocked yet
                                             elif bot_message.find('unlocked after second') > 1:
