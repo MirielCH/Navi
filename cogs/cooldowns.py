@@ -197,7 +197,7 @@ class CooldownsCog(commands.Cog):
                     time_left = time_left - time_elapsed
                     if time_left.total_seconds() > 0:
                         reminder: reminders.Reminder = (
-                            await reminders.insert_user_reminder(ctx.author.id, activity, time_left,
+                            await reminders.insert_user_reminder(self.bot, ctx.author.id, activity, time_left,
                                                                  ctx.channel.id, message)
                         )
                         if not reminder.record_exists:

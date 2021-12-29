@@ -134,7 +134,8 @@ class EventsCog(commands.Cog):
                     updated_reminder = False
                     if time_left.total_seconds() > 0:
                         try:
-                            reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, activity)
+                            reminder: reminders.Reminder = await reminders.get_user_reminder(self.bot, ctx.author.id,
+                                                                                             activity)
                             end_time = current_time + time_left
                             await reminder.update(end_time=end_time)
                             if not reminder.record_exists:

@@ -1,14 +1,19 @@
 # reminders.py
 """Provides access to the tables "reminders_users" and "reminders_clans" in the database"""
 
-
+import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
 from typing import Optional, Tuple
 
-from database import errors
+from discord.ext import commands
+
+from database import clans, errors, users
 from resources import exceptions, settings, strings
+
+
+running_tasks = {}
 
 
 # Containers
@@ -17,6 +22,7 @@ class Reminder():
     """Object that represents a record from the table "reminders_users" or "reminders_clans.
     The attribute "reminder_type" is set accordingly. If it is a user reminder, "clan_name" is None and vice versa."""
     activity: str
+    bot: commands.Bot
     channel_id: int
     clan_name: str
     custom_id: int
@@ -51,9 +57,9 @@ class Reminder():
         """
         try:
             if self.reminder_type == 'clan':
-                new_settings = await get_clan_reminder(self.clan_name)
+                new_settings = await get_clan_reminder(self.bot, self.clan_name)
             else:
-                new_settings = await get_user_reminder(self.user_id, self.activity)
+                new_settings = await get_user_reminder(self.bot, self.user_id, self.activity)
         except exceptions.NoDataFoundError as error:
             self.record_exists = False
             return
@@ -89,7 +95,7 @@ class Reminder():
 
 
 # Miscellaneous functions
-async def _dict_to_reminder(record: dict) -> Reminder:
+async def _dict_to_reminder(bot: commands.Bot, record: dict) -> Reminder:
     """Creates a Reminder object from a database record
 
     Arguments
@@ -115,6 +121,7 @@ async def _dict_to_reminder(record: dict) -> Reminder:
             task_name = f"{record['user_id']}-{record['activity']}"
         reminder = Reminder(
             activity = record['activity'],
+            bot = bot,
             channel_id = record['channel_id'],
             clan_name = record.get('clan_name', None),
             custom_id = record.get('custom_id', None),
@@ -136,7 +143,7 @@ async def _dict_to_reminder(record: dict) -> Reminder:
 
 
 # Read Data
-async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int] = None) -> Reminder:
+async def get_user_reminder(bot: commands.Bot, user_id: int, activity: str, custom_id: Optional[int] = None) -> Reminder:
     """Gets all settings for a user reminder from a user id and an activity.
 
     Arguments
@@ -176,12 +183,12 @@ async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int
         raise exceptions.NoDataFoundError(
             f'No reminder data found in database for user "{user_id}" and activity "{activity}".'
         )
-    reminder = await _dict_to_reminder(dict(record))
+    reminder = await _dict_to_reminder(bot, dict(record))
 
     return reminder
 
 
-async def get_clan_reminder(clan_name: str) -> Reminder:
+async def get_clan_reminder(bot: commands.Bot, clan_name: str) -> Reminder:
     """Gets all settings for a clan reminder from a clan name and an activity.
 
     Returns
@@ -211,12 +218,12 @@ async def get_clan_reminder(clan_name: str) -> Reminder:
         raise exceptions.NoDataFoundError(
             f'No reminder data found in database for clan "{clan_name}".'
         )
-    reminder = await _dict_to_reminder(dict(record))
+    reminder = await _dict_to_reminder(bot, dict(record))
 
     return reminder
 
 
-async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_active_user_reminders(bot: commands.Bot, user_id: Optional[int] = None) -> Tuple[Reminder]:
     """Gets all active reminders for all users or - if the argument user_id is set - for one user.
 
     Returns
@@ -254,13 +261,13 @@ async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Remi
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(bot, dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
 
 
-async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_active_clan_reminders(bot: commands.Bot, clan_name: Optional[str] = None) -> Tuple[Reminder]:
     """Gets all active reminders for all clans or - if the argument clan_name is set - for one clan.
 
     Returns
@@ -298,13 +305,13 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(bot, dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
 
 
-async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_due_user_reminders(bot: commands.Bot, user_id: Optional[int] = None) -> Tuple[Reminder]:
     """Gets all reminders for all users or - if the argument user_id is set - for one user that are due within
     the next 15 seconds.
 
@@ -349,13 +356,13 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(bot, dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
 
 
-async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_due_clan_reminders(bot: commands.Bot, clan_name: Optional[str] = None) -> Tuple[Reminder]:
     """Gets all reminders for all clans or - if the argument clan_name is set - for one clan that are due within
     the next 15 seconds.
 
@@ -400,13 +407,13 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(bot, dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
 
 
-async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_old_user_reminders(bot: commands.Bot, user_id: Optional[int] = None) -> Tuple[Reminder]:
     """Gets all reminders for all users or - if the argument user_id is set - for one user that are have an end time
     more than 20 seconds in the past.
 
@@ -446,13 +453,13 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(bot, dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
 
 
-async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_old_clan_reminders(bot: commands.Bot, clan_name: Optional[str] = None) -> Tuple[Reminder]:
     """Gets all reminders for all clans or - if the argument clan_name is set - for one clan that are have an end time
     more than 20 seconds in the past.
 
@@ -492,7 +499,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(bot, dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -590,12 +597,10 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    if triggered:
-        from cogs.tasks import TasksCog
-        await TasksCog.create_task(reminder)
+    if triggered: await create_task(reminder)
 
 
-async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta,
+async def insert_user_reminder(bot: commands.Bot, user_id: int, activity: str, time_left: timedelta,
                                channel_id: int, message: str) -> Reminder:
     """Inserts a user reminder record.
     This function first checks if a reminder exists. If yes, the existing reminder will be updated instead and
@@ -643,7 +648,7 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
         raise
     reminder = None
     try:
-        reminder = await get_user_reminder(user_id, activity)
+        reminder = await get_user_reminder(bot, user_id, activity)
     except exceptions.NoDataFoundError:
         pass
     if reminder is not None:
@@ -660,17 +665,15 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
             )
             raise
-        reminder = await get_user_reminder(user_id, activity)
+        reminder = await get_user_reminder(bot, user_id, activity)
 
     # Create background task if necessary
-    if triggered:
-        from cogs.tasks import TasksCog
-        await TasksCog.create_task(reminder)
+    if triggered: await create_task(reminder)
 
     return reminder
 
 
-async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id: int, message: str) -> Reminder:
+async def insert_clan_reminder(bot: commands.Bot, clan_name: str, time_left: timedelta, channel_id: int, message: str) -> Reminder:
     """Inserts a clan reminder record.
     This function first checks if a reminder exists. If yes, the existing reminder will be updated instead and
     no new record is inserted.
@@ -689,7 +692,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     table = 'reminders_clans'
     reminder = None
     try:
-        reminder = await get_clan_reminder(clan_name)
+        reminder = await get_clan_reminder(bot, clan_name)
     except exceptions.NoDataFoundError:
         pass
     current_time = datetime.utcnow().replace(microsecond=0)
@@ -710,11 +713,9 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
             )
             raise
-        reminder = await get_clan_reminder(clan_name)
+        reminder = await get_clan_reminder(bot, clan_name)
     # Create background task if necessary
-    if triggered:
-        from cogs.tasks import TasksCog
-        await TasksCog.create_task(reminder)
+    if triggered: await create_task(reminder)
 
     return reminder
 
@@ -732,12 +733,57 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
                 new_end_time = reminder.end_time - time_reduction
                 time_left = reminder.end_time - current_time
                 if time_left.total_seconds() <= 0:
-                    from cogs.tasks import TasksCog
-                    await TasksCog.delete_task(reminder.task_name)
+                    await delete_task(reminder.task_name)
                     await reminder.delete()
                 elif 1 <= time_left.total_seconds() <= 15:
                     await reminder.update(end_time=new_end_time, triggered=True)
-                    from cogs.tasks import TasksCog
-                    await TasksCog.create_task(reminder)
+                    await create_task(reminder)
                 else:
                     await reminder.update(end_time=new_end_time)
+
+
+# Task management
+async def background_task(reminder: Reminder) -> None:
+    """Background task for scheduling reminders"""
+    current_time = datetime.utcnow().replace(microsecond=0)
+    time_left = reminder.end_time - current_time
+    await asyncio.sleep(time_left.total_seconds())
+    try:
+        await reminder.bot.wait_until_ready()
+        channel = reminder.bot.get_channel(reminder.channel_id)
+        if reminder.reminder_type == 'user':
+            await reminder.bot.wait_until_ready()
+            user = reminder.bot.get_user(reminder.user_id)
+            user_settings = await users.get_user(user.id)
+            if not user_settings.dnd_mode_enabled:
+                await channel.send(f'{user.mention} {reminder.message}')
+            else:
+                await channel.send(f'**{user.name}**, {reminder.message}')
+        else:
+            clan = await clans.get_clan_by_user_id(reminder.user_id)
+            message_mentions = ''
+            for member_id in clan.member_ids:
+                if member_id is not None:
+                    await reminder.bot.wait_until_ready()
+                    member = reminder.bot.get_user(member_id)
+                    if member is not None:
+                        message_mentions = f'{message_mentions}{member.mention} '
+            await channel.send(f'{reminder.message}\n{message_mentions}')
+        running_tasks.pop(reminder.task_name, None)
+    except Exception as error:
+        await errors.log_error(error)
+
+
+async def create_task(reminder: Reminder) -> None:
+    """Creates a new background task"""
+    await delete_task(reminder.task_name)
+    task = reminder.bot.loop.create_task(background_task(reminder))
+    running_tasks[reminder.task_name] = task
+
+
+async def delete_task(task_name: str) -> None:
+    """Stops and deletes a running task if it exists"""
+    if task_name in running_tasks:
+        running_tasks[task_name].cancel()
+        running_tasks.pop(task_name, None)
+    return

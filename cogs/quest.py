@@ -160,7 +160,7 @@ class QuestCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left-time_elapsed
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
+                    await reminders.insert_user_reminder(self.bot, ctx.author.id, 'quest', time_left,
                                                          ctx.channel.id, quest_message)
                 )
                 if reminder.record_exists:
@@ -223,7 +223,7 @@ class QuestCog(commands.Cog):
 
             # Save reminder to database
             reminder: reminders.Reminder = (
-                await reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
+                await reminders.insert_user_reminder(self.bot, ctx.author.id, 'quest', time_left,
                                                      ctx.channel.id, quest_message)
             )
 

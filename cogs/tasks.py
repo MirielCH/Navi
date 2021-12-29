@@ -6,11 +6,8 @@ from datetime import datetime, timedelta
 
 from discord.ext import commands, tasks
 
-from database import clans, errors, reminders, users
+from database import clans, errors, reminders
 from resources import emojis, exceptions, settings
-
-
-running_tasks = {}
 
 
 class TasksCog(commands.Cog):
@@ -25,64 +22,21 @@ class TasksCog(commands.Cog):
         self.delete_old_reminders.start()
         self.reset_clans.start()
 
-    async def background_task(self, reminder: reminders.Reminder) -> None:
-        """Background task for scheduling reminders"""
-        current_time = datetime.utcnow().replace(microsecond=0)
-        time_left = reminder.end_time - current_time
-        await asyncio.sleep(time_left.total_seconds())
-        try:
-            await self.bot.wait_until_ready()
-            channel = self.bot.get_channel(reminder.channel_id)
-            if reminder.reminder_type == 'user':
-                await self.bot.wait_until_ready()
-                user = self.bot.get_user(reminder.user_id)
-                user_settings = await users.get_user(user.id)
-                if not user_settings.dnd_mode_enabled:
-                    await channel.send(f'{user.mention} {reminder.message}')
-                else:
-                    await channel.send(f'**{user.name}**, {reminder.message}')
-            else:
-                clan = await clans.get_clan_by_user_id(reminder.user_id)
-                message_mentions = ''
-                for member_id in clan.member_ids:
-                    if member_id is not None:
-                        await self.bot.wait_until_ready()
-                        member = self.bot.get_user(member_id)
-                        if member is not None:
-                            message_mentions = f'{message_mentions}{member.mention} '
-                await channel.send(f'{reminder.message}\n{message_mentions}')
-            delete_task = running_tasks.pop(reminder.task_name, None)
-        except Exception as error:
-            await errors.log_error(error)
-
-    async def create_task(self, reminder: reminders.Reminder) -> None:
-        """Creates a new background task"""
-        await self.delete_task(reminder.task_name)
-        task = self.bot.loop.create_task(self.background_task(reminder))
-        running_tasks[reminder.task_name] = task
-
-    async def delete_task(self, task_name: str) -> None:
-        """Stops and deletes a running task if it exists"""
-        if task_name in running_tasks:
-            running_tasks[task_name].cancel()
-            running_tasks.pop(task_name, None)
-        return
-
     @tasks.loop(seconds=10.0)
     async def schedule_reminders(self):
         """Task that reads all due reminders from the database and schedules them"""
         try:
-            due_user_reminders = await reminders.get_due_user_reminders()
+            due_user_reminders = await reminders.get_due_user_reminders(self.bot)
         except exceptions.NoDataFoundError:
             due_user_reminders = ()
         try:
-            due_clan_reminders = await reminders.get_due_clan_reminders()
+            due_clan_reminders = await reminders.get_due_clan_reminders(self.bot)
         except exceptions.NoDataFoundError:
             due_clan_reminders = ()
         due_reminders = list(due_user_reminders) + list(due_clan_reminders)
         for reminder in due_reminders:
             try:
-                await self.create_task(reminder)
+                await reminders.create_task(reminder)
                 await reminder.update(triggered=True)
             except Exception as error:
                 await errors.log_error(
@@ -93,11 +47,11 @@ class TasksCog(commands.Cog):
     async def delete_old_reminders(self) -> None:
         """Task that deletes all old reminders"""
         try:
-            old_user_reminders = await reminders.get_old_user_reminders()
+            old_user_reminders = await reminders.get_old_user_reminders(self.bot)
         except:
             old_user_reminders = ()
         try:
-            old_clan_reminders = await reminders.get_old_clan_reminders()
+            old_clan_reminders = await reminders.get_old_clan_reminders(self.bot)
         except:
             old_clan_reminders = ()
         old_reminders = list(old_user_reminders) + list(old_clan_reminders)
@@ -129,11 +83,11 @@ class TasksCog(commands.Cog):
                 time_left = timedelta(minutes=1)
                 reminder_message = clan.alert_message.replace('%','rpg guild upgrade')
                 try:
-                    reminder = await reminders.get_clan_reminder(clan.clan_name)
+                    reminder = await reminders.get_clan_reminder(self.bot, clan.clan_name)
                     await reminder.delete()
                 except:
                     pass
-                await reminders.insert_clan_reminder(clan.clan_name, time_left, clan.channel_id, reminder_message)
+                await reminders.insert_clan_reminder(self.bot, clan.clan_name, time_left, clan.channel_id, reminder_message)
                 try:
                     weekly_report: clans.ClanWeeklyReport = await clans.get_weekly_report(clan)
                 except exceptions.NoDataFoundError:

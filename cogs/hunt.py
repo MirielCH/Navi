@@ -138,7 +138,7 @@ class HuntCog(commands.Cog):
                                                  + 1)
                             time_left = timedelta(seconds=time_left_seconds)
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
+                        await reminders.insert_user_reminder(self.bot, ctx.author.id, 'hunt', time_left,
                                                              ctx.channel.id, hunt_message)
                     )
                     if reminder.record_exists:
@@ -232,7 +232,7 @@ class HuntCog(commands.Cog):
 
             # Save task to database
             reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
+                        await reminders.insert_user_reminder(self.bot, ctx.author.id, 'hunt', time_left,
                                                              ctx.channel.id, hunt_message)
                     )
 

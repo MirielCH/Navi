@@ -135,7 +135,7 @@ class SettingsClanCog(commands.Cog):
             return
         await clan.update(channel_id=None, alert_enabled=False)
         try:
-            reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+            reminder: reminders.Reminder = await reminders.get_clan_reminder(self.bot, clan.clan_name)
             await reminder.delete()
         except exceptions.NoDataFoundError:
             pass
@@ -298,12 +298,12 @@ class SettingsClanCog(commands.Cog):
                     clan: clans.Clan = await clans.get_clan_by_user_id(clan_leader_id)
                     if clan.leader_id == clan_leader_id and clan.clan_name != clan_name:
                         if clan.member_ids == tuple(clan_member_ids):
-                            reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+                            reminder: reminders.Reminder = await reminders.get_clan_reminder(self.bot, clan.clan_name)
                             await reminder.update(clan_name=clan_name)
                             await clan.update(clan_name=clan_name)
                         else:
                             try:
-                                reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+                                reminder: reminders.Reminder = await reminders.get_clan_reminder(self.bot, clan.clan_name)
                                 await reminder.delete()
                             except exceptions.NoDataFoundError:
                                 pass

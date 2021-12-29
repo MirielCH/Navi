@@ -161,7 +161,7 @@ class CustomRemindersCog(commands.Cog):
                 await ctx.reply(error_max_time, mention_author=False)
                 return
             reminder: reminders.Reminder = (
-                await reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
+                await reminders.insert_user_reminder(self.bot, ctx.author.id, 'custom', time_left,
                                                      ctx.channel.id, reminder_text)
             )
             if reminder.record_exists:
@@ -196,7 +196,7 @@ class CustomRemindersCog(commands.Cog):
             await ctx.reply(error_invalid_message_id, mention_author=False)
             return
         try:
-            reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, 'custom', reminder_id)
+            reminder: reminders.Reminder = await reminders.get_user_reminder(self.bot, ctx.author.id, 'custom', reminder_id)
         except exceptions.NoDataFoundError:
             await ctx.reply('There is no custom reminder with that ID.', mention_author=False)
             return

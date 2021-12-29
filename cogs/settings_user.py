@@ -61,13 +61,13 @@ class SettingsUserCog(commands.Cog):
         user_discord = self.bot.get_user(user_id)
         current_time = datetime.utcnow().replace(microsecond=0)
         try:
-            user_reminders = await reminders.get_active_user_reminders(user.user_id)
+            user_reminders = await reminders.get_active_user_reminders(self.bot, user.user_id)
         except:
             user_reminders = ()
         clan_reminders = ()
         if user.clan_name is not None:
             try:
-                clan_reminders = await reminders.get_active_clan_reminders(user.clan_name)
+                clan_reminders = await reminders.get_active_clan_reminders(self.bot, user.clan_name)
             except:
                 pass
         reminders_commands_list = []
@@ -220,7 +220,7 @@ class SettingsUserCog(commands.Cog):
         if user.reminders_enabled:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
             return
-        active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
+        active_reminders = await reminders.get_active_user_reminders(self.bot, ctx.author.id)
         for reminder in active_reminders:
             await reminder.delete()
         await ctx.reply(
@@ -351,7 +351,7 @@ class SettingsUserCog(commands.Cog):
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
                 if not enabled:
                     try:
-                        reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, activity)
+                        reminder: reminders.Reminder = await reminders.get_user_reminder(self.bot, ctx.author.id, activity)
                         await reminder.delete()
                     except exceptions.NoDataFoundError:
                         pass
