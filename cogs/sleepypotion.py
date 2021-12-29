@@ -1,37 +1,33 @@
 # sleepypotion.py
 
-import os,sys,inspect
-current_dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-parent_dir = os.path.dirname(current_dir)
-sys.path.insert(0, parent_dir)
-import discord
-import emojis
-import global_data
-import global_functions
 import asyncio
-import database
+from datetime import timedelta
+from typing import Tuple
 
+import discord
 from discord.ext import commands
-from discord.ext import tasks
-from datetime import datetime, timedelta
 
-# sleepy potion commands (cog)
-class sleepypotionCog(commands.Cog):
+from database import reminders, users
+from resources import emojis, exceptions, functions, logs, settings
+
+ # Change these to change the event prefix
+EVENT_NAME = 'xmas'
+EVENT_ALIASES = ('christmas',)
+
+
+class SleepyPotionCog(commands.Cog):
+    """Cog that contains the sleepy potion detection commands"""
     def __init__(self, bot):
         self.bot = bot
 
-    # Sleepy potion detection
-    async def get_sleepy_message(self, ctx):
-
-        def epic_rpg_check(m):
+    async def get_sleepy_message(self, ctx: commands.Context) -> Tuple[discord.Message, str]:
+        """Waits for the sleepy potion message in the channel and returns it if found."""
+        def epic_rpg_check(m: discord.Message) -> bool:
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                message = global_functions.encode_message_non_async(m)
-
-                if global_data.DEBUG_MODE == 'ON':
-                    global_data.logger.debug(f'Sleepy detection: {message}')
-
+                message = functions.encode_message_non_async(m)
+                if settings.DEBUG_MODE: logs.logger.debug(f'Sleepy detection: {message}')
                 if  ((message.find(ctx_author) > -1) and (message.find('has slept for a day') > -1))\
                 or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have a sleepy potion') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
@@ -41,26 +37,20 @@ class sleepypotionCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
+            return m.author.id == settings.EPIC_RPG_ID and m.channel == ctx.channel and correct_message
 
-            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
+        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = settings.TIMEOUT)
+        bot_message = await functions.encode_message(bot_answer)
+        return (bot_answer, bot_message)
 
-        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
-        bot_message = await global_functions.encode_message(bot_answer)
-
-        return (bot_answer, bot_message,)
-
-    # Boo detection
     async def get_boo_message(self, ctx):
-
-        def epic_rpg_check(m):
+        """Waits for the hal boo message in the channel and returns it if found."""
+        def epic_rpg_check(m: discord.Message) -> bool:
             correct_message = False
             try:
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                message = global_functions.encode_message_non_async(m)
-
-                if global_data.DEBUG_MODE == 'ON':
-                    global_data.logger.debug(f'Boo detection: {message}')
-
+                message = functions.encode_message_non_async(m)
+                if settings.DEBUG_MODE: logs.logger.debug(f'Boo detection: {message}')
                 if ((message.find(ctx_author) > -1) and (message.find('failed to scare') > -1))\
                 or ((message.find(ctx_author) > -1) and (message.find('scared') > -1))\
                 or ('bots cannot be scared' in message)\
@@ -74,132 +64,90 @@ class sleepypotionCog(commands.Cog):
                     correct_message = False
             except:
                 correct_message = False
+            return m.author.id == settings.EPIC_RPG_ID and m.channel == ctx.channel and correct_message
 
-            return m.author.id == global_data.epic_rpg_id and m.channel == ctx.channel and correct_message
-
-        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = global_data.timeout)
-        bot_message = await global_functions.encode_message(bot_answer)
-
-        return (bot_answer, bot_message,)
+        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = settings.TIMEOUT)
+        bot_message = await functions.encode_message(bot_answer)
+        return (bot_answer, bot_message)
 
     # --- Commands ---
-    # Sleepy potion (change command name according to event)
-    @commands.command(aliases=('christmas',))
+    @commands.command(name=EVENT_NAME, aliases=EVENT_ALIASES)
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def xmas(self, ctx, *args):
-
+    async def sleepy_potion(self, ctx: commands.Context, *args: tuple) -> None:
+        """Detects EPIC RPG sleepy potion messages and creates reminders"""
         prefix = ctx.prefix
-        if prefix.lower() == 'rpg ':
+        if prefix.lower() != 'rpg ': return
+        if not args: return
+        args = [arg.lower() for arg in args]
+        args_full = ''
+        for arg in args:
+            args_full = f'{args_full} {arg}'
+        if args_full.strip() == 'use sleepy potion':
+            try:
+                user: users.User = await users.get_user(ctx.author.id)
+            except exceptions.NoDataFoundError:
+                return
+            if not user.reminders_enabled: return
+        try:
+            task_status = self.bot.loop.create_task(self.get_sleepy_message(ctx))
+            bot_message = None
+            message_history = await ctx.channel.history(limit=50).flatten()
+            for msg in message_history:
+                if (msg.author.id == settings.EPIC_RPG_ID) and (msg.created_at > ctx.message.created_at):
+                    try:
+                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        message = await functions.encode_message(msg)
+                        if settings.DEBUG_MODE: logs.logger.debug(f'Sleepy potion detection: {message}')
+                        if  ((message.find(ctx_author) > -1) and (message.find('has slept for a day') > -1))\
+                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have a sleepy potion') > -1))\
+                        or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
+                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
+                            bot_answer = msg
+                            bot_message = message
+                    except Exception as e:
+                        await ctx.send(f'Error reading message history: {e}')
+            if bot_message is None:
+                task_result = await task_status
+                if task_result is not None:
+                    bot_answer = task_result[0]
+                    bot_message = task_result[1]
+                else:
+                    await ctx.send('Sleepy potion detection timeout.')
+                    return
 
-            if args:
-                args_full = ''
-                for arg in args:
-                    args_full = f'{args_full} {arg}'
+            if bot_message.find('has slept for a day') > -1:
+                await reminders.reduce_reminder_time(ctx.author.id, timedelta(days=1))
+                await bot_answer.add_reaction(emojis.NAVI)
+            # Ignore if htey don't have a potion
+            elif bot_message.find(f'you don\'t have a sleepy potion') > 1:
+                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
+                return
+            # Ignore in the middle of command error
+            elif bot_message.find('so no chance to scare lol') > 1:
+                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
+                return
+            # Ignore anti spam embed
+            elif bot_message.find('Huh please don\'t spam') > 1:
+                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
+                return
+            # Ignore failed Epic Guard event
+            elif bot_message.find('is now in the jail!') > 1:
+                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
+                await bot_answer.add_reaction(emojis.RIP)
+                return
+            # Ignore error when another command is active
+            elif bot_message.find('end your previous command') > 1:
+                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
+                return
 
-                args_full = args_full.strip()
+        except asyncio.TimeoutError:
+            await ctx.send('Sleepy Potion detection timeout.')
+            return
+        except Exception as e:
+            logs.logger.error(f'Sleepy potion detection error: {e}')
+            return
 
-                if args_full == 'use sleepy potion':
-                    settings = await database.get_settings(ctx, 'hunt') # Only need reminders_on
-                    if settings is not None:
-                        reminders_on = settings[0]
-                    else:
-                        return
-                    if reminders_on != 0:
-                        try:
-                            task_status = self.bot.loop.create_task(self.get_sleepy_message(ctx))
-                            bot_message = None
-                            message_history = await ctx.channel.history(limit=50).flatten()
-                            for msg in message_history:
-                                if (msg.author.id == global_data.epic_rpg_id) and (msg.created_at > ctx.message.created_at):
-                                    try:
-                                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                        message = await global_functions.encode_message(msg)
-
-                                        if global_data.DEBUG_MODE == 'ON':
-                                            global_data.logger.debug(f'Sleepy potion detection: {message}')
-
-                                        if  ((message.find(ctx_author) > -1) and (message.find('has slept for a day') > -1))\
-                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'you don\'t have a sleepy potion') > -1))\
-                                        or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1)):
-
-                                            bot_answer = msg
-                                            bot_message = message
-                                    except Exception as e:
-                                        await ctx.send(f'Error reading message history: {e}')
-
-                            if bot_message == None:
-                                task_result = await task_status
-                                if not task_result == None:
-                                    bot_answer = task_result[0]
-                                    bot_message = task_result[1]
-                                else:
-                                    await ctx.send('Sleepy potion detection timeout.')
-                                    return
-
-                            if bot_message.find('has slept for a day') > -1:
-                                status = await global_functions.reduce_reminder_time(ctx, 86400)
-                                if not status == 'ok':
-                                    await ctx.send(status)
-                                await bot_answer.add_reaction(emojis.navi)
-                            # Ignore if htey don't have a potion
-                            elif bot_message.find(f'you don\'t have a sleepy potion') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-                            # Ignore in the middle of command error
-                            elif bot_message.find('so no chance to scare lol') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-                            # Ignore anti spam embed
-                            elif bot_message.find('Huh please don\'t spam') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-                            # Ignore failed Epic Guard event
-                            elif bot_message.find('is now in the jail!') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                await bot_answer.add_reaction(emojis.rip)
-                                return
-                            # Ignore error when another command is active
-                            elif bot_message.find('end your previous command') > 1:
-                                if global_data.DEBUG_MODE == 'ON':
-                                    await bot_answer.add_reaction(emojis.cross)
-                                return
-
-                        except asyncio.TimeoutError as error:
-                            await ctx.send('Sleepy Potion detection timeout.')
-                            return
-                        except Exception as e:
-                            global_data.logger.error(f'Sleepy potion detection error: {e}')
-                            return
-
-                elif args_full == 'calendar' or args_full.startswith('calendar '):
-                    settings = await database.get_settings(ctx, 'hunt') # Only need reminders_on
-                    if settings is not None:
-                        reminders_on = settings[0]
-                    else:
-                        return
-                    if reminders_on != 0:
-                        calendar_message = 'Hey! It\'s time for `rpg xmas calendar`!'
-                        # Calculate cooldown
-                        current_time = datetime.utcnow().replace(microsecond=0)
-                        midnight_tomorrow = datetime.utcnow().replace(day=current_time.day+1, hour=0, minute=2, microsecond=0)
-                        time_to_midnight = midnight_tomorrow - current_time
-                        time_left = time_to_midnight.total_seconds()
-
-                        # Save task to database
-                        write_status = await global_functions.write_reminder(self.bot, ctx, 'xmas', time_left, calendar_message)
-
-                        # Add reaction
-                        if not write_status == 'aborted':
-                            await ctx.message.add_reaction(emojis.navi)
-                        else:
-                            if global_data.DEBUG_MODE == 'ON':
-                                await ctx.send('There was an error scheduling this reminder. Please tell Miri he\'s an idiot.')
 
 # Initialization
 def setup(bot):
-    bot.add_cog(sleepypotionCog(bot))
+    bot.add_cog(SleepyPotionCog(bot))
