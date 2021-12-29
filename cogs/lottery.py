@@ -43,7 +43,7 @@ class LotteryCog(commands.Cog):
     # --- Commands ---
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def lottery(self, ctx: commands.Context, *args: tuple) -> None:
+    async def lottery(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG lottery messages and creates reminders"""
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -84,6 +84,7 @@ class LotteryCog(commands.Cog):
                 else:
                     await ctx.send('Lottery detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if lottery overview, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'**Next draw**') > 1:
@@ -94,8 +95,10 @@ class LotteryCog(commands.Cog):
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'lottery', time_left,
-                                                                              ctx.channel.id, lottery_message)
+                reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(ctx.author.id, 'lottery', time_left,
+                                                             ctx.channel.id, lottery_message)
+                    )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:
@@ -110,8 +113,10 @@ class LotteryCog(commands.Cog):
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'lottery', time_left,
-                                                                              ctx.channel.id, lottery_message)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(ctx.author.id, 'lottery', time_left,
+                                                         ctx.channel.id, lottery_message)
+                )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:

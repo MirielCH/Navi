@@ -79,6 +79,7 @@ class DailyCog(commands.Cog):
                 else:
                     await ctx.send('Daily detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'\'s cooldown') > 1:
@@ -89,8 +90,10 @@ class DailyCog(commands.Cog):
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'daily', time_left,
-                                                                              ctx.channel.id, daily_message)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(ctx.author.id, 'daily', time_left,
+                                                         ctx.channel.id, daily_message)
+                )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:
@@ -123,8 +126,10 @@ class DailyCog(commands.Cog):
             time_left = timedelta(seconds=time_left_seconds)
 
             # Save reminder to database
-            reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'daily', time_left,
-                                                                          ctx.channel.id, daily_message)
+            reminder: reminders.Reminder = (
+                await reminders.insert_user_reminder(ctx.author.id, 'daily', time_left,
+                                                     ctx.channel.id, daily_message)
+            )
 
             # Add reaction
             if reminder.record_exists:

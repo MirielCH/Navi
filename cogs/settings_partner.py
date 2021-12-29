@@ -17,7 +17,7 @@ class SettingsPartnerCog(commands.Cog):
 
     @commands.group(invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def partner(self, ctx: commands.Context, *args: tuple) -> None:
+    async def partner(self, ctx: commands.Context, *args: str) -> None:
         """Check/set current partner"""
         def partner_check(m: discord.Message) -> bool:
             return m.author in ctx.message.mentions and m.channel == ctx.channel
@@ -127,7 +127,7 @@ class SettingsPartnerCog(commands.Cog):
 
     @partner.command(name='donor', aliases=('donator',))
     @commands.bot_has_permissions(send_messages=True)
-    async def partner_donor(self, ctx: commands.Context, *args: tuple) -> None:
+    async def partner_donor(self, ctx: commands.Context, *args: str) -> None:
         """Sets partner donor tier"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -135,7 +135,7 @@ class SettingsPartnerCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
         possible_tiers = f'Possible tiers:'
         for index, donor_tier in enumerate(strings.DONOR_TIERS):
-            possible_tiers = f'{possible_tiers}\n{emojis.BP}`{index}` : {donor_tier}\n'
+            possible_tiers = f'{possible_tiers}\n{emojis.BP}`{index}` : {donor_tier}'
         if not args:
             await ctx.reply(
                 f'**{ctx.author.name}**, your partner\'s EPIC RPG donor tier is **{user.user_donor_tier}** '
@@ -148,10 +148,10 @@ class SettingsPartnerCog(commands.Cog):
             try:
                 donor_tier = int(args[0])
             except:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
                 return
             if donor_tier > len(strings.DONOR_TIERS) - 1:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
                 return
             if user.partner_id is not None:
                 await ctx.reply(
@@ -165,7 +165,7 @@ class SettingsPartnerCog(commands.Cog):
             await user.update(partner_donor_tier=donor_tier)
             await ctx.reply(
                 f'**{ctx.author.name}**, your partner\'s EPIC RPG donor tier is now set to **{user.partner_donor_tier}** '
-                f'({strings.DONOR_TIERS[user.partner_donor_tier]}).\n\n'
+                f'({strings.DONOR_TIERS[user.partner_donor_tier]}).\n'
                 f'Please note that the `hunt together` cooldown can only be accurately calculated if '
                 f'`{prefix}donor [tier]` is set correctly as well.',
                 mention_author=False
@@ -173,7 +173,7 @@ class SettingsPartnerCog(commands.Cog):
 
     @partner.group(name='channel', invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def partner_channel(self, ctx: commands.Context, *args: tuple) -> None:
+    async def partner_channel(self, ctx: commands.Context, *args: str) -> None:
         """Check current partner alert channel"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -266,65 +266,6 @@ class SettingsPartnerCog(commands.Cog):
             await ctx.send('Your partner alert channel got reset and your partner alert disabled.')
         else:
             await ctx.send(strings.MSG_ERROR)
-
-    @commands.command(aliases=('disable',))
-    @commands.bot_has_permissions(send_messages=True)
-    async def enable(self, ctx: commands.Context, *args) -> None:
-        """Enables/disables specific reminders"""
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-
-        prefix = ctx.prefix
-        if prefix.lower() == 'rpg ': return
-        action = ctx.invoked_with.lower()
-        enabled = True if action == 'enable' else False
-        user: users.User = await users.get_user(ctx.author.id)
-        syntax = strings.MSG_SYNTAX(syntax=f'{prefix}{action} [activity]')
-        possible_activities = 'Possible activities:'
-        for activity in strings.ACTIVITIES_ALL:
-            possible_activities = f'{possible_activities}\n{emojis.BP} `{activity}`'
-        if not args:
-            await ctx.reply(f'{syntax}\n\n{possible_activities}', mention_author=False)
-            return
-        if args[0].lower() == 'all':
-            if not enabled:
-                try:
-                    await ctx.reply(
-                        f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. '
-                        f'Are you sure? `[yes/no]`',
-                        mention_author=False
-                    )
-                    answer = await self.bot.wait_for('message', check=check, timeout=30)
-                except asyncio.TimeoutError:
-                    await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-                    return
-                if answer.content.lower() not in ['yes','y']:
-                    await ctx.send('Aborted')
-                    return
-            args = strings.ACTIVITIES
-        updated_activities = []
-        ignored_activites = []
-        for activity in args:
-            if activity in strings.ACTIVITIES_ALIASES: activity = strings.ACTIVITIES_ALIASES[activity]
-            updated_activities.append(activity) if activity in strings.ACTIVITIES else ignored_activites.append(activity)
-        if updated_activities:
-            kwargs = {}
-            answer = f'{action.capitalize()}d activities:'
-            for activity in updated_activities:
-                kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
-                answer = f'{answer}\n{emojis.BP}`{activity}`'
-                if not enabled:
-                    try:
-                        reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, activity)
-                        await reminder.delete()
-                    except exceptions.NoDataFoundError:
-                        pass
-            await user.update(**kwargs)
-        if ignored_activites:
-            answer = f'{answer}\n\nCouldn\'t find the following activities:'
-            for activity in ignored_activites:
-                answer = f'{answer}\n{emojis.BP}`{activity}`'
-        await ctx.reply(answer, mention_author=False)
 
 
 # Initialization

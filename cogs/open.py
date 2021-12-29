@@ -87,6 +87,7 @@ class OpenCog(commands.Cog):
                 else:
                     await ctx.send('Open detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             if bot_message.find('lootbox opened!') > -1:
                 if bot_message.find('<:ruby:') > -1:

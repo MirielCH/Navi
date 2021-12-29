@@ -66,7 +66,7 @@ class TrainingCog(commands.Cog):
     # --- Commands ---
     @commands.command(aliases=('tr','ultraining','ultr',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def training(self, ctx: commands.Context, *args: tuple) -> None:
+    async def training(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG training messages and creates reminders"""
         prefix = ctx.prefix
         invoked = ctx.invoked_with
@@ -79,12 +79,12 @@ class TrainingCog(commands.Cog):
                 command = 'rpg ultraining'
         else:
             if invoked == 'ascended':
-                args = args[0]
                 arg_command = args[0]
                 if arg_command in ('tr', 'training',):
                     command = 'rpg ascended training'
                 elif arg_command in ('ultr', 'ultraining',):
                     command = 'rpg ascended ultraining'
+                args = list(args)
                 args.pop(0)
             else:
                 args = [arg.lower() for arg in args]
@@ -132,6 +132,8 @@ class TrainingCog(commands.Cog):
                 else:
                     await ctx.send('Training detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
+
             # Trigger training helper if necessary
             if bot_message.find('is training in') > -1:
                 if bot_message.find('training in the mine') > -1 and user.ruby_counter_enabled:
@@ -175,6 +177,7 @@ class TrainingCog(commands.Cog):
                     else:
                         await ctx.send('Training detection timeout.')
                         return
+                if not task_status.done(): task_status.cancel()
 
             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'\'s cooldown') > 1:
@@ -185,8 +188,10 @@ class TrainingCog(commands.Cog):
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'training', time_left,
-                                                                              ctx.channel.id, tr_message)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(ctx.author.id, 'training', time_left,
+                                                         ctx.channel.id, tr_message)
+                )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:
@@ -227,8 +232,11 @@ class TrainingCog(commands.Cog):
             time_left = timedelta(seconds=time_left_seconds)
 
             # Save reminder to database
-            reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'training', time_left,
-                                                                          ctx.channel.id, tr_message)
+            reminder: reminders.Reminder = (
+                await reminders.insert_user_reminder(ctx.author.id, 'training', time_left,
+                                                     ctx.channel.id, tr_message)
+            )
+
             # Add reaction
             if reminder.record_exists:
                 await bot_answer.add_reaction(emojis.NAVI)

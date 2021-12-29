@@ -47,7 +47,7 @@ class HuntCog(commands.Cog):
     # --- Commands ---
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def hunt(self, ctx: commands.Context, *args: tuple) -> None:
+    async def hunt(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG hunt messages and creates reminders"""
         prefix = ctx.prefix
         invoked = ctx.invoked_with
@@ -58,8 +58,8 @@ class HuntCog(commands.Cog):
             command = 'rpg hunt'
         else:
             if invoked == 'ascended':
+                args = list(args)
                 command = 'rpg ascended hunt'
-                args = args[0]
                 args.pop(0)
             else:
                 command = 'rpg hunt'
@@ -113,6 +113,7 @@ class HuntCog(commands.Cog):
                 else:
                     await ctx.send('Hunt detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if it found a cooldown embed, if yes if it is the correct one, if not, ignore it and try to wait for the bot message one more time
             if bot_message.find(f'\'s cooldown') > 1:
@@ -136,8 +137,10 @@ class HuntCog(commands.Cog):
                                                  - time_elapsed.total_seconds()
                                                  + 1)
                             time_left = timedelta(seconds=time_left_seconds)
-                    reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
-                                                                                  ctx.channel.id, hunt_message)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
+                                                             ctx.channel.id, hunt_message)
+                    )
                     if reminder.record_exists:
                         await bot_answer.add_reaction(emojis.NAVI)
                     else:
@@ -228,8 +231,10 @@ class HuntCog(commands.Cog):
             time_left = timedelta(seconds=time_left_seconds)
 
             # Save task to database
-            reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
-                                                                          ctx.channel.id, hunt_message)
+            reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
+                                                             ctx.channel.id, hunt_message)
+                    )
 
             # Add reaction
             if reminder.record_exists:
@@ -249,12 +254,12 @@ class HuntCog(commands.Cog):
                     lootbox_alert = ''
                     if f'**{user.partner_name}** got ' in bot_message:
                         lootboxes = {
-                            ' common lootbox': emojis.lbcommon,
-                            'uncommon lootbox': emojis.lbuncommon,
-                            'rare lootbox': emojis.lbrare,
-                            'EPIC lootbox': emojis.lbepic,
-                            'EDGY lootbox': emojis.lbedgy,
-                            'OMEGA lootbox': emojis.lbomega,
+                            ' common lootbox': emojis.LB_COMMON,
+                            'uncommon lootbox': emojis.LB_UNCOMMON,
+                            'rare lootbox': emojis.LB_RARE,
+                            'EPIC lootbox': emojis.LB_EPIC,
+                            'EDGY lootbox': emojis.LB_EDGY,
+                            'OMEGA lootbox': emojis.LB_OMEGA,
                             ' MEGA present': emojis.PRESENT_MEGA,
                             'ULTRA present': emojis.PRESENT_ULTRA,
                             'OMEGA present': emojis.PRESENT_OMEGA,
@@ -288,17 +293,17 @@ class HuntCog(commands.Cog):
                             except Exception as e:
                                 await ctx.send(e)
 
-                    if partner.hardmode_mode_enabled:
+                    if together and partner.hardmode_mode_enabled:
                         hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                         hm_message = (
                             f'{hm_message} **{user.partner_name}** is currently **hardmoding**.\n'
                             f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
                         )
                         await ctx.send(hm_message)
-                    else:
+                    elif not together and not partner.hardmode_mode_enabled:
                         hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                         hm_message = (
-                            f'{hm_message} **{user.partner_name}** is not hardmoding, \n'
+                            f'{hm_message} **{user.partner_name}** is not hardmoding, '
                             f'feel free to take them hunting.'
                         )
                         await ctx.send(hm_message)

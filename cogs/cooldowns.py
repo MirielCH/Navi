@@ -41,7 +41,7 @@ class CooldownsCog(commands.Cog):
     # --- Commands ---
     @commands.command(aliases=('cd','cds','cooldowns',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def cooldown(self, ctx: commands.Context, *args: tuple) -> None:
+    async def cooldown(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG cooldown messages and creates reminders"""
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -86,6 +86,7 @@ class CooldownsCog(commands.Cog):
                 else:
                     await ctx.send('Cooldowns detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if cooldown list, if yes, extract all the timestrings
             if bot_message.find(f'\'s cooldowns') > 1:
@@ -164,7 +165,7 @@ class CooldownsCog(commands.Cog):
                         dungmb_end = bot_message.find('s**', dungmb_start) + 1
                         dungmb = bot_message[dungmb_start:dungmb_end]
                         dungmb_message = user.alert_dungeon_miniboss.message.replace('%','rpg dungeon / miniboss')
-                        cooldowns.append(['dungmb', dungmb.lower(), dungmb_message])
+                        cooldowns.append(['dungeon-miniboss', dungmb.lower(), dungmb_message])
                 if user.alert_horse_breed.enabled:
                     if bot_message.find('race`** (**') > -1:
                         horse_start = bot_message.find('race`** (**') + 11
@@ -195,8 +196,10 @@ class CooldownsCog(commands.Cog):
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed
                     if time_left.total_seconds() > 0:
-                        reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, activity, time_left,
-                                                                                      ctx.channel.id, message)
+                        reminder: reminders.Reminder = (
+                            await reminders.insert_user_reminder(ctx.author.id, activity, time_left,
+                                                                 ctx.channel.id, message)
+                        )
                         if not reminder.record_exists:
                             await ctx.send(strings.MSG_ERROR)
                             return

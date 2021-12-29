@@ -74,7 +74,7 @@ ACTIVITIES = (
     'work',
 )
 
-ACTIVITIES_ALL = ACTIVITIES[:]
+ACTIVITIES_ALL = list(ACTIVITIES[:])
 ACTIVITIES_ALL.append('all')
 ACTIVITIES_ALL.sort()
 

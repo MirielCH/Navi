@@ -5,17 +5,18 @@ import os
 import sqlite3
 from typing import NamedTuple
 
-import bot as bot_py
+from dotenv import load_dotenv
 
 
-# Import some stuff from the main file to make it available everywhere
-bot = bot_py.bot
-DEBUG_MODE = bot_py.DEBUG_MODE
+load_dotenv()
+TOKEN = os.getenv('DISCORD_TOKEN')
+DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
 
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BOT_DIR, 'database/navi_db.db')
 
-NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None).row_factory = sqlite3.Row
+NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
+NAVI_DB.row_factory = sqlite3.Row
 
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
 

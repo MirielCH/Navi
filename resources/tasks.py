@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from discord.ext import tasks
 
 from database import clans, errors, reminders, users
-from resources import emojis, exceptions, settings, strings
+from resources import emojis, exceptions, settings, system
 
 
 # Runnin tasks dictionary
@@ -20,11 +20,11 @@ async def background_task(reminder: reminders.Reminder) -> None:
     time_left = reminder.end_time - current_time
     await asyncio.sleep(time_left.total_seconds())
     try:
-        await settings.bot.wait_until_ready()
-        channel = settings.get_channel(reminder.channel_id)
+        await system.bot.wait_until_ready()
+        channel = system.bot.get_channel(reminder.channel_id)
         if reminder.reminder_type == 'user':
-            await settings.bot.wait_until_ready()
-            user = settings.bot.get_user(reminder.user_id)
+            await system.bot.wait_until_ready()
+            user = system.bot.get_user(reminder.user_id)
             user_settings = await users.get_user(user.id)
             if not user_settings.dnd_mode_enabled:
                 await channel.send(f'{user.mention} {reminder.message}')
@@ -35,8 +35,8 @@ async def background_task(reminder: reminders.Reminder) -> None:
             message_mentions = ''
             for member_id in clan.member_ids:
                 if member_id is not None:
-                    await settings.bot.wait_until_ready()
-                    member = settings.bot.get_user(member_id)
+                    await system.bot.wait_until_ready()
+                    member = system.bot.get_user(member_id)
                     if member is not None:
                         message_mentions = f'{message_mentions}{member.mention} '
             await channel.send(f'{reminder.message}\n{message_mentions}')
@@ -48,7 +48,7 @@ async def background_task(reminder: reminders.Reminder) -> None:
 async def create_task(reminder: reminders.Reminder) -> None:
     """Creates a new background task"""
     await delete_task(reminder.task_name)
-    task = settings.bot.loop.create_task(background_task(reminder))
+    task = system.bot.loop.create_task(background_task(reminder))
     running_tasks[reminder.task_name] = task
 
 
@@ -62,8 +62,14 @@ async def delete_task(task_name: str) -> None:
 @tasks.loop(seconds=10.0)
 async def schedule_reminders():
     """Task that reads all due reminders from the database and schedules them"""
-    due_user_reminders = await reminders.get_due_user_reminders()
-    due_clan_reminders = await reminders.get_due_clan_reminders()
+    try:
+        due_user_reminders = await reminders.get_due_user_reminders()
+    except:
+        due_user_reminders = ()
+    try:
+        due_clan_reminders = await reminders.get_due_clan_reminders()
+    except:
+        due_clan_reminders = ()
     due_reminders = list(due_user_reminders) + list(due_clan_reminders)
     for reminder in due_reminders:
         try:
@@ -78,8 +84,14 @@ async def schedule_reminders():
 @tasks.loop(minutes=2.0)
 async def delete_old_reminders() -> None:
     """Task that deletes all old reminders"""
-    old_user_reminders = await reminders.get_old_user_reminders()
-    old_clan_reminders = await reminders.get_old_clan_reminders()
+    try:
+        old_user_reminders = await reminders.get_old_user_reminders()
+    except:
+        old_user_reminders = ()
+    try:
+        old_clan_reminders = await reminders.get_old_clan_reminders()
+    except:
+        old_clan_reminders = ()
     old_reminders = list(old_user_reminders) + list(old_clan_reminders)
 
     for reminder in old_reminders:
@@ -126,8 +138,8 @@ async def reset_clans() -> None:
             if weekly_report.best_raid is None:
                 message = f'{message}{emojis.BP} There were no cool raids. Not cool.\n'
             else:
-                await settings.bot.wait_until_ready()
-                best_user = settings.bot.get_user(weekly_report.best_raid.user_id)
+                await system.bot.wait_until_ready()
+                best_user = system.bot.get_user(weekly_report.best_raid.user_id)
                 best_user_praise = weekly_report.praise.format(username=best_user.name)
                 message = (
                     f'{message}{emojis.BP} '
@@ -136,15 +148,15 @@ async def reset_clans() -> None:
             if weekly_report.worst_raid is None:
                 message = f'{message}{emojis.BP} There were no cool raids. How lame.\n'
             else:
-                await settings.bot.wait_until_ready()
-                worst_user = settings.bot.get_user(weekly_report.worst_raid.user_id)
+                await system.bot.wait_until_ready()
+                worst_user = system.bot.get_user(weekly_report.worst_raid.user_id)
                 worst_user_roast = weekly_report.roast.format(username=worst_user.name)
                 message = (
                     f'{message}{emojis.BP} '
                     f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy}_ {emojis.ENERGY})\n'
                 )
-            await settings.bot.wait_until_ready()
-            clan_channel = settings.bot.get_channel(clan.channel_id)
+            await system.bot.wait_until_ready()
+            clan_channel = system.bot.get_channel(clan.channel_id)
             await clan_channel.send(message)
         # Delete leaderboard
         await clans.delete_clan_leaderboard()

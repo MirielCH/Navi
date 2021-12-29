@@ -41,7 +41,7 @@ class InventoryCog(commands.Cog):
     # --- Commands ---
     @commands.command(aliases=('i','inv',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def inventory(self, ctx: commands.Context, *args: tuple) -> None:
+    async def inventory(self, ctx: commands.Context, *args: str) -> None:
 
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -81,6 +81,7 @@ class InventoryCog(commands.Cog):
                 else:
                     await ctx.send('Inventory detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             if bot_message.find(f'\'s inventory') > -1:
                 if bot_message.find('**ruby**:') > -1:

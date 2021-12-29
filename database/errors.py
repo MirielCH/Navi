@@ -4,10 +4,11 @@
 from datetime import datetime
 import sqlite3
 from typing import Optional, Union
+from discord.enums import try_enum
 
 from discord.ext import commands
 
-from resources import logs, settings, strings
+from resources import exceptions, logs, settings, strings
 
 
 async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context] = None) -> None:
@@ -29,7 +30,12 @@ async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context
     if ctx is not None:
         date_time = ctx.message.created_at
         user_input = ctx.message.content
-        # Get user settings
+        try:
+            from database import users
+            user: users.User = await users.get_user(ctx.author.id)
+            user_settings = str(user)
+        except exceptions.NoDataFoundError:
+            user_settings = 'N/A'
     else:
         date_time = datetime.utcnow()
         user_input = 'N/A'

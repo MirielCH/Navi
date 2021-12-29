@@ -80,7 +80,7 @@ class Clan():
         NoArgumentsError if no kwargs are passed (need to pass at least one)
         Also logs all errors to the database.
         """
-        await _update_clan(self.clan_name, kwargs)
+        await _update_clan(self.clan_name, **kwargs)
         await self.refresh()
 
 
@@ -139,13 +139,15 @@ async def _dict_to_clan(record: dict) -> Clan:
                  record['member8_id'],
                  record['member9_id'],
                  record['member10_id'],
-            )
+            ),
+            stealth_current = record['stealth_current'],
+            stealth_threshold = record['stealth_threshold'],
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
     return clan
 
@@ -170,14 +172,14 @@ async def _dict_to_clan_raid(record: dict) -> ClanRaid:
         clan_raid = ClanRaid(
             clan_name = record['clan_name'],
             energy = record['energy'],
-            raid_time = datetime.strptime(record['raid_time']),
+            raid_time = datetime.fromisoformat(record['raid_time']),
             user_id = record['user_id']
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
     return clan_raid
 
@@ -213,11 +215,8 @@ async def get_clan_by_user_id(user_id: int) -> Clan:
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(f'No clan data found in database for user "{user_id}".')
-    clan = await _dict_to_clan(record)
+    clan = await _dict_to_clan(dict(record))
 
     return clan
 
@@ -249,11 +248,8 @@ async def get_clan_by_clan_name(clan_name: str) -> Clan:
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(f'No clan data found in database with clan name "{clan_name}".')
-    clan = await _dict_to_clan(record)
+    clan = await _dict_to_clan(dict(record))
 
     return clan
 
@@ -286,13 +282,10 @@ async def get_all_clans() -> Tuple[Clan]:
         raise
 
     if not records:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError('No clan data found in database.')
     clans = []
     for record in records:
-        clan = await _dict_to_clan(record)
+        clan = await _dict_to_clan(dict(record))
         clans.append(clan)
 
     return tuple(clans)
@@ -326,14 +319,11 @@ async def get_clan_raid(clan_name: str, user_id: str, raid_time: datetime) -> Cl
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(
             f'No clan raid data found in database for clan name "{clan_name}", user id "{user_id}" '
             f'and raid time "{raid_time}".'
         )
-    clan_raid = await _dict_to_clan_raid(record)
+    clan_raid = await _dict_to_clan_raid(dict(record))
 
     return clan_raid
 
@@ -375,10 +365,10 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
         raise
     best_raids = worst_raids = []
     for record_best in records_best:
-        best_raid = await _dict_to_clan_raid(record_best)
+        best_raid = await _dict_to_clan_raid(dict(record_best))
         best_raids.append(best_raid)
     for record_worst in records_worst:
-        worst_raid = await _dict_to_clan_raid(record_worst)
+        worst_raid = await _dict_to_clan_raid(dict(record_worst))
         worst_raids.append(worst_raid)
 
     clan_leaderboard = ClanLeaderboard(
@@ -509,6 +499,7 @@ async def _update_clan(clan_name: str, **kwargs) -> None:
             member_ids[index] = member_id_kwarg
         for index, member_id in enumerate(member_ids):
             kwargs[f'member{index+1}_id'] = member_id
+        kwargs.pop('member_ids', None)
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
@@ -526,14 +517,14 @@ async def _update_clan(clan_name: str, **kwargs) -> None:
 
 
 async def delete_clan_leaderboard(clan_name: Optional[str] = None) -> None:
-    """Deletes records in "clans_leaderboard". If clan_name is omitted, this deletes ALL RECORDS!
+    """Deletes records in "clans_raids". If clan_name is omitted, this deletes ALL RECORDS!
 
     Raises
     ------
     sqlite3.Error if something happened within the database.
     Also logs all errors to the database.
     """
-    table = 'clans_leaderboard'
+    table = 'clans_raids'
     function_name = 'delete_clan_leaderboard'
     sql = f'DELETE FROM {table}' if clan_name is None else f'DELETE FROM {table} WHERE clan_name=?'
     try:

@@ -160,7 +160,7 @@ class User():
             training_helper_enabled: bool
             user_donor_tier: int
         """
-        await _update_user(self, kwargs)
+        await _update_user(self, **kwargs)
         await self.refresh()
 
 
@@ -181,8 +181,9 @@ async def _dict_to_user(record: dict) -> User:
     LookupError if something goes wrong reading the dict. Also logs this error to the database.
     """
     function_name = '_dict_to_user'
+    none_date = datetime(1970, 1, 1, 0, 0, 0)
     try:
-        guild = User(
+        user = User(
             alert_adventure = UserAlert(enabled=bool(record['alert_adventure_enabled']),
                                         message=record['alert_adventure_message']),
             alert_arena = UserAlert(enabled=bool(record['alert_arena_enabled']),
@@ -218,7 +219,7 @@ async def _dict_to_user(record: dict) -> User:
             alert_quest = UserAlert(enabled=bool(record['alert_quest_enabled']),
                                     message=record['alert_quest_message']),
             alert_training = UserAlert(enabled=bool(record['alert_training_enabled']),
-                                       message=record['alert__message']),
+                                       message=record['alert_training_message']),
             alert_vote = UserAlert(enabled=bool(record['alert_vote_enabled']),
                                    message=record['alert_vote_message']),
             alert_weekly = UserAlert(enabled=bool(record['alert_weekly_enabled']),
@@ -228,12 +229,12 @@ async def _dict_to_user(record: dict) -> User:
             clan_name = record['clan_name'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
-            last_tt = datetime.strptime(record['last_tt']),
+            last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
-            reminders_enabled = bool(record['reminders_enabeld']),
+            reminders_enabled = bool(record['reminders_enabled']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             training_helper_enabled = bool(record['training_helper_enabled']),
@@ -242,11 +243,11 @@ async def _dict_to_user(record: dict) -> User:
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
-    return guild
+    return user
 
 
 # Get data
@@ -277,11 +278,8 @@ async def get_user(user_id: int) -> User:
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(f'No user data found in database for user "{user_id}".')
-    user = await _dict_to_user(record)
+    user = await _dict_to_user(dict(record))
 
     return user
 

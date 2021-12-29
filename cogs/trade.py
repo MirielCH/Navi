@@ -38,14 +38,14 @@ class TradeCog(commands.Cog):
                 correct_message = False
             return m.author.id == settings.EPIC_RPG_ID and m.channel == ctx.channel and correct_message
 
-        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = settings.TIMEOUT)
+        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout=settings.TIMEOUT)
         bot_message = await functions.encode_message_with_fields(bot_answer)
         return (bot_answer, bot_message)
 
     # --- Commands ---
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def trade(self, ctx: commands.Context, *args: tuple) -> None:
+    async def trade(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG trade messages and creates reminders"""
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -56,7 +56,7 @@ class TradeCog(commands.Cog):
             user: users.User = await users.get_user(ctx.author.id)
         except exceptions.NoDataFoundError:
             return
-        if not user.reminders_enabled or not user.ruby_counter_enabled.enabled: return
+        if not user.reminders_enabled or not user.ruby_counter_enabled: return
         try:
             task_status = self.bot.loop.create_task(self.get_trade_message(ctx))
             bot_message = None
@@ -86,6 +86,7 @@ class TradeCog(commands.Cog):
                 else:
                     await ctx.send('Trade detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             if bot_message.find('Our trade is done then') > -1:
                 rubies_start = bot_message.find('<:ruby:') + 28

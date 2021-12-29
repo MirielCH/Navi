@@ -6,7 +6,7 @@ import asyncio
 import discord
 from discord.ext import commands
 
-from database import clans, reminders
+from database import clans, reminders, users
 from resources import emojis, exceptions, settings, strings
 
 
@@ -18,16 +18,16 @@ class SettingsClanCog(commands.Cog):
     # Commands
     @commands.group(name='guild', invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def clan(self, ctx: commands.Context, *args: tuple) -> None:
+    async def clan(self, ctx: commands.Context, *args: str) -> None:
         """Trigger clan command detection if no subcommand was found"""
         if ctx.prefix.lower() == 'rpg ':
             if ctx.message.mentions: return
             command = self.bot.get_command(name='clan_detection')
-            if command is not None: await command.callback(command.cog, ctx, args)
+            if command is not None: await command.callback(command.cog, ctx, *args)
 
     @clan.group(name='channel', invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def clan_channel(self, ctx: commands.Context, *args: tuple) -> None:
+    async def clan_channel(self, ctx: commands.Context, *args: str) -> None:
         """Check the current clan alert channel"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -77,7 +77,7 @@ class SettingsClanCog(commands.Cog):
             return
         try:
             await ctx.reply(
-                f'**{ctx.author.name}**, do you want to set **{ctx.channel.name}** as the alert channel '
+                f'**{ctx.author.name}**, do you want to set `{ctx.channel.name}` as the alert channel '
                 f'for the guild **{clan.clan_name}**? `[yes/no]`',
                 mention_author=False
             )
@@ -89,7 +89,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.send('Aborted')
             return
         await clan.update(channel_id=ctx.channel.id)
-        if clan.clan_name == ctx.channel.id:
+        if clan.channel_id == ctx.channel.id:
             await ctx.send(f'`{ctx.channel.name}` is now set as your guild alert channel.')
         else:
             await ctx.send(strings.MSG_ERROR)
@@ -121,7 +121,7 @@ class SettingsClanCog(commands.Cog):
         channel = self.bot.get_channel(clan.channel_id)
         try:
             await ctx.reply(
-                f'**{ctx.author.name}**, do you want to remove **{channel.name}** as the alert channel for '
+                f'**{ctx.author.name}**, do you want to remove `{channel.name}` as the alert channel for '
                 f'the guild **{clan.clan_name}**? `[yes/no]`\n'
                 f'This will also disable your guild\'s reminders.',
                 mention_author=False
@@ -134,6 +134,11 @@ class SettingsClanCog(commands.Cog):
             await ctx.send('Aborted')
             return
         await clan.update(channel_id=None, alert_enabled=False)
+        try:
+            reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+            await reminder.delete()
+        except exceptions.NoDataFoundError:
+            pass
         if clan.channel_id is None and not clan.alert_enabled:
             await ctx.send(f'The guild **{clan.clan_name}**\'s alert channel got reset and the reminders disabled.')
         else:
@@ -141,7 +146,7 @@ class SettingsClanCog(commands.Cog):
 
     @clan.command(name='stealth')
     @commands.bot_has_permissions(send_messages=True)
-    async def clan_stealth(self, ctx: commands.Context, *args: tuple) -> None:
+    async def clan_stealth(self, ctx: commands.Context, *args: str) -> None:
         """Check/set the current clan stealth threshold"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -166,15 +171,16 @@ class SettingsClanCog(commands.Cog):
                 f'**{clan.stealth_threshold}**.',
                 mention_author=False
             )
+            return
         await ctx.reply(
                 f'The current stealth threshold for the guild **{clan.clan_name}** is **{clan.stealth_threshold}**.\n'
                 f'If you want to change this, use `{prefix}guild stealth [1-100]`.',
                 mention_author=False
         )
 
-    @clan.command(name='reminder', aliases=('reminder','alert'))
+    @clan.command(name='reminders', aliases=('reminder','alert'))
     @commands.bot_has_permissions(send_messages=True)
-    async def clan_reminder(self, ctx: commands.Context, *args: tuple) -> None:
+    async def clan_reminder(self, ctx: commands.Context, *args: str) -> None:
         """Check/set guild reminders"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -292,12 +298,15 @@ class SettingsClanCog(commands.Cog):
                     clan: clans.Clan = await clans.get_clan_by_user_id(clan_leader_id)
                     if clan.leader_id == clan_leader_id and clan.clan_name != clan_name:
                         if clan.member_ids == tuple(clan_member_ids):
-                            reminder: reminders.Reminder = reminders.get_clan_reminder(clan.clan_name)
+                            reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
                             await reminder.update(clan_name=clan_name)
                             await clan.update(clan_name=clan_name)
                         else:
-                            reminder: reminders.Reminder = reminders.get_clan_reminder(clan.clan_name)
-                            await reminder.delete()
+                            try:
+                                reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+                                await reminder.delete()
+                            except exceptions.NoDataFoundError:
+                                pass
                             await clans.delete_clan_leaderboard(clan.clan_name)
                             await clan.delete()
                             await self.bot.wait_until_ready()
@@ -317,10 +326,20 @@ class SettingsClanCog(commands.Cog):
                     await clan.update(leader_id=clan_leader_id, member_ids=clan_member_ids)
                 except exceptions.NoDataFoundError:
                     clan: clans.Clan = await clans.insert_clan(clan_name, clan_leader_id, clan_member_ids)
-                if clan.record_exists and clan.leader_id == clan_leader_id and clan.member_ids == tuple(clan_member_ids):
-                    await message_after.add_reaction(emojis.NAVI)
-                else:
+                if not clan.record_exists or clan.leader_id != clan_leader_id or clan.member_ids != tuple(clan_member_ids):
                     if settings.DEBUG_MODE: await message_after.channel.send(strings.MSG_ERROR)
+                    return
+                for member_id in clan.member_ids:
+                    try:
+                        user: users.User = await users.get_user(member_id)
+                        await user.update(clan_name = clan.clan_name)
+                        if user.clan_name != clan.clan_name:
+                            await message_after.channel.send(strings.MSG_ERROR)
+                            return
+                    except exceptions.NoDataFoundError:
+                        pass
+                await message_after.add_reaction(emojis.NAVI)
+
 
 # Initialization
 def setup(bot):

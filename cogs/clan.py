@@ -44,8 +44,8 @@ class ClanCog(commands.Cog):
 
     # --- Commands ---
     @commands.command()
-    @commands.bot_has_permissions(send_message=True, read_message_history=True)
-    async def clan_detection(self, ctx: commands.Context, *args: tuple) -> None:
+    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
+    async def clan_detection(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG clan messages and creates reminders"""
         if args:
             arg = args[0]
@@ -88,6 +88,7 @@ class ClanCog(commands.Cog):
                         else:
                             await ctx.send('Guild detection timeout.')
                             return
+                    if not task_status.done(): task_status.cancel()
                     clan_upgraded = False
 
                     # Check if stealth was upgraded
@@ -126,8 +127,10 @@ class ClanCog(commands.Cog):
                         bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                         time_elapsed = current_time - bot_answer_time
                         time_left = time_left - time_elapsed
-                        reminder: reminders.Reminder = reminders.insert_clan_reminder(clan.clan_name, time_left,
-                                                                                      clan.channel_id, clan_message)
+                        reminder: reminders.Reminder = (
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
+                                                             clan.channel_id, clan_message)
+                        )
                         if reminder.record_exists:
                             await bot_answer.add_reaction(emojis.NAVI)
                         else:
@@ -214,6 +217,7 @@ class ClanCog(commands.Cog):
                     else:
                         await ctx.send('Guild detection timeout.')
                         return
+                if not task_status.done(): task_status.cancel()
 
                 # Check if correct embed
                 if bot_message.find('Your guild was raided') > -1:
@@ -236,8 +240,10 @@ class ClanCog(commands.Cog):
                         timestring = bot_message[timestring_start:timestring_end]
                         timestring = timestring.lower()
                         time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
-                        reminder: reminders.Reminder = reminders.insert_clan_reminder(clan.clan_name, time_left,
-                                                                                      clan.channel_id, clan_message)
+                        reminder: reminders.Reminder = (
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
+                                                             clan.channel_id, clan_message)
+                        )
                         if reminder.record_exists:
                             await bot_answer.add_reaction(emojis.NAVI)
                         else:

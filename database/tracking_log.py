@@ -85,15 +85,15 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
         log_entry = LogEntry(
             command = record['commmand'],
             command_count = record['command_count'],
-            date_time = datetime.strptime(record['date_time']),
+            date_time = datetime.fromisoformat(record['date_time']),
             guild_id = record['guild_id'],
             user_id = record['user_id'],
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
     return log_entry
 
@@ -127,13 +127,10 @@ async def get_log_entry(user_id: int, command: str, date_time: datetime) -> LogE
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(
             f'No log data found in database for user "{user_id}", command "{command}" and time "{str(datetime)}".'
         )
-    log_entry = await _dict_to_log_entry(record)
+    log_entry = await _dict_to_log_entry(dict(record))
 
     return log_entry
 
@@ -183,13 +180,10 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     if not records:
         error_message = f'No log data found in database for timeframe "{str(timedelta)}".'
         if guild_id is not None: error_message = f'{error_message} Guild: {guild_id}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     log_entries = []
     for record in records:
-        log_entry = await _dict_to_log_entry(record)
+        log_entry = await _dict_to_log_entry(dict(record))
         log_entries.append(log_entry)
 
     return tuple(log_entries)

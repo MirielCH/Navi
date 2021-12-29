@@ -49,7 +49,7 @@ class BuyCog(commands.Cog):
     # Buy
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def buy(self, ctx: commands.Context, *args: tuple) -> None:
+    async def buy(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG buy messages and creates reminders"""
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -106,6 +106,7 @@ class BuyCog(commands.Cog):
                     else:
                         await ctx.send('Buy detection timeout.')
                         return
+                if not task_status.done(): task_status.cancel()
 
                 # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
                 if bot_message.find(f'\'s cooldown') > 1:
@@ -116,8 +117,10 @@ class BuyCog(commands.Cog):
                     bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed
-                    reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'lootbox', time_left,
-                                                                                  ctx.channel.id, lootbox_message)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(ctx.author.id, 'lootbox', time_left,
+                                                             ctx.channel.id, lootbox_message)
+                    )
                     if reminder.record_exists:
                         await bot_answer.add_reaction(emojis.NAVI)
                     else:
@@ -166,8 +169,10 @@ class BuyCog(commands.Cog):
                 time_left = timedelta(seconds=time_left_seconds)
 
                 # Save reminder to database
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'lootbox', time_left,
-                                                                              ctx.channel.id, lootbox_message)
+                reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(ctx.author.id, 'lootbox', time_left,
+                                                             ctx.channel.id, lootbox_message)
+                    )
 
                 # Add reaction
                 if reminder.record_exists:

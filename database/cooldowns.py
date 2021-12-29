@@ -43,7 +43,7 @@ class Cooldown():
             donor_affected: bool
             event_reduction: float
         """
-        await _update_cooldown(self.activity, kwargs)
+        await _update_cooldown(self.activity, **kwargs)
         await self.refresh()
 
 
@@ -73,9 +73,9 @@ async def _dict_to_cooldown(record: dict) -> Cooldown:
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
     return cooldown
 
@@ -111,7 +111,7 @@ async def get_cooldown(activity: str) -> Cooldown:
             strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
         )
         raise exceptions.NoDataFoundError(f'No cooldown data found in database for activity "{activity}".')
-    cooldown = await _dict_to_cooldown(record)
+    cooldown = await _dict_to_cooldown(dict(record))
 
     return cooldown
 
@@ -150,7 +150,7 @@ async def get_all_cooldowns() -> Tuple[Cooldown]:
         raise exceptions.NoDataFoundError('No cooldown data found in database.')
     cooldowns = []
     for record in records:
-        cooldown = await _dict_to_cooldown(record)
+        cooldown = await _dict_to_cooldown(dict(record))
         cooldowns.append(cooldown)
 
     return tuple(cooldowns)

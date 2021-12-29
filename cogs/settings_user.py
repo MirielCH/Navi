@@ -2,13 +2,12 @@
 """Contains user settings commands"""
 
 import asyncio
-from datetime import datetime
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
-from discord.raw_models import RawReactionClearEmojiEvent
 
-from database import clans, guilds, reminders, users
+from database import clans, reminders, users
 from resources import emojis, functions, exceptions, settings, strings
 
 
@@ -27,7 +26,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(name='list')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def list_reminders(self, ctx: commands.Context, *args: tuple) -> None:
+    async def list_reminders(self, ctx: commands.Context, *args: str) -> None:
         """Lists all active reminders"""
         if ctx.prefix.lower() == 'rpg ': return
         if args:
@@ -61,11 +60,16 @@ class SettingsUserCog(commands.Cog):
         await self.bot.wait_until_ready()
         user_discord = self.bot.get_user(user_id)
         current_time = datetime.utcnow().replace(microsecond=0)
-        user_reminders = await reminders.get_active_user_reminders(user.user_id)
         try:
-            clan_reminders = await reminders.get_active_clan_reminders(user.clan_name)
+            user_reminders = await reminders.get_active_user_reminders(user.user_id)
         except:
-            clan_reminders = ()
+            user_reminders = ()
+        clan_reminders = ()
+        if user.clan_name is not None:
+            try:
+                clan_reminders = await reminders.get_active_clan_reminders(user.clan_name)
+            except:
+                pass
         reminders_commands_list = []
         reminders_events_list = []
         reminders_pets_list = []
@@ -87,7 +91,7 @@ class SettingsUserCog(commands.Cog):
             for index, reminder in enumerate(reminders_pets_list):
                 reminder_last = reminders_pets_list[index-1] if index != 0 else None
                 pet_id = reminder.activity.replace('pets-','')
-                time_left = current_time - reminder.end_time
+                time_left = reminder.end_time - current_time
                 if reminder_last is None:
                     field_pets_list[time_left.total_seconds()] = pet_id
                     counter += 1
@@ -109,29 +113,29 @@ class SettingsUserCog(commands.Cog):
             field_command_reminders = ''
             for reminder in reminders_commands_list:
                 time_left = reminder.end_time - current_time
-                timestring = await functions.parse_seconds_to_timestring(time_left.total_seconds())
-                activity = reminder.activity.replace('-',' ').capitalize()
+                timestring = await functions.parse_timedelta_to_timestring(time_left)
+                activity = 'Dungeon / Miniboss' if reminder.activity == 'dungeon-miniboss' else reminder.activity
+                activity = activity.replace('-',' ').title()
                 field_command_reminders = (
                     f'{field_command_reminders}\n'
                     f'{emojis.BP} **`{activity}`** (**{timestring}**)'
                 )
-            embed.add_field(name='COMMANDS', value=field_command_reminders.strip())
+            embed.add_field(name='COMMANDS', value=field_command_reminders.strip(), inline=False)
         if reminders_events_list:
             field_event_reminders = ''
             for reminder in reminders_events_list:
                 time_left = reminder.end_time - current_time
-                timestring = await functions.parse_seconds_to_timestring(time_left.total_seconds())
-                if activity == 'dungeon-miniboss': activity = 'Dungeon / Miniboss'
+                timestring = await functions.parse_timedelta_to_timestring(time_left)
                 activity = reminder.activity.replace('-',' ').capitalize()
                 field_event_reminders = (
                     f'{field_event_reminders}\n'
                     f'{emojis.BP} **`{activity}`** (**{timestring}**)'
                 )
-            embed.add_field(name='EVENTS', value=field_event_reminders.strip())
+            embed.add_field(name='EVENTS', value=field_event_reminders.strip(), inline=False)
         if reminders_pets_list:
             field_pets_reminders = ''
-            for time_left, pet_ids in field_pets_list.items():
-                timestring = await functions.parse_seconds_to_timestring(time_left)
+            for time_left_seconds, pet_ids in field_pets_list.items():
+                timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                 if ',' in pet_ids:
                     field_pets_reminders = (
                         f'{field_pets_reminders}\n'
@@ -142,23 +146,23 @@ class SettingsUserCog(commands.Cog):
                         f'{field_pets_reminders}\n'
                         f'{emojis.BP} **`Pet {pet_ids}`** (**{timestring}**)'
                     )
-            embed.add_field(name='PETS', value=field_pets_reminders.strip())
+            embed.add_field(name='PETS', value=field_pets_reminders.strip(), inline=False)
         if clan_reminders:
             reminder = clan_reminders[0]
             time_left = reminder.end_time - current_time
-            timestring = await functions.parse_seconds_to_timestring(time_left.total_seconds())
+            timestring = await functions.parse_timedelta_to_timestring(time_left)
             embed.add_field(name='GUILD', value=f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)')
         if reminders_custom_list:
             field_custom_reminders = ''
             for reminder in reminders_custom_list:
                 time_left = reminder.end_time - current_time
-                timestring = await functions.parse_seconds_to_timestring(time_left.total_seconds())
+                timestring = await functions.parse_timedelta_to_timestring(time_left)
                 custom_id = f'0{reminder.custom_id}' if reminder.custom_id <= 9 else reminder.custom_id
                 field_custom_reminders = (
                     f'{field_custom_reminders}\n'
                     f'{emojis.BP} **`{custom_id}`** (**{timestring}**)'
                 )
-            embed.add_field(name='CUSTOM', value=field_custom_reminders.strip())
+            embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
         await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command(aliases=('start',))
@@ -227,7 +231,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command()
     @commands.bot_has_permissions(send_messages=True)
-    async def dnd(self, ctx: commands.Context, *args: tuple) -> None:
+    async def dnd(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables dnd mode"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -264,7 +268,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(aliases=('donator',))
     @commands.bot_has_permissions(send_messages=True)
-    async def donor(self, ctx: commands.Context, *args: tuple) -> None:
+    async def donor(self, ctx: commands.Context, *args: str) -> None:
         """Sets user donor tier"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -272,7 +276,7 @@ class SettingsUserCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
         possible_tiers = f'Possible tiers:'
         for index, donor_tier in enumerate(strings.DONOR_TIERS):
-            possible_tiers = f'{possible_tiers}\n{emojis.BP}`{index}` : {donor_tier}\n'
+            possible_tiers = f'{possible_tiers}\n{emojis.BP}`{index}` : {donor_tier}'
         if not args:
             await ctx.reply(
                 f'**{ctx.author.name}**, your current EPIC RPG donor tier is **{user.user_donor_tier}** '
@@ -285,15 +289,15 @@ class SettingsUserCog(commands.Cog):
             try:
                 donor_tier = int(args[0])
             except:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
                 return
             if donor_tier > len(strings.DONOR_TIERS) - 1:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
                 return
             await user.update(user_donor_tier=donor_tier)
             await ctx.reply(
                 f'**{ctx.author.name}**, your EPIC RPG donor tier is now set to **{user.user_donor_tier}** '
-                f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n\n'
+                f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n'
                 f'Please note that the `hunt together` cooldown can only be accurately calculated if '
                 f'`{prefix}partner donor [tier]` is set correctly as well.',
                 mention_author=False
@@ -301,7 +305,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(aliases=('disable',))
     @commands.bot_has_permissions(send_messages=True)
-    async def enable(self, ctx: commands.Context, *args: tuple) -> None:
+    async def enable(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables specific reminders"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
@@ -311,7 +315,7 @@ class SettingsUserCog(commands.Cog):
         action = ctx.invoked_with.lower()
         enabled = True if action == 'enable' else False
         user: users.User = await users.get_user(ctx.author.id)
-        syntax = strings.MSG_SYNTAX(syntax=f'{prefix}{action} [activity]')
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{action} [activity]')
         possible_activities = 'Possible activities:'
         for activity in strings.ACTIVITIES_ALL:
             possible_activities = f'{possible_activities}\n{emojis.BP} `{activity}`'
@@ -360,7 +364,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(aliases=('hm',))
     @commands.bot_has_permissions(send_messages=True)
-    async def hardmode(self, ctx: commands.Context, *args: tuple) -> None:
+    async def hardmode(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables hardmode mode"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -397,7 +401,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(aliases=('rubies',))
     @commands.bot_has_permissions(send_messages=True)
-    async def ruby(self, ctx: commands.Context, *args: tuple) -> None:
+    async def ruby(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables ruby counter and shows rubies"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -443,7 +447,7 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(aliases=('tr-helper','traininghelper','training-helper'))
     @commands.bot_has_permissions(send_messages=True)
-    async def trhelper(self, ctx: commands.Context, *args: tuple) -> None:
+    async def trhelper(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables training helper"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -527,51 +531,51 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
 
     # Fields
     field_user = (
-        f'{emojis.bp} Reminders: `{await bool_to_text(user_settings.reminders_enabled)}`\n'
-        f'{emojis.bp} Donor tier: `{user_settings.user_donor_tier}` '
-        f'({settings.DONOR_TIERS[strings.user_donor_tier]})\n'
-        f'{emojis.bp} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
-        f'{emojis.bp} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
-        f'{emojis.bp} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
-        f'{emojis.bp} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
-        f'{emojis.bp} Partner alert channel: `{partner_channel_name}`'
+        f'{emojis.BP} Reminders: `{await bool_to_text(user_settings.reminders_enabled)}`\n'
+        f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}` '
+        f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
+        f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
+        f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
+        f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
+        f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
+        f'{emojis.BP} Partner alert channel: `{partner_channel_name}`'
     )
     field_partner = (
-        f'{emojis.bp} Name: `{partner_name}`\n'
-        f'{emojis.bp} Hardmode mode: `{partner_hardmode_status}`\n'
-        f'{emojis.bp} Donor tier: `{user_settings.partner_donor_tier}` '
+        f'{emojis.BP} Name: `{partner_name}`\n'
+        f'{emojis.BP} Hardmode mode: `{partner_hardmode_status}`\n'
+        f'{emojis.BP} Donor tier: `{user_settings.partner_donor_tier}` '
         f'({strings.DONOR_TIERS[user_settings.partner_donor_tier]})\n'
     )
     field_clan = (
-        f'{emojis.bp} Name: `{clan_name}`\n'
-        f'{emojis.bp} Reminders: `{clan_alert_status}`\n'
-        f'{emojis.bp} Alert channel: `{clan_channel_name}`\n'
-        f'{emojis.bp} Stealth threshold: `{stealth_threshold}`'
+        f'{emojis.BP} Name: `{clan_name}`\n'
+        f'{emojis.BP} Reminders: `{clan_alert_status}`\n'
+        f'{emojis.BP} Alert channel: `{clan_channel_name}`\n'
+        f'{emojis.BP} Stealth threshold: `{stealth_threshold}`'
     )
     field_reminders = (
-        f'{emojis.bp} Adventure: `{await bool_to_text(user_settings.alert_adventure.enabled)}`\n'
-        f'{emojis.bp} Arena: `{await bool_to_text(user_settings.alert_arena.enabled)}`\n'
-        f'{emojis.bp} Daily: `{await bool_to_text(user_settings.alert_daily.enabled)}`\n'
-        f'{emojis.bp} Duel: `{await bool_to_text(user_settings.alert_duel.enabled)}`\n'
-        f'{emojis.bp} Dungeon / Miniboss: `{await bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}`\n'
-        f'{emojis.bp} Farm: `{await bool_to_text(user_settings.alert_farm.enabled)}`\n'
-        f'{emojis.bp} Horse: `{await bool_to_text(user_settings.alert_horse_breed.enabled)}`\n'
-        f'{emojis.bp} Hunt: `{await bool_to_text(user_settings.alert_hunt.enabled)}`\n'
-        f'{emojis.bp} Lootbox: `{await bool_to_text(user_settings.alert_lootbox.enabled)}`\n'
-        f'{emojis.bp} Lottery: `{await bool_to_text(user_settings.alert_lottery.enabled)}`\n'
-        f'{emojis.bp} Partner alert: `{await bool_to_text(user_settings.alert_partner.enabled)}`\n'
-        f'{emojis.bp} Pets: `{await bool_to_text(user_settings.alert_pets.enabled)}`\n'
-        f'{emojis.bp} Quest: `{await bool_to_text(user_settings.alert_quest.enabled)}`\n'
-        f'{emojis.bp} Training: `{await bool_to_text(user_settings.alert_training.enabled)}`\n'
-        f'{emojis.bp} Vote: `{await bool_to_text(user_settings.alert_vote.enabled)}`\n'
-        f'{emojis.bp} Weekly: `{await bool_to_text(user_settings.alert_weekly.enabled)}`\n'
-        f'{emojis.bp} Work: `{await bool_to_text(user_settings.alert_work.enabled)}`'
+        f'{emojis.BP} Adventure: `{await bool_to_text(user_settings.alert_adventure.enabled)}`\n'
+        f'{emojis.BP} Arena: `{await bool_to_text(user_settings.alert_arena.enabled)}`\n'
+        f'{emojis.BP} Daily: `{await bool_to_text(user_settings.alert_daily.enabled)}`\n'
+        f'{emojis.BP} Duel: `{await bool_to_text(user_settings.alert_duel.enabled)}`\n'
+        f'{emojis.BP} Dungeon / Miniboss: `{await bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}`\n'
+        f'{emojis.BP} Farm: `{await bool_to_text(user_settings.alert_farm.enabled)}`\n'
+        f'{emojis.BP} Horse: `{await bool_to_text(user_settings.alert_horse_breed.enabled)}`\n'
+        f'{emojis.BP} Hunt: `{await bool_to_text(user_settings.alert_hunt.enabled)}`\n'
+        f'{emojis.BP} Lootbox: `{await bool_to_text(user_settings.alert_lootbox.enabled)}`\n'
+        f'{emojis.BP} Lottery: `{await bool_to_text(user_settings.alert_lottery.enabled)}`\n'
+        f'{emojis.BP} Partner alert: `{await bool_to_text(user_settings.alert_partner.enabled)}`\n'
+        f'{emojis.BP} Pets: `{await bool_to_text(user_settings.alert_pets.enabled)}`\n'
+        f'{emojis.BP} Quest: `{await bool_to_text(user_settings.alert_quest.enabled)}`\n'
+        f'{emojis.BP} Training: `{await bool_to_text(user_settings.alert_training.enabled)}`\n'
+        f'{emojis.BP} Vote: `{await bool_to_text(user_settings.alert_vote.enabled)}`\n'
+        f'{emojis.BP} Weekly: `{await bool_to_text(user_settings.alert_weekly.enabled)}`\n'
+        f'{emojis.BP} Work: `{await bool_to_text(user_settings.alert_work.enabled)}`'
     )
     field_event_reminders = (
-        f'{emojis.bp} Big arena: `{await bool_to_text(user_settings.alert_big_arena.enabled)}`\n'
-        f'{emojis.bp} Horse race: `{await bool_to_text(user_settings.alert_horse_race.enabled)}`\n'
-        f'{emojis.bp} Not so mini boss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
-        f'{emojis.bp} Pet tournament: `{await bool_to_text(user_settings.alert_pet_tournament.enabled)}`\n'
+        f'{emojis.BP} Big arena: `{await bool_to_text(user_settings.alert_big_arena.enabled)}`\n'
+        f'{emojis.BP} Horse race: `{await bool_to_text(user_settings.alert_horse_race.enabled)}`\n'
+        f'{emojis.BP} Not so mini boss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
+        f'{emojis.BP} Pet tournament: `{await bool_to_text(user_settings.alert_pet_tournament.enabled)}`\n'
     )
     if not user_settings.reminders_enabled:
         field_reminders = f'**These settings are ignored because your reminders are off.**\n{field_reminders}'

@@ -88,6 +88,7 @@ class DungeonMinibossCog(commands.Cog):
                 else:
                     await ctx.send('Dungeon / Miniboss detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -99,8 +100,10 @@ class DungeonMinibossCog(commands.Cog):
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'dungeon-miniboss', time_left,
-                                                                              ctx.channel.id, dungmb_message)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(ctx.author.id, 'dungeon-miniboss', time_left,
+                                                         ctx.channel.id, dungmb_message)
+                )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:

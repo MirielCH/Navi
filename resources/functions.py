@@ -132,7 +132,7 @@ async def encode_message(bot_message: discord.Message) -> str:
         message = await encode_text(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = ''
+        message_author = message_description = message_fields = message_title = ''
         if embed.author: message_author = await encode_text(str(embed.author))
         if embed.description: message_description = await encode_text(str(embed.description))
         if embed.title: message_title = str(embed.title)
@@ -148,7 +148,7 @@ async def encode_message_clan(bot_message: discord.Message) -> str:
         message = await encode_text(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = message_footer = ''
+        message_author = message_description = message_fields = message_footer = message_title = ''
         if embed.author: message_author = await encode_text(str(embed.author))
         if embed.description: message_description = await encode_text(str(embed.description))
         if embed.title: message_title = await encode_text(str(embed.title))
@@ -166,7 +166,7 @@ async def encode_message_with_fields(bot_message: discord.Message) -> str:
         message = await encode_text(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = ''
+        message_author = message_description = message_fields = message_title = ''
         if embed.author: message_author = await encode_text(str(embed.author))
         if embed.description: message_description = await encode_text(str(embed.description))
         if embed.title: message_title = str(embed.title)
@@ -182,7 +182,7 @@ def encode_message_non_async(bot_message: discord.Message) -> str:
         message = encode_text_non_async(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = ''
+        message_author = message_description = message_fields = message_title = ''
         if embed.author: message_author = encode_text_non_async(str(embed.author))
         if embed.description: message_description = encode_text_non_async(str(embed.description))
         if embed.title: message_title = str(embed.title)
@@ -199,7 +199,7 @@ def encode_message_clan_non_async(bot_message: discord.Message) -> str:
         message = encode_text_non_async(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = message_footer = ''
+        message_author = message_description = message_fields = message_footer = message_title = ''
         if embed.author: message_author = encode_text_non_async(str(embed.author))
         if embed.description: message_description = encode_text_non_async(str(embed.description))
         if embed.title: message_title = encode_text_non_async(str(embed.title))
@@ -217,7 +217,7 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
         message = encode_text_non_async(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = ''
+        message_author = message_description = message_fields = message_title = ''
         if embed.author: message_author = encode_text_non_async(str(embed.author))
         if embed.description: message_description = encode_message_clan_non_async(str(embed.description))
         if embed.title: message_title = str(embed.title)

@@ -14,7 +14,7 @@ class CustomRemindersCog(commands.Cog):
     # rm
     @commands.group(aliases=('rm','remind',), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def reminder(self, ctx: commands.Context, *args: tuple) -> None:
+    async def reminder(self, ctx: commands.Context, *args: str) -> None:
         """Sets custom reminders"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
@@ -160,8 +160,10 @@ class CustomRemindersCog(commands.Cog):
             if time_left.total_seconds() > 3_023_999:
                 await ctx.reply(error_max_time, mention_author=False)
                 return
-            reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
-                                                                          ctx.channel.id, reminder_text)
+            reminder: reminders.Reminder = (
+                await reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
+                                                     ctx.channel.id, reminder_text)
+            )
             if reminder.record_exists:
                 await ctx.message.add_reaction(emojis.NAVI)
             else:
@@ -169,7 +171,7 @@ class CustomRemindersCog(commands.Cog):
 
     @reminder.command(name='delete', aliases=('del','remove'), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def reminder_delete(self, ctx: commands.Context, *args: tuple) -> None:
+    async def reminder_delete(self, ctx: commands.Context, *args: str) -> None:
         """Sets custom reminders"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return

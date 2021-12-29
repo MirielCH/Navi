@@ -31,7 +31,8 @@ class MainCog(commands.Cog):
     async def ascended(self, ctx: commands.Context, *args) -> None:
         """Ascended command detection"""
         if ctx.prefix.lower() == 'rpg ' and len(args) >= 1:
-            arg1 = args[0].lower()
+            args = [arg.lower() for arg in args]
+            arg1 = args[0]
             args = list(args)
             command = None
             if arg1 == 'hunt':
@@ -49,7 +50,7 @@ class MainCog(commands.Cog):
                 command = self.bot.get_command(name='farm')
 
             if command is not None:
-                await command.callback(command.cog, ctx, args)
+                await command.callback(command.cog, ctx, *args)
 
     @commands.command(aliases=('ping','info'))
     async def about(self, ctx: commands.Context) -> None:
@@ -112,7 +113,7 @@ class MainCog(commands.Cog):
         tasks.delete_old_reminders.start()
         tasks.reset_clans.start()
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                                 name='your commands'))
+                                                                  name='your commands'))
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Fires when bot joins a guild. Sends a welcome message to the system channel."""

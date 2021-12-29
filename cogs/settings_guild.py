@@ -15,7 +15,7 @@ class SettingsGuildCog(commands.Cog):
     @commands.command(aliases=('setprefix',))
     @commands.has_permissions(manage_guild=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def prefix(self, ctx: commands.Context, *args: tuple) -> None:
+    async def prefix(self, ctx: commands.Context, *args: str) -> None:
         """Gets/sets new server prefix"""
         if ctx.prefix.lower() == 'rpg ': return
         guild: guilds.Guild = await guilds.get_guild(ctx.guild.id)

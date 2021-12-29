@@ -70,7 +70,7 @@ class PetsCog(commands.Cog):
     # --- Commands ---
     @commands.command(aliases=('pets',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def pet(self, ctx: commands.Context, *args: tuple) -> None:
+    async def pet(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG pets messages and creates reminders"""
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -118,6 +118,7 @@ class PetsCog(commands.Cog):
                             else:
                                 await ctx.send('Pet cancel detection timeout.')
                                 return
+                        if not task_status.done(): task_status.cancel()
 
                         # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
                         if bot_message.find('pet adventure(s) cancelled') > -1:
@@ -207,6 +208,7 @@ class PetsCog(commands.Cog):
                             else:
                                 await ctx.send('Pet adventure detection timeout.')
                                 return
+                        if not task_status.done(): task_status.cancel()
 
                         # Check if pet adventure started overview, if yes, read the time and update/insert the reminder
                         if bot_message.find('Your pet has started an adventure and will be back') > -1:
@@ -217,8 +219,9 @@ class PetsCog(commands.Cog):
                             bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                             time_elapsed = current_time - bot_answer_time
                             time_left = time_left-time_elapsed
-                            reminder: reminders.Reminder = reminders.insert_user_reminder(
-                                ctx.author.id, f'pets-{pet_id}', time_left, ctx.channel.id, pets_message
+                            reminder: reminders.Reminder = (
+                                await reminders.insert_user_reminder(ctx.author.id, f'pets-{pet_id}', time_left,
+                                                                     ctx.channel.id, pets_message)
                             )
                             if reminder.record_exists:
                                 await bot_answer.add_reaction(emojis.NAVI)
@@ -303,6 +306,7 @@ class PetsCog(commands.Cog):
                         else:
                             await ctx.send('Pet tournament detection timeout.')
                             return
+                    if not task_status.done(): task_status.cancel()
 
                     # Check if pet tournament started, if yes, read the time and update/insert the reminder
                     if bot_message.find('pet successfully sent to the pet tournament!') > -1:
@@ -315,8 +319,10 @@ class PetsCog(commands.Cog):
                         time_elapsed = current_time - bot_answer_time
                         time_left = time_left - time_elapsed
                         time_left = time_left + timedelta(minutes=1) #The event is somethings not perfectly on point, so I added a minute
-                        reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'pet-tournament', time_left,
-                                                                                      ctx.channel.id, pet_tournament_message)
+                        reminder: reminders.Reminder = (
+                            await reminders.insert_user_reminder(ctx.author.id, 'pet-tournament', time_left,
+                                                                 ctx.channel.id, pet_tournament_message)
+                        )
                         if reminder.record_exists:
                             await bot_answer.add_reaction(emojis.NAVI)
                         else:
@@ -353,6 +359,8 @@ class PetsCog(commands.Cog):
                 except Exception as e:
                     logs.logger.error(f'Pet tournament detection error: {e}')
                     return
+            else:
+                args = ()
         if not args:
             try:
                 try:
@@ -360,7 +368,6 @@ class PetsCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not user.reminders_enabled or not user.alert_pets.enabled: return
-                pets_message = user.alert_pets.message.replace('$', pet_id)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 task_status = self.bot.loop.create_task(self.get_pet_list_message(ctx))
                 bot_message = None
@@ -387,6 +394,7 @@ class PetsCog(commands.Cog):
                     else:
                         await ctx.send('Pet detection timeout.')
                         return
+                if not task_status.done(): task_status.cancel()
 
                 # Check if pets are on adventures
                 action = ''
@@ -423,25 +431,25 @@ class PetsCog(commands.Cog):
                         time_elapsed = current_time - bot_answer_time
                         time_left = time_left - time_elapsed
                         pets_message = user.alert_pets.message.replace('$', pet_id)
-                        reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, f'pets-{pet_id}', time_left,
-                                                                                      ctx.channel.id, pets_message)
+                        reminder: reminders.Reminder = (
+                            await reminders.insert_user_reminder(ctx.author.id, f'pets-{pet_id}', time_left,
+                                                                 ctx.channel.id, pets_message)
+                        )
                         if not reminder.record_exists:
                             await ctx.send(strings.MSG_ERROR)
                         await bot_answer.add_reaction(emojis.NAVI)
-                    else:
-                        if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                        return
+
                 # Ignore anti spam embed
-                if bot_message.find('Huh please don\'t spam') > 1:
+                elif bot_message.find('Huh please don\'t spam') > 1:
                     if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                     return
                 # Ignore failed Epic Guard event
-                if bot_message.find('is now in the jail!') > 1:
+                elif bot_message.find('is now in the jail!') > 1:
                     if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                     await bot_answer.add_reaction(emojis.RIP)
                     return
                 # Ignore error when another command is active
-                if bot_message.find('end your previous command') > 1:
+                elif bot_message.find('end your previous command') > 1:
                     if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                     return
                 # Ignore error that pets are not unlocked yet

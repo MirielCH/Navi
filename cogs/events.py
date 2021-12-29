@@ -81,6 +81,7 @@ class EventsCog(commands.Cog):
                 else:
                     await ctx.send('Events detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if event list, if yes, extract all the timestrings
             if bot_message.find('Normal events') > 1:
@@ -104,7 +105,7 @@ class EventsCog(commands.Cog):
                         miniboss_start = bot_message.find('"mini" boss**: ') + 15
                         miniboss_end = bot_message.find('s', miniboss_start) + 1
                         miniboss = bot_message[miniboss_start:miniboss_end]
-                        miniboss_message = user.alert_not_so_mini_boss.message.format(event='not so mini boss')
+                        miniboss_message = user.alert_dungeon_miniboss.message.replace('%','rpg dungeon / miniboss')
                         cooldowns.append(['not-so-mini-boss', miniboss.lower(), miniboss_message])
                 if user.alert_pet_tournament.enabled:
                     if bot_message.find('tournament**: ') > -1:
@@ -118,7 +119,7 @@ class EventsCog(commands.Cog):
                         race_start = bot_message.find('race**: ') + 8
                         race_end = bot_message.find('s', race_start) + 1
                         race = bot_message[race_start:race_end]
-                        race_message = user.alert_horse_race.format(event='horse race')
+                        race_message = user.alert_horse_race.message.format(event='horse race')
                         cooldowns.append(['horse-race', race.lower(), race_message])
                 for cooldown in cooldowns:
                     activity = cooldown[0]
@@ -130,13 +131,19 @@ class EventsCog(commands.Cog):
                     time_left = time_left - time_elapsed
                     if activity == 'pet-tournament':
                         time_left = time_left + timedelta(minutes=1) #The event is somethings not perfectly on point, so I added a minute
+                    updated_reminder = False
                     if time_left.total_seconds() > 0:
-                        reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, activity, time_left,
-                                                                                      ctx.channel.id, message)
-                        if not reminder.record_exists:
-                            await ctx.send(strings.MSG_ERROR)
-                            return
-                await bot_answer.add_reaction(emojis.navi)
+                        try:
+                            reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, activity)
+                            end_time = current_time + time_left
+                            await reminder.update(end_time=end_time)
+                            if not reminder.record_exists:
+                                await ctx.send(strings.MSG_ERROR)
+                                return
+                            updated_reminder = True
+                        except exceptions.NoDataFoundError:
+                            pass
+                if updated_reminder: await bot_answer.add_reaction(emojis.NAVI)
 
             # Ignore anti spam embed
             elif bot_message.find('Huh please don\'t spam') > 1:

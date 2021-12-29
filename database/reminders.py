@@ -7,10 +7,8 @@ from datetime import datetime, timedelta
 import sqlite3
 from typing import Optional, Tuple
 
-from discord.ext import commands
-
 from database import errors
-from resources import exceptions, settings, strings, tasks
+from resources import exceptions, settings, strings
 
 
 # Containers
@@ -86,7 +84,7 @@ class Reminder():
             triggered: bool
             user_id: int
         """
-        await _update_reminder(self, kwargs)
+        await _update_reminder(self, **kwargs)
         await self.refresh()
 
 
@@ -119,8 +117,8 @@ async def _dict_to_reminder(record: dict) -> Reminder:
             activity = record['activity'],
             channel_id = record['channel_id'],
             clan_name = record.get('clan_name', None),
-            custom_id = record['custom_id'],
-            end_time = datetime.strptime(record['end_time']),
+            custom_id = record.get('custom_id', None),
+            end_time = datetime.fromisoformat(record['end_time'], ),
             message = record['message'],
             reminder_type = reminder_type,
             task_name = task_name,
@@ -130,9 +128,9 @@ async def _dict_to_reminder(record: dict) -> Reminder:
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
     return reminder
 
@@ -175,13 +173,10 @@ async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(
             f'No reminder data found in database for user "{user_id}" and activity "{activity}".'
         )
-    reminder = await _dict_to_reminder(record)
+    reminder = await _dict_to_reminder(dict(record))
 
     return reminder
 
@@ -213,13 +208,10 @@ async def get_clan_reminder(clan_name: str) -> Reminder:
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(
             f'No reminder data found in database for clan "{clan_name}".'
         )
-    reminder = await _dict_to_reminder(record)
+    reminder = await _dict_to_reminder(dict(record))
 
     return reminder
 
@@ -246,7 +238,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Remi
         sql = f'SELECT * FROM {table} WHERE user_id=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = datetime.utcnow().replace(microsecond=0).isoformat(sep=' ')
         cur.execute(sql, (current_time,)) if user_id is None else cur.execute(sql, (user_id, current_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -258,13 +250,10 @@ async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Remi
     if not records:
         error_message = 'No active user reminders found in database.'
         if user_id is not None: error_message = f'{error_message} User: {user_id}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(record)
+        reminder = await _dict_to_reminder(dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -292,7 +281,7 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = datetime.utcnow().replace(microsecond=0).isoformat(sep=' ')
         cur.execute(sql, (current_time,)) if clan_name is None else cur.execute(sql, (clan_name, current_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -302,15 +291,12 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
         raise
 
     if not records:
-        error_message = 'No active user reminders found in database.'
+        error_message = 'No active clan reminders found in database.'
         if clan_name is not None: error_message = f'{error_message} Clan: {clan_name}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(record)
+        reminder = await _dict_to_reminder(dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -341,8 +327,6 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time + timedelta(seconds=15)
-        current_time = current_time.timestamp()
-        end_time = end_time.timestamp()
         triggered = False
         if user_id is None:
             cur.execute(sql, (triggered, current_time, end_time))
@@ -358,13 +342,10 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     if not records:
         error_message = 'No due user reminders found in database.'
         if user_id is not None: error_message = f'{error_message} User: {user_id}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(record)
+        reminder = await _dict_to_reminder(dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -395,8 +376,6 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time + timedelta(seconds=15)
-        current_time = current_time.timestamp()
-        end_time = end_time.timestamp()
         triggered = False
         if clan_name is None:
             cur.execute(sql, (triggered, current_time, end_time))
@@ -412,13 +391,10 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     if not records:
         error_message = 'No due user reminders found in database.'
         if clan_name is not None: error_message = f'{error_message} Clan: {clan_name}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(record)
+        reminder = await _dict_to_reminder(dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -449,8 +425,6 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time - timedelta(seconds=20)
-        current_time = current_time.timestamp()
-        end_time = end_time.timestamp()
         cur.execute(sql, (end_time,)) if user_id is None else cur.execute(sql, (user_id, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -462,13 +436,10 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     if not records:
         error_message = 'No old user reminders found in database.'
         if user_id is not None: error_message = f'{error_message} User: {user_id}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(record)
+        reminder = await _dict_to_reminder(dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -499,8 +470,6 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time - timedelta(seconds=20)
-        current_time = current_time.timestamp()
-        end_time = end_time.timestamp()
         cur.execute(sql, (end_time,)) if clan_name is None else cur.execute(sql, (clan_name, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -512,13 +481,10 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     if not records:
         error_message = 'No old user reminders found in database.'
         if clan_name is not None: error_message = f'{error_message} Clan: {clan_name}'
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(record)
+        reminder = await _dict_to_reminder(dict(record))
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -555,6 +521,7 @@ async def _delete_reminder(reminder: Reminder) -> None:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
+    from resources import tasks
     await tasks.delete_task(reminder.task_name)
 
 
@@ -588,9 +555,6 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    end_time: datetime = kwargs.get('end_time', None)
-    if end_time is not None:
-        kwargs['end_time'] = end_time.replace(microsecond=0).timestamp()
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
@@ -672,7 +636,7 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
     else:
         sql = (
             f'INSERT INTO {table} (user_id, activity, end_time, channel_id, message, custom_id, triggered) '
-            f'VALUES (?, ?, ?, ?, ?, ?)'
+            f'VALUES (?, ?, ?, ?, ?, ?, ?)'
         )
         try:
             cur.execute(sql, (user_id, activity, end_time, channel_id, message, custom_id, triggered))
@@ -684,7 +648,9 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
         reminder = await get_user_reminder(user_id, activity)
 
     # Create background task if necessary
-    if triggered: await tasks.create_task(reminder)
+    if triggered:
+        from resources import tasks
+        await tasks.create_task(reminder)
 
     return reminder
 
@@ -717,7 +683,10 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     if reminder is not None:
         await reminder.update(end_time=end_time, channel_id=channel_id, message=message)
     else:
-        sql = f'INSERT INTO {table} (clan_name, activity, end_time, channel_id, message, triggered) VALUES (?, ?, ?, ?, ?)'
+        sql = (
+            f'INSERT INTO {table} (clan_name, activity, end_time, channel_id, message, triggered) '
+            f'VALUES (?, ?, ?, ?, ?, ?)'
+        )
         try:
             cur = settings.NAVI_DB.cursor()
             cur.execute(sql, (clan_name, 'guild', end_time, channel_id, message, triggered))
@@ -728,7 +697,9 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
             raise
         reminder = await get_clan_reminder(clan_name)
     # Create background task if necessary
-    if triggered: await tasks.create_task(reminder)
+    if triggered:
+        from resources import tasks
+        await tasks.create_task(reminder)
 
     return reminder
 
@@ -746,9 +717,11 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
                 new_end_time = reminder.end_time - time_reduction
                 time_left = reminder.end_time - current_time
                 if time_left.total_seconds() <= 0:
+                    from resources import tasks
                     await tasks.delete_task()
                     await reminder.delete()
                 elif 1 <= time_left.total_seconds() <= 15:
+                    from resources import tasks
                     await reminder.update(end_time=new_end_time, triggered=True)
                     await tasks.create_task(reminder)
                 else:

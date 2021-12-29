@@ -3,7 +3,7 @@
 # Lootboxes
 LB_COMMON = '<:erg_commonlootbox:770547275721736223>'
 LB_EDGY = '<:erg_edgylootbox:770547275649777685>'
-LB_EDGY = '<:erg_epiclootbox:770547275692507166>'
+LB_EPIC = '<:erg_epiclootbox:770547275692507166>'
 LB_GODLY = '<:erg_godlylootbox:770547275704827924>'
 LB_OMEGA = '<:erg_omegalootbox:770547275726454784>'
 LB_RARE = '<:erg_rarelootbox:770547275709415424>'

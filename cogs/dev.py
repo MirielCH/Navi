@@ -33,7 +33,7 @@ class DevCog(commands.Cog):
                             aliases = f'`{subcommand.qualified_name}`'
                             for alias in subcommand.aliases:
                                 aliases = f'{aliases}, `{alias}`'
-                            subcommands = f'{subcommands}{emojis.bp} {aliases}\n'
+                            subcommands = f'{subcommands}{emojis.BP} {aliases}\n'
         await ctx.reply(
             f'Available dev commands:\n'
             f'{subcommands}',
@@ -42,7 +42,7 @@ class DevCog(commands.Cog):
 
     @dev.group(name='event-reduction', aliases=('er',), invoke_without_commands=True)
     @commands.bot_has_permissions(send_messages=True)
-    async def dev_event_reduction(self, ctx: commands.Context, *args: tuple) -> None:
+    async def dev_event_reduction(self, ctx: commands.Context, *args: str) -> None:
         """Sets event reductions of activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
@@ -127,7 +127,7 @@ class DevCog(commands.Cog):
 
     @dev.command(name='cooldown-setup', aliases=('cd-setup',))
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def cooldown_setup(self, ctx: commands.Context, *args: tuple) -> None:
+    async def cooldown_setup(self, ctx: commands.Context, *args: str) -> None:
         """Sets base cooldowns of all activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
@@ -140,7 +140,7 @@ class DevCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [seconds]')
         activity_list = 'Possible activities:'
         for activity in strings.ACTIVITIES_WITH_COOLDOWN:
-            activity_list = f'{activity_list}\n{emojis.bp} `{activity}`'
+            activity_list = f'{activity_list}\n{emojis.BP} `{activity}`'
         if not args or len(args) != 2:
             all_cooldowns = cooldowns.get_all_cooldowns()
             message = 'Current base cooldowns:'
@@ -267,7 +267,7 @@ class DevCog(commands.Cog):
     @dev.command(aliases=('disable',))
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
-    async def enable(self, ctx: commands.Context, *args: tuple) -> None:
+    async def enable(self, ctx: commands.Context, *args: str) -> None:
         if ctx.prefix.lower() == 'rpg ': return
         action = ctx.invoked_with
         if args:

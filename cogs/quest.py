@@ -47,7 +47,7 @@ class QuestCog(commands.Cog):
     # --- Commands ---
     @commands.command(aliases=('quest',))
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def epic(self, ctx: commands.Context, *args: tuple) -> None:
+    async def epic(self, ctx: commands.Context, *args: str) -> None:
         """Detects EPIC RPG quest and epic quest messages and creates reminders"""
         prefix = ctx.prefix
         if prefix.lower() != 'rpg ': return
@@ -104,6 +104,7 @@ class QuestCog(commands.Cog):
                 else:
                     await ctx.send('Quest detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check what quest it is and if normal quest if the user accepts or denies the quest (different cooldowns)
             if (bot_message.find('Are you looking for a quest?') > -1) or (bot_message.find('Are you ready to start the EPIC quest') > -1):
@@ -138,6 +139,7 @@ class QuestCog(commands.Cog):
                     else:
                         await ctx.send('Quest detection timeout.')
                         return
+                if not task_status.done(): task_status.cancel()
 
                 if bot_message.find('you did not accept the quest') > -1:
                     quest_declined = True
@@ -157,8 +159,10 @@ class QuestCog(commands.Cog):
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left-time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
-                                                                              ctx.channel.id, quest_message)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
+                                                         ctx.channel.id, quest_message)
+                )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:
@@ -218,8 +222,11 @@ class QuestCog(commands.Cog):
             time_left = timedelta(seconds=time_left_seconds)
 
             # Save reminder to database
-            reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
-                                                                          ctx.channel.id, quest_message)
+            reminder: reminders.Reminder = (
+                await reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
+                                                     ctx.channel.id, quest_message)
+            )
+
             # Add reaction
             if reminder.record_exists:
                 await bot_answer.add_reaction(emojis.NAVI)

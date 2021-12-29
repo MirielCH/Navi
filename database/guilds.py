@@ -33,7 +33,7 @@ class Guild():
         kwargs (column=value):
             prefix: str
         """
-        await _update_guild(self.guild_id, kwargs)
+        await _update_guild(self.guild_id, **kwargs)
         await self.refresh()
 
 
@@ -61,9 +61,9 @@ async def _dict_to_guild(record: dict) -> Guild:
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, recod=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
         )
-        raise LookupError
+        raise LookupError(error)
 
     return guild
 
@@ -152,11 +152,8 @@ async def get_guild(guild_id: int) -> Guild:
         )
         raise
     if not record:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_NO_DATA_FOUND.format(table=table, function=function_name, sql=sql)
-        )
         raise exceptions.NoDataFoundError(f'No guild data found in database for guild "{guild_id}".')
-    guild = await _dict_to_guild(record)
+    guild = await _dict_to_guild(dict(record))
 
     return guild
 

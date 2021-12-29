@@ -54,7 +54,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
         if not args: return
         full_args = ''
         if invoked == 'ascended':
-            args = args[0]
+            args = list(args)
             args.pop(0)
         args = [arg.lower() for arg in args]
         for arg in args:
@@ -85,7 +85,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             bot_message = None
             message_history = await ctx.channel.history(limit=50).flatten()
             for msg in message_history:
-                if (msg.author.id == settings.settings.EPIC_RPG_ID) and (msg.created_at > ctx.message.created_at):
+                if (msg.author.id == settings.EPIC_RPG_ID) and (msg.created_at > ctx.message.created_at):
                     try:
                         ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         message = await functions.encode_message(msg)
@@ -110,18 +110,21 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 else:
                     await ctx.send('Big arena / Not so mini boss detection timeout.')
                     return
+            if not task_status.done(): task_status.cancel()
 
             # Check if event message with time in it, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'The next event is in') > -1:
                 timestring_start = bot_message.find('event is in **') + 14
                 timestring_end = bot_message.find('**,', timestring_start)
                 timestring = bot_message[timestring_start:timestring_end]
-                time_left = await functions.functions.parse_timestring_to_timedelta(ctx, timestring.lower())
+                time_left = await functions.parse_timestring_to_timedelta(ctx, timestring.lower())
                 bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder: reminders.Reminder = reminders.insert_user_reminder(ctx.author.id, event, time_left,
-                                                                              ctx.channel.id, event_message)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(ctx.author.id, event, time_left,
+                                                         ctx.channel.id, event_message)
+                )
                 if reminder.record_exists:
                     await bot_answer.add_reaction(emojis.NAVI)
                 else:
