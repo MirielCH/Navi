@@ -163,7 +163,7 @@ class FarmCog(commands.Cog):
                 return
 
             # Calculate cooldown
-            cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('adventure')
+            cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('farm')
             bot_answer_time = bot_answer.created_at.replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             if cooldown.donor_affected:

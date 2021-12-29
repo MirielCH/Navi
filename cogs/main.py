@@ -8,7 +8,7 @@ from discord.ext import commands
 from discord.ext.commands import errors
 
 from database import errors, guilds
-from resources import emojis, exceptions, logs, settings, tasks
+from resources import emojis, exceptions, logs, settings
 
 
 class MainCog(commands.Cog):
@@ -109,9 +109,6 @@ class MainCog(commands.Cog):
         startup_info = f'{self.bot.user.name} has connected to Discord!'
         print(startup_info)
         logs.logger.info(startup_info)
-        tasks.schedule_reminders.start()
-        tasks.delete_old_reminders.start()
-        tasks.reset_clans.start()
         await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
                                                                   name='your commands'))
     @commands.Cog.listener()

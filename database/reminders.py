@@ -238,8 +238,9 @@ async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Remi
         sql = f'SELECT * FROM {table} WHERE user_id=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0).isoformat(sep=' ')
-        cur.execute(sql, (current_time,)) if user_id is None else cur.execute(sql, (user_id, current_time))
+        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time_str = current_time.isoformat(sep=' ')
+        cur.execute(sql, (current_time_str,)) if user_id is None else cur.execute(sql, (user_id, current_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -281,8 +282,9 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0).isoformat(sep=' ')
-        cur.execute(sql, (current_time,)) if clan_name is None else cur.execute(sql, (clan_name, current_time))
+        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time_str = current_time.isoformat(sep=' ')
+        cur.execute(sql, (current_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, current_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -326,12 +328,14 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     try:
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
-        end_time  = current_time + timedelta(seconds=15)
+        end_time = current_time + timedelta(seconds=15)
+        current_time_str = current_time.isoformat(sep=' ')
+        end_time_str = end_time.isoformat(sep=' ')
         triggered = False
         if user_id is None:
-            cur.execute(sql, (triggered, current_time, end_time))
+            cur.execute(sql, (triggered, current_time_str, end_time_str))
         else:
-            cur.execute(sql, (user_id, triggered, current_time, end_time))
+            cur.execute(sql, (user_id, triggered, current_time_str, end_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -376,11 +380,13 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time + timedelta(seconds=15)
+        current_time_str = current_time.isoformat(sep=' ')
+        end_time_str = end_time.isoformat(sep=' ')
         triggered = False
         if clan_name is None:
-            cur.execute(sql, (triggered, current_time, end_time))
+            cur.execute(sql, (triggered, current_time_str, end_time_str))
         else:
-            cur.execute(sql, (clan_name, triggered, current_time, end_time))
+            cur.execute(sql, (clan_name, triggered, current_time_str, end_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -425,7 +431,8 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time - timedelta(seconds=20)
-        cur.execute(sql, (end_time,)) if user_id is None else cur.execute(sql, (user_id, end_time))
+        end_time_str = end_time.isoformat(sep=' ')
+        cur.execute(sql, (end_time_str,)) if user_id is None else cur.execute(sql, (user_id, end_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -470,7 +477,8 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         cur = settings.NAVI_DB.cursor()
         current_time = datetime.utcnow().replace(microsecond=0)
         end_time  = current_time - timedelta(seconds=20)
-        cur.execute(sql, (end_time,)) if clan_name is None else cur.execute(sql, (clan_name, end_time))
+        end_time_str = end_time.isoformat(sep=' ')
+        cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -521,8 +529,6 @@ async def _delete_reminder(reminder: Reminder) -> None:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    from resources import tasks
-    await tasks.delete_task(reminder.task_name)
 
 
 async def _update_reminder(reminder: Reminder, **kwargs) -> None:
@@ -555,6 +561,12 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
+    if 'triggered' not in kwargs:
+        current_time = datetime.utcnow().replace(microsecond=0)
+        end_time = kwargs['end_time'] if 'end_time' in kwargs else reminder.end_time
+        time_left = end_time - current_time
+        triggered = False if time_left.total_seconds() > 15 else True
+        kwargs['triggered'] = triggered
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
@@ -578,6 +590,9 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
+    if triggered:
+        from cogs.tasks import TasksCog
+        await TasksCog.create_task(reminder)
 
 
 async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta,
@@ -649,8 +664,8 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
 
     # Create background task if necessary
     if triggered:
-        from resources import tasks
-        await tasks.create_task(reminder)
+        from cogs.tasks import TasksCog
+        await TasksCog.create_task(reminder)
 
     return reminder
 
@@ -681,7 +696,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     end_time = current_time + time_left
     triggered = False if time_left.total_seconds() > 15 else True
     if reminder is not None:
-        await reminder.update(end_time=end_time, channel_id=channel_id, message=message)
+        await reminder.update(end_time=end_time, channel_id=channel_id, message=message, triggered=triggered)
     else:
         sql = (
             f'INSERT INTO {table} (clan_name, activity, end_time, channel_id, message, triggered) '
@@ -698,8 +713,8 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
         reminder = await get_clan_reminder(clan_name)
     # Create background task if necessary
     if triggered:
-        from resources import tasks
-        await tasks.create_task(reminder)
+        from cogs.tasks import TasksCog
+        await TasksCog.create_task(reminder)
 
     return reminder
 
@@ -717,12 +732,12 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
                 new_end_time = reminder.end_time - time_reduction
                 time_left = reminder.end_time - current_time
                 if time_left.total_seconds() <= 0:
-                    from resources import tasks
-                    await tasks.delete_task()
+                    from cogs.tasks import TasksCog
+                    await TasksCog.delete_task(reminder.task_name)
                     await reminder.delete()
                 elif 1 <= time_left.total_seconds() <= 15:
-                    from resources import tasks
                     await reminder.update(end_time=new_end_time, triggered=True)
-                    await tasks.create_task(reminder)
+                    from cogs.tasks import TasksCog
+                    await TasksCog.create_task(reminder)
                 else:
                     await reminder.update(end_time=new_end_time)
