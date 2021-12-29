@@ -2,7 +2,7 @@
 
 from discord.ext import commands
 
-from database import reminders
+from database import reminders, users
 from resources import emojis, exceptions, functions, strings
 
 
@@ -44,6 +44,7 @@ class CustomRemindersCog(commands.Cog):
                 mention_author=False
             )
             return
+        user: users.User = await users.get_user(ctx.author.id)
         args = [arg.lower() for arg in args]
         arg_time = args[0]
         last_time_code = None
@@ -144,30 +145,30 @@ class CustomRemindersCog(commands.Cog):
             else:
                 await ctx.reply(error_invalid_time, mention_author=False)
                 return
-            if last_char_was_number:
-                await ctx.reply(error_invalid_time, mention_author=False)
-                return
-            if len(args) > 1:
-                args = list(args)
-                args.pop(0)
-                for arg in args:
-                    reminder_text = f'{reminder_text} {arg}'
-            else:
-                reminder_text = 'idk, something?'
-            reminder_text = reminder_text.strip()
-            reminder_text = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder_text)
-            time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
-            if time_left.total_seconds() > 3_023_999:
-                await ctx.reply(error_max_time, mention_author=False)
-                return
-            reminder: reminders.Reminder = (
-                await reminders.insert_user_reminder(self.bot, ctx.author.id, 'custom', time_left,
-                                                     ctx.channel.id, reminder_text)
-            )
-            if reminder.record_exists:
-                await ctx.message.add_reaction(emojis.NAVI)
-            else:
-                await ctx.reply(strings.MSG_ERROR, mention_author=False)
+        if last_char_was_number:
+            await ctx.reply(error_invalid_time, mention_author=False)
+            return
+        if len(args) > 1:
+            args = list(args)
+            args.pop(0)
+            for arg in args:
+                reminder_text = f'{reminder_text} {arg}'
+        else:
+            reminder_text = 'idk, something?'
+        reminder_text = reminder_text.strip()
+        reminder_text = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder_text)
+        time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
+        if time_left.total_seconds() > 3_023_999:
+            await ctx.reply(error_max_time, mention_author=False)
+            return
+        reminder: reminders.Reminder = (
+            await reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
+                                                    ctx.channel.id, reminder_text)
+        )
+        if reminder.record_exists:
+            await ctx.message.add_reaction(emojis.NAVI)
+        else:
+            await ctx.reply(strings.MSG_ERROR, mention_author=False)
 
     @reminder.command(name='delete', aliases=('del','remove'), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
@@ -196,7 +197,7 @@ class CustomRemindersCog(commands.Cog):
             await ctx.reply(error_invalid_message_id, mention_author=False)
             return
         try:
-            reminder: reminders.Reminder = await reminders.get_user_reminder(self.bot, ctx.author.id, 'custom', reminder_id)
+            reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, 'custom', reminder_id)
         except exceptions.NoDataFoundError:
             await ctx.reply('There is no custom reminder with that ID.', mention_author=False)
             return

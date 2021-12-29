@@ -98,7 +98,7 @@ class ArenaCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
                 reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(self.bot, ctx.author.id, 'arena', time_left,
+                        await reminders.insert_user_reminder(ctx.author.id, 'arena', time_left,
                                                              ctx.channel.id, arena_message)
                     )
                 if reminder.record_exists:

@@ -278,7 +278,7 @@ async def get_user(user_id: int) -> User:
         )
         raise
     if not record:
-        raise exceptions.NoDataFoundError(f'No user data found in database for user "{user_id}".')
+        raise exceptions.FirstTimeUserError(f'No user data found in database for user "{user_id}".')
     user = await _dict_to_user(dict(record))
 
     return user

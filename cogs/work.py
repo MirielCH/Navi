@@ -139,7 +139,7 @@ class WorkCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(self.bot, ctx.author.id, 'work', time_left,
+                    await reminders.insert_user_reminder(ctx.author.id, 'work', time_left,
                                                          ctx.channel.id, work_message)
                 )
                 if reminder.record_exists:
@@ -183,7 +183,7 @@ class WorkCog(commands.Cog):
 
             # Save reminder to database
             reminder: reminders.Reminder = (
-                await reminders.insert_user_reminder(self.bot, ctx.author.id, 'work', time_left,
+                await reminders.insert_user_reminder(ctx.author.id, 'work', time_left,
                                                      ctx.channel.id, work_message)
             )
 

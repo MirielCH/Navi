@@ -128,7 +128,7 @@ class ClanCog(commands.Cog):
                         time_elapsed = current_time - bot_answer_time
                         time_left = time_left - time_elapsed
                         reminder: reminders.Reminder = (
-                        await reminders.insert_clan_reminder(self.bot, clan.clan_name, time_left,
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                              clan.channel_id, clan_message)
                         )
                         if reminder.record_exists:
@@ -160,7 +160,7 @@ class ClanCog(commands.Cog):
                     bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                     time_elapsed = current_time - bot_answer_time
                     time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                    reminder: reminders.Reminder = await reminders.insert_clan_reminder(self.bot, clan.clan_name, time_left,
+                    reminder: reminders.Reminder = await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                                                         clan.channel_id, clan_message)
 
                     # Add reaction
@@ -241,7 +241,7 @@ class ClanCog(commands.Cog):
                         timestring = timestring.lower()
                         time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
                         reminder: reminders.Reminder = (
-                        await reminders.insert_clan_reminder(self.bot, clan.clan_name, time_left,
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                              clan.channel_id, clan_message)
                         )
                         if reminder.record_exists:

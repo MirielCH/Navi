@@ -127,7 +127,7 @@ class PetsCog(commands.Cog):
                                 activity = f'pets-{pet_id}'
                                 try:
                                     reminder: reminders.Reminder = (
-                                        await reminders.get_user_reminder(self.bot, ctx.author.id, activity)
+                                        await reminders.get_user_reminder(ctx.author.id, activity)
                                     )
                                 except:
                                     return
@@ -220,7 +220,7 @@ class PetsCog(commands.Cog):
                             time_elapsed = current_time - bot_answer_time
                             time_left = time_left-time_elapsed
                             reminder: reminders.Reminder = (
-                                await reminders.insert_user_reminder(self.bot, ctx.author.id, f'pets-{pet_id}', time_left,
+                                await reminders.insert_user_reminder(ctx.author.id, f'pets-{pet_id}', time_left,
                                                                      ctx.channel.id, pets_message)
                             )
                             if reminder.record_exists:
@@ -320,7 +320,7 @@ class PetsCog(commands.Cog):
                         time_left = time_left - time_elapsed
                         time_left = time_left + timedelta(minutes=1) #The event is somethings not perfectly on point, so I added a minute
                         reminder: reminders.Reminder = (
-                            await reminders.insert_user_reminder(self.bot, ctx.author.id, 'pet-tournament', time_left,
+                            await reminders.insert_user_reminder(ctx.author.id, 'pet-tournament', time_left,
                                                                  ctx.channel.id, pet_tournament_message)
                         )
                         if reminder.record_exists:
@@ -432,7 +432,7 @@ class PetsCog(commands.Cog):
                         time_left = time_left - time_elapsed
                         pets_message = user.alert_pets.message.replace('$', pet_id)
                         reminder: reminders.Reminder = (
-                            await reminders.insert_user_reminder(self.bot, ctx.author.id, f'pets-{pet_id}', time_left,
+                            await reminders.insert_user_reminder(ctx.author.id, f'pets-{pet_id}', time_left,
                                                                  ctx.channel.id, pets_message)
                         )
                         if not reminder.record_exists:

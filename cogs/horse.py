@@ -102,7 +102,7 @@ class HorseCog(commands.Cog):
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(self.bot, ctx.author.id, 'horse', time_left,
+                        await reminders.insert_user_reminder(ctx.author.id, 'horse', time_left,
                                                              ctx.channel.id, horse_breed_message)
                     )
                     if reminder.record_exists:
@@ -122,7 +122,7 @@ class HorseCog(commands.Cog):
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left-time_elapsed
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(self.bot, ctx.author.id, 'horse-race', time_left,
+                        await reminders.insert_user_reminder(ctx.author.id, 'horse-race', time_left,
                                                              ctx.channel.id, horse_race_message)
                     )
                     if reminder.record_exists:
