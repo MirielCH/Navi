@@ -142,6 +142,22 @@ async def encode_message(bot_message: discord.Message) -> str:
     return message
 
 
+def encode_message_non_async(bot_message: discord.Message) -> str:
+    """Encodes a message to a version that converts all potentionally problematic unicode characters (non async)"""
+    if not bot_message.embeds:
+        message = encode_text_non_async(bot_message.content)
+    else:
+        embed: discord.Embed = bot_message.embeds[0]
+        message_author = message_description = message_fields = message_title = ''
+        if embed.author: message_author = encode_text_non_async(str(embed.author))
+        if embed.description: message_description = encode_text_non_async(str(embed.description))
+        if embed.title: message_title = str(embed.title)
+        if embed.fields: message_fields = str(embed.fields)
+        message = f'{message_author}{message_description}{message_fields}{message_title}'
+
+    return message
+
+
 async def encode_message_clan(bot_message: discord.Message) -> str:
     """Encodes a message to a version that converts all potentionally problematic unicode characters (async, clan)"""
     if not bot_message.embeds:
@@ -176,22 +192,6 @@ async def encode_message_with_fields(bot_message: discord.Message) -> str:
     return message
 
 
-def encode_message_non_async(bot_message: discord.Message) -> str:
-    """Encodes a message to a version that converts all potentionally problematic unicode characters (non async)"""
-    if not bot_message.embeds:
-        message = encode_text_non_async(bot_message.content)
-    else:
-        embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = message_title = ''
-        if embed.author: message_author = encode_text_non_async(str(embed.author))
-        if embed.description: message_description = encode_text_non_async(str(embed.description))
-        if embed.title: message_title = str(embed.title)
-        if embed.fields: message_fields = str(embed.fields)
-        message = f'{message_author}{message_description}{message_fields}{message_title}'
-
-    return message
-
-
 def encode_message_clan_non_async(bot_message: discord.Message) -> str:
     """Encodes a message to a version that converts all potentionally problematic unicode characters
     (non async, clan)"""
@@ -219,9 +219,9 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_title = ''
         if embed.author: message_author = encode_text_non_async(str(embed.author))
-        if embed.description: message_description = encode_message_clan_non_async(str(embed.description))
+        if embed.description: message_description = encode_text_non_async(str(embed.description))
         if embed.title: message_title = str(embed.title)
-        if embed.fields: message_fields = encode_message_clan_non_async(str(embed.fields))
+        if embed.fields: message_fields = encode_text_non_async(str(embed.fields))
         message = f'{message_author}{message_description}{message_fields}{message_title}'
 
     return message

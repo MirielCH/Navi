@@ -336,7 +336,7 @@ class SettingsClanCog(commands.Cog):
                         if user.clan_name != clan.clan_name:
                             await message_after.channel.send(strings.MSG_ERROR)
                             return
-                    except exceptions.NoDataFoundError:
+                    except exceptions.FirstTimeUserError:
                         pass
                 await message_after.add_reaction(emojis.NAVI)
 

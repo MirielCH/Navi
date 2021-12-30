@@ -41,7 +41,7 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'duel',
     'dungeon-miniboss',
     'farm',
-    'horse-breed',
+    'horse',
     'hunt',
     'lootbox',
     'quest',

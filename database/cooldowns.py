@@ -96,7 +96,7 @@ async def get_cooldown(activity: str) -> Cooldown:
     """
     table = 'cooldowns'
     function_name = 'get_cooldown'
-    sql = f'SELECT * FROM {table} where activity=?'
+    sql = f'SELECT * FROM {table} WHERE activity=?'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (activity,))

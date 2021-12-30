@@ -10,6 +10,7 @@ from discord.ext import commands
 from database import reminders, users
 from resources import emojis, exceptions, functions, logs, settings
 
+
  # Change these to change the event prefix
 EVENT_NAME = 'xmas'
 EVENT_ALIASES = ('christmas',)
@@ -82,12 +83,12 @@ class SleepyPotionCog(commands.Cog):
         args_full = ''
         for arg in args:
             args_full = f'{args_full} {arg}'
-        if args_full.strip() == 'use sleepy potion':
-            try:
-                user: users.User = await users.get_user(ctx.author.id)
-            except exceptions.NoDataFoundError:
-                return
-            if not user.reminders_enabled: return
+        if args_full.strip() != 'use sleepy potion': return
+        try:
+            user: users.User = await users.get_user(ctx.author.id)
+        except exceptions.NoDataFoundError:
+            return
+        if not user.reminders_enabled: return
         try:
             task_status = self.bot.loop.create_task(self.get_sleepy_message(ctx))
             bot_message = None

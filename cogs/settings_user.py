@@ -291,7 +291,7 @@ class SettingsUserCog(commands.Cog):
             except:
                 await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
                 return
-            if donor_tier > len(strings.DONOR_TIERS) - 1:
+            if donor_tier > len(strings.DONOR_TIERS) - 1 or donor_tier < 0:
                 await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
                 return
             await user.update(user_donor_tier=donor_tier)
@@ -345,7 +345,7 @@ class SettingsUserCog(commands.Cog):
             updated_activities.append(activity) if activity in strings.ACTIVITIES else ignored_activites.append(activity)
         if updated_activities:
             kwargs = {}
-            answer = f'{action.capitalize()}d activities:'
+            answer = f'{action.capitalize()}d alerts for the following activities:'
             for activity in updated_activities:
                 kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
@@ -357,7 +357,7 @@ class SettingsUserCog(commands.Cog):
                         pass
             await user.update(**kwargs)
         if ignored_activites:
-            answer = f'{answer}\n\nCouldn\'t find the following activities:'
+            answer = f'{answer}\n\nCouldn\'t find the following activites:'
             for activity in ignored_activites:
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
         await ctx.reply(answer, mention_author=False)
@@ -410,6 +410,12 @@ class SettingsUserCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
 
         if not args:
+            if not user.ruby_counter_enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, your ruby counter is turn off. Use `{prefix}ruby on` to activate it.',
+                    mention_author=False
+                )
+                return
             await ctx.reply(
                 f'**{ctx.author.name}**, you have {user.rubies} {emojis.RUBY} rubies.',
                 mention_author=False
@@ -431,7 +437,7 @@ class SettingsUserCog(commands.Cog):
                 mention_author=False
             )
             return
-        await user.update(ruby_counter_enabled=enabled)
+        await user.update(ruby_counter_enabled=enabled, rubies=0)
         if user.ruby_counter_enabled == enabled:
             answer = f'**{ctx.author.name}**, the ruby counter is now **{action}**.'
             if enabled:

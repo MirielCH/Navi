@@ -212,7 +212,7 @@ class SettingsPartnerCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
         try:
             await ctx.reply(
-                f'**{ctx.author.name}**, do you want to set **{ctx.channel.name}** as your partner alert channel? '
+                f'**{ctx.author.name}**, do you want to set `{ctx.channel.name}` as your partner alert channel? '
                 f'`[yes/no]`',
                 mention_author=False
             )
@@ -249,7 +249,7 @@ class SettingsPartnerCog(commands.Cog):
         channel = self.bot.get_channel(user.partner_channel_id)
         try:
             await ctx.reply(
-                f'**{ctx.author.name}**, do you want to remove **{channel.name}** as your partner alert channel? '
+                f'**{ctx.author.name}**, do you want to remove `{channel.name}` as your partner alert channel? '
                 f'`[yes/no]`\n'
                 f'This will also disable your partner alerts.',
                 mention_author=False

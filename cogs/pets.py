@@ -399,6 +399,7 @@ class PetsCog(commands.Cog):
                 # Check if pets are on adventures
                 action = ''
                 found_pets = []
+                original_bot_message = bot_message # debugging
                 if (bot_message.find('learning | ') > -1) or (bot_message.find('finding | ') > -1) or (bot_message.find('drilling | ') > -1):
                     while True:
                         if (bot_message.find('learning | ') > -1):
@@ -423,6 +424,7 @@ class PetsCog(commands.Cog):
                         bot_message = bot_message_old[:action_start] + bot_message_old[timestring_start:]
                         found_pets.append([id, timestring.lower()])
 
+                    detection_error = False
                     for pet in found_pets:
                         pet_id = pet[0]
                         pet_timestring = pet[1]
@@ -437,7 +439,9 @@ class PetsCog(commands.Cog):
                         )
                         if not reminder.record_exists:
                             await ctx.send(strings.MSG_ERROR)
-                        await bot_answer.add_reaction(emojis.NAVI)
+                            detection_error = True
+
+                    if not detection_error: await bot_answer.add_reaction(emojis.NAVI)
 
                 # Ignore anti spam embed
                 elif bot_message.find('Huh please don\'t spam') > 1:

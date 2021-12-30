@@ -97,7 +97,7 @@ async def get_all_prefixes(bot: commands.Bot, ctx: commands.Context) -> Tuple:
     """
     table = 'guilds'
     function_name = 'get_all_prefixes'
-    sql = f'SELECT prefix FROM {table} where guild_id=?'
+    sql = f'SELECT prefix FROM {table} WHERE guild_id=?'
     guild_id = ctx.guild.id
     try:
         cur = settings.NAVI_DB.cursor()
@@ -141,7 +141,7 @@ async def get_guild(guild_id: int) -> Guild:
     """
     table = 'guilds'
     function_name = 'get_guild'
-    sql = f'SELECT * FROM {table} where guild_id=?'
+    sql = f'SELECT * FROM {table} WHERE guild_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (guild_id,))

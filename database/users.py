@@ -267,7 +267,7 @@ async def get_user(user_id: int) -> User:
     """
     table = 'users'
     function_name = 'get_user'
-    sql = f'SELECT * FROM {table} where user_id=?'
+    sql = f'SELECT * FROM {table} WHERE user_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (user_id,))

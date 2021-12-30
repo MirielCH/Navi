@@ -624,11 +624,15 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
 
 
 async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta,
-                               channel_id: int, message: str) -> Reminder:
+                               channel_id: int, message: str, overwrite_message: Optional[bool] = True) -> Reminder:
     """Inserts a user reminder record.
     This function first checks if a reminder exists. If yes, the existing reminder will be updated instead and
     no new record is inserted.
     If end_time is less than 16 seconds in the future, this also creates a background task.
+
+    Arguments
+    ---------
+    overwrite_message: bool - If a reminder exists, this controls if the message gets updated or not.
 
     Returns
     -------
@@ -681,7 +685,10 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
         except exceptions.NoDataFoundError:
             pass
     if reminder is not None:
-        await reminder.update(end_time=end_time, channel_id=channel_id, message=message)
+        if overwrite_message:
+            await reminder.update(end_time=end_time, channel_id=channel_id, message=message)
+        else:
+            await reminder.update(end_time=end_time, channel_id=channel_id)
     else:
         sql = (
             f'INSERT INTO {table} (user_id, activity, end_time, channel_id, message, custom_id, triggered) '
@@ -760,9 +767,10 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
         for reminder in reminders:
             if reminder.activity in strings.SLEEPY_POTION_AFFECTED_ACTIVITIES:
                 new_end_time = reminder.end_time - time_reduction
-                time_left = reminder.end_time - current_time
+                time_left = new_end_time - current_time
                 if time_left.total_seconds() <= 0:
-                    scheduled_for_deletion[reminder.task_name] = reminder
+                    scheduled_for_tasks[reminder.task_name] = reminder # Testing to see if it rate limits
+                    #scheduled_for_deletion[reminder.task_name] = reminder
                     await reminder.delete()
                 elif 1 <= time_left.total_seconds() <= 15:
                     await reminder.update(end_time=new_end_time, triggered=True)

@@ -113,17 +113,16 @@ class CooldownsCog(commands.Cog):
                         lootbox_message = user.alert_lootbox.message.replace('%','rpg buy lootbox')
                         cooldowns.append(['lootbox', lootbox.lower(), lootbox_message])
                 if user.alert_adventure.enabled:
+                    adv_start = -1
                     if bot_message.find('Adventure`** (**') > -1:
                         adv_start = bot_message.find('Adventure`** (**') + 16
-                        adv_end = bot_message.find('s**', adv_start) + 1
-                        adventure = bot_message[adv_start:adv_end]
                         adv_message = user.alert_adventure.message.replace('%','rpg adventure')
-                        cooldowns.append(['adventure', adventure.lower(), adv_message])
                     elif bot_message.find('Adventure hardmode`** (**') > -1:
                         adv_start = bot_message.find('Adventure hardmode`** (**') + 25
+                        adv_message = user.alert_adventure.message.replace('%','rpg adventure hardmode')
+                    if adv_start > -1:
                         adv_end = bot_message.find('s**', adv_start) + 1
                         adventure = bot_message[adv_start:adv_end]
-                        adv_message = user.alert_adventure.message.replace('%','rpg adventure hardmode')
                         cooldowns.append(['adventure', adventure.lower(), adv_message])
                 if user.alert_training.enabled:
                     if bot_message.find('Training`** (**') > -1:
@@ -187,6 +186,21 @@ class CooldownsCog(commands.Cog):
                         farm = bot_message[farm_start:farm_end]
                         farm_message = user.alert_farm.message.replace('%','rpg farm')
                         cooldowns.append(['farm', farm.lower(), farm_message])
+                if user.alert_work.enabled:
+                    work_start = -1
+                    if bot_message.find('Mine`** (**') > -1:
+                        work_start = bot_message.find('Mine`** (**') + 11
+                    elif bot_message.find('Pickaxe`** (**') > -1:
+                        work_start = bot_message.find('Pickaxe`** (**') + 14
+                    elif bot_message.find('Drill`** (**') > -1:
+                        work_start = bot_message.find('Drill`** (**') + 12
+                    elif bot_message.find('Dynamite`** (**') > -1:
+                        work_start = bot_message.find('Dynamite`** (**') + 15
+                    if work_start > -1:
+                        work_end = bot_message.find('s**', work_start) + 1
+                        work = bot_message[work_start:work_end]
+                        work_message = user.alert_work.message.replace('%','work command')
+                        cooldowns.append(['work', work.lower(), work_message])
                 for cooldown in cooldowns:
                     activity = cooldown[0]
                     timestring = cooldown[1]
@@ -198,7 +212,7 @@ class CooldownsCog(commands.Cog):
                     if time_left.total_seconds() > 0:
                         reminder: reminders.Reminder = (
                             await reminders.insert_user_reminder(ctx.author.id, activity, time_left,
-                                                                 ctx.channel.id, message)
+                                                                 ctx.channel.id, message, overwrite_message=False)
                         )
                         if not reminder.record_exists:
                             await ctx.send(strings.MSG_ERROR)

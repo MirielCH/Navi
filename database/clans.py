@@ -202,7 +202,7 @@ async def get_clan_by_user_id(user_id: int) -> Clan:
     table = 'clans'
     function_name = 'get_clan_by_user_id'
     sql = (
-        f'SELECT * FROM {table} where leader_id=? or member1_id=? or member2_id=? or member3_id=? or member4_id=? '
+        f'SELECT * FROM {table} WHERE leader_id=? or member1_id=? or member2_id=? or member3_id=? or member4_id=? '
         f'or member5_id=? or member6_id=? or member7_id=? or member8_id=? or member9_id=? or member10_id=?'
     )
     try:
@@ -237,7 +237,7 @@ async def get_clan_by_clan_name(clan_name: str) -> Clan:
     """
     table = 'clans'
     function_name = 'get_clan_by_clan_name'
-    sql = f'SELECT * FROM {table} where clan_name=?'
+    sql = f'SELECT * FROM {table} WHERE clan_name=?'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan_name,))
@@ -343,7 +343,7 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
     """
     table = 'clans_raids'
     function_name = 'get_leaderboard'
-    sql = f'SELECT * FROM {table} clan_name=? AND energy>=100 ORDER BY energy DESC LIMIT 5'
+    sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy>=100 ORDER BY energy DESC LIMIT 5'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))
@@ -353,7 +353,7 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    sql = f'SELECT * FROM {table} clan_name=? AND energy<100 ORDER BY energy ASC LIMIT 5'
+    sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy<100 ORDER BY energy ASC LIMIT 5'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))
@@ -372,8 +372,8 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
         worst_raids.append(worst_raid)
 
     clan_leaderboard = ClanLeaderboard(
-        best_players = tuple(best_raids) if best_raids else None,
-        worst_players = tuple(worst_raids) if worst_raids else None
+        best_raids = tuple(best_raids) if best_raids else (),
+        worst_raids = tuple(worst_raids) if worst_raids else ()
     )
 
     return clan_leaderboard

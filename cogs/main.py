@@ -24,7 +24,7 @@ class MainCog(commands.Cog):
         if ctx.prefix.lower() == 'rpg ':
             return
         embed = await embed_main_help(ctx)
-        await ctx.respond(embed=embed)
+        await ctx.reply(embed=embed, mention_author=False)
 
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
@@ -147,18 +147,18 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     user_settings = (
         f'{emojis.BP} `{prefix}on` / `off` : Turn the bot on/off\n'
         f'{emojis.BP} `{prefix}settings` : Check your settings\n'
-        f'{emojis.BP} `{prefix}donator` : Set your EPIC RPG donator tier\n'
+        f'{emojis.BP} `{prefix}donor` : Set your EPIC RPG donor tier\n'
         f'{emojis.BP} `{prefix}enable` / `disable` : Enable/disable specific reminders\n'
         f'{emojis.BP} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
         f'{emojis.BP} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
+        f'{emojis.BP} `{prefix}ruby` : Check your current ruby count\n'
         f'{emojis.BP} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
         f'{emojis.BP} `{prefix}tr-helper on` / `off` : Turn the training helper on/off\n'
-        f'{emojis.BP} `{prefix}ruby` : Check your current ruby count'
     )
 
     partner_settings = (
         f'{emojis.BP} `{prefix}partner` : Set your marriage partner\n'
-        f'{emojis.BP} `{prefix}partner donator` : Set your partner\'s EPIC RPG donator tier\n'
+        f'{emojis.BP} `{prefix}partner donor` : Set your partner\'s EPIC RPG donor tier\n'
         f'{emojis.BP} `{prefix}partner channel` : Set the channel for incoming lootbox alerts'
     )
 
@@ -166,13 +166,12 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `rpg guild list` : Add/update your guild\n'
         f'{emojis.BP} `{prefix}guild leaderboard` : Check the weekly raid leaderboard\n'
         f'{emojis.BP} `{prefix}guild channel` : Set the channel for guild reminders\n'
-        f'{emojis.BP} `{prefix}guild on` / `off` : Turn guild reminders on or off\n'
+        f'{emojis.BP} `{prefix}guild reminders on` / `off` : Turn guild reminders on or off\n'
         f'{emojis.BP} `{prefix}guild stealth` : Set your stealth threshold'
     )
 
     server_settings = (
-        f'{emojis.BP} `{prefix}prefix` : Check the bot prefix\n'
-        f'{emojis.BP} `{prefix}setprefix` / `{prefix}sp` : Set the bot prefix'
+        f'{emojis.BP} `{prefix}prefix` : Check / set the bot prefix'
     )
 
     embed = discord.Embed(
@@ -186,7 +185,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)
     embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
 
-    await ctx.reply(embed=embed, mention_author=False)
+    return embed
 
 
 async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed:

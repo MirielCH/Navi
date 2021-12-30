@@ -33,7 +33,7 @@ EXTENSIONS = [
         'cogs.open',
         'cogs.pets',
         'cogs.quest',
-        'cogs.sleepypotion',
+        'cogs.sleepy-potion',
         'cogs.trade',
         'cogs.training',
         'cogs.weekly',
