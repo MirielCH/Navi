@@ -23,6 +23,7 @@ class TasksCog(commands.Cog):
         """Background task for scheduling reminders"""
         current_time = datetime.utcnow().replace(microsecond=0)
         time_left = reminder.end_time - current_time
+        if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
         await asyncio.sleep(time_left.total_seconds())
         try:
             await self.bot.wait_until_ready()
@@ -36,7 +37,7 @@ class TasksCog(commands.Cog):
                 else:
                     await channel.send(f'**{user.name}**, {reminder.message}')
             else:
-                clan = await clans.get_clan_by_user_id(reminder.user_id)
+                clan = await clans.get_clan_by_clan_name(reminder.clan_name)
                 message_mentions = ''
                 for member_id in clan.member_ids:
                     if member_id is not None:

@@ -55,6 +55,7 @@ class User():
     reminders_enabled: bool
     rubies: int
     ruby_counter_enabled: bool
+    tracking_enabled: bool
     training_helper_enabled: bool
     user_donor_tier: int
     user_id: int
@@ -94,6 +95,7 @@ class User():
         self.reminders_enabled = new_settings.reminders_enabled
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
+        self.tracking_enabled = new_settings.tracking_enabled
         self.training_helper_enabled = new_settings.training_helper_enabled
         self.user_donor_tier = new_settings.user_donor_tier
 
@@ -237,6 +239,7 @@ async def _dict_to_user(record: dict) -> User:
             reminders_enabled = bool(record['reminders_enabled']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
+            tracking_enabled = bool(record['tracking_enabled']),
             training_helper_enabled = bool(record['training_helper_enabled']),
             user_donor_tier = record['user_donor_tier'],
             user_id = record['user_id'],
@@ -282,6 +285,42 @@ async def get_user(user_id: int) -> User:
     user = await _dict_to_user(dict(record))
 
     return user
+
+
+async def get_all_users() -> tuple(User):
+    """Gets all user settings of all users.
+
+    Returns
+    -------
+    Tuple with User objects
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    exceptions.NoDataFoundError if no guild was found.
+    LookupError if something goes wrong reading the dict.
+    Also logs all errors to the database.
+    """
+    table = 'users'
+    function_name = 'get_all_users'
+    sql = f'SELECT * FROM {table}'
+    try:
+        cur = settings.NAVI_DB.cursor()
+        cur.execute(sql)
+        records = cur.fetchall()
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    if not records:
+        raise exceptions.FirstTimeUserError(f'No user data found in database (how likely is that).')
+    users = []
+    for record in records:
+        user = await _dict_to_user(dict(record))
+        users.append(user)
+
+    return tuple(users)
 
 
 async def get_user_count() -> int:

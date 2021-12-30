@@ -591,12 +591,11 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    if 'triggered' not in kwargs:
-        current_time = datetime.utcnow().replace(microsecond=0)
-        end_time = kwargs['end_time'] if 'end_time' in kwargs else reminder.end_time
-        time_left = end_time - current_time
-        triggered = False if time_left.total_seconds() > 15 else True
-        kwargs['triggered'] = triggered
+    current_time = datetime.utcnow().replace(microsecond=0)
+    end_time = kwargs['end_time'] if 'end_time' in kwargs else reminder.end_time
+    time_left = end_time - current_time
+    triggered = False if time_left.total_seconds() > 15 else True
+    if 'triggered' not in kwargs: kwargs['triggered'] = triggered
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
@@ -769,6 +768,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
                 new_end_time = reminder.end_time - time_reduction
                 time_left = new_end_time - current_time
                 if time_left.total_seconds() <= 0:
+                    reminder.end_time=new_end_time  # Testing to see if it rate limits
                     scheduled_for_tasks[reminder.task_name] = reminder # Testing to see if it rate limits
                     #scheduled_for_deletion[reminder.task_name] = reminder
                     await reminder.delete()

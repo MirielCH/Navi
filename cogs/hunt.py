@@ -7,7 +7,7 @@ from typing import Tuple
 import discord
 from discord.ext import commands
 
-from database import cooldowns, reminders, users
+from database import cooldowns, reminders, tracking, users
 from resources import emojis, exceptions, functions, logs, settings, strings
 
 
@@ -141,6 +141,7 @@ class HuntCog(commands.Cog):
                         await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
                                                              ctx.channel.id, hunt_message)
                     )
+
                     if reminder.record_exists:
                         await bot_answer.add_reaction(emojis.NAVI)
                     else:
@@ -232,9 +233,12 @@ class HuntCog(commands.Cog):
 
             # Save task to database
             reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
-                                                             ctx.channel.id, hunt_message)
-                    )
+                await reminders.insert_user_reminder(ctx.author.id, 'hunt', time_left,
+                                                     ctx.channel.id, hunt_message)
+            )
+
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'hunt', current_time)
 
             # Add reaction
             if reminder.record_exists:

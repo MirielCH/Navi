@@ -412,7 +412,7 @@ class SettingsUserCog(commands.Cog):
         if not args:
             if not user.ruby_counter_enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, your ruby counter is turn off. Use `{prefix}ruby on` to activate it.',
+                    f'**{ctx.author.name}**, the ruby counter is turned off. Use `{prefix}ruby on` to activate it.',
                     mention_author=False
                 )
                 return
@@ -492,6 +492,43 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
 
+    @commands.command(aliases=('track',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def tracking(self, ctx: commands.Context, *args: str) -> None:
+        """Enables/disables command tracking"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
+
+        if not args:
+            await ctx.reply(syntax, mention_author=False)
+            return
+        action = args[0].lower()
+        if action in ('on', 'enable', 'start'):
+            enabled = True
+            action = 'enabled'
+        elif action in ('off', 'disable', 'stop'):
+            enabled = False
+            action = 'disabled'
+        else:
+            await ctx.reply(syntax, mention_author=False)
+            return
+        user: users.User = await users.get_user(ctx.author.id)
+        if user.tracking_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, command tracking is already {action}.',
+                mention_author=False
+            )
+            return
+        await user.update(tracking_enabled=enabled)
+        if user.tracking_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, command tracking is now **{action}**.',
+                mention_author=False
+            )
+        else:
+            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+
 
 # Initialization
 def setup(bot):
@@ -538,19 +575,20 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     # Fields
     field_user = (
         f'{emojis.BP} Reminders: `{await bool_to_text(user_settings.reminders_enabled)}`\n'
-        f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}` '
+        f'{emojis.BP} Command tracking: `{await bool_to_text(user_settings.tracking_enabled)}`\n'
+        f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}`'
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
+        f'{emojis.BP} Partner alert channel: `{partner_channel_name}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
-        f'{emojis.BP} Partner alert channel: `{partner_channel_name}`'
     )
     field_partner = (
         f'{emojis.BP} Name: `{partner_name}`\n'
-        f'{emojis.BP} Hardmode mode: `{partner_hardmode_status}`\n'
         f'{emojis.BP} Donor tier: `{user_settings.partner_donor_tier}` '
         f'({strings.DONOR_TIERS[user_settings.partner_donor_tier]})\n'
+        f'{emojis.BP} Hardmode mode: `{partner_hardmode_status}`\n'
     )
     field_clan = (
         f'{emojis.BP} Name: `{clan_name}`\n'
@@ -593,7 +631,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     embed.add_field(name='USER', value=field_user, inline=False)
     embed.add_field(name='PARTNER', value=field_partner, inline=False)
     embed.add_field(name='GUILD', value=field_clan, inline=False)
-    embed.add_field(name='COOLDOWN REMINDERS', value=field_reminders, inline=False)
+    embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=False)
 
     return embed
