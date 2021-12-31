@@ -1,14 +1,10 @@
 # users.py
 """Provides access to the table "users" in the database"""
 
-
 from dataclasses import dataclass
 from datetime import datetime
-import itertools
 import sqlite3
-from typing import NamedTuple, Optional, Tuple
-
-from discord.ext import commands
+from typing import NamedTuple, Tuple
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -403,7 +399,7 @@ async def _update_user(user: User, **kwargs) -> None:
         clan_name: str
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
-        last_tt: datetime UTC
+        last_tt: datetime UTC (iso format with separator ' ')
         partner_channel_id: int
         partner_donor_tier: int
         partner_id: int

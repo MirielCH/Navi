@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from discord.ext.commands import errors
 
-from database import errors, guilds
+from database import errors, guilds, users
 from resources import emojis, exceptions, logs, settings
 
 
@@ -78,8 +78,15 @@ class MainCog(commands.Cog):
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.reply(embed=embed)
 
+        error = getattr(error, 'original', error)
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
+        elif isinstance(error, commands.CommandOnCooldown):
+            await ctx.reply(
+                f'**{ctx.author.name}**, you can only use this command every '
+                f'{int(error.cooldown.per)} seconds.\n'
+                f'You have to wait another **{error.retry_after:.2f}s**.'
+            )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.reply(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
         elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
@@ -154,6 +161,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `{prefix}ruby` : Check your current ruby count\n'
         f'{emojis.BP} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
         f'{emojis.BP} `{prefix}tr-helper on` / `off` : Turn the training helper on/off\n'
+        f'{emojis.BP} `{prefix}last-tt` : Manually change your last TT time\n'
     )
 
     partner_settings = (
@@ -190,8 +198,10 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
 
 async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed:
     """Bot info embed"""
+    user_count = await users.get_user_count()
     general = (
         f'{emojis.BP} {len(bot.guilds):,} servers\n'
+        f'{emojis.BP} {user_count:,} users\n'
         f'{emojis.BP} {round(bot.latency * 1000):,} ms bot latency\n'
         f'{emojis.BP} {round(api_latency.total_seconds() * 1000):,} ms API latency'
     )
@@ -199,5 +209,6 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
     embed = discord.Embed(color = settings.EMBED_COLOR, title = 'ABOUT NAVI')
     embed.add_field(name='BOT STATS', value=general, inline=False)
     embed.add_field(name='CREATOR', value=creator, inline=False)
+    embed.add_field(name='SPECIAL THANKS TO', value=f'{emojis.BP} Swiss cheese', inline=False)
 
     return embed

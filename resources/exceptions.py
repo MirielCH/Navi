@@ -20,3 +20,8 @@ class RecordExistsError(Exception):
 class FirstTimeUserError(Exception):
     """Custom exception for when no user record is found in the database"""
     pass
+
+
+class InvalidTimestringError(ValueError):
+    """Custom exception for when a timestring is not valid."""
+    pass

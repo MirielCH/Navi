@@ -7,7 +7,7 @@ from typing import Tuple
 import discord
 from discord.ext import commands
 
-from database import cooldowns, reminders, users
+from database import cooldowns, reminders, tracking, users
 from resources import emojis, exceptions, functions, logs, settings, strings
 
 
@@ -202,7 +202,11 @@ class WorkCog(commands.Cog):
                     await bot_answer.add_reaction(emojis.WOW)
             else:
                 if settings.DEBUG_MODE: await ctx.send(strings.MSG_ERROR)
-                return
+
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'work', current_time)
+
         except asyncio.TimeoutError:
             await ctx.send('Work detection timeout.')
             return

@@ -4,7 +4,6 @@
 from datetime import datetime
 import sqlite3
 from typing import Optional, Union
-from discord.enums import try_enum
 
 from discord.ext import commands
 
@@ -34,7 +33,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context
             from database import users
             user: users.User = await users.get_user(ctx.author.id)
             user_settings = str(user)
-        except exceptions.NoDataFoundError:
+        except exceptions.FirstTimeUserError:
             user_settings = 'N/A'
     else:
         date_time = datetime.utcnow()

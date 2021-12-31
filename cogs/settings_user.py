@@ -529,6 +529,47 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
 
+    @commands.command(aliases=('last-tt','lasttt'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def last_tt(self, ctx: commands.Context, *args: str) -> None:
+        """Updates the time of the last time travel"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [message ID]')
+        msg_syntax = (
+            f'{syntax}\n\n'
+            f'Use the ID of the message that announced your time travel '
+            f'("**{ctx.author.name}** traveled in time :cyclone:").\n'
+            f'If you don\'t have access to that message anymore, choose another message that is as close '
+            f'to your last time travel as possible.\n'
+            f'Note that it does not matter if I can actually read the message, I only need the ID.'
+        )
+
+        user: users.User = await users.get_user(ctx.author.id)
+
+        if not args:
+            await ctx.reply(msg_syntax, mention_author=False)
+            return
+        message_id = args[0]
+        try:
+            message_id = int(message_id)
+            snowflake_binary = f'{message_id:064b}'
+            timestamp_binary = snowflake_binary[:42]
+            timestamp_decimal = int(timestamp_binary, 2)
+            timestamp = (timestamp_decimal + 1_420_070_400_000) / 1000
+            tt_time = datetime.utcfromtimestamp(timestamp).replace(microsecond=0)
+            tt_time_str = tt_time.isoformat(sep=' ')
+        except:
+            await ctx.reply(f'Invalid message ID.\n{syntax}', mention_author=False)
+            return
+        await user.update(last_tt=tt_time.isoformat(sep=' '))
+        if user.last_tt != tt_time:
+            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            return
+        await ctx.reply(
+            f'**{ctx.author.name}**, your last time travel time was changed to `{tt_time_str} UTC`.',
+            mention_author=False
+        )
 
 # Initialization
 def setup(bot):
@@ -542,21 +583,24 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         return 'Enabled' if boolean else 'Disabled'
 
     # Get user settings
-    partner_channel_name = 'N/A'
+    user_partner_channel_name = 'N/A'
     user_settings: users.User = await users.get_user(ctx.author.id)
     if user_settings.partner_channel_id is not None:
         await bot.wait_until_ready()
-        partner_channel = bot.get_channel(user_settings.partner_channel_id)
-        partner_channel_name = partner_channel.name
+        user_partner_channel = bot.get_channel(user_settings.partner_channel_id)
+        user_partner_channel_name = user_partner_channel.name
 
     # Get partner settings
     partner_name = partner_hardmode_status = 'N/A'
+    partner_partner_channel_name = 'N/A'
     if user_settings.partner_id is not None:
         partner_settings: users.User = await users.get_user(user_settings.partner_id)
         await bot.wait_until_ready()
         partner = bot.get_user(user_settings.partner_id)
         partner_name = f'{partner.name}#{partner.discriminator}'
         partner_hardmode_status = await bool_to_text(partner_settings.hardmode_mode_enabled)
+        partner_partner_channel = bot.get_channel(partner_settings.partner_channel_id)
+        partner_partner_channel_name = partner_partner_channel.name
 
     # Get clan settings
     clan_name = clan_alert_status = stealth_threshold = clan_channel_name = 'N/A'
@@ -576,19 +620,21 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     field_user = (
         f'{emojis.BP} Reminders: `{await bool_to_text(user_settings.reminders_enabled)}`\n'
         f'{emojis.BP} Command tracking: `{await bool_to_text(user_settings.tracking_enabled)}`\n'
-        f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}`'
+        f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}` '
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
-        f'{emojis.BP} Partner alert channel: `{partner_channel_name}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
+        f'{emojis.BP} Last TT: `{user_settings.last_tt.isoformat(sep=" ")} UTC`\n'
+        f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{user_partner_channel_name}`\n'
     )
     field_partner = (
         f'{emojis.BP} Name: `{partner_name}`\n'
         f'{emojis.BP} Donor tier: `{user_settings.partner_donor_tier}` '
         f'({strings.DONOR_TIERS[user_settings.partner_donor_tier]})\n'
         f'{emojis.BP} Hardmode mode: `{partner_hardmode_status}`\n'
+        f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{partner_partner_channel_name}`\n'
     )
     field_clan = (
         f'{emojis.BP} Name: `{clan_name}`\n'
@@ -628,10 +674,10 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name}\'s settings'.upper(),
     )
-    embed.add_field(name='USER', value=field_user, inline=False)
-    embed.add_field(name='PARTNER', value=field_partner, inline=False)
+    embed.add_field(name='USER', value=field_user, inline=True)
+    embed.add_field(name='PARTNER', value=field_partner, inline=True)
     embed.add_field(name='GUILD', value=field_clan, inline=False)
-    embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=False)
-    embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=False)
+    embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=True)
+    embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=True)
 
     return embed

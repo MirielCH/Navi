@@ -7,7 +7,7 @@ from typing import Tuple
 import discord
 from discord.ext import commands
 
-from database import cooldowns, reminders, users
+from database import cooldowns, reminders, tracking, users
 from resources import emojis, exceptions, functions, logs, settings, strings
 
 
@@ -169,7 +169,11 @@ class AdventureCog(commands.Cog):
             if bot_message.find('GODLY lootbox') > -1: await bot_answer.add_reaction(emojis.SURPRISE)
             if bot_message.find('but lost fighting') > -1: await bot_answer.add_reaction(emojis.RIP)
 
-        except asyncio.TimeoutError as error:
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'adventure', current_time)
+
+        except asyncio.TimeoutError:
             await ctx.send('Adventure detection timeout.')
             return
         except Exception as e:

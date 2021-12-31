@@ -45,7 +45,8 @@ EXTENSIONS = [
         'cogs.settings_partner',
         'cogs.settings_clan',
         'cogs.fun',
-        'cogs.tasks'
+        'cogs.tasks',
+        'cogs.tracking'
     ]
 
 if __name__ == '__main__':

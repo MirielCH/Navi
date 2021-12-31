@@ -34,6 +34,7 @@ class SettingsClanCog(commands.Cog):
         if args:
             ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix), mention_author=False)
             return
+        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
@@ -67,6 +68,7 @@ class SettingsClanCog(commands.Cog):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
@@ -103,6 +105,7 @@ class SettingsClanCog(commands.Cog):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
@@ -150,6 +153,7 @@ class SettingsClanCog(commands.Cog):
         """Check/set the current clan stealth threshold"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
@@ -184,6 +188,7 @@ class SettingsClanCog(commands.Cog):
         """Check/set guild reminders"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
@@ -229,6 +234,7 @@ class SettingsClanCog(commands.Cog):
         """Shows the clan leaderboard"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:

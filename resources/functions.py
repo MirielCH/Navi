@@ -5,9 +5,102 @@ import discord
 from discord.ext import commands
 
 from database import errors
+from resources import exceptions
 
 
 # --- Parsing ---
+async def check_timestring(string: str) -> str:
+    """Checks if a string is a valid timestring. Returns itself it valid.
+
+    Raises
+    ------
+    ErrorInvalidTime if timestring is not a valid timestring.
+    """
+    last_time_code = None
+    last_char_was_number = False
+    timestring = ''
+    current_number = ''
+    pos = 0
+    while not pos == len(string):
+        slice = string[pos:pos+1]
+        pos = pos+1
+        allowedcharacters_numbers = set('1234567890')
+        allowedcharacters_timecode = set('wdhms')
+        if set(slice).issubset(allowedcharacters_numbers):
+            timestring = f'{timestring}{slice}'
+            current_number = f'{current_number}{slice}'
+            last_char_was_number = True
+        elif set(slice).issubset(allowedcharacters_timecode) and last_char_was_number:
+            if slice == 'w':
+                if last_time_code is None:
+                    timestring = f'{timestring}w'
+                    try:
+                        current_number_numeric = int(current_number)
+                    except:
+                        raise exceptions.InvalidTimestringError('Invalid timestring.')
+                    last_time_code = 'weeks'
+                    last_char_was_number = False
+                    current_number = ''
+                else:
+                    raise exceptions.InvalidTimestringError('Invalid timestring.')
+            elif slice == 'd':
+                if last_time_code in ('weeks',None):
+                    timestring = f'{timestring}d'
+                    try:
+                        current_number_numeric = int(current_number)
+                    except:
+                        raise exceptions.InvalidTimestringError('Invalid timestring.')
+                    last_time_code = 'days'
+                    last_char_was_number = False
+                    current_number = ''
+                else:
+                    raise exceptions.InvalidTimestringError('Invalid timestring.')
+            elif slice == 'h':
+                if last_time_code in ('weeks','days',None):
+                    timestring = f'{timestring}h'
+                    try:
+                        current_number_numeric = int(current_number)
+                    except:
+                        raise exceptions.InvalidTimestringError('Invalid timestring.')
+                    last_time_code = 'hours'
+                    last_char_was_number = False
+                    current_number = ''
+                else:
+                    raise exceptions.InvalidTimestringError('Invalid timestring.')
+            elif slice == 'm':
+                if last_time_code in ('weeks','days','hours',None):
+                    timestring = f'{timestring}m'
+                    try:
+                        current_number_numeric = int(current_number)
+                    except:
+                        raise exceptions.InvalidTimestringError('Invalid timestring.')
+                    last_time_code = 'minutes'
+                    last_char_was_number = False
+                    current_number = ''
+                else:
+                    raise exceptions.InvalidTimestringError('Invalid timestring.')
+            elif slice == 's':
+                if last_time_code in ('weeks','days','hours','minutes',None):
+                    timestring = f'{timestring}s'
+                    try:
+                        current_number_numeric = int(current_number)
+                    except:
+                        raise exceptions.InvalidTimestringError('Invalid timestring.')
+                    last_time_code = 'seconds'
+                    last_char_was_number = False
+                    current_number = ''
+                else:
+                    raise exceptions.InvalidTimestringError('Invalid timestring.')
+            else:
+                raise exceptions.InvalidTimestringError('Invalid timestring.')
+        else:
+            raise exceptions.InvalidTimestringError('Invalid timestring.')
+    if last_char_was_number:
+        raise exceptions.InvalidTimestringError('Invalid timestring.')
+
+    return timestring
+
+
 async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) -> timedelta:
     """Parses a time string and returns the time as timedelta."""
     time_left_seconds = 0
@@ -72,6 +165,9 @@ async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) 
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{seconds}\' to an integer',
                 ctx
             )
+
+    if time_left_seconds > 999_999_999:
+        raise OverflowError('Timestring out of valid range. Stop hacking.')
 
     return timedelta(seconds=time_left_seconds)
 

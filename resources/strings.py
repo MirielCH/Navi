@@ -20,7 +20,7 @@ MSG_NOT_CLAN_LEADER = (
     'If you are a guild leader, run `rpg guild list` first to add or update your guild in my database.'
 )
 MSG_INVALID_ARGUMENT = 'Invalid argument. Check `{prefix}help` for the correct commands.'
-MSG_SYNTAX = 'The command syntax is `{syntax}`'
+MSG_SYNTAX = 'The command syntax is `{syntax}`.'
 MSG_CLAN_NOT_REGISTERED = 'Your guild is not registered with Navi. If you are in a guild, use `rpg guild list` to add it.'
 
 DONOR_TIERS = (

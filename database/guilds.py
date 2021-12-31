@@ -22,7 +22,7 @@ class Guild():
 
     async def refresh(self) -> None:
         """Refreshes guild data from the database."""
-        new_settings = await get_guild(self.activity)
+        new_settings = await get_guild(self.guild_id)
         self.prefix = new_settings.prefix
 
     async def update(self, **kwargs) -> None:

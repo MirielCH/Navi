@@ -1,14 +1,14 @@
 # tracking.py
 """Contains commands related to command tracking"""
 
-import asyncio
 from datetime import datetime, timedelta
+import re
 
 import discord
 from discord.ext import commands
 
-from database import clans, reminders, users
-from resources import emojis, functions, exceptions, settings, strings
+from database import errors, users, tracking
+from resources import emojis, functions, exceptions, settings
 
 
 class TrackingCog(commands.Cog):
@@ -16,13 +16,83 @@ class TrackingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.cooldown(1, 1, commands.BucketType.user)
     @commands.command(aliases=('statistics','statistic','stat'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def stats(self, ctx: commands.Context, *args: str) -> None:
         """Returns current command statistics"""
-        if ctx.prefix.lower() == 'rpg ': return
-        embed = await embed_stats_overview(self.bot, ctx)
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        if ctx.message.mentions:
+            mentioned_user = ctx.message.mentions[0]
+            if mentioned_user.bot:
+                await ctx.reply(
+                    'Imaging trying to check the stats of a bot.',
+                    mention_author=False
+                )
+                return
+            user = mentioned_user
+            args = list(args)
+            matches = (f'<@!{user.id}>', f'<@{user.id}>')
+            for index, arg in enumerate(args):
+                if any(match in arg for match in matches):
+                    args.pop(index)
+        else:
+            user = ctx.author
+
+        try:
+            user_settings: users.User = await users.get_user(user.id)
+        except exceptions.FirstTimeUserError:
+            await ctx.reply(f'**{user.name}** is not registered with this bot.', mention_author=False)
+            return
+
+        if not args or len(args) > 1:
+            embed = await embed_stats_overview(ctx, user)
+        if args:
+            timestring = args[0]
+            try:
+                timestring = await functions.check_timestring(timestring)
+            except Exception as error:
+                await ctx.reply(error, mention_author=False)
+                return
+
+            time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
+            if time_left.days > 365:
+                await ctx.reply('The maximum time is 365d.', mention_author=False)
+                return
+            embed = await embed_stats_timeframe(ctx, user, time_left)
+
         await ctx.reply(embed=embed, mention_author=False)
+
+    # Events
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """Fires when a message is sent"""
+        #if (message.author.id == settings.EPIC_RPG_ID and message.embeds
+        #    and 'has traveled in time :cyclone:' in message.content.lower()):
+        if message.author.id == 619879176316649482 and 'has traveled in time' in message.content.lower():
+            try:
+                user_name = re.search("\*\*(.+?)\*\* has", message.content).group(1)
+            except Exception as error:
+                await errors.log_error(error)
+                return
+            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            user = None
+            for member in message.guild.members:
+                member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                if member_name == user_name:
+                    user = member
+                    break
+            if user is None:
+                await errors.log_error(f'Couldn\'t find a user with user_name {user_name}.')
+                return
+            try:
+                user_settings: users.User = await users.get_user(user.id)
+            except exceptions.NoDataFoundError:
+                return
+            tt_time = message.created_at.replace(microsecond=0)
+            await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+            if user_settings.last_tt == tt_time: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization
@@ -31,102 +101,88 @@ def setup(bot):
 
 
 # --- Embeds ---
-async def embed_stats_overview(bot: commands.Bot, ctx: commands.Context) -> discord.Embed:
+async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> discord.Embed:
     """Stats overview embed"""
-    async def bool_to_text(boolean: bool):
-        return 'Enabled' if boolean else 'Disabled'
 
-    # Get user settings
-    partner_channel_name = 'N/A'
-    user_settings: users.User = await users.get_user(ctx.author.id)
-    if user_settings.partner_channel_id is not None:
-        await bot.wait_until_ready()
-        partner_channel = bot.get_channel(user_settings.partner_channel_id)
-        partner_channel_name = partner_channel.name
+    async def command_count(command: str, timeframe: timedelta) -> str:
+        try:
+            report = await tracking.get_log_report(user.id, command, timeframe)
+            text = f'{emojis.BP} `{report.command}`: {report.command_count}'
+        except exceptions.NoDataFoundError:
+            text = f'{emojis.BP} `{command}`: 0'
 
-    # Get partner settings
-    partner_name = partner_hardmode_status = 'N/A'
-    if user_settings.partner_id is not None:
-        partner_settings: users.User = await users.get_user(user_settings.partner_id)
-        await bot.wait_until_ready()
-        partner = bot.get_user(user_settings.partner_id)
-        partner_name = f'{partner.name}#{partner.discriminator}'
-        partner_hardmode_status = await bool_to_text(partner_settings.hardmode_mode_enabled)
+        return text
 
-    # Get clan settings
-    clan_name = clan_alert_status = stealth_threshold = clan_channel_name = 'N/A'
-    try:
-        clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
-        clan_name = clan_settings.clan_name
-        clan_alert_status = await bool_to_text(clan_settings.alert_enabled)
-        stealth_threshold = clan_settings.stealth_threshold
-        if clan_settings.channel_id is not None:
-            await bot.wait_until_ready()
-            clan_channel = bot.get_channel(clan_settings.channel_id)
-            clan_channel_name = clan_channel.name
-    except exceptions.NoDataFoundError:
-        pass
-
-    # Fields
-    field_user = (
-        f'{emojis.BP} Reminders: `{await bool_to_text(user_settings.reminders_enabled)}`\n'
-        f'{emojis.BP} Command tracking: `{await bool_to_text(user_settings.tracking_enabled)}`\n'
-        f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}`'
-        f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
-        f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
-        f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
-        f'{emojis.BP} Partner alert channel: `{partner_channel_name}`\n'
-        f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
-        f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
-    )
-    field_partner = (
-        f'{emojis.BP} Name: `{partner_name}`\n'
-        f'{emojis.BP} Donor tier: `{user_settings.partner_donor_tier}` '
-        f'({strings.DONOR_TIERS[user_settings.partner_donor_tier]})\n'
-        f'{emojis.BP} Hardmode mode: `{partner_hardmode_status}`\n'
-    )
-    field_clan = (
-        f'{emojis.BP} Name: `{clan_name}`\n'
-        f'{emojis.BP} Reminders: `{clan_alert_status}`\n'
-        f'{emojis.BP} Alert channel: `{clan_channel_name}`\n'
-        f'{emojis.BP} Stealth threshold: `{stealth_threshold}`'
-    )
-    field_reminders = (
-        f'{emojis.BP} Adventure: `{await bool_to_text(user_settings.alert_adventure.enabled)}`\n'
-        f'{emojis.BP} Arena: `{await bool_to_text(user_settings.alert_arena.enabled)}`\n'
-        f'{emojis.BP} Daily: `{await bool_to_text(user_settings.alert_daily.enabled)}`\n'
-        f'{emojis.BP} Duel: `{await bool_to_text(user_settings.alert_duel.enabled)}`\n'
-        f'{emojis.BP} Dungeon / Miniboss: `{await bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}`\n'
-        f'{emojis.BP} Farm: `{await bool_to_text(user_settings.alert_farm.enabled)}`\n'
-        f'{emojis.BP} Horse: `{await bool_to_text(user_settings.alert_horse_breed.enabled)}`\n'
-        f'{emojis.BP} Hunt: `{await bool_to_text(user_settings.alert_hunt.enabled)}`\n'
-        f'{emojis.BP} Lootbox: `{await bool_to_text(user_settings.alert_lootbox.enabled)}`\n'
-        f'{emojis.BP} Lottery: `{await bool_to_text(user_settings.alert_lottery.enabled)}`\n'
-        f'{emojis.BP} Partner alert: `{await bool_to_text(user_settings.alert_partner.enabled)}`\n'
-        f'{emojis.BP} Pets: `{await bool_to_text(user_settings.alert_pets.enabled)}`\n'
-        f'{emojis.BP} Quest: `{await bool_to_text(user_settings.alert_quest.enabled)}`\n'
-        f'{emojis.BP} Training: `{await bool_to_text(user_settings.alert_training.enabled)}`\n'
-        f'{emojis.BP} Vote: `{await bool_to_text(user_settings.alert_vote.enabled)}`\n'
-        f'{emojis.BP} Weekly: `{await bool_to_text(user_settings.alert_weekly.enabled)}`\n'
-        f'{emojis.BP} Work: `{await bool_to_text(user_settings.alert_work.enabled)}`'
-    )
-    field_event_reminders = (
-        f'{emojis.BP} Big arena: `{await bool_to_text(user_settings.alert_big_arena.enabled)}`\n'
-        f'{emojis.BP} Horse race: `{await bool_to_text(user_settings.alert_horse_race.enabled)}`\n'
-        f'{emojis.BP} Not so mini boss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
-        f'{emojis.BP} Pet tournament: `{await bool_to_text(user_settings.alert_pet_tournament.enabled)}`\n'
-    )
-    if not user_settings.reminders_enabled:
-        field_reminders = f'**These settings are ignored because your reminders are off.**\n{field_reminders}'
+    user_settings: users.User = await users.get_user(user.id)
+    field_last_1h = field_last_12h = field_last_24h = field_last_7d = field_last_4w = field_last_1y = field_last_tt = ''
+    commands = ('hunt','work','farm','training','adventure')
+    current_time = datetime.utcnow().replace(microsecond=0)
+    for command in commands:
+        last_1h = await command_count(command, timedelta(hours=1))
+        field_last_1h = f'{field_last_1h}\n{last_1h}'
+        last_12h = await command_count(command, timedelta(hours=12))
+        field_last_12h = f'{field_last_12h}\n{last_12h}'
+        last_24h = await command_count(command, timedelta(hours=24))
+        field_last_24h = f'{field_last_24h}\n{last_24h}'
+        last_7d = await command_count(command, timedelta(days=7))
+        field_last_7d = f'{field_last_7d}\n{last_7d}'
+        last_4w = await command_count(command, timedelta(days=28))
+        field_last_4w = f'{field_last_4w}\n{last_4w}'
+        last_1y = await command_count(command, timedelta(days=365))
+        field_last_1y = f'{field_last_1y}\n{last_1y}'
+        last_tt = await command_count(command, current_time-user_settings.last_tt)
+        field_last_tt = f'{field_last_tt}\n{last_tt}'
+    field_last_tt = f'{field_last_tt}\n\n_Your last TT was on `{user_settings.last_tt.isoformat(sep=" ")} UTC`._'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name}\'s settings'.upper(),
+        title = f'{user.name}\'s stats'.upper(),
     )
-    embed.add_field(name='USER', value=field_user, inline=False)
-    embed.add_field(name='PARTNER', value=field_partner, inline=False)
-    embed.add_field(name='GUILD', value=field_clan, inline=False)
-    embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=False)
-    embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=False)
+    embed.set_footer(text=f'Use "{ctx.prefix}stats [time]" to check a custom timeframe.')
+    embed.add_field(name='LAST HOUR', value=field_last_1h, inline=True)
+    embed.add_field(name='LAST 12 HOURS', value=field_last_12h, inline=True)
+    embed.add_field(name='LAST 24 HOURS', value=field_last_24h, inline=True)
+    embed.add_field(name='LAST 7 DAYS', value=field_last_7d, inline=True)
+    embed.add_field(name='LAST 4 WEEKS', value=field_last_4w, inline=True)
+    embed.add_field(name='LAST YEAR', value=field_last_1y, inline=True)
+    embed.add_field(name='SINCE YOUR LAST TT', value=field_last_tt, inline=True)
+
+    return embed
+
+
+async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, time_left: timedelta) -> discord.Embed:
+    """Stats timeframe embed"""
+    field_timeframe = ''
+    commands = ('hunt','work','farm','training','adventure')
+    for command in commands:
+        try:
+            report = await tracking.get_log_report(user.id, command, time_left)
+            field_timeframe = f'{field_timeframe}\n{emojis.BP} `{report.command}`: {report.command_count}'
+        except exceptions.NoDataFoundError:
+            field_timeframe = f'{field_timeframe}\n{emojis.BP} `{command}`: 0'
+    if time_left.days >= 7:
+        timeframe = f'{time_left.days} days'
+    else:
+        days = int((time_left.total_seconds() % 604800) // 86400)
+        hours = int((time_left.total_seconds() % 86400) // 3600)
+        minutes = int((time_left.total_seconds() % 3600) // 60)
+        seconds = int(time_left.total_seconds() % 60)
+        timeframe = ''
+        if days > 0:
+            timeframe = f'{days} days'
+        if hours > 0:
+            timeframe = f'{timeframe}, {hours} hours'
+        if minutes > 0:
+            timeframe = f'{timeframe}, {minutes} minutes'
+        if seconds > 0:
+            timeframe = f'{timeframe}, {seconds} seconds'
+        timeframe = timeframe.strip(',').strip()
+
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{user.name}\'s stats'.upper(),
+    )
+    embed.set_footer(text=f'Use "{ctx.prefix}stats" to see an overview.')
+    embed.add_field(name=f'LAST {timeframe}'.upper(), value=field_timeframe, inline=False)
 
     return embed

@@ -28,10 +28,6 @@ class CustomRemindersCog(commands.Cog):
             f'You can find the ID with `{prefix}list`\n\n'
             f'Example: `{prefix}rm delete 3`'
         )
-        error_invalid_time = (
-            f'Invalid time.\n\n'
-            f'{syntax_add}'
-        )
         error_max_time = 'The maximum time is 4w6d23h59m59s.'
 
         if not args:
@@ -44,110 +40,16 @@ class CustomRemindersCog(commands.Cog):
                 mention_author=False
             )
             return
-        user: users.User = await users.get_user(ctx.author.id)
+        user: users.User = await users.get_user(ctx.author.id) # To stop if user is not registered
         args = [arg.lower() for arg in args]
-        arg_time = args[0]
-        last_time_code = None
-        last_char_was_number = False
-        reminder_text = ''
-        timestring = ''
-        current_number = ''
-        pos = 0
-        while not pos == len(arg_time):
-            slice = arg_time[pos:pos+1]
-            pos = pos+1
-            allowedcharacters_numbers = set('1234567890')
-            allowedcharacters_timecode = set('wdhms')
-            if set(slice).issubset(allowedcharacters_numbers):
-                timestring = f'{timestring}{slice}'
-                current_number = f'{current_number}{slice}'
-                last_char_was_number = True
-            elif set(slice).issubset(allowedcharacters_timecode) and last_char_was_number:
-                if slice == 'w':
-                    if last_time_code is None:
-                        timestring = f'{timestring}w'
-                        try:
-                            current_number_numeric = int(current_number)
-                        except Exception as e:
-                            await ctx.send(f'Error: {e}')
-                            return
-                        if current_number_numeric > 4:
-                            await ctx.reply(error_max_time, mention_author=False)
-                            return
-                        last_time_code = 'weeks'
-                        last_char_was_number = False
-                        current_number = ''
-                    else:
-                        await ctx.reply(error_invalid_time, mention_author=False)
-                        return
-                elif slice == 'd':
-                    if last_time_code in ('weeks',None):
-                        timestring = f'{timestring}d'
-                        try:
-                            current_number_numeric = int(current_number)
-                        except Exception as e:
-                            await ctx.send(f'Error: {e}')
-                            return
-                        if current_number_numeric > 34:
-                            await ctx.reply(error_max_time, mention_author=False)
-                            return
-                        last_time_code = 'days'
-                        last_char_was_number = False
-                        current_number = ''
-                    else:
-                        await ctx.reply(error_invalid_time, mention_author=False)
-                        return
-                elif slice == 'h':
-                    if last_time_code in ('weeks','days',None):
-                        timestring = f'{timestring}h'
-                        try:
-                            current_number_numeric = int(current_number)
-                        except Exception as e:
-                            await ctx.reply(f'Error: {e}', mention_author=False)
-                            return
-                        last_time_code = 'hours'
-                        last_char_was_number = False
-                        current_number = ''
-                    else:
-                        await ctx.reply(error_invalid_time, mention_author=False)
-                        return
-                elif slice == 'm':
-                    if last_time_code in ('weeks','days','hours',None):
-                        timestring = f'{timestring}m'
-                        try:
-                            current_number_numeric = int(current_number)
-                        except Exception as e:
-                            await ctx.reply(f'Error: {e}', mention_author=False)
-                            return
-                        last_time_code = 'minutes'
-                        last_char_was_number = False
-                        current_number = ''
-                    else:
-                        await ctx.reply(error_invalid_time, mention_author=False)
-                        return
-                elif slice == 's':
-                    if last_time_code in ('weeks','days','hours','minutes',None):
-                        timestring = f'{timestring}s'
-                        try:
-                            current_number_numeric = int(current_number)
-                        except Exception as e:
-                            await ctx.reply(f'Error: {e}', mention_author=False)
-                            return
-                        last_time_code = 'seconds'
-                        last_char_was_number = False
-                        current_number = ''
-                    else:
-                        await ctx.reply(error_invalid_time, mention_author=False)
-                        return
-                else:
-                    await ctx.reply(error_invalid_time, mention_author=False)
-                    return
-            else:
-                await ctx.reply(error_invalid_time, mention_author=False)
-                return
-        if last_char_was_number:
-            await ctx.reply(error_invalid_time, mention_author=False)
+        timestring = args[0]
+        try:
+            timestring = await functions.check_timestring(timestring)
+        except Exception as error:
+            await ctx.reply(f'{error}\n{syntax_add}', mention_author=False)
             return
+        time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
+        reminder_text = ''
         if len(args) > 1:
             args = list(args)
             args.pop(0)
@@ -157,7 +59,6 @@ class CustomRemindersCog(commands.Cog):
             reminder_text = 'idk, something?'
         reminder_text = reminder_text.strip()
         reminder_text = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder_text)
-        time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
         if time_left.total_seconds() > 3_023_999:
             await ctx.reply(error_max_time, mention_author=False)
             return

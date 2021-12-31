@@ -6,8 +6,8 @@ import asyncio
 import discord
 from discord.ext import commands
 
-from database import reminders, users
-from resources import emojis, exceptions, settings, strings
+from database import users
+from resources import emojis, exceptions, strings
 
 
 class SettingsPartnerCog(commands.Cog):

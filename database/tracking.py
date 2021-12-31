@@ -316,7 +316,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
         )
         raise
     if not records:
-        error_message = f'No log data found in database for timeframe "{str(timedelta)}".'
+        error_message = f'No log data found in database for timeframe "{str(timeframe)}".'
         if guild_id is not None: error_message = f'{error_message} Guild: {guild_id}'
         raise exceptions.NoDataFoundError(error_message)
     log_entries = []
@@ -345,7 +345,7 @@ async def get_log_report(user_id: int, command: str, timeframe: timedelta,
     log_entries = await get_log_entries(user_id, command, timeframe, guild_id)
     total_command_count = 0
     for log_entry in log_entries:
-        total_command_count += log_entry['command_count']
+        total_command_count += log_entry.command_count
     log_report = LogReport(
         command = command,
         command_count = total_command_count,

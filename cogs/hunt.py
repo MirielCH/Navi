@@ -237,9 +237,6 @@ class HuntCog(commands.Cog):
                                                      ctx.channel.id, hunt_message)
             )
 
-            if user.tracking_enabled:
-                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'hunt', current_time)
-
             # Add reaction
             if reminder.record_exists:
                 await bot_answer.add_reaction(emojis.NAVI)
@@ -294,8 +291,8 @@ class HuntCog(commands.Cog):
                                 await self.bot.wait_until_ready()
                                 await self.bot.get_channel(partner.partner_channel_id).send(lb_message)
                                 await bot_answer.add_reaction(emojis.PARTNER_ALERT)
-                            except Exception as e:
-                                await ctx.send(e)
+                            except Exception as error:
+                                await ctx.send(f'Had the following error while trying to send the partner alert:\n{error}')
 
                     if together and partner.hardmode_mode_enabled:
                         hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
@@ -329,6 +326,10 @@ class HuntCog(commands.Cog):
             # Add an F if the user died
             if (bot_message.find(f'**{ctx_author}** lost but ') > -1) or (bot_message.find('but lost fighting') > -1):
                 await bot_answer.add_reaction(emojis.RIP)
+
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'hunt', current_time)
 
         except asyncio.TimeoutError as error:
             await ctx.send('Hunt detection timeout.')

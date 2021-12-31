@@ -772,9 +772,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
                 new_end_time = reminder.end_time - time_reduction
                 time_left = new_end_time - current_time
                 if time_left.total_seconds() <= 0:
-                    reminder.end_time=new_end_time  # Testing to see if it rate limits
-                    scheduled_for_tasks[reminder.task_name] = reminder # Testing to see if it rate limits
-                    #scheduled_for_deletion[reminder.task_name] = reminder
+                    scheduled_for_deletion[reminder.task_name] = reminder
                     await reminder.delete()
                 elif 1 <= time_left.total_seconds() <= 15:
                     await reminder.update(end_time=new_end_time, triggered=True)
