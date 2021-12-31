@@ -68,9 +68,8 @@ class TrackingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Fires when a message is sent"""
-        #if (message.author.id == settings.EPIC_RPG_ID and message.embeds
-        #    and 'has traveled in time :cyclone:' in message.content.lower()):
-        if message.author.id == 619879176316649482 and 'has traveled in time' in message.content.lower():
+        if (message.author.id == settings.EPIC_RPG_ID and message.embeds
+            and 'has traveled in time' in message.content.lower()):
             try:
                 user_name = re.search("\*\*(.+?)\*\* has", message.content).group(1)
             except Exception as error:

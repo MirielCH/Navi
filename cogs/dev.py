@@ -40,7 +40,7 @@ class DevCog(commands.Cog):
             mention_author=False
             )
 
-    @dev.group(name='event-reduction', aliases=('er',), invoke_without_commands=True)
+    @dev.group(name='event-reduction', aliases=('er',), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
     async def dev_event_reduction(self, ctx: commands.Context, *args: str) -> None:
         """Sets event reductions of activities"""
@@ -56,7 +56,7 @@ class DevCog(commands.Cog):
         for activity in strings.ACTIVITIES_WITH_COOLDOWN:
             activity_list = f'{activity_list}\n{emojis.BP} `{activity}`'
         if not args or len(args) != 2:
-            all_cooldowns = cooldowns.get_all_cooldowns()
+            all_cooldowns = await cooldowns.get_all_cooldowns()
             message = 'Current event reductions:'
             for cooldown in all_cooldowns:
                 cooldown_message = (
@@ -86,7 +86,11 @@ class DevCog(commands.Cog):
         if activity not in strings.ACTIVITIES_WITH_COOLDOWN:
             await ctx.reply(f'**{ctx.author.name}**, couldn\'t find activity `{activity}`.')
             return
-        await ctx.reply(f'**{ctx.author.name}**, this will change the event reduction of activity **{activity}** to **{reduction}%**. Continue? [`yes/no`]', mention_author=False)
+        await ctx.reply(
+            f'**{ctx.author.name}**, this will change the event reduction of activity `{activity}` to '
+            f'**{reduction}%**. Continue? [`yes/no`]',
+            mention_author=False
+        )
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
@@ -98,7 +102,7 @@ class DevCog(commands.Cog):
         await cooldown.update(event_reduction=reduction)
         if cooldown.event_reduction == reduction:
             await ctx.reply(
-                f'Changed event reduction for activity **{cooldown.activity}** to **{cooldown.event_reduction}%**.',
+                f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.',
                 mention_author=False
             )
 
@@ -142,7 +146,7 @@ class DevCog(commands.Cog):
         for activity in strings.ACTIVITIES_WITH_COOLDOWN:
             activity_list = f'{activity_list}\n{emojis.BP} `{activity}`'
         if not args or len(args) != 2:
-            all_cooldowns = cooldowns.get_all_cooldowns()
+            all_cooldowns = await cooldowns.get_all_cooldowns()
             message = 'Current base cooldowns:'
             for cooldown in all_cooldowns:
                 message = f'{message}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown}s'
@@ -159,12 +163,12 @@ class DevCog(commands.Cog):
                 activity = args[1]
         if activity in strings.ACTIVITIES_ALIASES:
             activity = strings.ACTIVITIES_ALIASES[activity]
-        if activity not in strings.ACTIVITIES_ALIASES:
+        if activity not in strings.ACTIVITIES_WITH_COOLDOWN:
             await ctx.reply(f'**{ctx.author.name}**, couldn\'t find activity `{activity}`.')
             return
         await ctx.reply(
             f'**{ctx.author.name}**, this will change the base cooldown (before donor reduction) of activity '
-            f'**{activity}** to **{new_cooldown:,}** seconds. Continue? [`yes/no`]',
+            f'`{activity}` to **{new_cooldown:,}** seconds. Continue? [`yes/no`]',
             mention_author=False
         )
         try:
@@ -175,11 +179,11 @@ class DevCog(commands.Cog):
             await ctx.send('Aborted')
             return
         cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-        await cooldown.update(base_cooldown=new_cooldown)
+        await cooldown.update(cooldown=new_cooldown)
         if cooldown.base_cooldown == new_cooldown:
             await ctx.reply(
-                f'Changed event reduction for activity **{cooldown.activity}** to '
-                f'**{cooldown.event_reduction}%**.',
+                f'Changed event reduction for activity `{cooldown.activity}` to '
+                f'**{cooldown.base_cooldown}s**.',
                 mention_author=False
             )
         else:
