@@ -137,12 +137,16 @@ async def _dict_to_reminder(record: dict) -> Reminder:
     function_name = '_dict_to_reminder'
     try:
         user_id = record.get('user_id', None)
+        custom_id = record.get('custom_id', None)
         if user_id is None:
             reminder_type = 'clan'
             task_name = f"{record['clan_name']}-{record['activity']}"
         else:
             reminder_type = 'user'
-            task_name = f"{record['user_id']}-{record['activity']}"
+            if custom_id is not None:
+                task_name = f"{user_id}-{record['activity']}-{custom_id}"
+            else:
+                task_name = f"{user_id}-{record['activity']}"
         reminder = Reminder(
             activity = record['activity'],
             channel_id = record['channel_id'],
@@ -651,13 +655,13 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
     try:
         cur = settings.NAVI_DB.cursor()
         if activity == 'custom':
-            sql = f'SELECT custom_id FROM {table} WHERE user_id = ? AND activity = ? ORDER BY custom_id DESC'
+            sql = f'SELECT custom_id FROM {table} WHERE user_id = ? AND activity = ? ORDER BY custom_id ASC'
             cur.execute(sql, (user_id, 'custom',))
             record_custom_reminders = cur.fetchall()
             if not record_custom_reminders:
                 custom_id = 1
             else:
-                highest_custom_id = record_custom_reminders[0]['custom_id']
+                highest_custom_id = record_custom_reminders[-1]['custom_id']
                 if highest_custom_id is None:
                     custom_id = 1
                 else:

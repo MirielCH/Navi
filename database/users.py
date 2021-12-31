@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import itertools
 import sqlite3
-from typing import NamedTuple, Optional
+from typing import NamedTuple, Optional, Tuple
 
 from discord.ext import commands
 
@@ -287,7 +287,7 @@ async def get_user(user_id: int) -> User:
     return user
 
 
-async def get_all_users() -> tuple(User):
+async def get_all_users() -> Tuple[User]:
     """Gets all user settings of all users.
 
     Returns
