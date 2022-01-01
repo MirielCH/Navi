@@ -668,11 +668,10 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
                     if highest_custom_id > len(record_custom_reminders):
                         reminder_count = 1
                         for record in record_custom_reminders:
-                            custom_id = record['custom_id']
-                            if reminder_count == custom_id:
-                                reminder_count += 1
+                            if reminder_count == record['custom_id']:
+                                custom_id = reminder_count = reminder_count + 1
                             else:
-                                reminder_count -= 1
+                                custom_id = reminder_count
                                 break
                     else:
                         custom_id = highest_custom_id + 1

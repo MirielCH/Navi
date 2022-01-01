@@ -7,8 +7,6 @@ from datetime import datetime
 import sqlite3
 from typing import List, NamedTuple, Optional, Tuple, Union
 
-from discord.ext import commands
-
 from database import errors
 from resources import exceptions, settings, strings
 
@@ -363,7 +361,8 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    best_raids = worst_raids = []
+    best_raids = []
+    worst_raids = []
     for record_best in records_best:
         best_raid = await _dict_to_clan_raid(dict(record_best))
         best_raids.append(best_raid)
@@ -405,6 +404,7 @@ async def get_weekly_report(clan: Clan) -> ClanWeeklyReport:
         )
         raise
     table = 'clans_leaderboard_roasts'
+    sql = f'SELECT text FROM {table} ORDER BY RANDOM() LIMIT 1'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql)
@@ -414,7 +414,7 @@ async def get_weekly_report(clan: Clan) -> ClanWeeklyReport:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    table = 'clans_leaderbord'
+    table = 'clans_raids'
     sql = f'SELECT energy FROM {table} WHERE clan_name=?'
     try:
         cur = settings.NAVI_DB.cursor()

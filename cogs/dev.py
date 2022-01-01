@@ -2,7 +2,7 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import importlib
 import sys
 
@@ -250,7 +250,7 @@ class DevCog(commands.Cog):
             if not name_found:
                 if action == 'reload':
                     for module_name in sys.modules.copy():
-                        if mod_or_cog in module_name:
+                        if mod_or_cog == module_name:
                             module = sys.modules.get(module_name)
                             if module is not None:
                                 importlib.reload(module)
@@ -303,6 +303,14 @@ class DevCog(commands.Cog):
                 f'Syntax is `{ctx.prefix}{ctx.command} [command]`',
                 mention_author=False
                 )
+
+    # Enable/disable commands
+    @dev.command(aliases=('ts',))
+    @commands.is_owner()
+    @commands.bot_has_permissions(send_messages=True)
+    async def timestamp(self, ctx: commands.Context, timestamp: int) -> None:
+        if ctx.prefix.lower() == 'rpg ': return
+        await ctx.send(datetime.fromtimestamp(timestamp).isoformat(sep=' '))
 
 
 def setup(bot):

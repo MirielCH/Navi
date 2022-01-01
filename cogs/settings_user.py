@@ -160,7 +160,7 @@ class SettingsUserCog(commands.Cog):
                 custom_id = f'0{reminder.custom_id}' if reminder.custom_id <= 9 else reminder.custom_id
                 field_custom_reminders = (
                     f'{field_custom_reminders}\n'
-                    f'{emojis.BP} **`{custom_id}`** (**{timestring}**)'
+                    f'{emojis.BP} **`{custom_id}`** (**{timestring}**) - {reminder.message}'
                 )
             embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
         await ctx.reply(embed=embed, mention_author=False)
@@ -220,9 +220,12 @@ class SettingsUserCog(commands.Cog):
         if user.reminders_enabled:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
             return
-        active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
-        for reminder in active_reminders:
-            await reminder.delete()
+        try:
+            active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
+            for reminder in active_reminders:
+                await reminder.delete()
+        except exceptions.NoDataFoundError:
+            pass
         await ctx.reply(
             f'**{ctx.author.name}**, your reminders are now turned off.\n'
             f'All active reminders were deleted.',
@@ -567,7 +570,8 @@ class SettingsUserCog(commands.Cog):
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
             return
         await ctx.reply(
-            f'**{ctx.author.name}**, your last time travel time was changed to `{tt_time_str} UTC`.',
+            f'**{ctx.author.name}**, your last time travel time was changed to '
+            f'<t:{int(user.last_tt.timestamp())}:f> UTC.',
             mention_author=False
         )
 
@@ -626,7 +630,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
-        f'{emojis.BP} Last TT: `{user_settings.last_tt.isoformat(sep=" ")} UTC`\n'
+        f'{emojis.BP} Last TT: <t:{int(user_settings.last_tt.timestamp())}:f> UTC\n'
         f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{user_partner_channel_name}`\n'
     )
     field_partner = (

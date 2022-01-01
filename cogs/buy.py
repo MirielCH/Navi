@@ -58,6 +58,7 @@ class BuyCog(commands.Cog):
         command = 'rpg buy lootbox'
         args = [arg.lower() for arg in args]
         arg1 = args[0]
+        arg2 = ''
         if len(args) >= 2:
             arg2 = args[1]
 

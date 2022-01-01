@@ -250,7 +250,7 @@ class SettingsClanCog(commands.Cog):
         for index, worst_raid in enumerate(leaderboard.worst_raids):
             emoji = getattr(emojis, f'LEADERBOARD_{index+1}')
             await self.bot.wait_until_ready()
-            user = self.bot.get_user(best_raid.user_id)
+            user = self.bot.get_user(worst_raid.user_id)
             field_worst_raids = f'{field_worst_raids}\n{emoji} **{worst_raid.energy:,}** by {user.mention}'
         if field_best_raids == '': field_best_raids = f'{emojis.BP} _No cool raids yet._'
         if field_worst_raids == '': field_worst_raids = f'{emojis.BP} _No lame raids yet._'

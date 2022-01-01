@@ -57,14 +57,12 @@ class CustomRemindersCog(commands.Cog):
                 reminder_text = f'{reminder_text} {arg}'
         else:
             reminder_text = 'idk, something?'
-        reminder_text = reminder_text.strip()
-        reminder_text = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder_text)
         if time_left.total_seconds() > 3_023_999:
             await ctx.reply(error_max_time, mention_author=False)
             return
         reminder: reminders.Reminder = (
             await reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
-                                                    ctx.channel.id, reminder_text)
+                                                    ctx.channel.id, reminder_text.strip())
         )
         if reminder.record_exists:
             await ctx.message.add_reaction(emojis.NAVI)

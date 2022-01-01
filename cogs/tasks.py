@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from discord.ext import commands, tasks
 
 from database import clans, errors, reminders, users
-from resources import emojis, exceptions, settings
+from resources import emojis, exceptions, settings, strings
 
 
 running_tasks = {}
@@ -21,10 +21,12 @@ class TasksCog(commands.Cog):
     # Task management
     async def background_task(self, reminder: reminders.Reminder) -> None:
         """Background task for scheduling reminders"""
-        current_time = datetime.utcnow().replace(microsecond=0)
-        time_left = reminder.end_time - current_time
-        if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
-        await asyncio.sleep(time_left.total_seconds())
+        async def get_time_left() -> timedelta:
+            current_time = datetime.utcnow().replace(microsecond=0)
+            time_left = reminder.end_time - current_time
+            if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
+            return time_left
+
         try:
             await self.bot.wait_until_ready()
             channel = self.bot.get_channel(reminder.channel_id)
@@ -32,10 +34,16 @@ class TasksCog(commands.Cog):
                 await self.bot.wait_until_ready()
                 user = self.bot.get_user(reminder.user_id)
                 user_settings = await users.get_user(user.id)
-                if not user_settings.dnd_mode_enabled:
-                    await channel.send(f'{user.mention} {reminder.message}')
+                if reminder.activity == 'custom':
+                    message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder.message)
                 else:
-                    await channel.send(f'**{user.name}**, {reminder.message}')
+                    message = reminder.message
+                time_left = await get_time_left()
+                await asyncio.sleep(time_left.total_seconds())
+                if not user_settings.dnd_mode_enabled:
+                    await channel.send(f'{user.mention} {message}')
+                else:
+                    await channel.send(f'**{user.name}**, {message}')
             else:
                 clan = await clans.get_clan_by_clan_name(reminder.clan_name)
                 message_mentions = ''
@@ -45,6 +53,8 @@ class TasksCog(commands.Cog):
                         member = self.bot.get_user(member_id)
                         if member is not None:
                             message_mentions = f'{message_mentions}{member.mention} '
+                time_left = await get_time_left()
+                await asyncio.sleep(time_left.total_seconds())
                 await channel.send(f'{reminder.message}\n{message_mentions}')
             running_tasks.pop(reminder.task_name, None)
         except Exception as error:
@@ -120,13 +130,14 @@ class TasksCog(commands.Cog):
             all_clans = await clans.get_all_clans()
             for clan in all_clans:
                 await clan.update(stealth_current=1)
-                time_left = timedelta(minutes=1)
-                reminder_message = clan.alert_message.replace('%','rpg guild upgrade')
                 try:
                     reminder = await reminders.get_clan_reminder(clan.clan_name)
                     await reminder.delete()
                 except:
                     pass
+                if not clan.alert_enabled: continue
+                reminder_message = clan.alert_message.replace('%','rpg guild upgrade')
+                time_left = timedelta(minutes=1)
                 await reminders.insert_clan_reminder(clan.clan_name, time_left, clan.channel_id, reminder_message)
                 try:
                     weekly_report: clans.ClanWeeklyReport = await clans.get_weekly_report(clan)

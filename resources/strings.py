@@ -174,3 +174,11 @@ ACTIVITIES_WITH_COOLDOWN = (
     'weekly',
     'work',
 )
+
+TRACKED_COMMANDS = (
+    'hunt',
+    'work',
+    'farm',
+    'training',
+    'adventure'
+) # Sorted by cooldown length

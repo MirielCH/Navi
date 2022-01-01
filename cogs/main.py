@@ -85,7 +85,7 @@ class MainCog(commands.Cog):
             await ctx.reply(
                 f'**{ctx.author.name}**, you can only use this command every '
                 f'{int(error.cooldown.per)} seconds.\n'
-                f'You have to wait another **{error.retry_after:.2f}s**.'
+                f'You have to wait another **{error.retry_after:.1f}s**.'
             )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.reply(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')

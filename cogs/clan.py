@@ -106,7 +106,7 @@ class ClanCog(commands.Cog):
                         energy_end = bot_message.find(':low_brightness:', energy_start) - 3
                         energy = bot_message[energy_start:energy_end]
                         clan_raid = await clans.insert_clan_raid(clan.clan_name, ctx.author.id, int(energy), current_time)
-                        if not clan_raid.record_exists:
+                        if not clan_raid.raid_time == current_time:
                             if settings.DEBUG_MODE:
                                 await ctx.send(
                                     'There was an error adding the raid to the leaderboard. Please tell Miri he\'s an idiot.'

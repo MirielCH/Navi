@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users, tracking
-from resources import emojis, functions, exceptions, settings
+from resources import emojis, functions, exceptions, settings, strings
 
 
 class TrackingCog(commands.Cog):
@@ -16,7 +16,7 @@ class TrackingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.cooldown(1, 1, commands.BucketType.user)
+    @commands.cooldown(1, 5, commands.BucketType.user)
     @commands.command(aliases=('statistics','statistic','stat'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def stats(self, ctx: commands.Context, *args: str) -> None:
@@ -43,7 +43,7 @@ class TrackingCog(commands.Cog):
         try:
             user_settings: users.User = await users.get_user(user.id)
         except exceptions.FirstTimeUserError:
-            await ctx.reply(f'**{user.name}** is not registered with this bot.', mention_author=False)
+            await ctx.reply(f'User **{user.name}** is not registered with this bot.', mention_author=False)
             return
 
         if not args or len(args) > 1:
@@ -106,7 +106,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> d
     async def command_count(command: str, timeframe: timedelta) -> str:
         try:
             report = await tracking.get_log_report(user.id, command, timeframe)
-            text = f'{emojis.BP} `{report.command}`: {report.command_count}'
+            text = f'{emojis.BP} `{report.command}`: {report.command_count:,}'
         except exceptions.NoDataFoundError:
             text = f'{emojis.BP} `{command}`: 0'
 
@@ -114,9 +114,8 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> d
 
     user_settings: users.User = await users.get_user(user.id)
     field_last_1h = field_last_12h = field_last_24h = field_last_7d = field_last_4w = field_last_1y = field_last_tt = ''
-    commands = ('hunt','work','farm','training','adventure')
     current_time = datetime.utcnow().replace(microsecond=0)
-    for command in commands:
+    for command in strings.TRACKED_COMMANDS:
         last_1h = await command_count(command, timedelta(hours=1))
         field_last_1h = f'{field_last_1h}\n{last_1h}'
         last_12h = await command_count(command, timedelta(hours=12))
@@ -131,11 +130,12 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> d
         field_last_1y = f'{field_last_1y}\n{last_1y}'
         last_tt = await command_count(command, current_time-user_settings.last_tt)
         field_last_tt = f'{field_last_tt}\n{last_tt}'
-    field_last_tt = f'{field_last_tt}\n\n_Your last TT was on `{user_settings.last_tt.isoformat(sep=" ")} UTC`._'
+    field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(user_settings.last_tt.timestamp())}:f> UTC.'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user.name}\'s stats'.upper(),
+        description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
     embed.set_footer(text=f'Use "{ctx.prefix}stats [time]" to check a custom timeframe.')
     embed.add_field(name='LAST HOUR', value=field_last_1h, inline=True)
@@ -144,7 +144,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> d
     embed.add_field(name='LAST 7 DAYS', value=field_last_7d, inline=True)
     embed.add_field(name='LAST 4 WEEKS', value=field_last_4w, inline=True)
     embed.add_field(name='LAST YEAR', value=field_last_1y, inline=True)
-    embed.add_field(name='SINCE YOUR LAST TT', value=field_last_tt, inline=True)
+    embed.add_field(name=f'SINCE LAST TT', value=field_last_tt, inline=True)
 
     return embed
 
@@ -152,34 +152,30 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> d
 async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, time_left: timedelta) -> discord.Embed:
     """Stats timeframe embed"""
     field_timeframe = ''
-    commands = ('hunt','work','farm','training','adventure')
-    for command in commands:
+    user_settings: users.User = await users.get_user(user.id)
+    for command in strings.TRACKED_COMMANDS:
         try:
             report = await tracking.get_log_report(user.id, command, time_left)
-            field_timeframe = f'{field_timeframe}\n{emojis.BP} `{report.command}`: {report.command_count}'
+            field_timeframe = f'{field_timeframe}\n{emojis.BP} `{report.command}`: {report.command_count:,}'
         except exceptions.NoDataFoundError:
             field_timeframe = f'{field_timeframe}\n{emojis.BP} `{command}`: 0'
-    if time_left.days >= 7:
-        timeframe = f'{time_left.days} days'
-    else:
-        days = int((time_left.total_seconds() % 604800) // 86400)
-        hours = int((time_left.total_seconds() % 86400) // 3600)
-        minutes = int((time_left.total_seconds() % 3600) // 60)
-        seconds = int(time_left.total_seconds() % 60)
-        timeframe = ''
-        if days > 0:
-            timeframe = f'{days} days'
-        if hours > 0:
-            timeframe = f'{timeframe}, {hours} hours'
-        if minutes > 0:
-            timeframe = f'{timeframe}, {minutes} minutes'
-        if seconds > 0:
-            timeframe = f'{timeframe}, {seconds} seconds'
-        timeframe = timeframe.strip(',').strip()
+
+    time_left_seconds = int(time_left.total_seconds())
+    days = time_left_seconds // 86400
+    hours = (time_left_seconds % 86400) // 3600
+    minutes = (time_left_seconds % 3600) // 60
+    seconds = time_left_seconds % 60
+    timeframe = ''
+    if days > 0: timeframe = f'{days} days'
+    if hours > 0: timeframe = f'{timeframe}, {hours} hours'
+    if minutes > 0: timeframe = f'{timeframe}, {minutes} minutes'
+    if seconds > 0: timeframe = f'{timeframe}, {seconds} seconds'
+    timeframe = timeframe.strip(',').strip()
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user.name}\'s stats'.upper(),
+        description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
     embed.set_footer(text=f'Use "{ctx.prefix}stats" to see an overview.')
     embed.add_field(name=f'LAST {timeframe}'.upper(), value=field_timeframe, inline=False)

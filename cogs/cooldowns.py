@@ -47,7 +47,7 @@ class CooldownsCog(commands.Cog):
         if prefix.lower() != 'rpg ': return
         if args:
             args = [arg.lower() for arg in args]
-            if args[0] != 'max' and not (args[0].find(ctx.author.id) > -1): return
+            if args[0] != 'max' and not (args[0].find(str(ctx.author.id)) > -1): return
         try:
             try:
                 user: users.User = await users.get_user(ctx.author.id)
