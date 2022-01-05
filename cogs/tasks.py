@@ -21,7 +21,7 @@ class TasksCog(commands.Cog):
     # Task management
     async def background_task(self, reminder: reminders.Reminder) -> None:
         """Background task for scheduling reminders"""
-        async def get_time_left() -> timedelta:
+        def get_time_left() -> timedelta:
             current_time = datetime.utcnow().replace(microsecond=0)
             time_left = reminder.end_time - current_time
             if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
@@ -38,7 +38,7 @@ class TasksCog(commands.Cog):
                     message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder.message)
                 else:
                     message = reminder.message
-                time_left = await get_time_left()
+                time_left = get_time_left()
                 await asyncio.sleep(time_left.total_seconds())
                 if not user_settings.dnd_mode_enabled:
                     await channel.send(f'{user.mention} {message}')
@@ -53,7 +53,7 @@ class TasksCog(commands.Cog):
                         member = self.bot.get_user(member_id)
                         if member is not None:
                             message_mentions = f'{message_mentions}{member.mention} '
-                time_left = await get_time_left()
+                time_left = get_time_left()
                 await asyncio.sleep(time_left.total_seconds())
                 await channel.send(f'{reminder.message}\n{message_mentions}')
             running_tasks.pop(reminder.task_name, None)
@@ -87,11 +87,11 @@ class TasksCog(commands.Cog):
     async def schedule_tasks(self):
         """Task that creates or deletes tasks from scheduled reminders"""
         for reminder in reminders.scheduled_for_tasks.copy().values():
-            await self.create_task(reminder)
             reminders.scheduled_for_tasks.pop(reminder.task_name, None)
+            await self.create_task(reminder)
         for reminder in reminders.scheduled_for_deletion.copy().values():
-            await self.delete_task(reminder.task_name)
             reminders.scheduled_for_deletion.pop(reminder.task_name, None)
+            await self.delete_task(reminder.task_name)
 
     @tasks.loop(minutes=2.0)
     async def delete_old_reminders(self) -> None:
@@ -145,7 +145,7 @@ class TasksCog(commands.Cog):
                     continue
                 message = (
                     f'**{clan.clan_name} weekly guild report**\n\n'
-                    f'__Total energy from raids__: {weekly_report.energy_total} {emojis.ENERGY}\n\n'
+                    f'__Total energy from raids__: {weekly_report.energy_total:,} {emojis.ENERGY}\n\n'
                 )
                 if weekly_report.best_raid is None:
                     message = f'{message}{emojis.BP} There were no cool raids. Not cool.\n'
@@ -155,7 +155,7 @@ class TasksCog(commands.Cog):
                     best_user_praise = weekly_report.praise.format(username=best_user.name)
                     message = (
                         f'{message}{emojis.BP} '
-                        f'{best_user_praise} (_Best raid: {weekly_report.best_raid.energy}_ {emojis.ENERGY})\n'
+                        f'{best_user_praise} (_Best raid: {weekly_report.best_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
                 if weekly_report.worst_raid is None:
                     message = f'{message}{emojis.BP} There were no cool raids. How lame.\n'
@@ -165,7 +165,7 @@ class TasksCog(commands.Cog):
                     worst_user_roast = weekly_report.roast.format(username=worst_user.name)
                     message = (
                         f'{message}{emojis.BP} '
-                        f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy}_ {emojis.ENERGY})\n'
+                        f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
                 await self.bot.wait_until_ready()
                 clan_channel = self.bot.get_channel(clan.channel_id)

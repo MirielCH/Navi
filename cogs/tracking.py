@@ -68,12 +68,16 @@ class TrackingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Fires when a message is sent"""
-        if (message.author.id == settings.EPIC_RPG_ID and message.embeds
-            and 'has traveled in time' in message.content.lower()):
+        if message.author.id == settings.EPIC_RPG_ID and message.embeds:
             try:
-                user_name = re.search("\*\*(.+?)\*\* has", message.content).group(1)
+                message_content = str(message.embeds[0].description)
+            except:
+                return
+            if 'has traveled in time' not in message_content.lower(): return
+            try:
+                user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
             except Exception as error:
-                await errors.log_error(error)
+                await errors.log_error(f'Error while reading user name from time travel message:\n{error}')
                 return
             user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             user = None

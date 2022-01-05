@@ -294,20 +294,20 @@ class HuntCog(commands.Cog):
                             except Exception as error:
                                 await ctx.send(f'Had the following error while trying to send the partner alert:\n{error}')
 
-                    if together and partner.hardmode_mode_enabled:
-                        hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
-                        hm_message = (
-                            f'{hm_message} **{user.partner_name}** is currently **hardmoding**.\n'
-                            f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
-                        )
-                        await ctx.send(hm_message)
-                    elif not together and not partner.hardmode_mode_enabled:
-                        hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
-                        hm_message = (
-                            f'{hm_message} **{user.partner_name}** is not hardmoding, '
-                            f'feel free to take them hunting.'
-                        )
-                        await ctx.send(hm_message)
+                if together and partner.hardmode_mode_enabled:
+                    hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
+                    hm_message = (
+                        f'{hm_message} **{user.partner_name}** is currently **hardmoding**.\n'
+                        f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
+                    )
+                    await ctx.send(hm_message)
+                elif not together and not partner.hardmode_mode_enabled:
+                    hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
+                    hm_message = (
+                        f'{hm_message} **{user.partner_name}** is not hardmoding, '
+                        f'feel free to take them hunting.'
+                    )
+                    await ctx.send(hm_message)
 
             if f'**{ctx.author.name}** got' in bot_message:
                 found_stuff = {

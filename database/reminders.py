@@ -706,7 +706,10 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
         reminder = await get_user_reminder(user_id, activity, custom_id)
 
     # Create background task if necessary
-    if triggered: scheduled_for_tasks[reminder.task_name] = reminder
+    if triggered:
+        scheduled_for_tasks[reminder.task_name] = reminder
+    else:
+        scheduled_for_deletion[reminder.task_name] = reminder
 
     return reminder
 
@@ -753,8 +756,10 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
             raise
         reminder = await get_clan_reminder(clan_name)
     # Create background task if necessary
-    if triggered: scheduled_for_tasks[reminder.task_name] = reminder
-
+    if triggered:
+        scheduled_for_tasks[reminder.task_name] = reminder
+    else:
+        scheduled_for_deletion[reminder.task_name] = reminder
     return reminder
 
 

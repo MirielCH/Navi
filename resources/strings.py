@@ -81,6 +81,7 @@ ACTIVITIES_ALL.sort()
 ACTIVITIES_EVENTS = (
     'big-arena',
     'horse-race',
+    'lottery',
     'not-so-mini-boss',
     'pet-tournament',
 )

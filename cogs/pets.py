@@ -171,14 +171,13 @@ class PetsCog(commands.Cog):
 
                 elif pet_action in ('find', 'learn', 'drill') and not pet_id == '':
                     if len(args) > 3: return
-                    command = 'rpg pet adventure'
                     try:
                         try:
                             user: users.User = await users.get_user(ctx.author.id)
                         except exceptions.NoDataFoundError:
                             return
                         if not user.reminders_enabled or not user.alert_pets.enabled: return
-                        pets_message = user.alert_pets.message.replace('%', command)
+                        pets_message = user.alert_pets.message.replace('$', pet_id)
                         current_time = datetime.utcnow().replace(microsecond=0)
                         task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
                         bot_message = None
