@@ -604,7 +604,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         partner_name = f'{partner.name}#{partner.discriminator}'
         partner_hardmode_status = await bool_to_text(partner_settings.hardmode_mode_enabled)
         partner_partner_channel = bot.get_channel(partner_settings.partner_channel_id)
-        partner_partner_channel_name = partner_partner_channel.name
+        if partner_partner_channel is not None: partner_partner_channel_name = partner_partner_channel.name
 
     # Get clan settings
     clan_name = clan_alert_status = stealth_threshold = clan_channel_name = 'N/A'

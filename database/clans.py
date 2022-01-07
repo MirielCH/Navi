@@ -425,13 +425,13 @@ async def get_weekly_report(clan: Clan) -> ClanWeeklyReport:
     energy_total = 0
     for record in all_raids_records:
         energy_total += record['energy']
-    clan_leaderbord = await get_leaderboard(clan)
+    clan_leaderboard = await get_leaderboard(clan)
     weekly_report = ClanWeeklyReport(
-        best_raid =  clan_leaderbord.best_raids[0],
+        best_raid =  clan_leaderboard.best_raids[0] if clan_leaderboard.best_raids else None,
         energy_total = energy_total,
         praise = praise_record['text'],
         roast = roast_record['text'],
-        worst_raid = clan_leaderbord.worst_raids[0],
+        worst_raid = clan_leaderboard.worst_raids[0] if clan_leaderboard.worst_raids else None,
     )
 
     return weekly_report

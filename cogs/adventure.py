@@ -60,8 +60,8 @@ class AdventureCog(commands.Cog):
                 args.pop(0)
             else:
                 command = 'rpg adventure'
-            if args[0] in ('h','hardmode',):
-                command = f'{command} hardmode'
+            if args:
+                if args[0] in ('h','hardmode',): command = f'{command} hardmode'
 
         try:
             try:
