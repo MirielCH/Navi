@@ -50,7 +50,7 @@ class EventsCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled: return
+            if not user.bot_enabled: return
             if (not user.alert_big_arena.enabled and not user.alert_lottery.enabled
                 and not user.alert_not_so_mini_boss.enabled and not user.alert_pet_tournament.enabled
                 and not user.alert_horse_race.enabled):

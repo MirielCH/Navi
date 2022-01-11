@@ -92,7 +92,7 @@ class PetsCog(commands.Cog):
                             user: users.User = await users.get_user(ctx.author.id)
                         except exceptions.NoDataFoundError:
                             return
-                        if not user.reminders_enabled or not user.alert_pets.enabled: return
+                        if not user.bot_enabled or not user.alert_pets.enabled: return
                         task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
                         bot_message = None
                         message_history = await ctx.channel.history(limit=50).flatten()
@@ -176,7 +176,7 @@ class PetsCog(commands.Cog):
                             user: users.User = await users.get_user(ctx.author.id)
                         except exceptions.NoDataFoundError:
                             return
-                        if not user.reminders_enabled or not user.alert_pets.enabled: return
+                        if not user.bot_enabled or not user.alert_pets.enabled: return
                         pets_message = user.alert_pets.message.replace('$', pet_id)
                         current_time = datetime.utcnow().replace(microsecond=0)
                         task_status = self.bot.loop.create_task(self.get_pet_message(ctx))
@@ -273,7 +273,7 @@ class PetsCog(commands.Cog):
                         user: users.User = await users.get_user(ctx.author.id)
                     except exceptions.NoDataFoundError:
                         return
-                    if not user.reminders_enabled or not user.alert_pet_tournament.enabled: return
+                    if not user.bot_enabled or not user.alert_pet_tournament.enabled: return
                     user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
                     pet_tournament_message = user.alert_pet_tournament.message.format(event='pet tournament')
                     current_time = datetime.utcnow().replace(microsecond=0)
@@ -366,7 +366,7 @@ class PetsCog(commands.Cog):
                     user: users.User = await users.get_user(ctx.author.id)
                 except exceptions.NoDataFoundError:
                     return
-                if not user.reminders_enabled or not user.alert_pets.enabled: return
+                if not user.bot_enabled or not user.alert_pets.enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 task_status = self.bot.loop.create_task(self.get_pet_list_message(ctx))
                 bot_message = None

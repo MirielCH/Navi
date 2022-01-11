@@ -53,7 +53,7 @@ class CooldownsCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled: return
+            if not user.bot_enabled: return
             if (not user.alert_adventure.enabled and not user.alert_arena.enabled and not user.alert_daily.enabled
                 and not user.alert_duel.enabled and not user.alert_dungeon_miniboss.enabled
                 and not user.alert_farm.enabled and not user.alert_horse_breed.enabled and not user.alert_hunt.enabled

@@ -173,13 +173,13 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         try:
             user: users.User = await users.get_user(ctx.author.id)
-            if user.reminders_enabled:
+            if user.bot_enabled:
                 await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned on.', mention_author=False)
                 return
         except exceptions.FirstTimeUserError:
             user = await users.insert_user(ctx.author.id)
-        if not user.reminders_enabled: await user.update(reminders_enabled=True)
-        if not user.reminders_enabled:
+        if not user.bot_enabled: await user.update(bot_enabled=True)
+        if not user.bot_enabled:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
             return
         await ctx.reply(
@@ -200,7 +200,7 @@ class SettingsUserCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         user: users.User = await users.get_user(ctx.author.id)
-        if not user.reminders_enabled:
+        if not user.bot_enabled:
             await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned off.', mention_author=False)
             return
         await ctx.reply(
@@ -216,8 +216,8 @@ class SettingsUserCog(commands.Cog):
         except asyncio.TimeoutError:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
             return
-        await user.update(reminders_enabled=False)
-        if user.reminders_enabled:
+        await user.update(bot_enabled=False)
+        if user.bot_enabled:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
             return
         try:
@@ -353,6 +353,13 @@ class SettingsUserCog(commands.Cog):
                 kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
                 if not enabled:
+                    if activity == 'pets':
+                        try:
+                            all_reminders = await reminders.get_active_user_reminders(ctx.author.id)
+                            for reminder in all_reminders:
+                                if 'pets' in reminder.activity: await reminder.delete()
+                        except:
+                            pass
                     try:
                         reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, activity)
                         await reminder.delete()
@@ -622,7 +629,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
 
     # Fields
     field_user = (
-        f'{emojis.BP} Reminders: `{await bool_to_text(user_settings.reminders_enabled)}`\n'
+        f'{emojis.BP} Bot: `{await bool_to_text(user_settings.bot_enabled)}`\n'
         f'{emojis.BP} Command tracking: `{await bool_to_text(user_settings.tracking_enabled)}`\n'
         f'{emojis.BP} Donor tier: `{user_settings.user_donor_tier}` '
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
@@ -671,7 +678,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Not so mini boss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
         f'{emojis.BP} Pet tournament: `{await bool_to_text(user_settings.alert_pet_tournament.enabled)}`\n'
     )
-    if not user_settings.reminders_enabled:
+    if not user_settings.bot_enabled:
         field_reminders = f'**These settings are ignored because your reminders are off.**\n{field_reminders}'
 
     embed = discord.Embed(

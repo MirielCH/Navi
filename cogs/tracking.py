@@ -68,34 +68,52 @@ class TrackingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Fires when a message is sent"""
-        if message.author.id == settings.EPIC_RPG_ID and message.embeds:
-            try:
-                message_content = str(message.embeds[0].description)
-            except:
-                return
-            if 'has traveled in time' not in message_content.lower(): return
-            try:
-                user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
-            except Exception as error:
-                await errors.log_error(f'Error while reading user name from time travel message:\n{error}')
-                return
-            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-            user = None
-            for member in message.guild.members:
-                member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                if member_name == user_name:
-                    user = member
-                    break
-            if user is None:
-                await errors.log_error(f'Couldn\'t find a user with user_name {user_name}.')
-                return
-            try:
-                user_settings: users.User = await users.get_user(user.id)
-            except exceptions.NoDataFoundError:
-                return
-            tt_time = message.created_at.replace(microsecond=0)
-            await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
-            if user_settings.last_tt == tt_time: await message.add_reaction(emojis.NAVI)
+        if message.author.id == settings.EPIC_RPG_ID:
+            if not message.embeds:
+                try:
+                    message_content = message.content
+                except:
+                    return
+
+                if 'we have to check you are actually playing' in message_content.lower():
+                    if not message.mentions: return
+                    user = message.mentions[0]
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.NoDataFoundError:
+                        return
+                    if user_settings.tracking_enabled and user_settings.bot_enabled:
+                        current_time = datetime.utcnow().replace(microsecond=0)
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'epic guard', current_time)
+
+            if message.embeds:
+                try:
+                    message_content = str(message.embeds[0].description)
+                except:
+                    return
+                if 'has traveled in time' not in message_content.lower(): return
+                try:
+                    user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
+                except Exception as error:
+                    await errors.log_error(f'Error while reading user name from time travel message:\n{error}')
+                    return
+                user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                user = None
+                for member in message.guild.members:
+                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    if member_name == user_name:
+                        user = member
+                        break
+                if user is None:
+                    await errors.log_error(f'Couldn\'t find a user with user_name {user_name}.')
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.NoDataFoundError:
+                    return
+                tt_time = message.created_at.replace(microsecond=0)
+                await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+                if user_settings.last_tt == tt_time and user_settings.bot_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

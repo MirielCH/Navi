@@ -56,7 +56,7 @@ class OpenCog(commands.Cog):
             user: users.User = await users.get_user(ctx.author.id)
         except exceptions.NoDataFoundError:
             return
-        if not user.reminders_enabled or not user.ruby_counter_enabled: return
+        if not user.bot_enabled or not user.ruby_counter_enabled: return
         try:
             task_status = self.bot.loop.create_task(self.get_open_message(ctx))
             bot_message = None

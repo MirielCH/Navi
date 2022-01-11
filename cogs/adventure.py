@@ -68,7 +68,8 @@ class AdventureCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled or not user.alert_adventure.enabled: return
+            if not user.bot_enabled: return
+            if not user.alert_adventure.enabled and not user.tracking_enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             adv_message = user.alert_adventure.message.replace('%',command)
             current_time = datetime.utcnow().replace(microsecond=0)
@@ -104,6 +105,7 @@ class AdventureCog(commands.Cog):
 
             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'\'s cooldown') > 1:
+                if not user.alert_adventure.enabled: return
                 timestring_start = bot_message.find('wait at least **') + 16
                 timestring_end = bot_message.find('**...', timestring_start)
                 timestring = bot_message[timestring_start:timestring_end]
@@ -142,6 +144,11 @@ class AdventureCog(commands.Cog):
                 if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                 return
 
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'adventure', current_time)
+            if not user.alert_adventure.enabled: return
+
             # Calculate cooldown
             cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('adventure')
             bot_answer_time = bot_answer.created_at.replace(microsecond=0)
@@ -168,10 +175,6 @@ class AdventureCog(commands.Cog):
             if bot_message.find('OMEGA lootbox') > -1: await bot_answer.add_reaction(emojis.SURPRISE)
             if bot_message.find('GODLY lootbox') > -1: await bot_answer.add_reaction(emojis.SURPRISE)
             if bot_message.find('but lost fighting') > -1: await bot_answer.add_reaction(emojis.RIP)
-
-            # Add record to the tracking log
-            if user.tracking_enabled:
-                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'adventure', current_time)
 
         except asyncio.TimeoutError:
             await ctx.send('Adventure detection timeout.')

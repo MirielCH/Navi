@@ -65,7 +65,8 @@ class WorkCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled or not user.alert_work.enabled: return
+            if not user.bot_enabled: return
+            if not user.alert_work.enabled and not user.tracking_enabled and not user.ruby_counter_enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             work_message = user.alert_work.message.replace('%',command)
             current_time = datetime.utcnow().replace(microsecond=0)
@@ -131,6 +132,7 @@ class WorkCog(commands.Cog):
 
             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'\'s cooldown') > 1:
+                if not user.alert_work.enabled: return
                 timestring_start = bot_message.find('wait at least **') + 16
                 timestring_end = bot_message.find('**...', timestring_start)
                 timestring = bot_message[timestring_start:timestring_end]
@@ -169,6 +171,11 @@ class WorkCog(commands.Cog):
                 if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                 return
 
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'work', current_time)
+            if not user.alert_work.enabled: return
+
             # Calculate cooldown
             cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('work')
             bot_answer_time = bot_answer.created_at.replace(microsecond=0)
@@ -202,10 +209,6 @@ class WorkCog(commands.Cog):
                     await bot_answer.add_reaction(emojis.WOW)
             else:
                 if settings.DEBUG_MODE: await ctx.send(strings.MSG_ERROR)
-
-            # Add record to the tracking log
-            if user.tracking_enabled:
-                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'work', current_time)
 
         except asyncio.TimeoutError:
             await ctx.send('Work detection timeout.')

@@ -40,6 +40,7 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
+    bot_enabled: bool
     clan_name: str
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
@@ -48,7 +49,6 @@ class User():
     partner_donor_tier: int
     partner_id: int
     partner_name: str
-    reminders_enabled: bool
     rubies: int
     ruby_counter_enabled: bool
     tracking_enabled: bool
@@ -80,6 +80,7 @@ class User():
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
         self.alert_work = new_settings.alert_work
+        self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
@@ -88,7 +89,6 @@ class User():
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_id = new_settings.partner_id
         self.partner_name = new_settings.partner_name
-        self.reminders_enabled = new_settings.reminders_enabled
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.tracking_enabled = new_settings.tracking_enabled
@@ -144,6 +144,7 @@ class User():
             alert_weekly_message: str
             alert_work_enabled: bool
             alert_work_message: str
+            bot_enabled: bool
             clan_name: str
             dnd_mode_enabled: bool
             hardmode_mode_enabled: bool
@@ -152,7 +153,6 @@ class User():
             partner_donor_tier: int
             partner_id: int
             partner_name: str
-            reminders_enabled: bool
             rubies: int
             ruby_counter_enabled: bool
             training_helper_enabled: bool
@@ -224,6 +224,7 @@ async def _dict_to_user(record: dict) -> User:
                                     message=record['alert_weekly_message']),
             alert_work = UserAlert(enabled=bool(record['alert_work_enabled']),
                                    message=record['alert_work_message']),
+            bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
@@ -232,7 +233,6 @@ async def _dict_to_user(record: dict) -> User:
             partner_donor_tier = record['partner_donor_tier'],
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
-            reminders_enabled = bool(record['reminders_enabled']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             tracking_enabled = bool(record['tracking_enabled']),
@@ -396,6 +396,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_weekly_message: str
         alert_work_enabled: bool
         alert_work_message: str
+        bot_enabled: bool
         clan_name: str
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
@@ -404,7 +405,6 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_donor_tier: int
         partner_id: int
         partner_name: str
-        reminders_enabled: bool
         rubies: int
         ruby_counter_enabled: bool
         training_helper_enabled: bool

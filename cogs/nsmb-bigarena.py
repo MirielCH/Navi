@@ -72,7 +72,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled: return
+            if not user.bot_enabled: return
             if not user.alert_big_arena.enabled and event == 'big-arena': return
             if not user.alert_not_so_mini_boss.enabled and event == 'not-so-mini-boss': return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3

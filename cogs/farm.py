@@ -74,7 +74,8 @@ class FarmCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled or not user.alert_farm.enabled: return
+            if not user.bot_enabled: return
+            if not user.alert_farm.enabled and not user.tracking_enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             farm_message = user.alert_farm.message.replace('%',command)
             current_time = datetime.utcnow().replace(microsecond=0)
@@ -115,6 +116,7 @@ class FarmCog(commands.Cog):
 
             # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
             if bot_message.find(f'\'s cooldown') > 1:
+                if not user.alert_farm.enabled: return
                 timestring_start = bot_message.find('wait at least **') + 16
                 timestring_end = bot_message.find('**...', timestring_start)
                 timestring = bot_message[timestring_start:timestring_end]
@@ -162,6 +164,11 @@ class FarmCog(commands.Cog):
                 if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                 return
 
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'farm', current_time)
+            if not user.alert_farm.enabled: return
+
             # Calculate cooldown
             cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('farm')
             bot_answer_time = bot_answer.created_at.replace(microsecond=0)
@@ -192,10 +199,6 @@ class FarmCog(commands.Cog):
                         await bot_answer.add_reaction(emojis.SEED_BREAD)
             else:
                 if settings.DEBUG_MODE: await ctx.send(strings.MSG_ERROR)
-
-            # Add record to the tracking log
-            if user.tracking_enabled:
-                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'farm', current_time)
 
         except asyncio.TimeoutError:
             await ctx.send('Farm detection timeout.')

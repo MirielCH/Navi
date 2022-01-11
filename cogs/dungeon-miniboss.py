@@ -55,7 +55,7 @@ class DungeonMinibossCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled or not user.alert_dungeon_miniboss.enabled: return
+            if not user.bot_enabled or not user.alert_dungeon_miniboss.enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             dungmb_message = user.alert_dungeon_miniboss.message.replace('%',command)
             current_time = datetime.utcnow().replace(microsecond=0)

@@ -77,7 +77,8 @@ class HuntCog(commands.Cog):
                 user: users.User = await users.get_user(ctx.author.id)
             except exceptions.NoDataFoundError:
                 return
-            if not user.reminders_enabled or not user.alert_hunt.enabled: return
+            if not user.bot_enabled: return
+            if not user.alert_hunt.enabled and not user.tracking_enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             partner_donor_tier = user.partner_donor_tier if user.partner_donor_tier <= 3 else 3
             hunt_message = user.alert_hunt.message.replace('%',command)
@@ -117,6 +118,7 @@ class HuntCog(commands.Cog):
 
             # Check if it found a cooldown embed, if yes if it is the correct one, if not, ignore it and try to wait for the bot message one more time
             if bot_message.find(f'\'s cooldown') > 1:
+                if not user.alert_hunt.enabled: return
                 ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 if (bot_message.find(f'{ctx_author}\'s cooldown') > -1) or (bot_message.find(f'{user.partner_name}\'s cooldown') > -1):
                     timestring_start = bot_message.find('wait at least **') + 16
@@ -206,6 +208,12 @@ class HuntCog(commands.Cog):
             elif bot_message.find('is in the **jail**') > -1:
                 if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
                 return
+
+            # Add record to the tracking log
+            if user.tracking_enabled:
+                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'hunt', current_time)
+            if not user.alert_hunt.enabled: return
+
             # Read partner name from hunt together message and save it to database if necessary (to make the bot check safer)
             ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             if together:
@@ -282,7 +290,7 @@ class HuntCog(commands.Cog):
                         await self.bot.wait_until_ready()
                         partner_discord = self.bot.get_user(user.partner_id)
                         lootbox_alert = lootbox_alert.strip()
-                        if partner.partner_channel_id is not None and partner.alert_partner.enabled and partner.reminders_enabled:
+                        if partner.partner_channel_id is not None and partner.alert_partner.enabled and partner.bot_enabled:
                             try:
                                 if partner.dnd_mode_enabled:
                                     lb_message = f'**{partner_discord.name}**, {lootbox_alert}'
@@ -326,10 +334,6 @@ class HuntCog(commands.Cog):
             # Add an F if the user died
             if (bot_message.find(f'**{ctx_author}** lost but ') > -1) or (bot_message.find('but lost fighting') > -1):
                 await bot_answer.add_reaction(emojis.RIP)
-
-            # Add record to the tracking log
-            if user.tracking_enabled:
-                await tracking.insert_log_entry(user.user_id, ctx.guild.id, 'hunt', current_time)
 
         except asyncio.TimeoutError as error:
             await ctx.send('Hunt detection timeout.')
