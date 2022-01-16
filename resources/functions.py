@@ -1,8 +1,8 @@
 # global_data.py
 
 from datetime import timedelta
+
 import discord
-from discord.ext import commands
 
 from database import errors
 from resources import exceptions
@@ -101,7 +101,7 @@ async def check_timestring(string: str) -> str:
     return timestring
 
 
-async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) -> timedelta:
+async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
     """Parses a time string and returns the time as timedelta."""
     time_left_seconds = 0
 
@@ -114,8 +114,7 @@ async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) 
             time_left_seconds = time_left_seconds + (int(weeks) * 604800)
         except:
             await errors.log_error(
-                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{weeks}\' to an integer',
-                ctx
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{weeks}\' to an integer'
             )
     if timestring.find('d') > -1:
         days_start = 0
@@ -126,8 +125,7 @@ async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) 
             time_left_seconds = time_left_seconds + (int(days) * 86400)
         except:
             await errors.log_error(
-                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer',
-                ctx
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer'
             )
     if timestring.find('h') > -1:
         hours_start = 0
@@ -138,8 +136,7 @@ async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) 
             time_left_seconds = time_left_seconds + (int(hours) * 3600)
         except:
             await errors.log_error(
-                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{hours}\' to an integer',
-                ctx
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{hours}\' to an integer'
             )
     if timestring.find('m') > -1:
         minutes_start = 0
@@ -150,8 +147,7 @@ async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) 
             time_left_seconds = time_left_seconds + (int(minutes) * 60)
         except:
             await errors.log_error(
-                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{minutes}\' to an integer',
-                ctx
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{minutes}\' to an integer'
             )
     if timestring.find('s') > -1:
         seconds_start = 0
@@ -162,8 +158,7 @@ async def parse_timestring_to_timedelta(ctx: commands.Context, timestring: str) 
             time_left_seconds = time_left_seconds + int(seconds)
         except:
             await errors.log_error(
-                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{seconds}\' to an integer',
-                ctx
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{seconds}\' to an integer'
             )
 
     if time_left_seconds > 999_999_999:

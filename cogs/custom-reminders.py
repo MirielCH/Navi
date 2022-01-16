@@ -48,7 +48,7 @@ class CustomRemindersCog(commands.Cog):
         except Exception as error:
             await ctx.reply(f'{error}\n{syntax_add}', mention_author=False)
             return
-        time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
+        time_left = await functions.parse_timestring_to_timedelta(timestring)
         reminder_text = ''
         if len(args) > 1:
             args = list(args)

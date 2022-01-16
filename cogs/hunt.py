@@ -124,7 +124,7 @@ class HuntCog(commands.Cog):
                     timestring_start = bot_message.find('wait at least **') + 16
                     timestring_end = bot_message.find('**...', timestring_start)
                     timestring = bot_message[timestring_start:timestring_end]
-                    time_left = await functions.parse_timestring_to_timedelta(ctx, timestring.lower())
+                    time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                     bot_answer_time = bot_answer.created_at.replace(microsecond=0)
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed

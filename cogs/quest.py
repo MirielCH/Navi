@@ -1,14 +1,13 @@
 # quest.py
 
-import asyncio
 from datetime import datetime, timedelta
-from typing import Tuple
+import re
 
 import discord
 from discord.ext import commands
 
-from database import cooldowns, reminders, users
-from resources import emojis, exceptions, functions, logs, settings, strings
+from database import cooldowns, errors, reminders, users
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class QuestCog(commands.Cog):
@@ -16,228 +15,185 @@ class QuestCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    async def get_quest_message(self, ctx: commands.Context) -> Tuple[discord.Message, str]:
-        """Waits for the quest and quest message in the channel and returns it if found."""
-        def epic_rpg_check(m: discord.Message) -> bool:
-            correct_message = False
-            try:
-                ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                message = functions.encode_message_non_async(m)
-                if settings.DEBUG_MODE: logs.logger.debug(f'Quest detection: {message}')
-                if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('WAVE #1') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
-                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
-                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
-                or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
-                or ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('Are you ready to start the EPIC quest') > -1))\
-                or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already claimed a quest') > -1)) or (message.find('You cannot do this if you have a pending quest!') > -1)\
-                or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
-                or (message.find('You need a **special horse** to do this') > -1):
-                    correct_message = True
-                else:
-                    correct_message = False
-            except:
-                correct_message = False
-            return m.author.id == settings.EPIC_RPG_ID and m.channel == ctx.channel and correct_message
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """Runs when a message is sent in a channel."""
+        if message.author.id != settings.EPIC_RPG_ID: return
 
-        bot_answer = await self.bot.wait_for('message', check=epic_rpg_check, timeout = settings.TIMEOUT)
-        bot_message = await functions.encode_message(bot_answer)
-        return (bot_answer, bot_message)
+        if message.embeds:
+            embed: discord.Embed = message.embeds[0]
+            message_author = message_title = message_description = icon_url = ''
+            if embed.author:
+                message_author = str(embed.author.name)
+                icon_url = embed.author.icon_url
+            if embed.title: message_title = str(embed.title)
+            if embed.description: message_description = embed.description
 
-    # --- Commands ---
-    @commands.command(aliases=('quest',))
-    @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def epic(self, ctx: commands.Context, *args: str) -> None:
-        """Detects EPIC RPG quest and epic quest messages and creates reminders"""
-        prefix = ctx.prefix
-        if prefix.lower() != 'rpg ': return
-        command = 'rpg quest'
-        if args:
-            arg = args[0].lower()
-            invoked = ctx.invoked_with
-            invoked = invoked.lower()
-            if invoked == 'epic':
-                if arg == 'quest':
-                    command = 'rpg epic quest'
-                else:
-                    return
-            else:
-                if arg == 'quit': return
-        try:
-            try:
-                user: users.User = await users.get_user(ctx.author.id)
-            except exceptions.NoDataFoundError:
-                return
-            if not user.bot_enabled or not user.alert_quest.enabled: return
-            user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
-            quest_message = user.alert_quest.message.replace('%',command)
-            current_time = datetime.utcnow().replace(microsecond=0)
-            epic_quest = False
-            quest_declined = None
-            task_status = self.bot.loop.create_task(self.get_quest_message(ctx))
-            bot_message = None
-            message_history = await ctx.channel.history(limit=50).flatten()
-            for msg in message_history:
-                if (msg.author.id == settings.EPIC_RPG_ID) and (msg.created_at > ctx.message.created_at):
+            # Quest cooldown
+            if 'you have already claimed a quest' in message_title.lower():
+                user_id = user_name = user = None
+                try:
+                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                except:
                     try:
-                        ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        message = await functions.encode_message(msg)
-                        if settings.DEBUG_MODE: logs.logger.debug(f'Quest detection: {message}')
-                        if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('WAVE #1') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
-                        or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
-                        or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
-                        or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
-                        or ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('Are you ready to start the EPIC quest') > -1))\
-                        or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already claimed a quest') > -1)) or (message.find('You cannot do this if you have a pending quest!') > -1)\
-                        or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                        or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
-                        or (message.find('You need a **special horse** to do this') > -1):
-                            bot_answer = msg
-                            bot_message = message
-                    except Exception as e:
-                        await ctx.send(f'Error reading message history: {e}')
-            if bot_message is None:
-                task_result = await task_status
-                if task_result is not None:
-                    bot_answer = task_result[0]
-                    bot_message = task_result[1]
-                else:
-                    await ctx.send('Quest detection timeout.')
-                    return
-            if not task_status.done(): task_status.cancel()
-
-            # Check what quest it is and if normal quest if the user accepts or denies the quest (different cooldowns)
-            if (bot_message.find('Are you looking for a quest?') > -1) or (bot_message.find('Are you ready to start the EPIC quest') > -1):
-                task_status = self.bot.loop.create_task(self.get_quest_message(ctx))
-                bot_first_answer = bot_answer
-                bot_message = None
-                message_history = await ctx.channel.history(limit=50).flatten()
-                for msg in message_history:
-                    if (msg.author.id == settings.EPIC_RPG_ID) and (msg.created_at > bot_first_answer.created_at):
-                        try:
-                            ctx_author = str(ctx.author.name).encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                            message = await functions.encode_message(msg)
-                            if settings.DEBUG_MODE: logs.logger.debug(f'Quest detection: {message}')
-                            if  ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('WAVE #1') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('epic quest cancelled') > -1))\
-                            or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Are you looking for a quest?') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you did not accept the quest') > -1))\
-                            or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find('Completed!') > -1)) or (message.find(f'**{ctx_author}** got a **new quest**!') > -1)\
-                            or ((message.find(f'{ctx_author}\'s quest') > -1) and (message.find(f'If you don\'t want this quest anymore') > -1))\
-                            or ((message.find(f'{ctx_author}\'s epic quest') > -1) and (message.find('Are you ready to start the EPIC quest') > -1))\
-                            or ((message.find(f'{ctx_author}\'s cooldown') > -1) and (message.find('You have already claimed a quest') > -1)) or (message.find('You cannot do this if you have a pending quest!') > -1)\
-                            or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
-                            or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'end your previous command') > -1))\
-                            or (message.find('You need a **special horse** to do this') > -1):
-                                bot_answer = msg
-                                bot_message = message
-                        except Exception as e:
-                            await ctx.send(f'Error reading message history: {e}')
-                if bot_message is None:
-                    task_result = await task_status
-                    if task_result is not None:
-                        bot_answer = task_result[0]
-                        bot_message = task_result[1]
-                    else:
-                        await ctx.send('Quest detection timeout.')
+                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(error)
                         return
-                if not task_status.done(): task_status.cancel()
-
-                if bot_message.find('you did not accept the quest') > -1:
-                    quest_declined = True
-                elif bot_message.find('got a **new quest**!') > -1:
-                    quest_declined = False
-                elif bot_message.find('WAVE #1') > -1:
-                    epic_quest = True
+                if user_id is not None:
+                    user = await message.guild.fetch_member(user_id)
                 else:
-                    if settings.DEBUG_MODE: await ctx.send('I could not find out if the quest was accepted or declined.')
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
+                if user is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(f'User not found in quest cooldown message: {message}')
                     return
-            # Check if it found a cooldown embed, if yes, read the time and update/insert the reminder if necessary
-            elif bot_message.find(f'\'s cooldown') > 1:
-                timestring_start = bot_message.find('wait at least **') + 16
-                timestring_end = bot_message.find('**...', timestring_start)
-                timestring = bot_message[timestring_start:timestring_end]
-                time_left = await functions.parse_timestring_to_timedelta(ctx, timestring.lower())
-                bot_answer_time = bot_answer.created_at.replace(microsecond=0)
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                message_history = await message.channel.history(limit=50).flatten()
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if msg.content.lower() in ('rpg quest','rpg epic quest') and msg.author == user:
+                            user_command_message = msg
+                            break
+                if user_command_message is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error('Couldn\'t find a command for the quest cooldown message.')
+                    return
+                user_command = user_command_message.content.lower()
+                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
+                bot_answer_time = message.created_at.replace(microsecond=0)
+                current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
-                time_left = time_left-time_elapsed
+                time_left = time_left - time_elapsed
+                reminder_message = user_settings.alert_quest.message.replace('%',user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
-                                                         ctx.channel.id, quest_message)
+                    await reminders.insert_user_reminder(user.id, 'quest', time_left,
+                                                         message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
-                    await bot_answer.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.NAVI)
                 else:
-                    if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore anti spam embed
-            elif bot_message.find('Huh please don\'t spam') > 1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore failed Epic Guard event
-            elif bot_message.find('is now in the jail!') > 1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                await bot_answer.add_reaction(emojis.RIP)
-                return
-            # Ignore quest cancellation as it does not reset the cooldown
-            elif bot_message.find('epic quest cancelled') > -1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore error when trying to do epic quest with active quest
-            elif bot_message.find(f'You cannot do this if you have a pending quest!') > -1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore active quest
-            elif bot_message.find(f'If you don\'t want this quest anymore') > -1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore completed quest
-            elif bot_message.find(f'Completed!') > -1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore trying epic quest without a special horse
-            elif bot_message.find('You need a **special horse** to do this') > -1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
-            # Ignore error when another command is active
-            elif bot_message.find('end your previous command') > 1:
-                if settings.DEBUG_MODE: await bot_answer.add_reaction(emojis.CROSS)
-                return
+                    if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
 
-            # Calculate cooldown
-            cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
-            if not epic_quest and quest_declined is None:
-                logs.logger.error(f'Quest detection error: Neither quest_declined nor epic_quest had a value that allowed me to determine what the user did. epic_quest: {epic_quest}, quest_declined: {quest_declined}')
-                return
-            if epic_quest:
-                cooldown_seconds = cooldown.actual_cooldown()
-            else:
-                cooldown_seconds = 3600 if quest_declined else cooldown.actual_cooldown()
-            bot_answer_time = bot_answer.created_at.replace(microsecond=0)
-            time_elapsed = current_time - bot_answer_time
-            if cooldown.donor_affected:
-                time_left_seconds = (cooldown.actual_cooldown()
-                                     * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                     - time_elapsed.total_seconds())
-            else:
-                time_left_seconds = cooldown-time_elapsed.total_seconds()
-            time_left = timedelta(seconds=time_left_seconds)
+            # Epic Quest
+            if '__wave #1__' in message_description.lower():
+                user_id = user_name = user = None
+                try:
+                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                except:
+                    try:
+                        user_name = re.search("^(.+?)'s epic quest", message_author).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(error)
+                        return
+                if user_id is not None:
+                    user = await message.guild.fetch_member(user_id)
+                else:
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
+                if user is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(f'User not found in epic quest message: {message}')
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0)
+                time_elapsed = current_time - bot_answer_time
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
+                if cooldown.donor_affected:
+                    time_left_seconds = (cooldown.actual_cooldown()
+                                        * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier]
+                                        - time_elapsed.total_seconds())
+                else:
+                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                time_left = timedelta(seconds=time_left_seconds)
+                reminder_message = user_settings.alert_quest.message.replace('%','rpg epic quest')
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'quest', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                if reminder.record_exists:
+                    await message.add_reaction(emojis.NAVI)
+                else:
+                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
-            # Save reminder to database
-            reminder: reminders.Reminder = (
-                await reminders.insert_user_reminder(ctx.author.id, 'quest', time_left,
-                                                     ctx.channel.id, quest_message)
-            )
+        if not message.embeds:
+            message_content = message.content
+            # Quest
+            if ('you did not accept the quest' in message_content.lower()
+                or 'got a **new quest**!' in message_content.lower()):
+                user_name = user = None
+                if message.mentions:
+                    quest_declined = True
+                    user = message.mentions[0]
+                else:
+                    quest_declined = False
+                    try:
+                        user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(error)
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
+                    if user is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in quest message: {message}')
+                        return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0)
+                time_elapsed = current_time - bot_answer_time
+                if quest_declined:
+                    time_left = timedelta(hours=1)
+                else:
+                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
+                    if cooldown.donor_affected:
+                        time_left_seconds = (cooldown.actual_cooldown()
+                                            * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier]
+                                            - time_elapsed.total_seconds())
+                    else:
+                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                    time_left = timedelta(seconds=time_left_seconds)
+                reminder_message = user_settings.alert_quest.message.replace('%','rpg quest')
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'quest', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                if reminder.record_exists:
+                    await message.add_reaction(emojis.NAVI)
+                else:
+                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
-            # Add reaction
-            if reminder.record_exists:
-                await bot_answer.add_reaction(emojis.NAVI)
-            else:
-                if settings.DEBUG_MODE: await ctx.send(strings.MSG_ERROR)
-        except asyncio.TimeoutError:
-            await ctx.send('Quest detection timeout.')
-            return
-        except Exception as e:
-            logs.logger.error(f'Quest detection error: {e}')
-            return
 
 # Initialization
 def setup(bot):

@@ -4,6 +4,7 @@
 import asyncio
 from datetime import datetime, timedelta
 
+import discord
 from discord.ext import commands, tasks
 
 from database import clans, errors, reminders, users
@@ -55,7 +56,8 @@ class TasksCog(commands.Cog):
                             message_mentions = f'{message_mentions}{member.mention} '
                 time_left = get_time_left()
                 await asyncio.sleep(time_left.total_seconds())
-                await channel.send(f'{reminder.message}\n{message_mentions}')
+                embed = discord.Embed(title=reminder.message)
+                await channel.send(f'{message_mentions}\nIt\'s time for:', embed=embed)
             running_tasks.pop(reminder.task_name, None)
         except Exception as error:
             await errors.log_error(error)
@@ -136,9 +138,9 @@ class TasksCog(commands.Cog):
                 except:
                     pass
                 if not clan.alert_enabled: continue
-                reminder_message = clan.alert_message.replace('%','rpg guild upgrade')
+                command = 'rpg guild upgrade'
                 time_left = timedelta(minutes=1)
-                await reminders.insert_clan_reminder(clan.clan_name, time_left, clan.channel_id, reminder_message)
+                await reminders.insert_clan_reminder(clan.clan_name, time_left, clan.channel_id, command)
                 try:
                     weekly_report: clans.ClanWeeklyReport = await clans.get_weekly_report(clan)
                 except exceptions.NoDataFoundError:

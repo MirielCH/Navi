@@ -1,4 +1,4 @@
-# daily.py
+# lootbox.py
 
 from datetime import datetime, timedelta
 import re
@@ -10,8 +10,8 @@ from database import cooldowns, errors, reminders, users
 from resources import emojis, exceptions, functions, settings, strings
 
 
-class DailyCog(commands.Cog):
-    """Cog that contains the daily detection commands"""
+class BuyCog(commands.Cog):
+    """Cog that contains the lootbox detection commands"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -28,8 +28,8 @@ class DailyCog(commands.Cog):
                 icon_url = embed.author.icon_url
             if embed.title: message_title = str(embed.title)
 
-            # Daily cooldown
-            if 'you have claimed your daily rewards already' in message_title.lower():
+            # Lootbox cooldown
+            if 'you have already bought a lootbox' in message_title.lower():
                 user_id = user_name = user = None
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -51,22 +51,22 @@ class DailyCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in daily cooldown message: {message}')
+                    await errors.log_error(f'User not found in lootbox cooldown message: {message}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_daily.enabled: return
+                if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                 bot_answer_time = message.created_at.replace(microsecond=0)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_daily.message.replace('%','rpg daily')
+                reminder_message = user_settings.alert_lootbox.message.replace('%','rpg buy lootbox')
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'daily', time_left,
+                    await reminders.insert_user_reminder(user.id, 'lootbox', time_left,
                                                         message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
@@ -74,37 +74,29 @@ class DailyCog(commands.Cog):
                 else:
                     if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
 
-            # Daily
-            if "'s daily reward" in message_author.lower():
-                user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s daily reward", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(error)
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
-                else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
+        if not message.embeds:
+            message_content = message.content
+            # Buy lootbox
+            if "lootbox` successfully bought for" in message_content.lower():
+                message_history = await message.channel.history(limit=50).flatten()
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if (msg.content.lower().startswith('rpg buy ')
+                            and (msg.content.lower().endswith('lb') or msg.content.lower().endswith('lootbox'))):
+                            user_command_message = msg
                             break
-                if user is None:
+                if user_command_message is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in daily message: {message}')
+                    await errors.log_error('Couldn\'t find a command for the lootbox message.')
                     return
+                user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_daily.enabled: return
-                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('daily')
+                if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('lootbox')
                 bot_answer_time = message.created_at.replace(microsecond=0)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
@@ -115,9 +107,9 @@ class DailyCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_daily.message.replace('%','rpg daily')
+                reminder_message = user_settings.alert_lootbox.message.replace('%','rpg buy lootbox')
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'daily', time_left,
+                    await reminders.insert_user_reminder(user.id, 'lootbox', time_left,
                                                          message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
@@ -128,4 +120,4 @@ class DailyCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(DailyCog(bot))
+    bot.add_cog(BuyCog(bot))

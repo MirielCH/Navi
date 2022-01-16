@@ -16,7 +16,7 @@ from resources import exceptions, settings, strings
 class Clan():
     """Object that represents a record from table "clans"."""
     alert_enabled: bool
-    alert_message: int
+    alert_message: str
     channel_id: int
     clan_name: str
     leader_id: int

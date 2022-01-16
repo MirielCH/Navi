@@ -56,7 +56,7 @@ class TrackingCog(commands.Cog):
                 await ctx.reply(error, mention_author=False)
                 return
 
-            time_left = await functions.parse_timestring_to_timedelta(ctx, timestring)
+            time_left = await functions.parse_timestring_to_timedelta(timestring)
             if time_left.days > 365:
                 await ctx.reply('The maximum time is 365d.', mention_author=False)
                 return
@@ -70,11 +70,8 @@ class TrackingCog(commands.Cog):
         """Fires when a message is sent"""
         if message.author.id == settings.EPIC_RPG_ID:
             if not message.embeds:
-                try:
-                    message_content = message.content
-                except:
-                    return
-
+                message_content = message.content
+                # Epic Guard
                 if 'we have to check you are actually playing' in message_content.lower():
                     if not message.mentions: return
                     user = message.mentions[0]
@@ -87,6 +84,7 @@ class TrackingCog(commands.Cog):
                         await tracking.insert_log_entry(user.id, message.guild.id, 'epic guard', current_time)
 
             if message.embeds:
+                # Last time travel
                 try:
                     message_content = str(message.embeds[0].description)
                 except:

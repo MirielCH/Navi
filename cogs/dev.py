@@ -48,7 +48,7 @@ class DevCog(commands.Cog):
             return m.author == ctx.author and m.channel == ctx.channel
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        if not ctx.author.id in (285399610032390146, 619879176316649482):
+        if not ctx.author.id in (285399610032390146, 619879176316649482, 552563486740447263):
             await ctx.reply('You are not allowed to use this command.', mention_author=False)
             return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [reduction in %]')
@@ -63,7 +63,7 @@ class DevCog(commands.Cog):
                     f'{emojis.BP} {cooldown.activity}: {cooldown.event_reduction}% '
                     f'({cooldown.actual_cooldown():,}s)'
                 )
-                message = f'{message}**\n{cooldown_message}**' if cooldown.event_reduction > 0 else f'{message}\n{cooldown_message}'
+                message = f'{message}\n**{cooldown_message}**' if cooldown.event_reduction > 0 else f'{message}\n{cooldown_message}'
             message = f'{message}\n\n{syntax}'
             await ctx.reply(message, mention_author=False)
             return
@@ -113,6 +113,9 @@ class DevCog(commands.Cog):
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
         if ctx.prefix.lower() == 'rpg ': return
+        if not ctx.author.id in (285399610032390146, 619879176316649482, 552563486740447263):
+            await ctx.reply('You are not allowed to use this command.', mention_author=False)
+            return
         await ctx.reply(
             f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]',
             mention_author=False
@@ -304,13 +307,24 @@ class DevCog(commands.Cog):
                 mention_author=False
                 )
 
-    # Enable/disable commands
+    # Convert timestring to iso format
     @dev.command(aliases=('ts',))
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def timestamp(self, ctx: commands.Context, timestamp: int) -> None:
         if ctx.prefix.lower() == 'rpg ': return
         await ctx.send(datetime.fromtimestamp(timestamp).isoformat(sep=' '))
+
+    # Test command
+    @dev.command()
+    @commands.is_owner()
+    @commands.bot_has_permissions(send_messages=True)
+    async def test(self, ctx: commands.Context, text: str) -> None:
+        if ctx.prefix.lower() == 'rpg ': return
+        embed = discord.Embed(
+            description=f'```\n{text}\n```'
+        )
+        await ctx.send(f'{ctx.author.mention}', embed=embed)
 
 
 def setup(bot):

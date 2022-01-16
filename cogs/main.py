@@ -46,8 +46,6 @@ class MainCog(commands.Cog):
                 command = self.bot.get_command(name='chop')
             elif arg1 in ('big','not',):
                 command = self.bot.get_command(name='big')
-            elif arg1 in ('farm',):
-                command = self.bot.get_command(name='farm')
 
             if command is not None:
                 await command.callback(command.cog, ctx, *args)
