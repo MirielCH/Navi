@@ -338,12 +338,15 @@ class SettingsClanCog(commands.Cog):
                 for member_id in clan.member_ids:
                     try:
                         user: users.User = await users.get_user(member_id)
-                        await user.update(clan_name = clan.clan_name)
+                        await user.update(clan_name=clan.clan_name)
                         if user.clan_name != clan.clan_name:
                             await message_after.channel.send(strings.MSG_ERROR)
                             return
                     except exceptions.FirstTimeUserError:
                         pass
+                users_with_clan_name = await users.get_users_by_clan_name(clan_name)
+                for user in users_with_clan_name:
+                    if not user.user_id in clan_member_ids: await user.update(clan_name=None)
                 await message_after.add_reaction(emojis.NAVI)
 
 

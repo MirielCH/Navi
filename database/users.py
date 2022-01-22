@@ -319,6 +319,42 @@ async def get_all_users() -> Tuple[User]:
     return tuple(users)
 
 
+async def get_users_by_clan_name(clan_name: str) -> Tuple[User]:
+    """Gets all user settings of all users that have a certain clan_name set.
+
+    Returns
+    -------
+    Tuple with User objects
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    exceptions.NoDataFoundError if no guild was found.
+    LookupError if something goes wrong reading the dict.
+    Also logs all errors to the database.
+    """
+    table = 'users'
+    function_name = 'get_users_by_clan_name'
+    sql = f'SELECT * FROM {table} WHERE clan_name=?'
+    try:
+        cur = settings.NAVI_DB.cursor()
+        cur.execute(sql, (clan_name,))
+        records = cur.fetchall()
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    if not records:
+        raise exceptions.FirstTimeUserError(f'No users found for clan {clan_name} ')
+    users = []
+    for record in records:
+        user = await _dict_to_user(dict(record))
+        users.append(user)
+
+    return tuple(users)
+
+
 async def get_user_count() -> int:
     """Gets the amount of users in the table "users".
 
