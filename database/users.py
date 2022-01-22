@@ -57,7 +57,7 @@ class User():
     user_id: int
 
     async def refresh(self) -> None:
-        """Refreshes guild data from the database."""
+        """Refreshes user data from the database."""
         new_settings: User = await get_user(self.user_id)
         self.alert_adventure = new_settings.alert_adventure
         self.alert_arena = new_settings.alert_arena
@@ -260,7 +260,7 @@ async def get_user(user_id: int) -> User:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no guild was found.
+    exceptions.FirstTimeUserError if no user was found.
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """

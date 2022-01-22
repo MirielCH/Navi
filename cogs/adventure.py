@@ -142,9 +142,10 @@ class AdventureCog(commands.Cog):
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('adventure')
                 bot_answer_time = message.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 if cooldown.donor_affected:
                     time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier]
+                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()

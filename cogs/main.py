@@ -107,6 +107,7 @@ class MainCog(commands.Cog):
             await errors.log_error(error, ctx)
             await send_error()
 
+
     # Events
     @commands.Cog.listener()
     async def on_ready(self) -> None:

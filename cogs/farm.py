@@ -133,9 +133,10 @@ class FarmCog(commands.Cog):
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('farm')
                 bot_answer_time = message.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 if cooldown.donor_affected:
                     time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier]
+                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
@@ -149,6 +150,13 @@ class FarmCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                if 'also got' in message_content.lower():
+                    if 'potato seed**' in message_content.lower():
+                        await message.add_reaction(emojis.SEED_POTATO)
+                    elif 'carrot seed**' in message_content.lower():
+                        await message.add_reaction(emojis.SEED_CARROT)
+                    elif 'bread seed**' in message_content.lower():
+                        await message.add_reaction(emojis.SEED_BREAD)
 
             # Farm event
             if ('hits the floor with the fist' in message_content.lower()
@@ -196,9 +204,10 @@ class FarmCog(commands.Cog):
                 bot_answer_time = message.created_at.replace(microsecond=0)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 if cooldown.donor_affected:
                     time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier]
+                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()

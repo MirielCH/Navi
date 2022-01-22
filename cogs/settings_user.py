@@ -343,6 +343,7 @@ class SettingsUserCog(commands.Cog):
             args = strings.ACTIVITIES
         updated_activities = []
         ignored_activites = []
+        answer = ''
         for activity in args:
             if activity in strings.ACTIVITIES_ALIASES: activity = strings.ACTIVITIES_ALIASES[activity]
             updated_activities.append(activity) if activity in strings.ACTIVITIES else ignored_activites.append(activity)

@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import cooldowns, errors, reminders, tracking, users
+import database
 from resources import emojis, exceptions, functions, settings, strings
 
 
@@ -29,7 +30,7 @@ class WorkCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Work cooldown
-            if 'You have already got some resources' in message_title.lower():
+            if 'you have already got some resources' in message_title.lower():
                 user_id = user_name = user = None
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -91,17 +92,20 @@ class WorkCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Work
-            excluded_strings = ('hunting together','** found','** plants','** throws')
+            excluded_strings = ('hunting together','** found','** plants','** throws', 'new quest')
             if ('** got ' in message_content.lower()
                 and not any(string in message_content.lower() for string in excluded_strings)):
                 user_name = user = None
-                try:
-                    user_name = re.search("\*\*(.+?)\*\* got", message_content, re.IGNORECASE).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
+                search_strings = ['[!1] \*\*(.+?)\*\* got', '[!1] (.+?)\*\* got', '\*\*(.+?)\*\* got']
+                for search_string in search_strings:
+                    user_name_search = re.search(search_string, message_content, re.IGNORECASE)
+                    if user_name_search is not None: break
+                if user_name_search is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'User not found in work message: {message.content}')
                     return
+                user_name = user_name_search.group(1)
+                user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     if member_name == user_name:
@@ -109,10 +113,11 @@ class WorkCog(commands.Cog):
                         break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in work message: {message}')
+                    await errors.log_error(f'User not found for user name {user_name}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
+                    await errors.log_error(f'User settings work: {user_settings}')
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
@@ -137,9 +142,10 @@ class WorkCog(commands.Cog):
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('work')
                 bot_answer_time = message.created_at.replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 if cooldown.donor_affected:
                     time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier]
+                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
@@ -153,6 +159,20 @@ class WorkCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                if 'quite a large leaf' in message_content.lower():
+                    await message.add_reaction(emojis.WOAH_THERE)
+                elif 'mined with too much force' in message_content.lower():
+                    await message.add_reaction(emojis.SWEATY)
+                elif 'for some reason, one of the fish was carrying' in message_content.lower():
+                    await message.add_reaction(emojis.FISHPOGGERS)
+                elif 'one of them had' in message_content.lower() and 'rubies in it' in message_content.lower():
+                    await message.add_reaction(emojis.WOW)
+                if 'woooaaaa!!' in message_content.lower():
+                    await message.add_reaction(emojis.FIRE)
+                elif 'wwwwwoooooooooaaaaaaaa!!' in message_content.lower():
+                    await message.add_reaction(emojis.FIRE)
+                elif 'is this a **dream**??' in message_content.lower():
+                    await message.add_reaction(emojis.FIRE)
 
 
 # Initialization

@@ -117,7 +117,7 @@ class RubyCounterCog(commands.Cog):
                 if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
 
             # Rubies from inventory
-            if "'s inventory" in message_author.lower() and '<:ruby' in message_field.lower():
+            if "'s inventory" in message_author.lower():
                 user_id = user_name = user = None
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -146,17 +146,20 @@ class RubyCounterCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                try:
-                    ruby_count = re.search("ruby\*\*: (.+?)\\n", message_field).group(1)
-                    ruby_count = int(ruby_count)
-                except:
+                if  '<:ruby' not in message_field.lower():
+                    ruby_count = 0
+                else:
                     try:
-                        ruby_count = re.search("ruby\*\*: (.+?)$", message_field).group(1)
+                        ruby_count = re.search("ruby\*\*: (.+?)\\n", message_field).group(1)
                         ruby_count = int(ruby_count)
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(error)
-                        return
+                    except:
+                        try:
+                            ruby_count = re.search("ruby\*\*: (.+?)$", message_field).group(1)
+                            ruby_count = int(ruby_count)
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(error)
+                            return
                 await user_settings.update(rubies=ruby_count)
                 if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
 

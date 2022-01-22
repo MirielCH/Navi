@@ -26,7 +26,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[commands.Context
     table = 'errors'
     function_name = 'log_error'
     sql = f'INSERT INTO {table} (date_time, user_input, error, user_settings) VALUES (?, ?, ?, ?)'
-    if ctx is not None:
+    if isinstance(ctx, commands.Context):
         date_time = ctx.message.created_at
         user_input = ctx.message.content
         try:
