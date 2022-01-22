@@ -45,6 +45,7 @@ EXTENSIONS = [
         'cogs.events',
         'cogs.farm',
         'cogs.fun',
+        'cogs.heal-warning',
         'cogs.horse',
         'cogs.horse-race',
         'cogs.hunt',

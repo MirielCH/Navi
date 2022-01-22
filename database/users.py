@@ -44,6 +44,7 @@ class User():
     clan_name: str
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
+    heal_warning_enabled: bool
     last_tt: datetime
     partner_channel_id: int
     partner_donor_tier: int
@@ -84,6 +85,7 @@ class User():
         self.clan_name = new_settings.clan_name
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
+        self.heal_warning_enabled = new_settings.heal_warning_enabled
         self.last_tt = new_settings.last_tt
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
@@ -148,6 +150,7 @@ class User():
             clan_name: str
             dnd_mode_enabled: bool
             hardmode_mode_enabled: bool
+            heal_warning_enabled: bool
             last_tt: datetime UTC
             partner_channel_id: int
             partner_donor_tier: int
@@ -228,6 +231,7 @@ async def _dict_to_user(record: dict) -> User:
             clan_name = record['clan_name'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
+            heal_warning_enabled = bool(record['heal_warning_enabled']),
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
@@ -436,6 +440,7 @@ async def _update_user(user: User, **kwargs) -> None:
         clan_name: str
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
+        heal_warning_enabled: bool
         last_tt: datetime UTC (iso format with separator ' ')
         partner_channel_id: int
         partner_donor_tier: int

@@ -540,6 +540,40 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
 
+    @commands.command(aliases=('heal-warning','healwarning','heal-warn','healwarn'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def heal(self, ctx: commands.Context, *args: str) -> None:
+        """Enables/disables heal warning"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
+        if not args:
+            await ctx.reply(syntax, mention_author=False)
+            return
+        action = args[0].lower()
+        if action in ('on', 'enable', 'start'):
+            enabled = True
+            action = 'enabled'
+        elif action in ('off', 'disable', 'stop'):
+            enabled = False
+            action = 'disabled'
+        else:
+            await ctx.reply(syntax, mention_author=False)
+            return
+        user: users.User = await users.get_user(ctx.author.id)
+        if user.heal_warning_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, the heal warning is already {action}.',
+                mention_author=False
+            )
+            return
+        await user.update(heal_warning_enabled=enabled)
+        if user.heal_warning_enabled == enabled:
+            answer = f'**{ctx.author.name}**, the heal warning is now **{action}**.'
+            await ctx.reply(answer, mention_author=False)
+        else:
+            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+
     @commands.command(aliases=('last-tt','lasttt'))
     @commands.bot_has_permissions(send_messages=True)
     async def last_tt(self, ctx: commands.Context, *args: str) -> None:
@@ -636,6 +670,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
+        f'{emojis.BP} Heal warning: `{await bool_to_text(user_settings.heal_warning_enabled)}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
         f'{emojis.BP} Last TT: <t:{int(user_settings.last_tt.timestamp())}:f> UTC\n'

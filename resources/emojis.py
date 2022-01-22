@@ -22,6 +22,7 @@ WORST_RAIDS = '<:anime_sus:834673942530359337>'
 # Materials
 BANANA = '<:erg_banana:770324898081406986>'
 FISH = '<:erg_normiefish:770324897884536865>'
+LIFE_POTION = '<:erg_lifepotion:770327166956601425>'
 LOG_SUPER = '<:erg_superlog:770324898102640720>'
 RUBY = '<:erg_ruby:770324898168963144>'
 SEED_BREAD = '<:erg_seedbread:835165887606292520>'
