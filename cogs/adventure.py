@@ -94,7 +94,7 @@ class AdventureCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Adventure
-            if ('** found and killed ' in message_content.lower()
+            if ('** found a' in message_content.lower()
                 and any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user_name = user = None
                 try:

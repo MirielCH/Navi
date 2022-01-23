@@ -49,14 +49,18 @@ class HealWarningCog(commands.Cog):
             else:
                 health_search = re.search(f'\*\*{user_name}\*\* lost (.+?) HP, remaining HP is (.+?)/', message_content)
             if health_search is None:
-                if f'{user_name}** lost but' in message_content.lower() or 'but lost fighting' in message_content.lower():
+                if (f'{user_name}** lost but' not in message_content
+                    and 'but lost fighting' not in message_content.lower()):
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(f'Health not found in training/adventure message: {message_content}')
                     return
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'Health not found in training/adventure message: {message_content}')
-                return
             try:
-                health_lost = int(health_search.group(1))
-                health_remaining = int(health_search.group(2))
+                if health_search is not None:
+                    health_lost = int(health_search.group(1))
+                    health_remaining = int(health_search.group(2))
+                else:
+                    health_lost = 100
+                    health_remaining = 0
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Health not found in training/adventure message. {error}')
