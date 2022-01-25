@@ -475,7 +475,7 @@ async def _update_user(user: User, **kwargs) -> None:
         cur.execute(sql, kwargs)
         if 'user_donor_tier' in kwargs and user.partner_id is not None:
             partner = await get_user(user.partner_id)
-            await partner.update(partner_donor_tier=user.user_donor_tier)
+            await partner.update(partner_donor_tier=kwargs['user_donor_tier'])
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

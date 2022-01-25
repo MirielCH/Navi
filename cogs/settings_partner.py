@@ -24,9 +24,6 @@ class SettingsPartnerCog(commands.Cog):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        if args:
-            await ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix), mention_author=False)
-            return
         user: users.User = await users.get_user(ctx.author.id)
         if not ctx.message.mentions:
             if user.partner_id is None:
@@ -75,8 +72,8 @@ class SettingsPartnerCog(commands.Cog):
             except asyncio.TimeoutError:
                 await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
                 return
-            await user.update(partner_id=partner.user_id)
-            await partner.update(partner_id=user.user_id)
+            await user.update(partner_id=partner.user_id, partner_donor_tier=partner.user_donor_tier)
+            await partner.update(partner_id=user.user_id, partner_donor_tier=user.user_donor_tier)
             if user.partner_id == new_partner.id and partner.partner_id == ctx.author.id:
                 await ctx.send(
                     f'**{ctx.author.name}**, {new_partner.name} is now set as your partner.\n'
