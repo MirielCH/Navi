@@ -28,7 +28,8 @@ class PetsCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower().startswith('rpg pet') and ' adv' in msg.content.lower():
+                        if (msg.content.lower().startswith('rpg pet') and ' adv' in msg.content.lower()
+                            and not msg.author.bot):
                             user_command_message = msg
                             break
                 if user_command_message is None:
@@ -38,6 +39,7 @@ class PetsCog(commands.Cog):
                 user = user_command_message.author
                 arguments = user_command_message.content.split()
                 pet_id = arguments[-1].upper()
+                if pet_id == 'EPIC': return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -65,7 +67,8 @@ class PetsCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower().startswith('rpg pet') and ' cancel ' in msg.content.lower():
+                        if (msg.content.lower().startswith('rpg pet') and ' cancel ' in msg.content.lower()
+                            and not msg.author.bot):
                             user_command_message = msg
                             break
                 if user_command_message is None:

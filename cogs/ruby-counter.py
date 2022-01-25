@@ -197,7 +197,7 @@ class RubyCounterCog(commands.Cog):
                     await errors.log_error(error)
                     return
                 answer = 'YES' if user_settings.rubies > ruby_count else 'NO'
-                await message.reply(f'`{answer}` (you have {user_settings.rubies} {emojis.RUBY}', mention_author=False)
+                await message.reply(f'`{answer}` (you have {user_settings.rubies} {emojis.RUBY})', mention_author=False)
 
             # Rubies from work commands
             if '** got ' in message_content.lower() and '<:ruby' in message_content.lower():
@@ -240,7 +240,7 @@ class RubyCounterCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower() == 'rpg craft ruby sword':
+                        if msg.content.lower() == 'rpg craft ruby sword' and not msg.author.bot:
                             user_command_message = msg
                             break
                 if user_command_message is None:
@@ -264,7 +264,7 @@ class RubyCounterCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower() == 'rpg craft ruby armor':
+                        if msg.content.lower() == 'rpg craft ruby armor' and not msg.author.bot:
                             user_command_message = msg
                             break
                 if user_command_message is None:
@@ -288,7 +288,7 @@ class RubyCounterCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower() == 'rpg craft coin sword':
+                        if msg.content.lower() == 'rpg craft coin sword' and not msg.author.bot:
                             user_command_message = msg
                             break
                 if user_command_message is None:
@@ -312,7 +312,7 @@ class RubyCounterCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower() == 'rpg forge ultra-edgy armor':
+                        if msg.content.lower() == 'rpg forge ultra-edgy armor' and not msg.author.bot:
                             user_command_message = msg
                             break
                 if user_command_message is None:

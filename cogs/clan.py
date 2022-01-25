@@ -125,7 +125,7 @@ class ClanCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower() == 'rpg guild upgrade':
+                        if msg.content.lower() == 'rpg guild upgrade' and not msg.author.bot:
                             user_command_message = msg
                             break
                 if user_command_message is None:

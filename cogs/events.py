@@ -34,7 +34,7 @@ class EventsCog(commands.Cog):
         user_command_message = None
         for msg in message_history:
             if msg.content is not None:
-                if msg.content.lower().startswith('rpg event'):
+                if msg.content.lower().startswith('rpg event') and not msg.author.bot:
                     user_command_message = msg
                     break
         if user_command_message is None:

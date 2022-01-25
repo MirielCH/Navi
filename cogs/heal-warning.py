@@ -21,7 +21,7 @@ class HealWarningCog(commands.Cog):
         if message.embeds: return
         message_content = message.content
 
-        if '** found and killed' in message_content.lower() or 'are hunting together' in message_content.lower():
+        if '** found a' in message_content.lower() or 'are hunting together' in message_content.lower():
             user_name = user = None
             try:
                 user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)

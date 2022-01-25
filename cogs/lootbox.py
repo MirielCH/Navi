@@ -83,7 +83,8 @@ class BuyCog(commands.Cog):
                 for msg in message_history:
                     if msg.content is not None:
                         if (msg.content.lower().startswith('rpg buy ')
-                            and (msg.content.lower().endswith('lb') or msg.content.lower().endswith('lootbox'))):
+                            and (msg.content.lower().endswith('lb') or msg.content.lower().endswith('lootbox'))
+                            and not msg.author.bot):
                             user_command_message = msg
                             break
                 if user_command_message is None:

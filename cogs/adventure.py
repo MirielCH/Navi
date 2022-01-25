@@ -98,7 +98,7 @@ class AdventureCog(commands.Cog):
                 and any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user_name = user = None
                 try:
-                    user_name = re.search("^\*\*(.+?)\*\* found and killed", message_content).group(1)
+                    user_name = re.search("^\*\*(.+?)\*\* found a", message_content).group(1)
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
