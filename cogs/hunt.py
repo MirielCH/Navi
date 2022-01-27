@@ -151,16 +151,18 @@ class HuntCog(commands.Cog):
                     if user.partner_id is not None:
                         partner: users.User = await users.get_user(user.partner_id)
                         if together and partner.hardmode_mode_enabled:
+                            partner_discord = self.bot.get_user(user.partner_id)
                             hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                             hm_message = (
-                                f'{hm_message} **{user.partner_name}** is currently **hardmoding**.\n'
+                                f'{hm_message} **{partner_discord.name}** is currently **hardmoding**.\n'
                                 f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
                             )
                             await ctx.send(hm_message)
                         elif not together and not partner.hardmode_mode_enabled:
+                            partner_discord = self.bot.get_user(user.partner_id)
                             hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                             hm_message = (
-                                f'{hm_message} **{user.partner_name}** is not hardmoding, '
+                                f'{hm_message} **{partner_discord.name}** is not hardmoding, '
                                 f'feel free to take them hunting.'
                             )
                             await ctx.send(hm_message)
@@ -303,16 +305,18 @@ class HuntCog(commands.Cog):
                                 await ctx.send(f'Had the following error while trying to send the partner alert:\n{error}')
 
                 if together and partner.hardmode_mode_enabled:
+                    partner_discord = self.bot.get_user(user.partner_id)
                     hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                     hm_message = (
-                        f'{hm_message} **{user.partner_name}** is currently **hardmoding**.\n'
+                        f'{hm_message} **{partner_discord.name}** is currently **hardmoding**.\n'
                         f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
                     )
                     await ctx.send(hm_message)
                 elif not together and not partner.hardmode_mode_enabled:
+                    partner_discord = self.bot.get_user(user.partner_id)
                     hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                     hm_message = (
-                        f'{hm_message} **{user.partner_name}** is not hardmoding, '
+                        f'{hm_message} **{partner_discord.name}** is not hardmoding, '
                         f'feel free to take them hunting.'
                     )
                     await ctx.send(hm_message)

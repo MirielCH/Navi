@@ -675,6 +675,7 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
                                 break
                     else:
                         custom_id = highest_custom_id + 1
+
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

@@ -52,7 +52,7 @@ class PetsCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_pets.message.replace('$', pet_id)
+                reminder_message = user_settings.alert_pets.message.format(id=pet_id, emoji='')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
                                                          message.channel.id, reminder_message)
@@ -113,6 +113,18 @@ class PetsCog(commands.Cog):
 
             # Pet list
             if 'pets can collect items and coins, more information' in message_description.lower():
+                pet_names_emojis = {
+                    'cat': emojis.PET_CAT,
+                    'dog': emojis.PET_DOG,
+                    'dragon': emojis.PET_DRAGON,
+                    'golden bunny': emojis.PET_GOLDEN_BUNNY,
+                    'hamster': emojis.PET_HAMSTER,
+                    'pumpkin bat': emojis.PET_PUMPKIN_BAT,
+                    'pink fish': emojis.PET_PINK_FISH,
+                    'snowball': emojis.PET_SNOWBALL,
+                    'pony': emojis.PET_PONY,
+                    'panda': emojis.PET_PANDA,
+                }
                 user_id = user_name = user = None
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -148,6 +160,11 @@ class PetsCog(commands.Cog):
                 for field in embed.fields:
                     try:
                         pet_id_search = re.search('`ID: (.+?)`', field.name)
+                        pet_emoji = ''
+                        for pet, emoji in pet_names_emojis.items():
+                            if pet in field.name.lower():
+                                pet_emoji = emoji
+                                break
                         pet_action_timestring_search = re.search('Status__:\*\* (.+?) \| \*\*(.+?)\*\*', field.value)
                         if pet_id_search is None or pet_action_timestring_search is None: continue
                         pet_id = pet_id_search.group(1)
@@ -162,7 +179,7 @@ class PetsCog(commands.Cog):
                         return
 
                     reminder_created = True
-                    reminder_message = user_settings.alert_pets.message.replace('$', pet_id)
+                    reminder_message = user_settings.alert_pets.message.format(id=pet_id, emoji=pet_emoji)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
                                                              message.channel.id, reminder_message)

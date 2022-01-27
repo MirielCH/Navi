@@ -53,7 +53,8 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             user_command_message = None
             for msg in message_history:
                 if msg.content is not None:
-                    if ((msg.content.lower().startswith('rpg big ') or msg.content.lower().startswith('rpg not '))
+                    if ((msg.content.lower().startswith('rpg ')
+                         and 'big arena join' in msg.content.lower() or 'not so mini boss join' in msg.content.lower())
                         and msg.author == user):
                         user_command_message = msg
                         break

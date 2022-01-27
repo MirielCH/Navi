@@ -63,7 +63,8 @@ class TrainingCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ') and ' tr' in msg.content.lower()
+                        if (msg.content.lower().startswith('rpg ')
+                            and (' tr' in msg.content.lower() or 'ultr' in msg.content.lower())
                             and msg.author == user):
                             user_command_message = msg
                             break
@@ -72,7 +73,8 @@ class TrainingCog(commands.Cog):
                     await errors.log_error('Couldn\'t find a command for the training cooldown message.')
                     return
                 user_command = user_command_message.content.lower()
-                if user_command.endswith('tr'): user_command = user_command.replace('tr','training')
+                if user_command.endswith(' ultr'): user_command = user_command.replace(' ultr',' ultraining')
+                if user_command.endswith(' tr'): user_command = user_command.replace(' tr',' training')
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                 bot_answer_time = message.created_at.replace(microsecond=0)

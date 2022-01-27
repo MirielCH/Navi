@@ -117,7 +117,6 @@ class WorkCog(commands.Cog):
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
-                    await errors.log_error(f'User settings work: {user_settings}')
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
