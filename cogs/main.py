@@ -158,6 +158,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
         f'{emojis.BP} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
         f'{emojis.BP} `{prefix}heal on` / `off` : Turn heal warning on/off\n'
+        f'{emojis.BP} `{prefix}pet-helper on` / `off` : Turn the pet catch helper on/off\n'
         f'{emojis.BP} `{prefix}ruby` : Check your current ruby count\n'
         f'{emojis.BP} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
         f'{emojis.BP} `{prefix}tr-helper on` / `off` : Turn the training helper on/off\n'

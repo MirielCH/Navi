@@ -50,6 +50,7 @@ class User():
     partner_donor_tier: int
     partner_id: int
     partner_name: str
+    pet_helper_enabled: bool
     rubies: int
     ruby_counter_enabled: bool
     tracking_enabled: bool
@@ -91,6 +92,7 @@ class User():
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_id = new_settings.partner_id
         self.partner_name = new_settings.partner_name
+        self.pet_helper_enabled = new_settings.pet_helper_enabled
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.tracking_enabled = new_settings.tracking_enabled
@@ -156,6 +158,7 @@ class User():
             partner_donor_tier: int
             partner_id: int
             partner_name: str
+            pet_helper_enabled: bool
             rubies: int
             ruby_counter_enabled: bool
             training_helper_enabled: bool
@@ -237,6 +240,7 @@ async def _dict_to_user(record: dict) -> User:
             partner_donor_tier = record['partner_donor_tier'],
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
+            pet_helper_enabled = record['pet_helper_enabled'],
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             tracking_enabled = bool(record['tracking_enabled']),
@@ -446,6 +450,7 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_donor_tier: int
         partner_id: int
         partner_name: str
+        pet_helper_enabled: bool
         rubies: int
         ruby_counter_enabled: bool
         training_helper_enabled: bool

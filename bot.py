@@ -54,6 +54,7 @@ EXTENSIONS = [
         'cogs.main',
         'cogs.nsmb-bigarena',
         'cogs.pet-tournament',
+        'cogs.pet-helper',
         'cogs.pets',
         'cogs.quest',
         'cogs.ruby-counter',
