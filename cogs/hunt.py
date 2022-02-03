@@ -28,6 +28,7 @@ class HuntCog(commands.Cog):
                     or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('pretends to be a zombie') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('fights the horde') > -1))\
+                    or ((message.find('The slime did not attack') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('Thankfully, the horde did not notice') > -1))\
                     or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                     or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
@@ -97,6 +98,7 @@ class HuntCog(commands.Cog):
                             or ((message.find(f'\'s cooldown') > -1) and (message.find('You have already looked around') > -1))\
                             or ((message.find(ctx_author) > -1) and (message.find('pretends to be a zombie') > -1))\
                             or ((message.find(ctx_author) > -1) and (message.find('fights the horde') > -1))\
+                            or ((message.find('The slime did not attack') > -1))\
                             or ((message.find(ctx_author) > -1) and (message.find('Thankfully, the horde did not notice') > -1))\
                             or ((message.find(ctx_author) > -1) and (message.find('Huh please don\'t spam') > -1)) or ((message.find(ctx_author) > -1) and (message.find('is now in the jail!') > -1))\
                             or ((message.find(f'{ctx.author.id}') > -1) and (message.find('you have to be married') > -1)) or ((message.find(f'{ctx.author.id}') > -1) and (message.find(f'the ascended command is unlocked with the ascended skill') > -1))\
@@ -160,7 +162,7 @@ class HuntCog(commands.Cog):
                             await ctx.send(hm_message)
                         elif not together and not partner.hardmode_mode_enabled:
                             partner_discord = self.bot.get_user(user.partner_id)
-                            hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
+                            hm_message = ctx.author.mention if not user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                             hm_message = (
                                 f'{hm_message} **{partner_discord.name}** is not hardmoding, '
                                 f'feel free to take them hunting.'
@@ -314,7 +316,7 @@ class HuntCog(commands.Cog):
                     await ctx.send(hm_message)
                 elif not together and not partner.hardmode_mode_enabled:
                     partner_discord = self.bot.get_user(user.partner_id)
-                    hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
+                    hm_message = ctx.author.mention if not user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                     hm_message = (
                         f'{hm_message} **{partner_discord.name}** is not hardmoding, '
                         f'feel free to take them hunting.'

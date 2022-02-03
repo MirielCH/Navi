@@ -94,7 +94,7 @@ class ClanCog(commands.Cog):
                     clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
                 except exceptions.NoDataFoundError:
                     return
-                if not clan.alert_enabled: return
+                if not clan.alert_enabled or clan.channel_id is None: return
                 try:
                     stealth = re.search("STEALTH\*\*: (.+?)\\n", message_field1).group(1)
                     stealth = int(stealth)

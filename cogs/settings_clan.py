@@ -75,7 +75,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_GUILD_LEADER.format(username=ctx.author.name), mention_author=False)
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name), mention_author=False)
             return
         try:
             await ctx.reply(
@@ -112,7 +112,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_GUILD_LEADER.format(username=ctx.author.name), mention_author=False)
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name), mention_author=False)
             return
         if clan.channel_id is None:
             await ctx.reply(

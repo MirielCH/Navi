@@ -22,12 +22,13 @@ class TrainingCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = message_description = icon_url = ''
+            message_author = message_title = message_description = message_field1_value = icon_url = ''
             if embed.author:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.title: message_title = str(embed.title)
             if embed.description: message_description = str(embed.description)
+            if len(embed.fields) > 1: message_field1_value = embed.fields[1].value
 
             # Training cooldown
             if 'you have trained already' in message_title.lower():
@@ -153,6 +154,7 @@ class TrainingCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                if 'better luck next time' in message_field1_value.lower(): await message.add_reaction(emojis.NOOB)
 
         if not message.embeds:
             message_content = message.content
