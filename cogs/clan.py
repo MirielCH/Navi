@@ -84,6 +84,7 @@ class ClanCog(commands.Cog):
 
             # Clan overview
             if 'your guild was raided' in message_footer.lower():
+                if message.mentions: return # Yes that also disables it if you ping yourself but who does that
                 try:
                     clan_name = re.search("^\*\*(.+?)\*\*", message_description).group(1)
                 except Exception as error:

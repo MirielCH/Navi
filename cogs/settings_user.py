@@ -407,6 +407,28 @@ class SettingsUserCog(commands.Cog):
                 f'**{ctx.author.name}**, hardmode mode is now **{action}**.',
                 mention_author=False
             )
+            if user.partner_id is not None:
+                await self.bot.wait_until_ready()
+                partner_discord = self.bot.get_user(user.partner_id)
+                partner: users.User = await users.get_user(user.partner_id)
+                if partner.partner_channel_id is not None:
+                    partner_message = partner_discord.mention if user.dnd_mode_enabled else f'**{partner_discord.name}**,'
+                    partner_message = f'{partner_message} **{ctx.author.name}** just {action} **hardmoding**.'
+                    if action == 'enabled':
+                        partner_message = (
+                            f'{partner_message}\n'
+                            f'If you want to hardmode too, please activate hardmode mode and hunt solo.\n'
+                            f'Otherwise, enjoy the ride.'
+                        )
+                    else:
+                        partner_message = (
+                            f'{partner_message}\n'
+                            f'Feel free to take them hunting again.'
+                        )
+                    await self.bot.wait_until_ready()
+                    partner_channel = self.bot.get_channel(partner.partner_channel_id)
+                    await partner_channel.send(partner_message)
+
         else:
             await ctx.reply(strings.MSG_ERROR, mention_author=False)
 

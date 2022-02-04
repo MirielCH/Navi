@@ -63,7 +63,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 await errors.log_error('Couldn\'t find a command for the big-arena or not-so-mini-boss message.')
                 return
             user_command = user_command_message.content.lower()
-            if user_command.startswith('rpg not'):
+            if ' not so mini ' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
                 event = 'not-so-mini-boss'
                 reminder_message = user_settings.alert_not_so_mini_boss.message.format(event=event.replace('-',' '))

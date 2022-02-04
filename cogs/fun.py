@@ -1,6 +1,7 @@
 # fun.py
 """Contains some nonsense"""
 
+import discord
 from discord.ext import commands
 
 
@@ -17,6 +18,14 @@ class FunCog(commands.Cog):
             return
         await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431', mention_author=False)
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """Runs when a message is sent in a channel."""
+
+        if not message.embeds and not message.author.bot:
+            message_content = message.content
+            if message_content.lower() == 'navi lit':
+                await message.reply('https://tenor.com/view/betty-white-dab-mood-gif-5044603', mention_author=False)
 
 # Initialization
 def setup(bot):
