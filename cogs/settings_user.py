@@ -412,7 +412,7 @@ class SettingsUserCog(commands.Cog):
                 partner_discord = self.bot.get_user(user.partner_id)
                 partner: users.User = await users.get_user(user.partner_id)
                 if partner.partner_channel_id is not None:
-                    partner_message = partner_discord.mention if user.dnd_mode_enabled else f'**{partner_discord.name}**,'
+                    partner_message = partner_discord.mention if not user.dnd_mode_enabled else f'**{partner_discord.name}**,'
                     partner_message = f'{partner_message} **{ctx.author.name}** just {action} **hardmoding**.'
                     if action == 'enabled':
                         partner_message = (

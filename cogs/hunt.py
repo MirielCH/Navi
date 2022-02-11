@@ -154,7 +154,7 @@ class HuntCog(commands.Cog):
                         partner: users.User = await users.get_user(user.partner_id)
                         if together and partner.hardmode_mode_enabled:
                             partner_discord = self.bot.get_user(user.partner_id)
-                            hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
+                            hm_message = ctx.author.mention if not user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                             hm_message = (
                                 f'{hm_message} **{partner_discord.name}** is currently **hardmoding**.\n'
                                 f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
@@ -308,7 +308,7 @@ class HuntCog(commands.Cog):
 
                 if together and partner.hardmode_mode_enabled:
                     partner_discord = self.bot.get_user(user.partner_id)
-                    hm_message = ctx.author.mention if user.dnd_mode_enabled else f'**{ctx.author.name}**,'
+                    hm_message = ctx.author.mention if not user.dnd_mode_enabled else f'**{ctx.author.name}**,'
                     hm_message = (
                         f'{hm_message} **{partner_discord.name}** is currently **hardmoding**.\n'
                         f'If you want to hardmode too, please activate hardmode mode and hunt solo.'

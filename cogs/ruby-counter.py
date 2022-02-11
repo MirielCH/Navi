@@ -227,9 +227,13 @@ class RubyCounterCog(commands.Cog):
                     ruby_count = re.search('\*\* got (.+?) <:ruby', message_content, re.IGNORECASE).group(1)
                     ruby_count = int(ruby_count)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
-                    return
+                    try:
+                        ruby_count = re.search(' had (.+?) <:ruby', message_content).group(1)
+                        ruby_count = int(ruby_count)
+                    except:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'Couldn\t find ruby count: {error}')
+                        return
                 ruby_count += user_settings.rubies
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
