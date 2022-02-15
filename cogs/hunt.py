@@ -82,7 +82,7 @@ class HuntCog(commands.Cog):
             if not user.alert_hunt.enabled and not user.tracking_enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             partner_donor_tier = user.partner_donor_tier if user.partner_donor_tier <= 3 else 3
-            hunt_message = user.alert_hunt.message.replace('%',command)
+            hunt_message = user.alert_hunt.message.format(command=command)
             current_time = datetime.utcnow().replace(microsecond=0)
             cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
             task_status = self.bot.loop.create_task(self.get_hunt_message(ctx))

@@ -64,7 +64,7 @@ class WeeklyCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_weekly.message.replace('%','rpg weekly')
+                reminder_message = user_settings.alert_weekly.message.format(command='rpg weekly')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'weekly', time_left,
                                                          message.channel.id, reminder_message)
@@ -116,7 +116,7 @@ class WeeklyCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_weekly.message.replace('%','rpg weekly')
+                reminder_message = user_settings.alert_weekly.message.format(command='rpg weekly')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'weekly', time_left,
                                                          message.channel.id, reminder_message)

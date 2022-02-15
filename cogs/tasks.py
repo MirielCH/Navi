@@ -40,7 +40,7 @@ class TasksCog(commands.Cog):
                 message = ''
                 for reminder in reminders:
                     if reminders[0].activity == 'custom':
-                        reminder_message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.replace('%', reminder.message)
+                        reminder_message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.format(message=reminder.message)
                     else:
                         reminder_message = reminder.message
                     if user_settings.dnd_mode_enabled:

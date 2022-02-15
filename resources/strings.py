@@ -8,7 +8,36 @@ INTERNAL_ERROR_LOOKUP = 'Error assigning values.\nError: {error}\nTable: {table}
 INTERNAL_ERROR_NO_ARGUMENTS = 'You need to specify at least one keyword argument.\nTable: {table}\nFunction: {function}'
 INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: {function}\nRecord: {record}\n'
 
-DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **%**!'
+DEFAULT_MESSAGE = 'Hey! It\'s time for `{command}`!'
+DEFAULT_MESSAGE_EVENT = (
+    'Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
+    f'official EPIC RPG server.'
+)
+DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **{message}**!'
+
+DEFAULT_MESSAGES = {
+    'adventure': DEFAULT_MESSAGE,
+    'arena': DEFAULT_MESSAGE,
+    'big-arena': DEFAULT_MESSAGE_EVENT,
+    'daily': DEFAULT_MESSAGE,
+    'duel': DEFAULT_MESSAGE,
+    'dungeon-miniboss': DEFAULT_MESSAGE,
+    'farm': DEFAULT_MESSAGE,
+    'horse': DEFAULT_MESSAGE,
+    'horse-race': DEFAULT_MESSAGE_EVENT,
+    'hunt': DEFAULT_MESSAGE,
+    'lootbox': DEFAULT_MESSAGE,
+    'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and `{command}` to enter the next draw!',
+    'not-so-mini-boss': DEFAULT_MESSAGE_EVENT,
+    'partner': '**{user}** found {lootbox} for you!',
+    'pets': 'Hey! Your pet `{id}` is back! {emoji}',
+    'pet-tournament': DEFAULT_MESSAGE_EVENT,
+    'quest': DEFAULT_MESSAGE,
+    'training': DEFAULT_MESSAGE,
+    'vote': DEFAULT_MESSAGE,
+    'weekly': DEFAULT_MESSAGE,
+    'work': DEFAULT_MESSAGE,
+}
 
 CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
     '<:amongus_sus:875996946903478292> There is one player among us that wants us to believe he is not an impostor.'

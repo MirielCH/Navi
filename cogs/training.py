@@ -82,7 +82,7 @@ class TrainingCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_training.message.replace('%',user_command)
+                reminder_message = user_settings.alert_training.message.format(command=user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
@@ -145,7 +145,7 @@ class TrainingCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_training.message.replace('%',user_command)
+                reminder_message = user_settings.alert_training.message.format(command=user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
@@ -212,7 +212,7 @@ class TrainingCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_training.message.replace('%',user_command)
+                reminder_message = user_settings.alert_training.message.format(command=user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)

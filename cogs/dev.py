@@ -315,6 +315,17 @@ class DevCog(commands.Cog):
         if ctx.prefix.lower() == 'rpg ': return
         await ctx.send(datetime.fromtimestamp(timestamp).isoformat(sep=' '))
 
+    # List servers
+    @dev.command()
+    @commands.is_owner()
+    @commands.bot_has_permissions(send_messages=True)
+    async def servers(self, ctx: commands.Context) -> None:
+        if ctx.prefix.lower() == 'rpg ': return
+        server_list = ''
+        for guild in self.bot.guilds:
+            server_list = f'{server_list}\n{emojis.BP} {guild.name}'
+        await ctx.send(server_list)
+
     # Test command
     @dev.command()
     @commands.is_owner()

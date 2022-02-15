@@ -77,7 +77,7 @@ class QuestCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_quest.message.replace('%',user_command)
+                reminder_message = user_settings.alert_quest.message.format(command=user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
@@ -129,7 +129,7 @@ class QuestCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_quest.message.replace('%','rpg epic quest')
+                reminder_message = user_settings.alert_quest.message.format(command='rpg epic quest')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
@@ -186,7 +186,7 @@ class QuestCog(commands.Cog):
                     else:
                         time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                     time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_quest.message.replace('%','rpg quest')
+                reminder_message = user_settings.alert_quest.message.format(command='rpg quest')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)

@@ -167,7 +167,7 @@ class EventsCog(commands.Cog):
                     return
                 if lottery_search is not None:
                     lottery_timestring = lottery_search.group(1)
-                    lottery_message = user_settings.alert_lottery.message.replace('%','rpg buy lottery ticket')
+                    lottery_message = user_settings.alert_lottery.message.format(command='rpg buy lottery ticket')
                     cooldowns.append(['lottery', lottery_timestring.lower(), lottery_message])
             if user_settings.alert_pet_tournament.enabled:
                 try:

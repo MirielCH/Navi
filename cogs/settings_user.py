@@ -373,6 +373,141 @@ class SettingsUserCog(commands.Cog):
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
         await ctx.reply(answer, mention_author=False)
 
+    @commands.command()
+    @commands.bot_has_permissions(send_messages=True)
+    async def message(self, ctx: commands.Context, *args: str) -> None:
+        """Change specific reminder messages"""
+        def check(m: discord.Message) -> bool:
+            return m.author == ctx.author and m.channel == ctx.channel
+
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        if ctx.message.mentions:
+            await ctx.reply(f'Please don\'t.', mention_author=False)
+            return
+        user: users.User = await users.get_user(ctx.author.id)
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}message [activity] [message]')
+        possible_activities = '**Possible activities**'
+        for activity in strings.ACTIVITIES:
+            possible_activities = f'{possible_activities}\n{emojis.BP} `{activity}`'
+        syntax_message = (
+            f'This command changes the reminder messages Navi sends.\n\n'
+            f'**Syntax**\n'
+            f'{emojis.BP} Use `{prefix}message [activity] [message]` to change a message.\n'
+            f'{emojis.BP} Use `{prefix}message [activity]` to view a current message.\n'
+            f'{emojis.BP} Use `{prefix}message [activity] reset` to reset a message to the default one.\n'
+            f'{emojis.BP} Use `{prefix}message list` to view **all** current messages.\n'
+            f'{emojis.BP} Use `{prefix}message reset` to reset **all** messages to the default one.\n\n'
+            f'**Placeholders**\n'
+            f'{emojis.BP} Words in curly brackets such as \u007bcommand\u007d are **required**.\n'
+            f'{emojis.BP} Check the current message to see which placeholders you need to use.\n\n'
+            f'{possible_activities}'
+        )
+        if not args:
+            await ctx.reply(syntax_message, mention_author=False)
+            return
+        activity = args[0]
+        if activity == 'reset':
+            await ctx.reply(
+                f'**{ctx.author.name}**, this will reset **all** messages to the default one. '
+                f'Are you sure? `[yes/no]`',
+                mention_author=False
+            )
+            try:
+                answer = await self.bot.wait_for('message', check=check, timeout=30)
+                if answer.content.lower() not in ['yes','y']:
+                    await ctx.send('Aborted.')
+                    return
+            except asyncio.TimeoutError:
+                await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                return
+            kwargs = {}
+            for activity in strings.ACTIVITIES:
+                activity_column = strings.ACTIVITIES_COLUMNS[activity]
+                kwargs[f'{activity_column}_message'] = strings.DEFAULT_MESSAGES[activity]
+            await user.update(**kwargs)
+            await ctx.reply(
+                f'Changed all messages back to the default message.\n\n'
+                f'Note that running reminders do not update automatically.',
+                mention_author=False
+            )
+            return
+        if activity == 'list':
+            embed = await embed_message_settings(ctx, user)
+            await ctx.reply(embed=embed, mention_author=False)
+            return
+        if activity in strings.ACTIVITIES_ALIASES: activity = strings.ACTIVITIES_ALIASES[activity]
+        if activity not in strings.ACTIVITIES:
+            await ctx.reply(
+                f'I don\'t know an activity called `{activity}`.\n{syntax}\n\n{possible_activities}',
+                mention_author=False
+            )
+            return
+        activity_column = strings.ACTIVITIES_COLUMNS[activity]
+        alert = getattr(user, activity_column)
+        if len(args) == 1:
+            await ctx.reply(
+                f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
+                mention_author=False
+            )
+            return
+        if len(args) > 1:
+            args = list(args)
+            args.pop(0)
+            new_message = " ".join(args)
+            if new_message == 'reset': new_message = strings.DEFAULT_MESSAGES[activity]
+            if activity == 'lottery':
+                if not '{command}' in new_message:
+                    await ctx.reply(
+                        f'Invalid message. The message needs to include the placeholder \u007bcommand\u007d.\n\n'
+                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
+                        mention_author=False
+                    )
+                    return
+            elif activity in strings.ACTIVITIES_EVENTS:
+                if not '{event}' in new_message:
+                    await ctx.reply(
+                        f'Invalid message. The message needs to include the placeholder \u007bevent\u007d.\n\n'
+                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
+                        mention_author=False
+                    )
+                    return
+            elif activity == 'partner':
+                if not '{lootbox}' in new_message or not '{user}' in new_message:
+                    await ctx.reply(
+                        f'Invalid message. The message needs to include the placeholders \u007buser\u007d '
+                        f'and \u007blootbox\u007d.\n\n'
+                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
+                        mention_author=False
+                    )
+                    return
+            elif activity == 'pets':
+                if not '{id}' in new_message or not '{emoji}' in new_message:
+                    await ctx.reply(
+                        f'Invalid message. The message needs to include the placeholders \u007bid\u007d '
+                        f'and \u007bemoji\u007d.\n\n'
+                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
+                        mention_author=False
+                    )
+                    return
+            else:
+                if not '{command}' in new_message:
+                    await ctx.reply(
+                        f'Invalid message. The message needs to include the placeholder \u007bcommand\u007d.\n\n'
+                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
+                        mention_author=False
+                    )
+                    return
+            kwargs = {}
+            kwargs[f'{activity_column}_message'] = new_message
+            await user.update(**kwargs)
+            alert = getattr(user, activity_column)
+            await ctx.reply(
+                f'Changed message for activity `{activity}` to:\n{emojis.BP} {alert.message}\n\n'
+                f'Note that running reminders do not update automatically.',
+                mention_author=False
+            )
+
     @commands.command(aliases=('hm',))
     @commands.bot_has_permissions(send_messages=True)
     async def hardmode(self, ctx: commands.Context, *args: str) -> None:
@@ -782,5 +917,23 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     embed.add_field(name='GUILD', value=field_clan, inline=False)
     embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=True)
     embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=True)
+
+    return embed
+
+
+async def embed_message_settings(ctx: commands.Context, user: users.User) -> discord.Embed:
+    """Message settings embed"""
+
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name}\'s message settings'.upper(),
+    )
+
+    for activity in strings.ACTIVITIES:
+        activity_column = strings.ACTIVITIES_COLUMNS[activity]
+        alert = getattr(user, activity_column)
+        activity = activity.capitalize()
+        embed.add_field(name=activity, value=f'{alert.message}', inline=False)
+    embed.set_footer(text=f'Use "{ctx.prefix}message [activity] [message]" to change a message.')
 
     return embed
