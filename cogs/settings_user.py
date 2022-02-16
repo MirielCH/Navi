@@ -399,8 +399,8 @@ class SettingsUserCog(commands.Cog):
             f'{emojis.BP} Use `{prefix}message list` to view **all** current messages.\n'
             f'{emojis.BP} Use `{prefix}message reset` to reset **all** messages to the default one.\n\n'
             f'**Placeholders**\n'
-            f'{emojis.BP} Words in curly brackets such as \u007bcommand\u007d are **required**.\n'
-            f'{emojis.BP} Check the current message to see which placeholders you need to use.\n\n'
+            f'{emojis.BP} You can use placeholders in curly brackets such as \u007bcommand\u007d.\n'
+            f'{emojis.BP} Check the default messages to see which placeholders you can use.\n\n'
             f'{possible_activities}'
         )
         if not args:
@@ -456,48 +456,6 @@ class SettingsUserCog(commands.Cog):
             args.pop(0)
             new_message = " ".join(args)
             if new_message == 'reset': new_message = strings.DEFAULT_MESSAGES[activity]
-            if activity == 'lottery':
-                if not '{command}' in new_message:
-                    await ctx.reply(
-                        f'Invalid message. The message needs to include the placeholder \u007bcommand\u007d.\n\n'
-                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
-                        mention_author=False
-                    )
-                    return
-            elif activity in strings.ACTIVITIES_EVENTS:
-                if not '{event}' in new_message:
-                    await ctx.reply(
-                        f'Invalid message. The message needs to include the placeholder \u007bevent\u007d.\n\n'
-                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
-                        mention_author=False
-                    )
-                    return
-            elif activity == 'partner':
-                if not '{lootbox}' in new_message or not '{user}' in new_message:
-                    await ctx.reply(
-                        f'Invalid message. The message needs to include the placeholders \u007buser\u007d '
-                        f'and \u007blootbox\u007d.\n\n'
-                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
-                        mention_author=False
-                    )
-                    return
-            elif activity == 'pets':
-                if not '{id}' in new_message or not '{emoji}' in new_message:
-                    await ctx.reply(
-                        f'Invalid message. The message needs to include the placeholders \u007bid\u007d '
-                        f'and \u007bemoji\u007d.\n\n'
-                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
-                        mention_author=False
-                    )
-                    return
-            else:
-                if not '{command}' in new_message:
-                    await ctx.reply(
-                        f'Invalid message. The message needs to include the placeholder \u007bcommand\u007d.\n\n'
-                        f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
-                        mention_author=False
-                    )
-                    return
             kwargs = {}
             kwargs[f'{activity_column}_message'] = new_message
             await user.update(**kwargs)

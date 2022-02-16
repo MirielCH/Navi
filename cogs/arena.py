@@ -63,7 +63,7 @@ class ArenaCog(commands.Cog):
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed
-            reminder_message = user_settings.alert_arena.message.format(command='rpg arena')
+            reminder_message = user_settings.alert_arena.message.replace('{command}', 'rpg arena')
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'arena', time_left,
                                                      message.channel.id, reminder_message)

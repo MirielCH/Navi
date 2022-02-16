@@ -66,11 +66,11 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             if ' not so mini ' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
                 event = 'not-so-mini-boss'
-                reminder_message = user_settings.alert_not_so_mini_boss.message.format(event=event.replace('-',' '))
+                reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
             else:
                 if not user_settings.alert_big_arena.enabled: return
                 event = 'big-arena'
-                reminder_message = user_settings.alert_big_arena.message.format(event=event.replace('-',' '))
+                reminder_message = user_settings.alert_big_arena.message.replace('{event}', event.replace('-',' '))
             timestring = re.search("next event is in \*\*(.+?)\*\*", message_content).group(1)
             time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
             bot_answer_time = message.created_at.replace(microsecond=0)

@@ -52,7 +52,7 @@ class PetsCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_pets.message.format(id=pet_id, emoji='')
+                reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}','')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
                                                          message.channel.id, reminder_message)
@@ -179,7 +179,7 @@ class PetsCog(commands.Cog):
                         return
 
                     reminder_created = True
-                    reminder_message = user_settings.alert_pets.message.format(id=pet_id, emoji=pet_emoji)
+                    reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
                                                              message.channel.id, reminder_message)

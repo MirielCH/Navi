@@ -50,7 +50,7 @@ class HorseRaceCog(commands.Cog):
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed
-            reminder_message = user_settings.alert_horse_race.message.format(event='horse race')
+            reminder_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'horse-race', time_left,
                                                     message.channel.id, reminder_message)

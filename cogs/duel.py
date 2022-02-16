@@ -64,7 +64,7 @@ class DuelCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_duel.message.format(command='rpg duel')
+                reminder_message = user_settings.alert_duel.message.replace('{command}', 'rpg duel')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'duel', time_left,
                                                          message.channel.id, reminder_message)

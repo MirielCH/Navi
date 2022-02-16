@@ -156,7 +156,7 @@ class EventsCog(commands.Cog):
                     return
                 if big_arena_search is not None:
                     big_arena_timestring = big_arena_search.group(1)
-                    big_arena_message = user_settings.alert_big_arena.message.format(event='big arena')
+                    big_arena_message = user_settings.alert_big_arena.message.replace('{event}', 'big arena')
                     cooldowns.append(['big-arena', big_arena_timestring.lower(), big_arena_message])
             if user_settings.alert_lottery.enabled:
                 try:
@@ -167,7 +167,7 @@ class EventsCog(commands.Cog):
                     return
                 if lottery_search is not None:
                     lottery_timestring = lottery_search.group(1)
-                    lottery_message = user_settings.alert_lottery.message.format(command='rpg buy lottery ticket')
+                    lottery_message = user_settings.alert_lottery.message.replace('{command}', 'rpg buy lottery ticket')
                     cooldowns.append(['lottery', lottery_timestring.lower(), lottery_message])
             if user_settings.alert_pet_tournament.enabled:
                 try:
@@ -178,7 +178,7 @@ class EventsCog(commands.Cog):
                     return
                 if pet_search is not None:
                     pet_timestring = pet_search.group(1)
-                    pet_message = user_settings.alert_pet_tournament.message.format(event='pet tournament')
+                    pet_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
                     cooldowns.append(['pet-tournament', pet_timestring.lower(), pet_message])
             if user_settings.alert_horse_race.enabled:
                 try:
@@ -189,7 +189,7 @@ class EventsCog(commands.Cog):
                     return
                 if horse_search is not None:
                     horse_timestring = horse_search.group(1)
-                    horse_message = user_settings.alert_horse_race.message.format(event='horse race')
+                    horse_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')
                     cooldowns.append(['horse-race', horse_timestring.lower(), horse_message])
             current_time = datetime.utcnow().replace(microsecond=0)
             updated_reminder = False

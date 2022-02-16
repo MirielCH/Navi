@@ -46,7 +46,7 @@ class PetTournamentCog(commands.Cog):
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed
-            reminder_message = user_settings.alert_pet_tournament.message.format(event='pet tournament')
+            reminder_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'pet-tournament', time_left,
                                                      message.channel.id, reminder_message)

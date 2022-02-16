@@ -82,7 +82,7 @@ class HuntCog(commands.Cog):
             if not user.alert_hunt.enabled and not user.tracking_enabled: return
             user_donor_tier = user.user_donor_tier if user.user_donor_tier <= 3 else 3
             partner_donor_tier = user.partner_donor_tier if user.partner_donor_tier <= 3 else 3
-            hunt_message = user.alert_hunt.message.format(command=command)
+            hunt_message = user.alert_hunt.message.replace('{command}', command)
             current_time = datetime.utcnow().replace(microsecond=0)
             cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
             task_status = self.bot.loop.create_task(self.get_hunt_message(ctx))
@@ -284,10 +284,9 @@ class HuntCog(commands.Cog):
                                 amount_end = bot_message.rfind('<:', 0, lootbox_start) - 1
                                 amount_start = bot_message.rfind('got ', 0, amount_end) + 4
                                 amount = bot_message[amount_start:amount_end].replace('*','').strip()
-                                partner_message = partner.alert_partner.message.format(
-                                    user=ctx.author.name,
-                                    lootbox=f'{amount} {lootbox_emoji} {lootbox_name}'
-                                )
+                                partner_message = (partner.alert_partner.message
+                                                   .replace('{user}', ctx.author.name)
+                                                   .replace('{lootbox}', f'{amount} {lootbox_emoji} {lootbox_name}'))
                                 lootbox_alert = partner_message if lootbox_alert == '' else f'{lootbox_alert}\nAlso: {partner_message}'
 
                     if lootbox_alert != '':
