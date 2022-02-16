@@ -14,7 +14,10 @@ intents.guilds = True   # for on_guild_join() and all guild objects
 intents.messages = True   # for command detection
 intents.members = True  # To be able to look up user info
 
-bot = commands.Bot(command_prefix=guilds.get_all_prefixes, help_command=None, case_insensitive=True, intents=intents)
+allowed_mentions = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
+
+bot = commands.Bot(command_prefix=guilds.get_all_prefixes, help_command=None, case_insensitive=True,
+                   intents=intents, allowed_mentions=allowed_mentions)
 
 
 @bot.event

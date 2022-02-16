@@ -16,7 +16,7 @@ class FunCog(commands.Cog):
         """Hey! Listen!"""
         if ctx.prefix.lower() == 'rpg ':
             return
-        await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431', mention_author=False)
+        await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -25,7 +25,7 @@ class FunCog(commands.Cog):
         if not message.embeds and not message.author.bot:
             message_content = message.content
             if message_content.lower() == 'navi lit':
-                await message.reply('https://tenor.com/view/betty-white-dab-mood-gif-5044603', mention_author=False)
+                await message.reply('https://tenor.com/view/betty-white-dab-mood-gif-5044603')
 
 # Initialization
 def setup(bot):

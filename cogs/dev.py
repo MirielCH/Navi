@@ -34,11 +34,7 @@ class DevCog(commands.Cog):
                             for alias in subcommand.aliases:
                                 aliases = f'{aliases}, `{alias}`'
                             subcommands = f'{subcommands}{emojis.BP} {aliases}\n'
-        await ctx.reply(
-            f'Available dev commands:\n'
-            f'{subcommands}',
-            mention_author=False
-            )
+        await ctx.reply(f'Available dev commands:\n{subcommands}')
 
     @dev.group(name='event-reduction', aliases=('er',), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
@@ -49,7 +45,7 @@ class DevCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if not ctx.author.id in (285399610032390146, 619879176316649482, 552563486740447263):
-            await ctx.reply('You are not allowed to use this command.', mention_author=False)
+            await ctx.reply('You are not allowed to use this command.')
             return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [reduction in %]')
         activity_list = 'Possible activities:'
@@ -65,7 +61,7 @@ class DevCog(commands.Cog):
                 )
                 message = f'{message}\n**{cooldown_message}**' if cooldown.event_reduction > 0 else f'{message}\n{cooldown_message}'
             message = f'{message}\n\n{syntax}'
-            await ctx.reply(message, mention_author=False)
+            await ctx.reply(message)
             return
         activity = args[0].lower()
         reduction = args[1].lower().replace('%','')
@@ -76,10 +72,10 @@ class DevCog(commands.Cog):
                 reduction = float(activity)
                 activity = args[1]
             except:
-                await ctx.reply(f'{syntax}\n\n{activity_list}', mention_author=False)
+                await ctx.reply(f'{syntax}\n\n{activity_list}')
                 return
         if not 0 <= reduction <= 99:
-            await ctx.reply(f'**{ctx.author.name}**, a reduction of **{reduction}%** doesn\'t make much sense, does it.', mention_author=False)
+            await ctx.reply(f'**{ctx.author.name}**, a reduction of **{reduction}%** doesn\'t make much sense, does it.')
             return
         if activity in strings.ACTIVITIES_ALIASES:
             activity = strings.ACTIVITIES_ALIASES[activity]
@@ -88,8 +84,7 @@ class DevCog(commands.Cog):
             return
         await ctx.reply(
             f'**{ctx.author.name}**, this will change the event reduction of activity `{activity}` to '
-            f'**{reduction}%**. Continue? [`yes/no`]',
-            mention_author=False
+            f'**{reduction}%**. Continue? [`yes/no`]'
         )
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
@@ -102,8 +97,7 @@ class DevCog(commands.Cog):
         await cooldown.update(event_reduction=reduction)
         if cooldown.event_reduction == reduction:
             await ctx.reply(
-                f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.',
-                mention_author=False
+                f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.'
             )
 
     @dev_event_reduction.command(name='reset')
@@ -114,11 +108,10 @@ class DevCog(commands.Cog):
             return m.author == ctx.author and m.channel == ctx.channel
         if ctx.prefix.lower() == 'rpg ': return
         if not ctx.author.id in (285399610032390146, 619879176316649482, 552563486740447263):
-            await ctx.reply('You are not allowed to use this command.', mention_author=False)
+            await ctx.reply('You are not allowed to use this command.')
             return
         await ctx.reply(
-            f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]',
-            mention_author=False
+            f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]'
         )
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
@@ -130,7 +123,7 @@ class DevCog(commands.Cog):
         all_cooldowns = await cooldowns.get_all_cooldowns()
         for cooldown in all_cooldowns:
             await cooldown.update(event_reduction=0.0)
-        await ctx.reply(f'All event reductions have been reset.', mention_author=False)
+        await ctx.reply(f'All event reductions have been reset.')
 
     @dev.command(name='cooldown-setup', aliases=('cd-setup',))
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
@@ -142,7 +135,7 @@ class DevCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if not ctx.author.id in (285399610032390146, 619879176316649482):
-            await ctx.reply('You are not allowed to use this command.', mention_author=False)
+            await ctx.reply('You are not allowed to use this command.')
             return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [seconds]')
         activity_list = 'Possible activities:'
@@ -154,7 +147,7 @@ class DevCog(commands.Cog):
             for cooldown in all_cooldowns:
                 message = f'{message}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown}s'
             message = f'{message}\n\n{syntax}'
-            await ctx.reply(message, mention_author=False)
+            await ctx.reply(message)
             return
         activity = args[0].lower()
         new_cooldown = args[1]
@@ -171,8 +164,7 @@ class DevCog(commands.Cog):
             return
         await ctx.reply(
             f'**{ctx.author.name}**, this will change the base cooldown (before donor reduction) of activity '
-            f'`{activity}` to **{new_cooldown:,}** seconds. Continue? [`yes/no`]',
-            mention_author=False
+            f'`{activity}` to **{new_cooldown:,}** seconds. Continue? [`yes/no`]'
         )
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
@@ -186,11 +178,10 @@ class DevCog(commands.Cog):
         if cooldown.base_cooldown == new_cooldown:
             await ctx.reply(
                 f'Changed event reduction for activity `{cooldown.activity}` to '
-                f'**{cooldown.base_cooldown}s**.',
-                mention_author=False
+                f'**{cooldown.base_cooldown}s**.'
             )
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @dev.command()
     @commands.is_owner()
@@ -199,7 +190,7 @@ class DevCog(commands.Cog):
         """Sleepy potion test command"""
         if ctx.prefix.lower() == 'rpg ': return
         await reminders.reduce_reminder_time(ctx.author.id, timedelta(seconds=seconds))
-        await ctx.reply('Done.', mention_author=False)
+        await ctx.reply('Done.')
 
     @dev.command()
     @commands.is_owner()
@@ -210,7 +201,7 @@ class DevCog(commands.Cog):
             return m.author == ctx.author and m.channel == ctx.channel
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`', mention_author=False)
+        await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeOutError:
@@ -284,13 +275,11 @@ class DevCog(commands.Cog):
             command = self.bot.get_command(command)
             if command is None:
                 await ctx.reply(
-                    'No command with that name found.',
-                    mention_author=False
+                    'No command with that name found.'
                     )
             elif ctx.command == command:
                 await ctx.reply(
-                    f'You can not {action} this command.',
-                    mention_author=False
+                    f'You can not {action} this command.'
                     )
             else:
                 if action == 'enable':
@@ -298,13 +287,11 @@ class DevCog(commands.Cog):
                 else:
                     command.enabled = False
                 await ctx.reply(
-                    f'Command {command.qualified_name} {action}d.',
-                    mention_author=False
+                    f'Command {command.qualified_name} {action}d.'
                     )
         else:
             await ctx.reply(
-                f'Syntax is `{ctx.prefix}{ctx.command} [command]`',
-                mention_author=False
+                f'Syntax is `{ctx.prefix}{ctx.command} [command]`'
                 )
 
     # Convert timestring to iso format
@@ -404,7 +391,7 @@ class DevCog(commands.Cog):
         )
         #embed.add_field(name='COMMANDS', value=f'```{commands.upper().strip()}```', inline=False)
         embed.set_footer(text=f'Catch chance: {chance_min:.2f} - {chance_max:.2f}%')
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.reply(embed=embed)
 
 
 def setup(bot):

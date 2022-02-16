@@ -32,13 +32,13 @@ class SettingsClanCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if args:
-            ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix), mention_author=False)
+            ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix))
             return
         user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
-            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.channel_id is not None:
             await self.bot.wait_until_ready()
@@ -46,16 +46,14 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(
                 f'Your current guild alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                 f'If you want to change this, use `{prefix}guild channel set` within your new alert channel.\n'
-                f'To remove the alert channel entirely, use `{ctx.prefix}guild channel reset`',
-                mention_author=False
+                f'To remove the alert channel entirely, use `{ctx.prefix}guild channel reset`'
             )
             return
         else:
             await ctx.reply(
                 f'You don\'t have a guild alert channel set.\n'
                 f'If you want to set one, use `{ctx.prefix}guild channel set` within your new alert channel.\n'
-                f'The guild alert channel is the channel where the guild reminders are sent to.',
-                mention_author=False
+                f'The guild alert channel is the channel where the guild reminders are sent to.'
             )
             return
 
@@ -72,16 +70,15 @@ class SettingsClanCog(commands.Cog):
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
-            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name), mention_author=False)
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
             return
         try:
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to set `{ctx.channel.name}` as the alert channel '
-                f'for the guild **{clan.clan_name}**? `[yes/no]`',
-                mention_author=False
+                f'for the guild **{clan.clan_name}**? `[yes/no]`'
             )
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
@@ -109,15 +106,14 @@ class SettingsClanCog(commands.Cog):
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
-            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name), mention_author=False)
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
             return
         if clan.channel_id is None:
             await ctx.reply(
-                f'**{ctx.author.name}**, you don\'t have a guild alert channel set, there is no need to reset it.\n',
-                mention_author=False
+                f'**{ctx.author.name}**, you don\'t have a guild alert channel set, there is no need to reset it.\n'
             )
             return
         await self.bot.wait_until_ready()
@@ -126,8 +122,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to remove `{channel.name}` as the alert channel for '
                 f'the guild **{clan.clan_name}**? `[yes/no]`\n'
-                f'This will also disable your guild\'s reminders.',
-                mention_author=False
+                f'This will also disable your guild\'s reminders.'
             )
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
@@ -157,29 +152,27 @@ class SettingsClanCog(commands.Cog):
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
-            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if args:
             msg_wrong_argument = f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 100.'
             try:
                 new_threshold = int(args[0])
             except:
-                await ctx.reply(msg_wrong_argument, mention_author=False)
+                await ctx.reply(msg_wrong_argument)
                 return
             if not 1 <= new_threshold <= 100:
-                await ctx.reply(msg_wrong_argument, mention_author=False)
+                await ctx.reply(msg_wrong_argument)
                 return
             await clan.update(stealth_threshold=new_threshold)
             await ctx.reply(
                 f'**{ctx.author.name}**, the stealth threshold for the guild **{clan.clan_name}** is now '
-                f'**{clan.stealth_threshold}**.',
-                mention_author=False
+                f'**{clan.stealth_threshold}**.'
             )
             return
         await ctx.reply(
                 f'The current stealth threshold for the guild **{clan.clan_name}** is **{clan.stealth_threshold}**.\n'
-                f'If you want to change this, use `{prefix}guild stealth [1-100]`.',
-                mention_author=False
+                f'If you want to change this, use `{prefix}guild stealth [1-100]`.'
         )
 
     @clan.command(name='reminders', aliases=('reminder','alert'))
@@ -192,14 +185,13 @@ class SettingsClanCog(commands.Cog):
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
-            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if not args:
             action = 'enabled' if clan.alert_enabled else 'disabled'
             await ctx.reply(
                 f'**{ctx.author.name}**, reminders for the guild **{clan.clan_name}** are currently {action}.\n'
-                f'Use `{prefix}guild reminder [on|off]` to change this.',
-                mention_author=False
+                f'Use `{prefix}guild reminder [on|off]` to change this.'
             )
             return
         if args:
@@ -211,22 +203,20 @@ class SettingsClanCog(commands.Cog):
                 action = 'disabled'
                 enabled = False
             else:
-                await ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix), mention_author=False)
+                await ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix))
                 return
             if clan.alert_enabled == enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, reminders for the guild **{clan.clan_name}** are already {action}.',
-                    mention_author=False
+                    f'**{ctx.author.name}**, reminders for the guild **{clan.clan_name}** are already {action}.'
                 )
                 return
             await clan.update(alert_enabled=enabled)
             if clan.alert_enabled == enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, reminders for the guild **{clan.clan_name}** are now {action}.',
-                    mention_author=False
+                    f'**{ctx.author.name}**, reminders for the guild **{clan.clan_name}** are now {action}.'
                 )
             else:
-                await ctx.reply(strings.MSG_ERROR, mention_author=False)
+                await ctx.reply(strings.MSG_ERROR)
 
     @clan.command(name='leaderboard', aliases=('lb',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
@@ -238,7 +228,7 @@ class SettingsClanCog(commands.Cog):
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
-            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED, mention_author=False)
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         leaderboard: clans.ClanLeaderboard = await clans.get_leaderboard(clan)
         field_best_raids = field_worst_raids = ''
@@ -261,7 +251,7 @@ class SettingsClanCog(commands.Cog):
         embed.set_footer(text='Imagine being on the lower list.')
         embed.add_field(name=f'COOL RAIDS {emojis.BEST_RAIDS}', value=field_best_raids, inline=False)
         embed.add_field(name=f'WHAT THE HELL IS THIS {emojis.WORST_RAIDS}', value=field_worst_raids, inline=False)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.reply(embed=embed)
 
     # Events
     @commands.Cog.listener()

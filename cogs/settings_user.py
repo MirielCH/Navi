@@ -22,7 +22,7 @@ class SettingsUserCog(commands.Cog):
         """Returns current user progress settings"""
         if ctx.prefix.lower() == 'rpg ': return
         embed = await embed_user_settings(self.bot, ctx)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.reply(embed=embed)
 
     @commands.command(name='list')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
@@ -41,10 +41,7 @@ class SettingsUserCog(commands.Cog):
         elif ctx.message.mentions:
             mentioned_user = ctx.message.mentions[0]
             if mentioned_user.bot:
-                await ctx.reply(
-                    'Why would you check the reminders of a bot :face_with_raised_eyebrow:',
-                    mention_author=False
-                )
+                await ctx.reply('Why would you check the reminders of a bot :face_with_raised_eyebrow:')
                 return
             user_id = mentioned_user.id
         else:
@@ -55,7 +52,7 @@ class SettingsUserCog(commands.Cog):
             if user_id == ctx.author.id:
                 raise
             else:
-                await ctx.reply('This user is not registered with this bot.', mention_author=False)
+                await ctx.reply('This user is not registered with this bot.')
                 return
         await self.bot.wait_until_ready()
         user_discord = self.bot.get_user(user_id)
@@ -163,7 +160,7 @@ class SettingsUserCog(commands.Cog):
                     f'{emojis.BP} **`{custom_id}`** (**{timestring}**) - {reminder.message}'
                 )
             embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.reply(embed=embed)
 
     @commands.command(aliases=('start',))
     @commands.bot_has_permissions(send_messages=True)
@@ -174,20 +171,19 @@ class SettingsUserCog(commands.Cog):
         try:
             user: users.User = await users.get_user(ctx.author.id)
             if user.bot_enabled:
-                await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned on.', mention_author=False)
+                await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned on.')
                 return
         except exceptions.FirstTimeUserError:
             user = await users.insert_user(ctx.author.id)
         if not user.bot_enabled: await user.update(bot_enabled=True)
         if not user.bot_enabled:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
             return
         await ctx.reply(
             f'Hey! **{ctx.author.name}**! Hello! Your reminders are now turned on.\n'
             f'Don\'t forget to set your donor tier with `{prefix}donor` and - if you are married - '
             f'the donor tier of your partner with `{prefix}partner donor`.\n'
-            f'You can check all of your settings with `{prefix}settings`.',
-            mention_author=False
+            f'You can check all of your settings with `{prefix}settings`.'
         )
 
     @commands.command(aliases=('stop',))
@@ -201,12 +197,11 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         user: users.User = await users.get_user(ctx.author.id)
         if not user.bot_enabled:
-            await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned off.', mention_author=False)
+            await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned off.')
             return
         await ctx.reply(
             f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. '
-            f'Are you sure? `[yes/no]`',
-            mention_author=False
+            f'Are you sure? `[yes/no]`'
         )
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
@@ -218,7 +213,7 @@ class SettingsUserCog(commands.Cog):
             return
         await user.update(bot_enabled=False)
         if user.bot_enabled:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
             return
         try:
             active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
@@ -228,8 +223,7 @@ class SettingsUserCog(commands.Cog):
             pass
         await ctx.reply(
             f'**{ctx.author.name}**, your reminders are now turned off.\n'
-            f'All active reminders were deleted.',
-            mention_author=False
+            f'All active reminders were deleted.'
         )
 
     @commands.command()
@@ -241,7 +235,7 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}dnd [on|off]')
 
         if not args:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
         if args:
             action = args[0].lower()
             if action in ('on', 'enable', 'start'):
@@ -251,23 +245,21 @@ class SettingsUserCog(commands.Cog):
                 enabled = False
                 action = 'disabled'
             else:
-                await ctx.reply(syntax, mention_author=False)
+                await ctx.reply(syntax)
                 return
             user: users.User = await users.get_user(ctx.author.id)
             if user.dnd_mode_enabled == enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, DND mode is already {action}.',
-                    mention_author=False
+                    f'**{ctx.author.name}**, DND mode is already {action}.'
                 )
                 return
             await user.update(dnd_mode_enabled=enabled)
             if user.dnd_mode_enabled == enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, DND mode is now **{action}**.',
-                    mention_author=False
+                    f'**{ctx.author.name}**, DND mode is now **{action}**.'
                 )
             else:
-                await ctx.reply(strings.MSG_ERROR, mention_author=False)
+                await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('donator',))
     @commands.bot_has_permissions(send_messages=True)
@@ -284,26 +276,24 @@ class SettingsUserCog(commands.Cog):
             await ctx.reply(
                 f'**{ctx.author.name}**, your current EPIC RPG donor tier is **{user.user_donor_tier}** '
                 f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n'
-                f'If you want to change this, use `{prefix}{ctx.invoked_with} [tier]`.\n\n{possible_tiers}',
-                mention_author=False
+                f'If you want to change this, use `{prefix}{ctx.invoked_with} [tier]`.\n\n{possible_tiers}'
             )
             return
         if args:
             try:
                 donor_tier = int(args[0])
             except:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
                 return
             if donor_tier > len(strings.DONOR_TIERS) - 1 or donor_tier < 0:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
                 return
             await user.update(user_donor_tier=donor_tier)
             await ctx.reply(
                 f'**{ctx.author.name}**, your EPIC RPG donor tier is now set to **{user.user_donor_tier}** '
                 f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n'
                 f'Please note that the `hunt together` cooldown can only be accurately calculated if '
-                f'`{prefix}partner donor [tier]` is set correctly as well.',
-                mention_author=False
+                f'`{prefix}partner donor [tier]` is set correctly as well.'
             )
 
     @commands.command(aliases=('disable',))
@@ -323,15 +313,14 @@ class SettingsUserCog(commands.Cog):
         for activity in strings.ACTIVITIES_ALL:
             possible_activities = f'{possible_activities}\n{emojis.BP} `{activity}`'
         if not args:
-            await ctx.reply(f'{syntax}\n\n{possible_activities}', mention_author=False)
+            await ctx.reply(f'{syntax}\n\n{possible_activities}')
             return
         if args[0].lower() == 'all':
             if not enabled:
                 try:
                     await ctx.reply(
                         f'**{ctx.author.name}**, turning off all reminders will delete all of your active reminders. '
-                        f'Are you sure? `[yes/no]`',
-                        mention_author=False
+                        f'Are you sure? `[yes/no]`'
                     )
                     answer = await self.bot.wait_for('message', check=check, timeout=30)
                 except asyncio.TimeoutError:
@@ -371,7 +360,7 @@ class SettingsUserCog(commands.Cog):
             answer = f'{answer}\n\nCouldn\'t find the following activites:'
             for activity in ignored_activites:
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
-        await ctx.reply(answer, mention_author=False)
+        await ctx.reply(answer)
 
     @commands.command()
     @commands.bot_has_permissions(send_messages=True)
@@ -383,7 +372,7 @@ class SettingsUserCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if ctx.message.mentions:
-            await ctx.reply(f'Please don\'t.', mention_author=False)
+            await ctx.reply(f'Please don\'t.')
             return
         user: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}message [activity] [message]')
@@ -404,14 +393,13 @@ class SettingsUserCog(commands.Cog):
             f'{possible_activities}'
         )
         if not args:
-            await ctx.reply(syntax_message, mention_author=False)
+            await ctx.reply(syntax_message)
             return
         activity = args[0]
         if activity == 'reset':
             await ctx.reply(
                 f'**{ctx.author.name}**, this will reset **all** messages to the default one. '
-                f'Are you sure? `[yes/no]`',
-                mention_author=False
+                f'Are you sure? `[yes/no]`'
             )
             try:
                 answer = await self.bot.wait_for('message', check=check, timeout=30)
@@ -428,27 +416,24 @@ class SettingsUserCog(commands.Cog):
             await user.update(**kwargs)
             await ctx.reply(
                 f'Changed all messages back to the default message.\n\n'
-                f'Note that running reminders do not update automatically.',
-                mention_author=False
+                f'Note that running reminders do not update automatically.'
             )
             return
         if activity == 'list':
             embed = await embed_message_settings(ctx, user)
-            await ctx.reply(embed=embed, mention_author=False)
+            await ctx.reply(embed=embed)
             return
         if activity in strings.ACTIVITIES_ALIASES: activity = strings.ACTIVITIES_ALIASES[activity]
         if activity not in strings.ACTIVITIES:
             await ctx.reply(
-                f'I don\'t know an activity called `{activity}`.\n{syntax}\n\n{possible_activities}',
-                mention_author=False
+                f'I don\'t know an activity called `{activity}`.\n{syntax}\n\n{possible_activities}'
             )
             return
         activity_column = strings.ACTIVITIES_COLUMNS[activity]
         alert = getattr(user, activity_column)
         if len(args) == 1:
             await ctx.reply(
-                f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}',
-                mention_author=False
+                f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}'
             )
             return
         if len(args) > 1:
@@ -462,8 +447,7 @@ class SettingsUserCog(commands.Cog):
             alert = getattr(user, activity_column)
             await ctx.reply(
                 f'Changed message for activity `{activity}` to:\n{emojis.BP} {alert.message}\n\n'
-                f'Note that running reminders do not update automatically.',
-                mention_author=False
+                f'Note that running reminders do not update automatically.'
             )
 
     @commands.command(aliases=('hm',))
@@ -475,7 +459,7 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
 
         if not args:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -485,20 +469,18 @@ class SettingsUserCog(commands.Cog):
             enabled = False
             action = 'disabled'
         else:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.hardmode_mode_enabled == enabled:
             await ctx.reply(
-                f'**{ctx.author.name}**, hardmode mode is already {action}.',
-                mention_author=False
+                f'**{ctx.author.name}**, hardmode mode is already {action}.'
             )
             return
         await user.update(hardmode_mode_enabled=enabled)
         if user.hardmode_mode_enabled == enabled:
             await ctx.reply(
-                f'**{ctx.author.name}**, hardmode mode is now **{action}**.',
-                mention_author=False
+                f'**{ctx.author.name}**, hardmode mode is now **{action}**.'
             )
             if user.partner_id is not None:
                 await self.bot.wait_until_ready()
@@ -523,7 +505,7 @@ class SettingsUserCog(commands.Cog):
                     await partner_channel.send(partner_message)
 
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('rubies',))
     @commands.bot_has_permissions(send_messages=True)
@@ -538,13 +520,11 @@ class SettingsUserCog(commands.Cog):
         if not args:
             if not user.ruby_counter_enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, the ruby counter is turned off. Use `{prefix}ruby on` to activate it.',
-                    mention_author=False
+                    f'**{ctx.author.name}**, the ruby counter is turned off. Use `{prefix}ruby on` to activate it.'
                 )
                 return
             await ctx.reply(
-                f'**{ctx.author.name}**, you have {user.rubies} {emojis.RUBY} rubies.',
-                mention_author=False
+                f'**{ctx.author.name}**, you have {user.rubies} {emojis.RUBY} rubies.'
             )
             return
         action = args[0].lower()
@@ -555,12 +535,11 @@ class SettingsUserCog(commands.Cog):
             enabled = False
             action = 'disabled'
         else:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         if user.ruby_counter_enabled == enabled:
             await ctx.reply(
-                f'**{ctx.author.name}**, the ruby counter is already {action}.',
-                mention_author=False
+                f'**{ctx.author.name}**, the ruby counter is already {action}.'
             )
             return
         await user.update(ruby_counter_enabled=enabled, rubies=0)
@@ -573,9 +552,9 @@ class SettingsUserCog(commands.Cog):
                     f'the ruby training comes along.\n'
                     f'If you want to manually check your ruby count, use `{prefix}ruby`.'
                 )
-            await ctx.reply(answer, mention_author=False)
+            await ctx.reply(answer)
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('tr-helper','traininghelper','training-helper'))
     @commands.bot_has_permissions(send_messages=True)
@@ -585,7 +564,7 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -595,13 +574,12 @@ class SettingsUserCog(commands.Cog):
             enabled = False
             action = 'disabled'
         else:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.training_helper_enabled == enabled:
             await ctx.reply(
-                f'**{ctx.author.name}**, the training helper is already {action}.',
-                mention_author=False
+                f'**{ctx.author.name}**, the training helper is already {action}.'
             )
             return
         await user.update(training_helper_enabled=enabled)
@@ -614,9 +592,9 @@ class SettingsUserCog(commands.Cog):
                     f'training questions.\n'
                     f'Note that the ruby question is controlled separately with `{prefix}ruby [on|off]`.'
                 )
-            await ctx.reply(answer, mention_author=False)
+            await ctx.reply(answer)
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('pet-helper','pethelp','pet-help'))
     @commands.bot_has_permissions(send_messages=True)
@@ -626,7 +604,7 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -636,20 +614,19 @@ class SettingsUserCog(commands.Cog):
             enabled = False
             action = 'disabled'
         else:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.pet_helper_enabled == enabled:
             await ctx.reply(
-                f'**{ctx.author.name}**, the pet helper is already {action}.',
-                mention_author=False
+                f'**{ctx.author.name}**, the pet helper is already {action}.'
             )
             return
         await user.update(pet_helper_enabled=enabled)
         if user.pet_helper_enabled == enabled:
-            await ctx.reply(f'**{ctx.author.name}**, the pet helper is now **{action}**.', mention_author=False)
+            await ctx.reply(f'**{ctx.author.name}**, the pet helper is now **{action}**.')
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('track',))
     @commands.bot_has_permissions(send_messages=True)
@@ -660,7 +637,7 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
 
         if not args:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -670,23 +647,17 @@ class SettingsUserCog(commands.Cog):
             enabled = False
             action = 'disabled'
         else:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.tracking_enabled == enabled:
-            await ctx.reply(
-                f'**{ctx.author.name}**, command tracking is already {action}.',
-                mention_author=False
-            )
+            await ctx.reply(f'**{ctx.author.name}**, command tracking is already {action}.')
             return
         await user.update(tracking_enabled=enabled)
         if user.tracking_enabled == enabled:
-            await ctx.reply(
-                f'**{ctx.author.name}**, command tracking is now **{action}**.',
-                mention_author=False
-            )
+            await ctx.reply(f'**{ctx.author.name}**, command tracking is now **{action}**.')
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('heal-warning','healwarning','heal-warn','healwarn'))
     @commands.bot_has_permissions(send_messages=True)
@@ -696,7 +667,7 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -706,21 +677,18 @@ class SettingsUserCog(commands.Cog):
             enabled = False
             action = 'disabled'
         else:
-            await ctx.reply(syntax, mention_author=False)
+            await ctx.reply(syntax)
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.heal_warning_enabled == enabled:
-            await ctx.reply(
-                f'**{ctx.author.name}**, the heal warning is already {action}.',
-                mention_author=False
-            )
+            await ctx.reply(f'**{ctx.author.name}**, the heal warning is already {action}.')
             return
         await user.update(heal_warning_enabled=enabled)
         if user.heal_warning_enabled == enabled:
             answer = f'**{ctx.author.name}**, the heal warning is now **{action}**.'
-            await ctx.reply(answer, mention_author=False)
+            await ctx.reply(answer)
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('last-tt','lasttt'))
     @commands.bot_has_permissions(send_messages=True)
@@ -741,7 +709,7 @@ class SettingsUserCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
 
         if not args:
-            await ctx.reply(msg_syntax, mention_author=False)
+            await ctx.reply(msg_syntax)
             return
         message_id = args[0]
         try:
@@ -753,16 +721,15 @@ class SettingsUserCog(commands.Cog):
             tt_time = datetime.utcfromtimestamp(timestamp).replace(microsecond=0)
             tt_time_str = tt_time.isoformat(sep=' ')
         except:
-            await ctx.reply(f'Invalid message ID.\n{syntax}', mention_author=False)
+            await ctx.reply(f'Invalid message ID.\n{syntax}')
             return
         await user.update(last_tt=tt_time.isoformat(sep=' '))
         if user.last_tt != tt_time:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
             return
         await ctx.reply(
             f'**{ctx.author.name}**, your last time travel time was changed to '
-            f'<t:{int(user.last_tt.timestamp())}:f> UTC.',
-            mention_author=False
+            f'<t:{int(user.last_tt.timestamp())}:f> UTC.'
         )
 
 # Initialization

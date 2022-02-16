@@ -286,7 +286,7 @@ class HuntCog(commands.Cog):
                                 amount = bot_message[amount_start:amount_end].replace('*','').strip()
                                 partner_message = (partner.alert_partner.message
                                                    .replace('{user}', ctx.author.name)
-                                                   .replace('{lootbox}', f'{amount} {lootbox_emoji} {lootbox_name}'))
+                                                   .replace('{loot}', f'{amount} {lootbox_emoji} {lootbox_name}'))
                                 lootbox_alert = partner_message if lootbox_alert == '' else f'{lootbox_alert}\nAlso: {partner_message}'
 
                     if lootbox_alert != '':

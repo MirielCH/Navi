@@ -26,10 +26,7 @@ class TrackingCog(commands.Cog):
         if ctx.message.mentions:
             mentioned_user = ctx.message.mentions[0]
             if mentioned_user.bot:
-                await ctx.reply(
-                    'Imaging trying to check the stats of a bot.',
-                    mention_author=False
-                )
+                await ctx.reply('Imaging trying to check the stats of a bot.')
                 return
             user = mentioned_user
             args = list(args)
@@ -43,7 +40,7 @@ class TrackingCog(commands.Cog):
         try:
             user_settings: users.User = await users.get_user(user.id)
         except exceptions.FirstTimeUserError:
-            await ctx.reply(f'User **{user.name}** is not registered with this bot.', mention_author=False)
+            await ctx.reply(f'User **{user.name}** is not registered with this bot.')
             return
 
         if not args or len(args) > 1:
@@ -53,16 +50,16 @@ class TrackingCog(commands.Cog):
             try:
                 timestring = await functions.check_timestring(timestring)
             except Exception as error:
-                await ctx.reply(error, mention_author=False)
+                await ctx.reply(error)
                 return
 
             time_left = await functions.parse_timestring_to_timedelta(timestring)
             if time_left.days > 365:
-                await ctx.reply('The maximum time is 365d.', mention_author=False)
+                await ctx.reply('The maximum time is 365d.')
                 return
             embed = await embed_stats_timeframe(ctx, user, time_left)
 
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.reply(embed=embed)
 
     # Events
     @commands.Cog.listener()

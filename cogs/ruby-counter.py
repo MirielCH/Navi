@@ -197,7 +197,7 @@ class RubyCounterCog(commands.Cog):
                     await errors.log_error(error)
                     return
                 answer = 'YES' if user_settings.rubies > ruby_count else 'NO'
-                await message.reply(f'`{answer}` (you have {user_settings.rubies} {emojis.RUBY})', mention_author=False)
+                await message.reply(f'`{answer}` (you have {user_settings.rubies} {emojis.RUBY})')
 
             # Rubies from work commands
             if '** got ' in message_content.lower() and '<:ruby' in message_content.lower():

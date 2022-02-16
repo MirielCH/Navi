@@ -24,7 +24,7 @@ class MainCog(commands.Cog):
         if ctx.prefix.lower() == 'rpg ':
             return
         embed = await embed_main_help(ctx)
-        await ctx.reply(embed=embed, mention_author=False)
+        await ctx.reply(embed=embed)
 
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
@@ -100,8 +100,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.reply(
                 f'**{ctx.author.name}**, looks like I don\'t know you yet.\n'
-                f'Use `{ctx.prefix}on` to activate me first.',
-                mention_author=False
+                f'Use `{ctx.prefix}on` to activate me first.'
             )
         else:
             await errors.log_error(error, ctx)

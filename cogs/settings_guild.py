@@ -28,15 +28,14 @@ class SettingsGuildCog(commands.Cog):
         )
         if args:
             if len(args) > 1:
-                await ctx.reply(message_syntax, mention_author=False)
+                await ctx.reply(message_syntax)
                 return
             (new_prefix,) = args
             await guild.update(prefix=new_prefix)
-            await ctx.reply(f'Prefix changed to `{guild.prefix}`', mention_author=False)
+            await ctx.reply(f'Prefix changed to `{guild.prefix}`')
         else:
             await ctx.reply(
-                f'The prefix for this server is `{guild.prefix}`\nTo change the prefix use `{syntax}`',
-                mention_author=False
+                f'The prefix for this server is `{guild.prefix}`\nTo change the prefix use `{syntax}`'
             )
 
 

@@ -97,7 +97,7 @@ class PetHelperCog(commands.Cog):
                     commands = f'{commands} pat'
                 embed = discord.Embed(description = f'`{commands.upper().strip()}`')
                 embed.set_footer(text=footer)
-                await message.reply(embed=embed, mention_author=False)
+                await message.reply(embed=embed)
 
 
 # Initialization

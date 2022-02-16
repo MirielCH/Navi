@@ -36,17 +36,19 @@ class CustomRemindersCog(commands.Cog):
                 f'**Adding reminders**\n'
                 f'{syntax_add}\n\n'
                 f'**Deleting reminders**\n'
-                f'{syntax_delete}',
-                mention_author=False
+                f'{syntax_delete}'
             )
             return
-        user: users.User = await users.get_user(ctx.author.id) # To stop if user is not registered
+        if ctx.message.mentions:
+            await ctx.reply(f'Please don\'t.')
+            return
+        user: users.User = await users.get_user(ctx.author.id) # Only to stop if user is not registered
         args = [arg.lower() for arg in args]
         timestring = args[0]
         try:
             timestring = await functions.check_timestring(timestring)
         except Exception as error:
-            await ctx.reply(f'{error}\n{syntax_add}', mention_author=False)
+            await ctx.reply(f'{error}\n{syntax_add}')
             return
         time_left = await functions.parse_timestring_to_timedelta(timestring)
         reminder_text = ''
@@ -58,7 +60,7 @@ class CustomRemindersCog(commands.Cog):
         else:
             reminder_text = 'idk, something?'
         if time_left.total_seconds() > 3_023_999:
-            await ctx.reply(error_max_time, mention_author=False)
+            await ctx.reply(error_max_time)
             return
         reminder: reminders.Reminder = (
             await reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
@@ -67,7 +69,7 @@ class CustomRemindersCog(commands.Cog):
         if reminder.record_exists:
             await ctx.message.add_reaction(emojis.NAVI)
         else:
-            await ctx.reply(strings.MSG_ERROR, mention_author=False)
+            await ctx.reply(strings.MSG_ERROR)
 
     @reminder.command(name='delete', aliases=('del','remove'), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
@@ -85,26 +87,26 @@ class CustomRemindersCog(commands.Cog):
             f'{syntax_delete}'
         )
         if not args or len(args) > 1:
-            await ctx.reply(syntax_delete, mention_author=False)
+            await ctx.reply(syntax_delete)
             return
         try:
             reminder_id = int(args[0])
         except:
-            await ctx.reply(error_invalid_message_id, mention_author=False)
+            await ctx.reply(error_invalid_message_id)
             return
         if reminder_id < 1:
-            await ctx.reply(error_invalid_message_id, mention_author=False)
+            await ctx.reply(error_invalid_message_id)
             return
         try:
             reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, 'custom', reminder_id)
         except exceptions.NoDataFoundError:
-            await ctx.reply('There is no custom reminder with that ID.', mention_author=False)
+            await ctx.reply('There is no custom reminder with that ID.')
             return
         await reminder.delete()
         if not reminder.record_exists:
             await ctx.message.add_reaction(emojis.NAVI)
         else:
-            await ctx.reply('There was an error deleting the reminder, RIP.', mention_author=False)
+            await ctx.reply('There was an error deleting the reminder, RIP.')
 
 
 # Initialization

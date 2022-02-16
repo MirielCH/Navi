@@ -45,7 +45,7 @@ class TrainingHelperCog(commands.Cog):
                 return
             if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
             answer = functions.get_training_answer(message_content.lower())
-            await message.reply(f'`{answer}`', mention_author=False)
+            await message.reply(f'`{answer}`')
 
 
 # Initialization

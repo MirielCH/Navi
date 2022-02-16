@@ -29,8 +29,7 @@ class SettingsPartnerCog(commands.Cog):
             if user.partner_id is None:
                 await ctx.reply(
                     f'**{ctx.author.name}**, you don\'t have a partner set.\n'
-                    f'If you want to set a partner, use this command to ping them (`{prefix}partner @User`)',
-                    mention_author=False
+                    f'If you want to set a partner, use this command to ping them (`{prefix}partner @User`)'
                 )
             else:
                 await self.bot.wait_until_ready()
@@ -38,16 +37,14 @@ class SettingsPartnerCog(commands.Cog):
                 await ctx.reply(
                     f'Your current partner is **{partner.name}**.\n'
                     f'If you want to change this, use this command to ping your new partner (`{prefix}partner @User`)\n'
-                    f'To remove your partner entirely, use `{prefix}partner reset`.',
-                    mention_author=False
+                    f'To remove your partner entirely, use `{prefix}partner reset`.'
                 )
                 return
         if ctx.message.mentions:
             if user.partner_id:
                 await ctx.reply(
                     f'**{ctx.author.name}**, you already have a partner.\n'
-                    f'Use `{prefix}partner reset` to remove your old one first.',
-                    mention_author=False
+                    f'Use `{prefix}partner reset` to remove your old one first.'
                 )
                 return
             new_partner = ctx.message.mentions[0]
@@ -55,14 +52,12 @@ class SettingsPartnerCog(commands.Cog):
                 partner: users.User = await users.get_user(new_partner.id)
             except exceptions.FirstTimeUserError:
                 await ctx.reply(
-                    f'**{new_partner.name}** is not registered with this bot yet. They need to do `{prefix}on` first.',
-                    mention_author=False
+                    f'**{new_partner.name}** is not registered with this bot yet. They need to do `{prefix}on` first.'
                 )
                 return
             await ctx.reply(
                 f'{new_partner.mention}, **{ctx.author.name}** wants to set you as his partner. '
-                f'Do you accept? `[yes/no]`',
-                mention_author=False
+                f'Do you accept? `[yes/no]`'
             )
             try:
                 answer = await self.bot.wait_for('message', check=partner_check, timeout=30)
@@ -95,8 +90,7 @@ class SettingsPartnerCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
         if user.partner_id is None:
             await ctx.reply(
-                f'**{ctx.author.name}**, you don\'t have a partner set, there is no need to reset it.\n',
-                mention_author=False
+                f'**{ctx.author.name}**, you don\'t have a partner set, there is no need to reset it.\n'
             )
         else:
             try:
@@ -104,8 +98,7 @@ class SettingsPartnerCog(commands.Cog):
                     f'**{ctx.author.name}**, this will reset both your partner **and** your partner\'s partner '
                     f'(which is you, heh).\n'
                     f'This also resets the partner donor tier back to 0.\n\n'
-                    f'Do you accept? `[yes/no]`',
-                    mention_author=False
+                    f'Do you accept? `[yes/no]`'
                 )
                 answer = await self.bot.wait_for('message', check=check, timeout=30)
             except asyncio.TimeoutError:
@@ -137,26 +130,24 @@ class SettingsPartnerCog(commands.Cog):
             await ctx.reply(
                 f'**{ctx.author.name}**, your partner\'s EPIC RPG donor tier is **{user.user_donor_tier}** '
                 f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n'
-                f'If you want to change this, use `{prefix}partner donor [tier]`.\n\n{possible_tiers}',
-                mention_author=False
+                f'If you want to change this, use `{prefix}partner donor [tier]`.\n\n{possible_tiers}'
             )
             return
         if args:
             try:
                 donor_tier = int(args[0])
             except:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
                 return
             if donor_tier > len(strings.DONOR_TIERS) - 1:
-                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}', mention_author=False)
+                await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
                 return
             if user.partner_id is not None:
                 await ctx.reply(
                     f'**{ctx.author.name}**, you currently have a partner set. The partner donor tier is '
                     f'automatically synchronized with your partner.\n'
                     f'If the donor tier of your partner is wrong, they have to change it themselves using '
-                    f'`{prefix} donor [tier]`.',
-                    mention_author=False
+                    f'`{prefix} donor [tier]`.'
                 )
                 return
             await user.update(partner_donor_tier=donor_tier)
@@ -164,8 +155,7 @@ class SettingsPartnerCog(commands.Cog):
                 f'**{ctx.author.name}**, your partner\'s EPIC RPG donor tier is now set to **{user.partner_donor_tier}** '
                 f'({strings.DONOR_TIERS[user.partner_donor_tier]}).\n'
                 f'Please note that the `hunt together` cooldown can only be accurately calculated if '
-                f'`{prefix}donor [tier]` is set correctly as well.',
-                mention_author=False
+                f'`{prefix}donor [tier]` is set correctly as well.'
             )
 
     @partner.group(name='channel', invoke_without_command=True)
@@ -175,7 +165,7 @@ class SettingsPartnerCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if args:
-            await ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix), mention_author=False)
+            await ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix))
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.partner_channel_id is not None:
@@ -184,16 +174,15 @@ class SettingsPartnerCog(commands.Cog):
             await ctx.reply(
                 f'Your current partner alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                 f'If you want to change this, use `{prefix}partner channel set` within your new alert channel.\n'
-                f'To remove the alert channel entirely, use `{ctx.prefix}partner channel reset`',
-                mention_author=False
+                f'To remove the alert channel entirely, use `{ctx.prefix}partner channel reset`'
             )
             return
         else:
             await ctx.reply(
                 f'You don\'t have a partner alert channel set.\n'
                 f'If you want to set one, use `{ctx.prefix}partner channel set` within your new alert channel.\n'
-                f'The partner alert channel is the channel where you get notified if your partner finds a lootbox for you while hunting.',
-                mention_author=False
+                f'The partner alert channel is the channel where you get notified if your partner finds a lootbox '
+                f'for you while hunting.'
             )
             return
 
@@ -210,8 +199,7 @@ class SettingsPartnerCog(commands.Cog):
         try:
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to set `{ctx.channel.name}` as your partner alert channel? '
-                f'`[yes/no]`',
-                mention_author=False
+                f'`[yes/no]`'
             )
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
@@ -238,8 +226,7 @@ class SettingsPartnerCog(commands.Cog):
         user: users.User = await users.get_user(ctx.author.id)
         if user.partner_channel_id is None:
             await ctx.reply(
-                f'**{ctx.author.name}**, you don\'t have a partner alert channel set, there is no need to reset it.\n',
-                mention_author=False
+                f'**{ctx.author.name}**, you don\'t have a partner alert channel set, there is no need to reset it.\n'
             )
             return
         await self.bot.wait_until_ready()
@@ -248,8 +235,7 @@ class SettingsPartnerCog(commands.Cog):
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to remove `{channel.name}` as your partner alert channel? '
                 f'`[yes/no]`\n'
-                f'This will also disable your partner alerts.',
-                mention_author=False
+                f'This will also disable your partner alerts.'
             )
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
