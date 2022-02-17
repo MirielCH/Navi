@@ -40,8 +40,10 @@ class CustomRemindersCog(commands.Cog):
             )
             return
         if ctx.message.mentions:
-            await ctx.reply(f'Please don\'t.')
-            return
+            for user in ctx.message.mentions:
+                if user != ctx.author:
+                    await ctx.reply(f'Please don\'t.')
+                    return
         user: users.User = await users.get_user(ctx.author.id) # Only to stop if user is not registered
         args = [arg.lower() for arg in args]
         timestring = args[0]

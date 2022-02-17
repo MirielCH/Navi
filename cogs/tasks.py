@@ -49,7 +49,8 @@ class TasksCog(commands.Cog):
                         message = f'{message}{user.mention} {reminder_message}\n'
                 time_left = get_time_left()
                 await asyncio.sleep(time_left.total_seconds())
-                await channel.send(message.strip())
+                allowed_mentions = discord.AllowedMentions(users=[user,])
+                await channel.send(message.strip(), allowed_mentions=allowed_mentions)
 
             if reminders[0].reminder_type == 'clan':
                 clan = await clans.get_clan_by_clan_name(reminders[0].clan_name)

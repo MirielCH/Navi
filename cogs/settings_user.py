@@ -372,8 +372,10 @@ class SettingsUserCog(commands.Cog):
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if ctx.message.mentions:
-            await ctx.reply(f'Please don\'t.')
-            return
+            for user in ctx.message.mentions:
+                if user != ctx.author:
+                    await ctx.reply(f'Please don\'t.')
+                    return
         user: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}message [activity] [message]')
         possible_activities = '**Possible activities**'
@@ -433,7 +435,9 @@ class SettingsUserCog(commands.Cog):
         alert = getattr(user, activity_column)
         if len(args) == 1:
             await ctx.reply(
-                f'Current message for activity `{activity}`:\n{emojis.BP} {alert.message}'
+                f'Current message for activity `{activity}`:'
+                f'\n{emojis.BP} {alert.message}\n\n'
+                f'Use `{prefix}message {activity} [message]` to change it.'
             )
             return
         if len(args) > 1:
@@ -441,6 +445,9 @@ class SettingsUserCog(commands.Cog):
             args.pop(0)
             new_message = " ".join(args)
             if new_message == 'reset': new_message = strings.DEFAULT_MESSAGES[activity]
+            if len(new_message) > 1024:
+                await ctx.reply('This is a command to set a new message, not to write a novel :thinking:')
+                return
             kwargs = {}
             kwargs[f'{activity_column}_message'] = new_message
             await user.update(**kwargs)
