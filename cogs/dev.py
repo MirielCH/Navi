@@ -38,15 +38,13 @@ class DevCog(commands.Cog):
 
     @dev.group(name='event-reduction', aliases=('er',), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
+    @commands.is_owner()
     async def dev_event_reduction(self, ctx: commands.Context, *args: str) -> None:
         """Sets event reductions of activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        if not ctx.author.id in (285399610032390146, 619879176316649482, 552563486740447263):
-            await ctx.reply('You are not allowed to use this command.')
-            return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [reduction in %]')
         activity_list = 'Possible activities:'
         for activity in strings.ACTIVITIES_WITH_COOLDOWN:
@@ -101,15 +99,13 @@ class DevCog(commands.Cog):
             )
 
     @dev_event_reduction.command(name='reset')
+    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def dev_event_reduction_reset(self, ctx: commands.Context) -> None:
         """Resets event reductions of all activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
         if ctx.prefix.lower() == 'rpg ': return
-        if not ctx.author.id in (285399610032390146, 619879176316649482, 552563486740447263):
-            await ctx.reply('You are not allowed to use this command.')
-            return
         await ctx.reply(
             f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]'
         )
@@ -126,6 +122,7 @@ class DevCog(commands.Cog):
         await ctx.reply(f'All event reductions have been reset.')
 
     @dev.command(name='cooldown-setup', aliases=('cd-setup',))
+    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def cooldown_setup(self, ctx: commands.Context, *args: str) -> None:
         """Sets base cooldowns of all activities"""
@@ -134,9 +131,6 @@ class DevCog(commands.Cog):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        if not ctx.author.id in (285399610032390146, 619879176316649482):
-            await ctx.reply('You are not allowed to use this command.')
-            return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [seconds]')
         activity_list = 'Possible activities:'
         for activity in strings.ACTIVITIES_WITH_COOLDOWN:
