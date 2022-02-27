@@ -1,4 +1,4 @@
-# global_data.py
+# functions.py
 
 from datetime import timedelta
 

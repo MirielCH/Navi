@@ -155,13 +155,13 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if args:
-            msg_wrong_argument = f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 100.'
+            msg_wrong_argument = f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 95.'
             try:
                 new_threshold = int(args[0])
             except:
                 await ctx.reply(msg_wrong_argument)
                 return
-            if not 1 <= new_threshold <= 100:
+            if not 1 <= new_threshold <= 95:
                 await ctx.reply(msg_wrong_argument)
                 return
             await clan.update(stealth_threshold=new_threshold)
@@ -172,7 +172,7 @@ class SettingsClanCog(commands.Cog):
             return
         await ctx.reply(
                 f'The current stealth threshold for the guild **{clan.clan_name}** is **{clan.stealth_threshold}**.\n'
-                f'If you want to change this, use `{prefix}guild stealth [1-100]`.'
+                f'If you want to change this, use `{prefix}guild stealth [1-95]`.'
         )
 
     @clan.command(name='reminders', aliases=('reminder','alert'))
