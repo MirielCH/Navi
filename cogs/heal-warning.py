@@ -28,7 +28,7 @@ class HealWarningCog(commands.Cog):
                 user_name_encoded = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message}')
                 return
             for member in message.guild.members:
                 member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -37,7 +37,7 @@ class HealWarningCog(commands.Cog):
                     break
             if user is None:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in training/adventure message: {message}')
+                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message}')
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
@@ -52,7 +52,7 @@ class HealWarningCog(commands.Cog):
                 if (f'{user_name}** lost but' not in message_content
                     and 'but lost fighting' not in message_content.lower()):
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Health not found in training/adventure message: {message_content}')
+                    await errors.log_error(f'Health not found in hunt/adventure message for heal warning: {message_content}')
                     return
             try:
                 if health_search is not None:
@@ -63,7 +63,7 @@ class HealWarningCog(commands.Cog):
                     health_remaining = 0
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'Health not found in training/adventure message. {error}')
+                await errors.log_error(f'Health not found in hunt/adventure message for heal warning: {error}')
                 return
             if health_lost > (health_remaining - (health_lost / 10)):
                 warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'

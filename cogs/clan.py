@@ -47,7 +47,7 @@ class ClanCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(error)
+                        await errors.log_error(f'User not found in clan cooldown message: {message}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -89,7 +89,7 @@ class ClanCog(commands.Cog):
                     clan_name = re.search("^\*\*(.+?)\*\*", message_description).group(1)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Clan name not found in clan message: {message}')
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
@@ -102,7 +102,7 @@ class ClanCog(commands.Cog):
                     await clan.update(stealth_current=stealth)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Stealth not found in clan message: {message}')
                     return
                 alert_message = 'rpg guild raid' if clan.stealth_current >= clan.stealth_threshold else 'rpg guild upgrade'
                 if '`raid` | `upgrade`' in message_field1:
@@ -145,7 +145,7 @@ class ClanCog(commands.Cog):
                     stealth = int(stealth)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Stealth not found in clan upgrade message: {message}')
                     return
                 await clan.update(stealth_current=stealth)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
@@ -173,7 +173,7 @@ class ClanCog(commands.Cog):
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'User not found in clan raid message: {message}')
                     return
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -194,7 +194,7 @@ class ClanCog(commands.Cog):
                     energy = int(energy)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Energy not found in clan raid message: {message}')
                     return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 clan_raid = await clans.insert_clan_raid(clan.clan_name, user.id, energy, current_time)

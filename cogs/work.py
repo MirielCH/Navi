@@ -40,7 +40,7 @@ class WorkCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(error)
+                        await errors.log_error(f'User not found in work cooldown message: {message}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -96,7 +96,12 @@ class WorkCog(commands.Cog):
             if ('** got ' in message_content.lower()
                 and not any(string in message_content.lower() for string in excluded_strings)):
                 user_name = user = None
-                search_strings = ['[!1] \*\*(.+?)\*\* got', '[!1] (.+?)\*\* got', '\*\*(.+?)\*\* got']
+                search_strings = [
+                    '[!1] \*\*(.+?)\*\* got',
+                    '[!1] (.+?)\*\* got',
+                    '\?\?\?\?\? \*\*(.+?)\*\* got',
+                    '\*\*(.+?)\*\* got'
+                ]
                 for search_string in search_strings:
                     user_name_search = re.search(search_string, message_content, re.IGNORECASE)
                     if user_name_search is not None: break
@@ -166,12 +171,16 @@ class WorkCog(commands.Cog):
                     await message.add_reaction(emojis.FISHPOGGERS)
                 elif 'one of them had' in message_content.lower() and 'rubies in it' in message_content.lower():
                     await message.add_reaction(emojis.WOW)
-                if 'woooaaaa!!' in message_content.lower():
+                elif 'woooaaaa!!' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
                 elif 'wwwwwoooooooooaaaaaaaa!!' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
                 elif 'is this a **dream**??' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
+                elif 'nice!' in message_content.lower() and 'watermelon' in message_content.lower():
+                    await message.add_reaction(emojis.PANDA_MELON)
+                # Add ultimate log (panda_cool) and super fish (panda_fish) when they drop to someone
+
 
 
 # Initialization

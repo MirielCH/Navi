@@ -74,7 +74,7 @@ class TrackingCog(commands.Cog):
                     user = message.mentions[0]
                     try:
                         user_settings: users.User = await users.get_user(user.id)
-                    except exceptions.NoDataFoundError:
+                    except exceptions.FirstTimeUserError:
                         return
                     if user_settings.tracking_enabled and user_settings.bot_enabled:
                         current_time = datetime.utcnow().replace(microsecond=0)
@@ -104,7 +104,7 @@ class TrackingCog(commands.Cog):
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
-                except exceptions.NoDataFoundError:
+                except exceptions.FirstTimeUserError:
                     return
                 tt_time = message.created_at.replace(microsecond=0)
                 await user_settings.update(last_tt=tt_time.isoformat(sep=' '))

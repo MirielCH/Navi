@@ -33,7 +33,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message}')
                     return
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')

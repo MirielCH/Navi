@@ -41,7 +41,7 @@ class CooldownsCog(commands.Cog):
                 user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'User not found in cooldown message: {message}')
                 return
         if user_id is not None:
             user = await message.guild.fetch_member(user_id)
@@ -66,7 +66,7 @@ class CooldownsCog(commands.Cog):
                 daily_search = re.search("Daily`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Daily cooldown not found in cooldown message: {message}')
                 return
             if daily_search is not None:
                 daily_timestring = daily_search.group(1)
@@ -77,7 +77,7 @@ class CooldownsCog(commands.Cog):
                 weekly_search = re.search("Weekly`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Weekly cooldown not found in cooldown message: {message}')
                 return
             if weekly_search is not None:
                 weekly_timestring = weekly_search.group(1)
@@ -88,7 +88,7 @@ class CooldownsCog(commands.Cog):
                 lb_search = re.search("Lootbox`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Lootbox cooldown not found in cooldown message: {message}')
                 return
             if lb_search is not None:
                 lb_timestring = lb_search.group(1)
@@ -105,7 +105,7 @@ class CooldownsCog(commands.Cog):
                 adv_search = re.search(adv_search_string, message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Adventure cooldown not found in cooldown message: {message}')
                 return
             if adv_search is not None:
                 adv_timestring = adv_search.group(1)
@@ -117,7 +117,7 @@ class CooldownsCog(commands.Cog):
                 tr_search = re.search("raining`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Training cooldown not found in cooldown message: {message}')
                 return
             if tr_search is not None:
                 tr_timestring = tr_search.group(1)
@@ -128,7 +128,7 @@ class CooldownsCog(commands.Cog):
                 quest_search = re.search("quest`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Quest cooldown not found in cooldown message: {message}')
                 return
             if quest_search is not None:
                 quest_timestring = quest_search.group(1)
@@ -139,7 +139,7 @@ class CooldownsCog(commands.Cog):
                 duel_search = re.search("Duel`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Duel cooldown not found in cooldown message: {message}')
                 return
             if duel_search is not None:
                 duel_timestring = duel_search.group(1)
@@ -150,7 +150,7 @@ class CooldownsCog(commands.Cog):
                 arena_search = re.search("rena`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Arena cooldown not found in cooldown message: {message}')
                 return
             if arena_search is not None:
                 arena_timestring = arena_search.group(1)
@@ -161,7 +161,7 @@ class CooldownsCog(commands.Cog):
                 dungmb_search = re.search("boss`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Miniboss cooldown not found in cooldown message: {message}')
                 return
             if dungmb_search is not None:
                 dungmb_timestring = dungmb_search.group(1)
@@ -172,7 +172,7 @@ class CooldownsCog(commands.Cog):
                 horse_search = re.search("race`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Horse cooldown not found in cooldown message: {message}')
                 return
             if horse_search is not None:
                 horse_timestring = horse_search.group(1)
@@ -183,7 +183,7 @@ class CooldownsCog(commands.Cog):
                 vote_search = re.search("Vote`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Vote cooldown not found in cooldown message: {message}')
                 return
             if vote_search is not None:
                 vote_timestring = vote_search.group(1)
@@ -194,7 +194,7 @@ class CooldownsCog(commands.Cog):
                 farm_search = re.search("Farm`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Farm cooldown not found in cooldown message: {message}')
                 return
             if farm_search is not None:
                 farm_timestring = farm_search.group(1)
@@ -209,7 +209,7 @@ class CooldownsCog(commands.Cog):
                 work_search = re.search(work_search_string, message_fields)
             except Exception as error:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(error)
+                await errors.log_error(f'Work cooldown not found in cooldown message: {message}')
                 return
             if work_search is not None:
                 work_timestring = work_search.group(1)

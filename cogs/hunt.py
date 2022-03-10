@@ -76,7 +76,7 @@ class HuntCog(commands.Cog):
         try:
             try:
                 user: users.User = await users.get_user(ctx.author.id)
-            except exceptions.NoDataFoundError:
+            except exceptions.FirstTimeUserError:
                 return
             if not user.bot_enabled: return
             if not user.alert_hunt.enabled and not user.tracking_enabled: return

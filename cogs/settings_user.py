@@ -531,7 +531,7 @@ class SettingsUserCog(commands.Cog):
                 )
                 return
             await ctx.reply(
-                f'**{ctx.author.name}**, you have {user.rubies} {emojis.RUBY} rubies.'
+                f'**{ctx.author.name}**, you have {user.rubies:,} {emojis.RUBY} rubies.'
             )
             return
         action = args[0].lower()

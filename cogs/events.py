@@ -152,7 +152,7 @@ class EventsCog(commands.Cog):
                     big_arena_search = re.search("Big arena\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Big arena cooldown not found in event message: {message}')
                     return
                 if big_arena_search is not None:
                     big_arena_timestring = big_arena_search.group(1)
@@ -163,7 +163,7 @@ class EventsCog(commands.Cog):
                     lottery_search = re.search("Lottery\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Lottery cooldown not found in event message: {message}')
                     return
                 if lottery_search is not None:
                     lottery_timestring = lottery_search.group(1)
@@ -174,7 +174,7 @@ class EventsCog(commands.Cog):
                     pet_search = re.search("tournament\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Pet tournament cooldown not found in event message: {message}')
                     return
                 if pet_search is not None:
                     pet_timestring = pet_search.group(1)
@@ -185,7 +185,7 @@ class EventsCog(commands.Cog):
                     horse_search = re.search("race\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Horse race cooldown not found in event message: {message}')
                     return
                 if horse_search is not None:
                     horse_timestring = horse_search.group(1)

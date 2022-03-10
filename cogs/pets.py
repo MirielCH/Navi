@@ -134,7 +134,7 @@ class PetsCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(error)
+                        await errors.log_error(f'User not found in pet list message: {message}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -175,7 +175,7 @@ class PetsCog(commands.Cog):
                         time_left = time_left - time_elapsed
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(error)
+                        await errors.log_error(f'Pet id, action or timestring not found in pet list message: {message}')
                         return
 
                     reminder_created = True

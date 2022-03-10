@@ -26,30 +26,6 @@ class MainCog(commands.Cog):
         embed = await embed_main_help(ctx)
         await ctx.reply(embed=embed)
 
-    @commands.command()
-    @commands.bot_has_permissions(send_messages=True, external_emojis=True, add_reactions=True, read_message_history=True)
-    async def ascended(self, ctx: commands.Context, *args) -> None:
-        """Ascended command detection"""
-        if ctx.prefix.lower() == 'rpg ' and len(args) >= 1:
-            args = [arg.lower() for arg in args]
-            arg1 = args[0]
-            args = list(args)
-            command = None
-            if arg1 == 'hunt':
-                command = self.bot.get_command(name='hunt')
-            elif arg1 in ('adventure','adv',):
-                command = self.bot.get_command(name='adventure')
-            elif arg1 in ('tr','training','ultr','ultraining'):
-                command = self.bot.get_command(name='training')
-            elif arg1 in ('chop','axe','bowsaw','chainsaw','fish','net','boat','bigboat','pickup','ladder','tractor',
-                          'greenhouse','mine','pickaxe','drill','dynamite',):
-                command = self.bot.get_command(name='chop')
-            elif arg1 in ('big','not',):
-                command = self.bot.get_command(name='big')
-
-            if command is not None:
-                await command.callback(command.cog, ctx, *args)
-
     @commands.command(aliases=('ping','info'))
     async def about(self, ctx: commands.Context) -> None:
         """Shows some info about Tatl"""

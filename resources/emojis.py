@@ -60,6 +60,10 @@ LAUGH = '<a:pepe_laugh:909873829332000788>'
 NOICE = '<:noice:909879569023119411>'
 WARNING = '⚠️'
 NOOB = '<a:peepo_noob:937093173111582810>'
+PANDA_COOL = '<a:panda_cool:949216263710859264>'
+PANDA_MELON = '<:panda_melon: <a:panda_melon:949216263241101363>'
+PANDA_FISH = '<:panda_fish: <:panda_fish:949216262779715595>'
+
 
 # Pets
 PET_CAT = '<:ca:770327200670416906>'

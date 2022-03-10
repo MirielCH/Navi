@@ -34,7 +34,7 @@ class PetHelperCog(commands.Cog):
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'User not found in pet catch message for pet helper: {message}')
                     return
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -43,7 +43,7 @@ class PetHelperCog(commands.Cog):
                         break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in pet catch message: {message}')
+                    await errors.log_error(f'User not found in pet catch message for pet helper: {message}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -57,7 +57,7 @@ class PetHelperCog(commands.Cog):
                     hunger = int(hunger)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(error)
+                    await errors.log_error(f'Happiness or hunger not found in pet catch message for pet helper: {message}')
                     return
                 feeds = hunger // 20
                 hunger_rest = hunger % 20
