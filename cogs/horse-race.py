@@ -23,18 +23,21 @@ class HorseRaceCog(commands.Cog):
         message_content = message.content
         if 'the next race is in' in message_content.lower():
             user_id = user_name = user = None
-            try:
-                user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
-                user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-            except Exception as error:
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in horse race message: {message}')
-                return
-            for member in message.guild.members:
-                member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                if member_name == user_name:
-                    user = member
-                    break
+            if message.mentions:
+                user = message.mentions[0]
+            else:
+                try:
+                    user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
+                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                except Exception as error:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(f'User not found in horse race message: {message}')
+                    return
+                for member in message.guild.members:
+                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    if member_name == user_name:
+                        user = member
+                        break
             if user is None:
                 await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'User not found in horse race message: {message}')

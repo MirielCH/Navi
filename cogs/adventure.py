@@ -39,7 +39,7 @@ class AdventureCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in adventure cooldown message: {message}')
+                        await errors.log_error(f'User not found in adventure cooldown message: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -51,7 +51,7 @@ class AdventureCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in adventure cooldown message: {message}')
+                    await errors.log_error(f'User not found in adventure cooldown message: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

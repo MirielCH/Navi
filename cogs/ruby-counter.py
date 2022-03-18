@@ -38,7 +38,7 @@ class RubyCounterCog(commands.Cog):
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in trade message for ruby counter: {message}')
+                    await errors.log_error(f'User not found in trade message for ruby counter: {message.embeds[0].fields}')
                     return
 
                 for member in message.guild.members:
@@ -48,7 +48,7 @@ class RubyCounterCog(commands.Cog):
                         break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in trade message for ruby counter: {message}')
+                    await errors.log_error(f'User not found in trade message for ruby counter: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -64,7 +64,7 @@ class RubyCounterCog(commands.Cog):
                     ruby_count = int(ruby_count.replace(',',''))
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Ruby count not found in trade message for ruby counter: {message}')
+                    await errors.log_error(f'Ruby count not found in trade message for ruby counter: {message.embeds[0].fields}')
                     return
                 if trade_type == 'E': ruby_count *= -1
                 ruby_count += user_settings.rubies
@@ -83,7 +83,7 @@ class RubyCounterCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in lootbox message for ruby counter: {message}')
+                        await errors.log_error(f'User not found in lootbox message for ruby counter: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -95,7 +95,7 @@ class RubyCounterCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in lootbox message for ruby counter: {message}')
+                    await errors.log_error(f'User not found in lootbox message for ruby counter: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -109,7 +109,7 @@ class RubyCounterCog(commands.Cog):
                     ruby_count = int(ruby_count.replace(',',''))
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Ruby count not found in lootbox message for ruby counter: {message}')
+                    await errors.log_error(f'Ruby count not found in lootbox message for ruby counter: {message.embeds[0].fields}')
                     return
                 ruby_count += user_settings.rubies
                 if ruby_count < 0: ruby_count == 0
@@ -127,7 +127,7 @@ class RubyCounterCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in inventory message for ruby counter: {message}')
+                        await errors.log_error(f'User not found in inventory message for ruby counter: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -139,7 +139,7 @@ class RubyCounterCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in inventory message for ruby counter: {message}')
+                    await errors.log_error(f'User not found in inventory message for ruby counter: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -158,7 +158,7 @@ class RubyCounterCog(commands.Cog):
                             ruby_count = int(ruby_count.replace(',',''))
                         except Exception as error:
                             await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'Ruby count not found in inventory message for ruby counter: {message}')
+                            await errors.log_error(f'Ruby count not found in inventory message for ruby counter: {message.embeds[0].fields}')
                             return
                 await user_settings.update(rubies=ruby_count)
                 if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)

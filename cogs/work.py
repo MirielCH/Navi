@@ -40,7 +40,7 @@ class WorkCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in work cooldown message: {message}')
+                        await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -52,7 +52,7 @@ class WorkCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in work cooldown message: {message}')
+                    await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -173,14 +173,16 @@ class WorkCog(commands.Cog):
                     await message.add_reaction(emojis.WOW)
                 elif 'woooaaaa!!' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
-                elif 'wwwwwoooooooooaaaaaaaa!!' in message_content.lower():
+                elif 'wwwooooooaaa!!!1' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
                 elif 'is this a **dream**??' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
                 elif 'nice!' in message_content.lower() and 'watermelon' in message_content.lower():
                     await message.add_reaction(emojis.PANDA_MELON)
-                # Add ultimate log (panda_cool) and super fish (panda_fish) when they drop to someone
-
+                elif 'this may be the luckiest moment of your life' in message_content.lower():
+                    await message.add_reaction(emojis.PANDA_COOL)
+                elif 'ooofff!!' in message_content.lower():
+                    await message.add_reaction(emojis.PANDA_FISH)
 
 
 # Initialization

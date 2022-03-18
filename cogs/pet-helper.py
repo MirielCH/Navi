@@ -34,7 +34,7 @@ class PetHelperCog(commands.Cog):
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in pet catch message for pet helper: {message}')
+                    await errors.log_error(f'User not found in pet catch message for pet helper: {message.embeds[0].fields}')
                     return
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -43,7 +43,7 @@ class PetHelperCog(commands.Cog):
                         break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in pet catch message for pet helper: {message}')
+                    await errors.log_error(f'User not found in pet catch message for pet helper: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -51,13 +51,13 @@ class PetHelperCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.pet_helper_enabled: return
                 try:
-                    happiness = re.search("Happiness:\*\* (.+?)\\n", message_field_value).group(1)
+                    happiness = re.search("Happiness\*\*: (.+?)\\n", message_field_value).group(1)
                     happiness = int(happiness)
-                    hunger = re.search("Hunger:\*\* (.+?)$", message_field_value).group(1)
+                    hunger = re.search("Hunger\*\*: (.+?)$", message_field_value).group(1)
                     hunger = int(hunger)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Happiness or hunger not found in pet catch message for pet helper: {message}')
+                    await errors.log_error(f'Happiness or hunger not found in pet catch message for pet helper: {message.embeds[0].fields}')
                     return
                 feeds = hunger // 20
                 hunger_rest = hunger % 20

@@ -39,7 +39,7 @@ class FarmCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in farm cooldown message: {message}')
+                        await errors.log_error(f'User not found in farm cooldown message: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
@@ -51,7 +51,7 @@ class FarmCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in farm cooldown message: {message}')
+                    await errors.log_error(f'User not found in farm cooldown message: {message.embeds[0].fields}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -80,7 +80,7 @@ class FarmCog(commands.Cog):
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
-                                                        message.channel.id, reminder_message)
+                                                         message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
                     await message.add_reaction(emojis.NAVI)
