@@ -16,6 +16,11 @@ class PetsCog(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id != settings.EPIC_RPG_ID: return
@@ -24,6 +29,7 @@ class PetsCog(commands.Cog):
             message_content = message.content
             # Single pet adventure
             if 'your pet has started an adventure and will be back' in message_content.lower():
+                if message.interaction is not None: return
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None
                 for msg in message_history:
@@ -48,7 +54,7 @@ class PetsCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 timestring = re.search("will be back in \*\*(.+?)\*\*", message_content).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
@@ -63,6 +69,10 @@ class PetsCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
             if 'pet adventure(s) cancelled' in message_content.lower():
+                if message.interaction is not None:
+                    user = message.interaction.user
+                    await message.channel.send(f'**{user.name}**, please use `/pets list` to update your pet reminders.')
+                    return
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None
                 for msg in message_history:
@@ -126,24 +136,27 @@ class PetsCog(commands.Cog):
                     'panda': emojis.PET_PANDA,
                 }
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s pets", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in pet list message: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s pets", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in pet list message: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in pet list message: {message.embeds[0].fields}')
@@ -154,7 +167,7 @@ class PetsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 reminder_created = False
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 for field in embed.fields:

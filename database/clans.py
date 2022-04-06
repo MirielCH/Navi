@@ -341,7 +341,8 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
     """
     table = 'clans_raids'
     function_name = 'get_leaderboard'
-    sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy>=300000 ORDER BY energy DESC LIMIT 5'
+    stealth_threshold = 500
+    sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy>={stealth_threshold} ORDER BY energy DESC LIMIT 5'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))
@@ -351,7 +352,7 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy<300000 ORDER BY energy ASC LIMIT 5'
+    sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy<{stealth_threshold} ORDER BY energy ASC LIMIT 5'
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan.clan_name,))

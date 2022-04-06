@@ -32,24 +32,27 @@ class WorkCog(commands.Cog):
             # Work cooldown
             if 'you have already got some resources' in message_title.lower():
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
@@ -59,23 +62,26 @@ class WorkCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_work.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ')
-                            and any(command in msg.content.lower() for command in strings.WORK_COMMANDS)
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the work cooldown message.')
-                    return
-                user_command = user_command_message.content.lower()
+                if message.interaction is not None:
+                    user_command = f'/{message.interaction.name}'
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().startswith('rpg ')
+                                and any(command in msg.content.lower() for command in strings.WORK_COMMANDS)
+                                and msg.author == user):
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the work cooldown message.')
+                        return
+                    user_command = user_command_message.content.lower()
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
@@ -96,26 +102,29 @@ class WorkCog(commands.Cog):
             if ('** got ' in message_content.lower()
                 and not any(string in message_content.lower() for string in excluded_strings)):
                 user_name = user = None
-                search_strings = [
-                    '[!1] \*\*(.+?)\*\* got',
-                    '[!1] (.+?)\*\* got',
-                    '\?\?\?\?\? \*\*(.+?)\*\* got',
-                    '\*\*(.+?)\*\* got'
-                ]
-                for search_string in search_strings:
-                    user_name_search = re.search(search_string, message_content, re.IGNORECASE)
-                    if user_name_search is not None: break
-                if user_name_search is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in work message: {message.content}')
-                    return
-                user_name = user_name_search.group(1)
-                user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    search_strings = [
+                        '[!1] \*\*(.+?)\*\* got',
+                        '[!1] (.+?)\*\* got',
+                        '\?\?\?\?\? \*\*(.+?)\*\* got',
+                        '\*\*(.+?)\*\* got'
+                    ]
+                    for search_string in search_strings:
+                        user_name_search = re.search(search_string, message_content, re.IGNORECASE)
+                        if user_name_search is not None: break
+                    if user_name_search is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in work message: {message.content}')
+                        return
+                    user_name = user_name_search.group(1)
+                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found for user name {user_name}')
@@ -129,22 +138,25 @@ class WorkCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
                 if not user_settings.alert_work.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ')
-                            and any(command in msg.content.lower() for command in strings.WORK_COMMANDS)
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the work message.')
-                    return
-                user_command = user_command_message.content.lower()
+                if message.interaction is not None:
+                    user_command = f'/{message.interaction.name}'
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().startswith('rpg ')
+                                and any(command in msg.content.lower() for command in strings.WORK_COMMANDS)
+                                and msg.author == user):
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the work message.')
+                        return
+                    user_command = user_command_message.content.lower()
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('work')
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 if cooldown.donor_affected:
@@ -171,7 +183,7 @@ class WorkCog(commands.Cog):
                     await message.add_reaction(emojis.FISHPOGGERS)
                 elif 'one of them had' in message_content.lower() and 'rubies in it' in message_content.lower():
                     await message.add_reaction(emojis.WOW)
-                elif 'woooaaaa!!' in message_content.lower():
+                elif 'wooaaaa!!' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
                 elif 'wwwooooooaaa!!!1' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)

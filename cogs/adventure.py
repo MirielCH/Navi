@@ -31,24 +31,28 @@ class AdventureCog(commands.Cog):
             # Adventure cooldown
             if 'you have already been in an adventure' in message_title.lower():
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in adventure cooldown message: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
+                    user_command = '/adventure'
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in adventure cooldown message: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in adventure cooldown message: {message.embeds[0].fields}')
@@ -58,26 +62,28 @@ class AdventureCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ') and ' adv' in msg.content.lower()
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the adventure cooldown message.')
-                    return
-                user_command = user_command_message.content.lower()
-                if ' adv ' in user_command or user_command.endswith(' adv'):
-                    user_command = user_command.replace(' adv',' adventure')
-                if ' h ' in user_command or user_command.endswith(' h'):
-                    user_command = user_command.replace(' h',' hardmode')
+                if message.interaction is None:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().startswith('rpg ') and ' adv' in msg.content.lower()
+                                and msg.author == user):
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the adventure cooldown message.')
+                        return
+                    user_command = user_command_message.content.lower()
+                    if ' adv ' in user_command or user_command.endswith(' adv'):
+                        user_command = user_command.replace(' adv',' adventure')
+                    if ' h ' in user_command or user_command.endswith(' h'):
+                        user_command = user_command.replace(' h',' hardmode')
+                    user_command = " ".join(user_command.split())
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
@@ -97,18 +103,21 @@ class AdventureCog(commands.Cog):
             if ('** found a' in message_content.lower()
                 and any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user_name = user = None
-                try:
-                    user_name = re.search("^\*\*(.+?)\*\* found a", message_content).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in adventure message: {message}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    try:
+                        user_name = re.search("^\*\*(.+?)\*\* found a", message_content).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in adventure message: {message}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in adventure message: {message}')
@@ -122,25 +131,14 @@ class AdventureCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)
                 if not user_settings.alert_adventure.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ') and ' adv' in msg.content.lower()
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the adventure cooldown message.')
-                    return
-                user_command = user_command_message.content.lower()
-                if ' adv ' in user_command or user_command.endswith(' adv'):
-                    user_command = user_command.replace(' adv',' adventure')
-                if ' h ' in user_command or user_command.endswith(' h'):
-                    user_command = user_command.replace(' h',' hardmode')
+                if message.interaction is None:
+                    user_command = 'rpg adventure'
+                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} hardmode'
+                else:
+                    user_command = '/adventure'
+                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} mode: hardmode'
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('adventure')
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 if cooldown.donor_affected:

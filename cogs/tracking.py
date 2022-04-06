@@ -70,8 +70,12 @@ class TrackingCog(commands.Cog):
                 message_content = message.content
                 # Epic Guard
                 if 'we have to check you are actually playing' in message_content.lower():
-                    if not message.mentions: return
-                    user = message.mentions[0]
+                    if message.interaction is not None:
+                        user = message.interaction.user
+                    elif message.mentions:
+                        user = message.mentions[0]
+                    else:
+                        return
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
@@ -87,18 +91,21 @@ class TrackingCog(commands.Cog):
                 except:
                     return
                 if 'has traveled in time' not in message_content.lower(): return
-                try:
-                    user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
-                except Exception as error:
-                    await errors.log_error(f'Error while reading user name from time travel message:\n{error}')
-                    return
-                user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 user = None
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    try:
+                        user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
+                    except Exception as error:
+                        await errors.log_error(f'Error while reading user name from time travel message:\n{error}')
+                        return
+                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await errors.log_error(f'Couldn\'t find a user with user_name {user_name}.')
                     return
@@ -106,7 +113,7 @@ class TrackingCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                tt_time = message.created_at.replace(microsecond=0)
+                tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
                 if user_settings.last_tt == tt_time and user_settings.bot_enabled: await message.add_reaction(emojis.NAVI)
 

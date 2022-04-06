@@ -323,11 +323,11 @@ def get_training_answer(message_content: str) -> str:
     answer = None
     if 'river!' in message_content:
         if '<:epicfish' in message_content:
-            answer = '3'
+            answer = '3 / EPIC fish'
         elif '<:goldenfish' in message_content:
-            answer = '2'
+            answer = '2 / golden fish'
         elif '<:normiefish' in message_content:
-            answer = '1'
+            answer = '1 / normie fish'
     elif 'field!' in message_content:
         if '<:apple' in message_content:
             if '**first**' in message_content:

@@ -25,7 +25,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             or 'successfully registered for the next **not so "mini" boss** event!' in message_content.lower()
             or 'you are already registered!' in message_content.lower()):
             user_name = user = None
-            if message.mentions:
+            if message.interaction is not None:
+                user = message.interaction.user
+            elif message.mentions:
                 user = message.mentions[0]
             else:
                 try:
@@ -49,21 +51,25 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            message_history = await message.channel.history(limit=50).flatten()
-            user_command_message = None
-            for msg in message_history:
-                if msg.content is not None:
-                    if ((msg.content.lower().startswith('rpg ')
-                         and 'big arena join' in msg.content.lower() or 'not so mini boss join' in msg.content.lower())
-                        and msg.author == user):
-                        user_command_message = msg
-                        break
-            if user_command_message is None:
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error('Couldn\'t find a command for the big-arena or not-so-mini-boss message.')
-                return
-            user_command = user_command_message.content.lower()
-            if ' not so mini ' in user_command:
+            if message.interaction is not None:
+                user_command = '/big arena' if message.interaction.name == 'big' else '/minint'
+                user_command = f'{user_command} join: true'
+            else:
+                message_history = await message.channel.history(limit=50).flatten()
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if ((msg.content.lower().startswith('rpg ')
+                            and 'big arena join' in msg.content.lower() or 'not so mini boss join' in msg.content.lower())
+                            and msg.author == user):
+                            user_command_message = msg
+                            break
+                if user_command_message is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error('Couldn\'t find a command for the big-arena or not-so-mini-boss message.')
+                    return
+                user_command = user_command_message.content.lower()
+            if ' not so mini ' in user_command or 'minint' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
                 event = 'not-so-mini-boss'
                 reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
@@ -73,7 +79,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 reminder_message = user_settings.alert_big_arena.message.replace('{event}', event.replace('-',' '))
             timestring = re.search("next event is in \*\*(.+?)\*\*", message_content).group(1)
             time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-            bot_answer_time = message.created_at.replace(microsecond=0)
+            bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed

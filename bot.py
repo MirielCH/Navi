@@ -13,6 +13,7 @@ intents = discord.Intents.none()
 intents.guilds = True   # for on_guild_join() and all guild objects
 intents.messages = True   # for command detection
 intents.members = True  # To be able to look up user info
+intents.message_content = True # for command detection
 
 allowed_mentions = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
 

@@ -22,8 +22,10 @@ class HorseRaceCog(commands.Cog):
         if message.embeds: return
         message_content = message.content
         if 'the next race is in' in message_content.lower():
-            user_id = user_name = user = None
-            if message.mentions:
+            user_name = user = None
+            if message.interaction is not None:
+                user = message.interaction.user
+            elif message.mentions:
                 user = message.mentions[0]
             else:
                 try:
@@ -49,7 +51,7 @@ class HorseRaceCog(commands.Cog):
             if not user_settings.bot_enabled or not user_settings.alert_horse_race.enabled: return
             timestring = re.search("next race is in \*\*(.+?)\*\*", message_content).group(1)
             time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-            bot_answer_time = message.created_at.replace(microsecond=0)
+            bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed

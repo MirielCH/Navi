@@ -66,7 +66,7 @@ class EventsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(hours=12) - time_elapsed
                 reminder_message = 'Hey! It\'s time for `rpg cel multiply`!'
@@ -129,18 +129,21 @@ class EventsCog(commands.Cog):
             if not message_field_name.lower() == 'normal events': return
 
             user = None
-            message_history = await message.channel.history(limit=50).flatten()
-            user_command_message = None
-            for msg in message_history:
-                if msg.content is not None:
-                    if msg.content.lower().startswith('rpg event') and not msg.author.bot:
-                        user_command_message = msg
-                        break
-            if user_command_message is None:
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error('Couldn\'t find a command for the events message.')
-                return
-            user = user_command_message.author
+            if message.interaction is not None:
+                user = message.interaction.user
+            else:
+                message_history = await message.channel.history(limit=50).flatten()
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if msg.content.lower().startswith('rpg event') and not msg.author.bot:
+                            user_command_message = msg
+                            break
+                if user_command_message is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error('Couldn\'t find a command for the events message.')
+                    return
+                user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
@@ -204,7 +207,7 @@ class EventsCog(commands.Cog):
                 updated_reminder = True
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
                 if cd_activity == 'pet-tournament': time_left += timedelta(minutes=1)
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
                 if time_left.total_seconds() > 0:

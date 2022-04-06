@@ -33,24 +33,27 @@ class TrainingCog(commands.Cog):
             # Training cooldown
             if 'you have trained already' in message_title.lower():
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in training cooldown message: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in training cooldown message: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in training cooldown message: {message.embeds[0].fields}')
@@ -60,25 +63,29 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_training.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ')
-                            and (' tr' in msg.content.lower() or 'ultr' in msg.content.lower())
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the training cooldown message.')
-                    return
-                user_command = user_command_message.content.lower()
-                if user_command.endswith(' ultr'): user_command = user_command.replace(' ultr',' ultraining')
-                if user_command.endswith(' tr'): user_command = user_command.replace(' tr',' training')
+                if message.interaction is not None:
+                    user_command = f'/{message.interaction.name}'
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().startswith('rpg ')
+                                and (' tr' in msg.content.lower() or 'ultr' in msg.content.lower())
+                                and msg.author == user):
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the training cooldown message.')
+                        return
+                    user_command = user_command_message.content.lower()
+                    if user_command.endswith(' ultr'): user_command = user_command.replace(' ultr',' ultraining')
+                    if user_command.endswith(' tr'): user_command = user_command.replace(' tr',' training')
+                    user_command = " ".join(user_command.split())
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
@@ -119,22 +126,9 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ') and ' ultr' in msg.content.lower()
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the ultraining message.')
-                    return
-                user_command = user_command_message.content.lower()
-                if user_command.endswith('ultr'): user_command = user_command.replace('ultr','ultraining')
+                user_command = '/ultraining' if message.type.value == 19 else 'rpg ultraining'
                 current_time = datetime.utcnow().replace(microsecond=0)
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('training')
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
@@ -187,21 +181,8 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ') and ' tr' in msg.content.lower()
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the training message.')
-                    return
-                user_command = user_command_message.content.lower()
-                if user_command.endswith('tr'): user_command = user_command.replace('tr','training')
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                user_command = '/training' if message.type.value == 19 else 'rpg training'
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('training')
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier

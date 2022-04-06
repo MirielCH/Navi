@@ -31,21 +31,24 @@ class RubyCounterCog(commands.Cog):
             # Rubies from trades E and F
             if 'our trade is done then' in message_description.lower() and '<:ruby' in message_field.lower():
                 user_name = user = None
-                try:
-                    search_string = "\*\*(.+?)\*\*"
-                    user_name = re.search(search_string, message_field).group(1)
-                    if user_name == 'EPIC NPC': user_name = re.search(search_string, message_field).group(2)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in trade message for ruby counter: {message.embeds[0].fields}')
-                    return
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    try:
+                        search_string = "\*\*(.+?)\*\*"
+                        user_name = re.search(search_string, message_field).group(1)
+                        if user_name == 'EPIC NPC': user_name = re.search(search_string, message_field).group(2)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in trade message for ruby counter: {message.embeds[0].fields}')
+                        return
 
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in trade message for ruby counter: {message.embeds[0].fields}')
@@ -75,24 +78,27 @@ class RubyCounterCog(commands.Cog):
             # Rubies from lootboxes
             if "'s lootbox" in message_author.lower() and '<:ruby' in message_field.lower():
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s lootbox", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in lootbox message for ruby counter: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s lootbox", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in lootbox message for ruby counter: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in lootbox message for ruby counter: {message.embeds[0].fields}')
@@ -119,24 +125,27 @@ class RubyCounterCog(commands.Cog):
             # Rubies from inventory
             if "'s inventory" in message_author.lower():
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s inventory", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in inventory message for ruby counter: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s inventory", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in inventory message for ruby counter: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in inventory message for ruby counter: {message.embeds[0].fields}')
@@ -168,18 +177,21 @@ class RubyCounterCog(commands.Cog):
             # Ruby training helper
             if '** is training in the mine!' in message_content.lower():
                 user_name = user = None
-                try:
-                    user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    try:
+                        user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message}')
@@ -202,18 +214,21 @@ class RubyCounterCog(commands.Cog):
             # Rubies from work commands
             if '** got ' in message_content.lower() and '<:ruby' in message_content.lower():
                 user_name = user = None
-                try:
-                    user_name = re.search("\*\*(.+?)\*\* got", message_content, re.IGNORECASE).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in work message for ruby counter: {message}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    try:
+                        user_name = re.search("\*\*(.+?)\*\* got", message_content, re.IGNORECASE).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in work message for ruby counter: {message}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in work message for ruby counter: {message}')
@@ -240,18 +255,21 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ruby sword
             if '`ruby sword` successfully crafted' in message_content.lower():
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if msg.content.lower() == 'rpg craft ruby sword' and not msg.author.bot:
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the ruby sword crafting message.')
-                    return
-                user = user_command_message.author
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if msg.content.lower() == 'rpg craft ruby sword' and not msg.author.bot:
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the ruby sword crafting message.')
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -264,18 +282,21 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ruby armor
             if '`ruby armor` successfully crafted' in message_content.lower():
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if msg.content.lower() == 'rpg craft ruby armor' and not msg.author.bot:
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the ruby armor crafting message.')
-                    return
-                user = user_command_message.author
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if msg.content.lower() == 'rpg craft ruby armor' and not msg.author.bot:
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the ruby armor crafting message.')
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -288,18 +309,21 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting coin sword
             if '`coin sword` successfully crafted' in message_content.lower():
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if msg.content.lower() == 'rpg craft coin sword' and not msg.author.bot:
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the coin sword crafting message.')
-                    return
-                user = user_command_message.author
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if msg.content.lower() == 'rpg craft coin sword' and not msg.author.bot:
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the coin sword crafting message.')
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -312,18 +336,21 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ultra-edgy armor
             if '`ultra-edgy armor` successfully forged' in message_content.lower():
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if msg.content.lower() == 'rpg forge ultra-edgy armor' and not msg.author.bot:
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the ultra-edgy armor crafting message.')
-                    return
-                user = user_command_message.author
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if msg.content.lower() == 'rpg forge ultra-edgy armor' and not msg.author.bot:
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the ultra-edgy armor crafting message.')
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

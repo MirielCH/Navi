@@ -39,24 +39,27 @@ class ClanCog(commands.Cog):
             # Clan cooldown
             if 'your guild has already raided or been upgraded' in message_title.lower():
                 user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    try:
-                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in clan cooldown message: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
+                if message.interaction is not None:
+                    user = message.interaction.user
                 else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in clan cooldown message: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in clan cooldown message: {message.embeds[0].fields}')
@@ -68,11 +71,15 @@ class ClanCog(commands.Cog):
                 if not clan.alert_enabled: return
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                alert_message = 'rpg guild raid' if clan.stealth_current >= clan.stealth_threshold else 'rpg guild upgrade'
+                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
+                if clan.stealth_current >= clan.stealth_threshold:
+                    alert_message = f'{alert_message_prefix}guild raid'
+                else:
+                    alert_message = f'{alert_message_prefix}guild upgrade'
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                          clan.channel_id, alert_message)
@@ -121,18 +128,21 @@ class ClanCog(commands.Cog):
             # Guild upgrade
             if ('guild successfully upgraded!' in message_description.lower()
                 or 'guild upgrade failed!' in message_description.lower()):
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if msg.content.lower() == 'rpg guild upgrade' and not msg.author.bot:
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the clan upgrade message.')
-                    return
-                user = user_command_message.author
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if msg.content.lower() == 'rpg guild upgrade' and not msg.author.bot:
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the clan upgrade message.')
+                        return
+                    user = user_command_message.author
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
                 except exceptions.NoDataFoundError:
@@ -148,11 +158,15 @@ class ClanCog(commands.Cog):
                     return
                 await clan.update(stealth_current=stealth)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                alert_message = 'rpg guild raid' if clan.stealth_current >= clan.stealth_threshold else 'rpg guild upgrade'
+                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
+                if clan.stealth_current >= clan.stealth_threshold:
+                    alert_message = f'{alert_message_prefix}guild raid'
+                else:
+                    alert_message = f'{alert_message_prefix}guild upgrade'
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                          clan.channel_id, alert_message)
@@ -167,18 +181,21 @@ class ClanCog(commands.Cog):
             # Guild raid
             if ('** RAIDED **' in message_description and ':crossed_swords:' in message_description.lower()):
                 user_name = user = None
-                try:
-                    user_name = re.search("\*\*(.+?)\*\* throws", message_field0).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in clan raid message: {message.embeds[0].fields}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                if message.interaction is not None:
+                    user = message.interaction.user
+                else:
+                    try:
+                        user_name = re.search("\*\*(.+?)\*\* throws", message_field0).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in clan raid message: {message.embeds[0].fields}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in clan raid message: {message.embeds[0].fields}')
@@ -203,11 +220,15 @@ class ClanCog(commands.Cog):
                             'There was an error adding the raid to the leaderboard. Please tell Miri he\'s an idiot.'
                         )
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
-                bot_answer_time = message.created_at.replace(microsecond=0)
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                alert_message = 'rpg guild raid' if clan.stealth_current >= clan.stealth_threshold else 'rpg guild upgrade'
+                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
+                if clan.stealth_current >= clan.stealth_threshold:
+                    alert_message = f'{alert_message_prefix}guild raid'
+                else:
+                    alert_message = f'{alert_message_prefix}guild upgrade'
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                          clan.channel_id, alert_message)

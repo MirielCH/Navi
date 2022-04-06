@@ -42,7 +42,7 @@ class PetTournamentCog(commands.Cog):
             if not user_settings.bot_enabled or not user_settings.alert_pet_tournament.enabled: return
             timestring = re.search("next pet tournament is in \*\*(.+?)\*\*", message_content).group(1)
             time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-            bot_answer_time = message.created_at.replace(microsecond=0)
+            bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed

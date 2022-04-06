@@ -127,7 +127,7 @@ class HuntCog(commands.Cog):
                     timestring_end = bot_message.find('**...', timestring_start)
                     timestring = bot_message[timestring_start:timestring_end]
                     time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                    bot_answer_time = bot_answer.created_at.replace(microsecond=0)
+                    bot_answer_time = bot_answer.created_at.replace(microsecond=0, tzinfo=None)
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed
                     if together and ctx_author in bot_message:
@@ -229,7 +229,7 @@ class HuntCog(commands.Cog):
                     await user.update(partner_name=partner_name)
 
             # Calculate cooldown
-            bot_answer_time = bot_answer.created_at.replace(microsecond=0)
+            bot_answer_time = bot_answer.created_at.replace(microsecond=0, tzinfo=None)
             time_elapsed = current_time - bot_answer_time
             if together and partner_donor_tier < user_donor_tier:
                 donor_tier = partner_donor_tier
