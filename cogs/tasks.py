@@ -48,7 +48,10 @@ class TasksCog(commands.Cog):
                     else:
                         message = f'{message}{user.mention} {reminder_message}\n'
                 time_left = get_time_left()
-                await asyncio.sleep(time_left.total_seconds())
+                try:
+                    await asyncio.sleep(time_left.total_seconds())
+                except asyncio.CancelledError:
+                    pass
                 allowed_mentions = discord.AllowedMentions(users=[user,])
                 await channel.send(message.strip(), allowed_mentions=allowed_mentions)
 

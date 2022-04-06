@@ -147,7 +147,7 @@ class SettingsPartnerCog(commands.Cog):
                     f'**{ctx.author.name}**, you currently have a partner set. The partner donor tier is '
                     f'automatically synchronized with your partner.\n'
                     f'If the donor tier of your partner is wrong, they have to change it themselves using '
-                    f'`{prefix} donor [tier]`.'
+                    f'`{prefix}donor [tier]`.'
                 )
                 return
             await user.update(partner_donor_tier=donor_tier)
