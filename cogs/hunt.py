@@ -71,11 +71,11 @@ class HuntCog(commands.Cog):
                         return
                     user_command = user_command_message.content.lower()
                     user_command = user_command[8:].strip()
-                    if 'h ' in user_command or user_command.endswith(' h'):
+                    if 'h ' in user_command or user_command.endswith('h'):
                         user_command = user_command.replace('h','hardmode')
-                    if 't ' in user_command or user_command.endswith(' t'):
+                    if 't ' in user_command or user_command.endswith('t'):
                         user_command = user_command.replace('t',' together')
-                    if 'a ' in user_command or user_command.endswith(' a'):
+                    if 'a ' in user_command or user_command.endswith('a'):
                         user_command = user_command.replace('a',' alone')
                     user_command = " ".join(user_command.split())
                     user_command = f'rpg hunt {user_command}'
@@ -83,7 +83,7 @@ class HuntCog(commands.Cog):
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
+                if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -144,8 +144,8 @@ class HuntCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)
-                if not user_settings.alert_adventure.enabled: return
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                if not user_settings.alert_hunt.enabled: return
                 hardmode = True if '(but stronger)' in message_content.lower() else False
                 alone = True if '(way stronger!!!)' in message_content.lower() else False
                 together = True if 'hunting together' in message_content.lower() else False
@@ -172,7 +172,7 @@ class HuntCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_adventure.message.replace('{command}', user_command)
+                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'hunt', time_left,
                                                          message.channel.id, reminder_message)
@@ -259,6 +259,89 @@ class HuntCog(commands.Cog):
                 if ((message_content.find(f'**{user.name}** lost but ') > -1)
                     or (message_content.find('but lost fighting') > -1)):
                     await message.add_reaction(emojis.RIP)
+
+            # Hunt event
+            if ('pretends to be a zombie' in message_content.lower()
+                or 'fights the horde' in message_content.lower()
+                or 'thankfully, the horde did not notice' in message_content.lower()):
+                user_name = user = None
+                if message.interaction is not None:
+                    user = message.interaction.user
+                    user_command = '/hunt'
+                else:
+                    try:
+                        user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in hunt event message: {message}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
+                if user is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(f'User not found in hunt event message: {message}')
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                if user_settings.tracking_enabled:
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                if not user_settings.alert_hunt.enabled: return
+                message_history = await message.channel.history(limit=50).flatten()
+                if message.interaction is None:
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().startswith('rpg ') and 'hunt' in msg.content.lower()
+                                and msg.author == user):
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error('Couldn\'t find a command for the hunt event message.')
+                        return
+                    user_command = user_command_message.content.lower()
+                    user_command = user_command[8:].strip()
+                    if 'h ' in user_command or user_command.endswith(' h'):
+                        user_command = user_command.replace('h','hardmode')
+                    if 't ' in user_command or user_command.endswith(' t'):
+                        user_command = user_command.replace('t',' together')
+                    if 'a ' in user_command or user_command.endswith(' a'):
+                        user_command = user_command.replace('a',' alone')
+                    user_command = " ".join(user_command.split())
+                    user_command = f'rpg hunt {user_command}'
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                time_elapsed = current_time - bot_answer_time
+                together = True if user_settings.partner_id is not None else False
+                if together and user_settings.partner_donor_tier < user_settings.user_donor_tier:
+                    donor_tier = user_settings.partner_donor_tier
+                else:
+                    donor_tier = user_settings.user_donor_tier
+                donor_tier = 3 if donor_tier > 3 else donor_tier
+                if cooldown.donor_affected:
+                    time_left_seconds = (cooldown.actual_cooldown()
+                                        * settings.DONOR_COOLDOWNS[donor_tier]
+                                        - time_elapsed.total_seconds())
+                else:
+                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                time_left = timedelta(seconds=time_left_seconds)
+                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                if reminder.record_exists:
+                    await message.add_reaction(emojis.NAVI)
+                else:
+                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
 
 # Initialization
