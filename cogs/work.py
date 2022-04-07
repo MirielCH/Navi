@@ -66,7 +66,7 @@ class WorkCog(commands.Cog):
                     user_command = f'/{message.interaction.name}'
                 else:
                     message_history = await message.channel.history(limit=50).flatten()
-                    user_command_message = None
+                    user_command_message = user_command = None
                     for msg in message_history:
                         if msg.content is not None:
                             if (msg.content.lower().startswith('rpg ')
@@ -74,11 +74,29 @@ class WorkCog(commands.Cog):
                                 and msg.author == user):
                                 user_command_message = msg
                                 break
-                    if user_command_message is None:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the work cooldown message.')
-                        return
-                    user_command = user_command_message.content.lower()
+                    if user_command_message is not None:
+                        user_command = user_command_message.content.lower()
+                    else:
+                        if ('three chainsaw' in message_content.lower()
+                        or 'is this a **dream**??' in message_content.lower()
+                        or 'this may be the luckiest moment of your life' in message_content.lower()):
+                            action = 'chainsaw'
+                        elif 'two bow saw' in message_content.lower(): action = 'bowsaw'
+                        elif 'axe' in message_content.lower(): action = 'axe'
+                        elif 'log' in message_content.lower(): action = 'chop'
+                        elif 'three nets' in message_content.lower(): action = 'bigboat'
+                        elif 'a **net**' in message_content.lower(): action = 'net'
+                        elif 'fish' in message_content.lower(): action = 'fish'
+                        elif 'two tractors' in message_content.lower(): action = 'greenhouse'
+                        elif 'tractor' in message_content.lower(): action = 'tractor'
+                        elif 'both hands' in message_content.lower(): action = 'ladder'
+                        elif 'apple' in message_content.lower() or 'banana' in message_content.lower(): action = 'pickup'
+                        elif 'four drills' in message_content.lower(): action = 'dynamite'
+                        elif 'two drills' in message_content.lower(): action = 'drill'
+                        elif 'pickaxe' in message_content.lower(): action = 'pickaxe'
+                        elif 'coins' in message_content.lower() or 'ruby' in message_content.lower(): action = 'mine'
+                        else: action = '[work command]'
+                        user_command = f'rpg {action}'
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)

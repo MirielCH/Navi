@@ -22,19 +22,22 @@ class PetTournamentCog(commands.Cog):
         if message.embeds: return
         message_content = message.content
         if 'pet successfully sent to the pet tournament!' in message_content.lower():
-            message_history = await message.channel.history(limit=50).flatten()
-            user_command_message = None
-            for msg in message_history:
-                if msg.content is not None:
-                    if (msg.content.lower().startswith('rpg pet') and ' tournament ' in msg.content.lower()
-                        and not msg.author.bot):
-                        user_command_message = msg
-                        break
-            if user_command_message is None:
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error('Couldn\'t find a command for the pet tournament message.')
-                return
-            user = user_command_message.author
+            if message.interaction is not None:
+                user = message.interaction.user
+            else:
+                message_history = await message.channel.history(limit=50).flatten()
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if (msg.content.lower().startswith('rpg pet') and ' tournament ' in msg.content.lower()
+                            and not msg.author.bot):
+                            user_command_message = msg
+                            break
+                if user_command_message is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error('Couldn\'t find a command for the pet tournament message.')
+                    return
+                user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
