@@ -163,8 +163,7 @@ class FarmCog(commands.Cog):
                         await message.add_reaction(emojis.SEED_BREAD)
 
             # Farm event
-            if ('hits the floor with the fist' in message_content.lower()
-                or 'hits the floor with the' in message_content.lower()
+            if ('hits the floor with the' in message_content.lower()
                 or 'is about to plant another seed' in message_content.lower()):
                 user_name = user = None
                 if message.interaction is not None:
