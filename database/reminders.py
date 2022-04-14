@@ -10,6 +10,7 @@ from typing import Optional, Tuple
 from discord.ext import tasks
 
 from database import errors
+import database
 from resources import exceptions, settings, strings
 
 
@@ -769,18 +770,20 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted."""
     current_time = datetime.utcnow().replace(microsecond=0)
-    reminders = await get_active_user_reminders(user_id)
-    if reminders:
-        current_time = datetime.utcnow()
-        for reminder in reminders:
-            if reminder.activity in strings.SLEEPY_POTION_AFFECTED_ACTIVITIES:
-                new_end_time = reminder.end_time - time_reduction
-                time_left = new_end_time - current_time
-                if time_left.total_seconds() <= 0:
-                    scheduled_for_deletion[reminder.task_name] = reminder
-                    await reminder.delete()
-                elif 1 <= time_left.total_seconds() <= 15:
-                    await reminder.update(end_time=new_end_time, triggered=True)
-                    scheduled_for_tasks[reminder.task_name] = reminder
-                else:
-                    await reminder.update(end_time=new_end_time)
+    try:
+        reminders = await get_active_user_reminders(user_id)
+    except exceptions.NoDataFoundError:
+        return
+    current_time = datetime.utcnow()
+    for reminder in reminders:
+        if reminder.activity in strings.SLEEPY_POTION_AFFECTED_ACTIVITIES:
+            new_end_time = reminder.end_time - time_reduction
+            time_left = new_end_time - current_time
+            if time_left.total_seconds() <= 0:
+                scheduled_for_deletion[reminder.task_name] = reminder
+                await reminder.delete()
+            elif 1 <= time_left.total_seconds() <= 15:
+                await reminder.update(end_time=new_end_time, triggered=True)
+                scheduled_for_tasks[reminder.task_name] = reminder
+            else:
+                await reminder.update(end_time=new_end_time)

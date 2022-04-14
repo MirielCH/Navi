@@ -280,6 +280,7 @@ MONSTERS_ADVENTURE = (
     'Void Cone',
     'Void Cube',
     'Void Sphere',
+    'Dragon',
 )
 
 MONSTERS_HUNT = (

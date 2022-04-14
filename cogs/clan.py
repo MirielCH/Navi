@@ -111,7 +111,11 @@ class ClanCog(commands.Cog):
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Stealth not found in clan message: {message.embeds[0].fields}')
                     return
-                alert_message = 'rpg guild raid' if clan.stealth_current >= clan.stealth_threshold else 'rpg guild upgrade'
+                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
+                if clan.stealth_current >= clan.stealth_threshold:
+                    alert_message = f'{alert_message_prefix}guild raid'
+                else:
+                    alert_message = f'{alert_message_prefix}guild upgrade'
                 timestring_search = re.search(":clock4: \*\*(.+?)\*\*", message_field1)
                 if timestring_search is None: return
                 timestring = timestring_search.group(1)
@@ -162,7 +166,7 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
+                alert_message_prefix = '/' if message.interaction is not None or message.type.value == 19 else 'rpg '
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:
@@ -224,7 +228,7 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
+                alert_message_prefix = '/' if message.interaction is not None or message.type.value == 19 else 'rpg '
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:

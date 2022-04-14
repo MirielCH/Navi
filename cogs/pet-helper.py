@@ -20,10 +20,11 @@ class PetHelperCog(commands.Cog):
         if message.author.id != settings.EPIC_RPG_ID: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_field_name = message_field_value = ''
+            message_field_name = message_field_value = message_author = ''
             if embed.fields:
                 message_field_name = str(embed.fields[0].name)
                 message_field_value = str(embed.fields[0].value)
+                message_author = str(embed.author.name)
 
             # Pet catch
             if ('happiness' in message_field_value.lower() and 'hunger' in message_field_value.lower()
@@ -33,7 +34,10 @@ class PetHelperCog(commands.Cog):
                     user = message.interaction.user
                 else:
                     try:
-                        user_name = re.search("APPROACHING \*\*(.+?)\*\*", message_field_name).group(1)
+                        user_name_search = re.search("APPROACHING \*\*(.+?)\*\*", message_field_name)
+                        if user_name_search is None:
+                            user_name_search = re.search("^(.+?)'s bunny", message_author)
+                        user_name = user_name_search.group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
@@ -54,9 +58,15 @@ class PetHelperCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.pet_helper_enabled: return
                 try:
-                    happiness = re.search("Happiness\*\*: (.+?)\\n", message_field_value).group(1)
+                    happiness_search = re.search("Happiness\*\*: (.+?)\\n", message_field_value)
+                    if happiness_search is None:
+                        happiness_search = re.search("Happiness: (.+?)\\n", message_field_value)
+                    happiness = happiness_search.group(1)
                     happiness = int(happiness)
-                    hunger = re.search("Hunger\*\*: (.+?)$", message_field_value).group(1)
+                    hunger_search = re.search("Hunger\*\*: (.+?)$", message_field_value)
+                    if hunger_search is None:
+                        hunger_search = re.search("Hunger: (.+?)$", message_field_value)
+                    hunger = hunger_search.group(1)
                     hunger = int(hunger)
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
@@ -92,13 +102,16 @@ class PetHelperCog(commands.Cog):
                 else:
                     footer = f'Catch chance: {chance_max:.2f}%'
 
-
                 commands = ''
                 for x in range(0,feeds):
                     commands = f'{commands} feed'
                 for x in range(0,pats):
                     commands = f'{commands} pat'
-                embed = discord.Embed(description = f'`{commands.upper().strip()}`')
+                commands = f'`{commands.upper().strip()}`'
+                hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
+                actions = f'{hunger_emoji} {feeds} feeds, {emojis.PET_HAPPINESS} {pats} pats'
+                description = actions if message.type.value == 19 else commands
+                embed = discord.Embed(description=description)
                 embed.set_footer(text=footer)
                 await message.reply(embed=embed)
 

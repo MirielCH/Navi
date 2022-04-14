@@ -93,10 +93,12 @@ class HuntCog(commands.Cog):
                 if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                     and interaction_user == embed_user):
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                    partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
+                    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                     partner_cooldown = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_settings.partner_donor_tier])
+                                        * settings.DONOR_COOLDOWNS[partner_donor_tier])
                     user_cooldown = (cooldown.actual_cooldown()
-                                     * settings.DONOR_COOLDOWNS[user_settings.user_donor_tier])
+                                     * settings.DONOR_COOLDOWNS[user_donor_tier])
                     time_left_seconds = (time_left.total_seconds()
                                          + (partner_cooldown - user_cooldown)
                                          - time_elapsed.total_seconds()
@@ -116,26 +118,31 @@ class HuntCog(commands.Cog):
             message_content = message.content
             # Hunt
             if ('** found a' in message_content.lower()
-                and any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT)):
+                and any(f'**{monster.lower()}**' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = user = None
                 if message.interaction is not None:
                     user = message.interaction.user
                 else:
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\* found a", message_content).group(1)
+                    user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
+                    if user_name_search is not None:
+                        user_name = user_name_search.group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in hunt message: {message}')
-                        return
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                        if user_name != 'Both players':
+                            for member in message.guild.members:
+                                member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                                if member_name == user_name:
+                                    user = member
+                                    break
+                    if user is None:
+                        message_history = await message.channel.history(limit=50).flatten()
+                        for msg in message_history:
+                            if msg.content is not None:
+                                if msg.content.lower().startswith('rpg hunt'):
+                                    user = msg.author
+                                    break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in hunt message: {message}')
+                    await errors.log_error(f'User not found in hunt message: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -153,7 +160,7 @@ class HuntCog(commands.Cog):
                     user_command = 'rpg hunt'
                 else:
                     user_command = '/hunt'
-                    if hardmode or alone or together: user_command = f'{user_command} mode: '
+                    if hardmode or alone or together: user_command = f'{user_command} mode:'
                 if hardmode: user_command = f'{user_command} hardmode'
                 if alone: user_command = f'{user_command} alone'
                 if together: user_command = f'{user_command} together'
@@ -199,6 +206,7 @@ class HuntCog(commands.Cog):
                             'ULTRA present': emojis.PRESENT_ULTRA,
                             'OMEGA present': emojis.PRESENT_OMEGA,
                             'GODLY present': emojis.PRESENT_GODLY,
+                            'easter lootbox': emojis.EASTER_LOOTBOX,
                         }
                         partner_start = message_content.find(f'**{user_settings.partner_name}** got ')
                         lb_search_content = message_content[partner_start:]

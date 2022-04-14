@@ -101,7 +101,7 @@ class AdventureCog(commands.Cog):
             message_content = message.content
             # Adventure
             if ('** found a' in message_content.lower()
-                and any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
+                and any(f'**{monster.lower()}**' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user_name = user = None
                 if message.interaction is not None:
                     user = message.interaction.user
