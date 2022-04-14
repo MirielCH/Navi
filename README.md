@@ -1,6 +1,6 @@
 # Navi
 
-Reminder / Helper for EPIC RPG
+Reminder / Helper for EPIC RPG. This reminder supports the latest slash commands.
 
 # Setup
 • Rename `default.env` to `.env` and add your token.  
