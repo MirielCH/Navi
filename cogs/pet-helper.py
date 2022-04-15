@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, settings
+from resources import emojis, exceptions, functions, settings
 
 
 class PetHelperCog(commands.Cog):
@@ -29,10 +29,10 @@ class PetHelperCog(commands.Cog):
             # Pet catch
             if ('happiness' in message_field_value.lower() and 'hunger' in message_field_value.lower()
                 and 'suddenly' in message_field_name.lower()):
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
                     try:
                         user_name_search = re.search("APPROACHING \*\*(.+?)\*\*", message_field_name)
                         if user_name_search is None:
@@ -110,7 +110,7 @@ class PetHelperCog(commands.Cog):
                 commands = f'`{commands.upper().strip()}`'
                 hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
                 actions = f'{hunger_emoji} {feeds} feeds, {emojis.PET_HAPPINESS} {pats} pats'
-                description = actions if message.type.value == 19 else commands
+                description = actions if slash_command else commands
                 embed = discord.Embed(description=description)
                 embed.set_footer(text=footer)
                 await message.reply(embed=embed)

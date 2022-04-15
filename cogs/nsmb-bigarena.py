@@ -24,35 +24,37 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
         if ('successfully registered for the next **big arena** event!' in message_content.lower()
             or 'successfully registered for the next **not so "mini" boss** event!' in message_content.lower()
             or 'you are already registered!' in message_content.lower()):
-            user_name = user = None
-            if message.interaction is not None:
-                user = message.interaction.user
-            elif message.mentions:
-                user = message.mentions[0]
-            else:
-                try:
-                    user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+            user_name = None
+            user = await functions.get_interaction_user(message)
+            slash_command = True if user is not None else False
+            if user is None:
+                if message.mentions:
+                    user = message.mentions[0]
+                else:
+                    try:
+                        user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message_content}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
             if user is None:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message}')
+                await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message_content}')
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            if message.interaction is not None:
-                user_command = '/big arena' if message.interaction.name == 'big' else '/minint'
+            if slash_command:
+                interaction = await functions.get_interaction(message)
+                user_command = '/big arena' if interaction.name == 'big' else '/minint'
                 user_command = f'{user_command} join: true'
             else:
                 message_history = await message.channel.history(limit=50).flatten()

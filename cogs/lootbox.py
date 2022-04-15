@@ -30,10 +30,10 @@ class BuyCog(commands.Cog):
 
             # Lootbox cooldown
             if 'you have already bought a lootbox' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg buy [lootbox]' if user is None else '/buy item: [lootbox]'
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -67,7 +67,6 @@ class BuyCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                user_command = 'rpg buy [lootbox]' if message.interaction is None else '/buy item: [lootbox]'
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lootbox', time_left,
@@ -82,9 +81,9 @@ class BuyCog(commands.Cog):
             message_content = message.content
             # Buy lootbox
             if "lootbox` successfully bought for" in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg buy [lootbox]' if user is None else '/buy item: [lootbox]'
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -116,7 +115,6 @@ class BuyCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                user_command = 'rpg buy [lootbox]' if message.interaction is None else '/buy item: [lootbox]'
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lootbox', time_left,

@@ -128,10 +128,8 @@ class EventsCog(commands.Cog):
 
             if not message_field_name.lower() == 'normal events': return
 
-            user = None
-            if message.interaction is not None:
-                user = message.interaction.user
-            else:
+            user = await functions.get_interaction_user(message)
+            if user is None:
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None
                 for msg in message_history:

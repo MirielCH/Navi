@@ -31,10 +31,10 @@ class WorkCog(commands.Cog):
 
             # Work cooldown
             if 'you have already got some resources' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -62,8 +62,9 @@ class WorkCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_work.enabled: return
-                if message.interaction is not None:
-                    user_command = f'/{message.interaction.name}'
+                if slash_command:
+                    interaction = await functions.get_interaction(message)
+                    user_command = f'/{interaction.name}'
                 else:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = user_command = None
@@ -102,10 +103,10 @@ class WorkCog(commands.Cog):
             excluded_strings = ('hunting together','** found','** plants','** throws', 'new quest')
             if ('** got ' in message_content.lower()
                 and not any(string in message_content.lower() for string in excluded_strings)):
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
                     search_strings = [
                         '[!1] \*\*(.+?)\*\* got',
                         '[!1] (.+?)\*\* got',
@@ -139,8 +140,9 @@ class WorkCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
                 if not user_settings.alert_work.enabled: return
-                if message.interaction is not None:
-                    user_command = f'/{message.interaction.name}'
+                if slash_command:
+                    interaction = await functions.get_interaction(message)
+                    user_command = f'/{interaction.name}'
                 else:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None

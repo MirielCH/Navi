@@ -28,9 +28,9 @@ class LotteryCog(commands.Cog):
 
             # Lottery event check
             if 'join with `rpg lottery' in message_description.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg buy lottery ticket' if user is None else '/lottery amount: [1-10]'
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -55,7 +55,6 @@ class LotteryCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                user_command = 'rpg buy lottery ticket' if message.interaction is None else '/lottery amount: [1-10]'
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,
@@ -70,15 +69,15 @@ class LotteryCog(commands.Cog):
             message_content = message.content
             # Buy lottery ticket
             if "lottery ticket successfully bought" in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg buy lottery ticket' if user is None else '/lottery amount: [1-10]'
+                if user is None:
                     try:
                         user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in lottery ticket message: {message}')
+                        await errors.log_error(f'User not found in lottery ticket message: {message_content}')
                         return
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -87,7 +86,7 @@ class LotteryCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in buy lottery ticket message: {message}')
+                    await errors.log_error(f'User not found in buy lottery ticket message: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -100,7 +99,6 @@ class LotteryCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                user_command = 'rpg buy lottery ticket' if message.interaction is None else '/lottery amount: [1-10]'
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,

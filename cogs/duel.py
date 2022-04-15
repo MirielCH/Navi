@@ -30,10 +30,9 @@ class DuelCog(commands.Cog):
 
             # Daily cooldown
             if 'you have been in a duel recently' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:

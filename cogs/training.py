@@ -32,10 +32,10 @@ class TrainingCog(commands.Cog):
 
             # Training cooldown
             if 'you have trained already' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -63,8 +63,9 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_training.enabled: return
-                if message.interaction is not None:
-                    user_command = f'/{message.interaction.name}'
+                if slash_command:
+                    interaction = await functions.get_interaction(message)
+                    user_command = f'/{interaction.name}'
                 else:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
@@ -100,19 +101,22 @@ class TrainingCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
 
             if '**epic npc**: well done, **' in message_description.lower():
-                user_name = user = None
-                try:
-                    user_name = re.search(", \*\*(.+?)\*\*!", message_description).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in ultraining message: {message.embeds[0].fields}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = '/ultraining' if user is not None else 'rpg ultraining'
+                if user is None:
+                    try:
+                        user_name = re.search(", \*\*(.+?)\*\*!", message_description).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in ultraining message: {message.embeds[0].fields}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in ultraining message: {message.embeds[0].fields}')
@@ -126,7 +130,6 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
-                user_command = '/ultraining' if message.type.value == 19 else 'rpg ultraining'
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -155,22 +158,25 @@ class TrainingCog(commands.Cog):
             # Training
             if ('well done, **' in message_content.lower()
                 or 'better luck next time, **' in message_content.lower()):
-                user_name = user = None
-                try:
-                    user_name = re.search(", \*\*(.+?)\*\* !", message_content).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in training message: {message}')
-                    return
-                for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    if member_name == user_name:
-                        user = member
-                        break
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = '/training' if user is not None else 'rpg training'
+                if user is None:
+                    try:
+                        user_name = re.search(", \*\*(.+?)\*\* !", message_content).group(1)
+                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    except Exception as error:
+                        await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(f'User not found in training message: {message_content}')
+                        return
+                    for member in message.guild.members:
+                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        if member_name == user_name:
+                            user = member
+                            break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in training message: {message}')
+                    await errors.log_error(f'User not found in training message: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -181,7 +187,6 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
-                user_command = '/training' if message.type.value == 19 else 'rpg training'
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('training')

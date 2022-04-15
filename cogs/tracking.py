@@ -70,12 +70,12 @@ class TrackingCog(commands.Cog):
                 message_content = message.content
                 # Epic Guard
                 if 'we have to check you are actually playing' in message_content.lower():
-                    if message.interaction is not None:
-                        user = message.interaction.user
-                    elif message.mentions:
-                        user = message.mentions[0]
-                    else:
-                        return
+                    user = await functions.get_interaction_user(message)
+                    if user is None:
+                        if message.mentions:
+                            user = message.mentions[0]
+                        else:
+                            return
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
@@ -91,10 +91,8 @@ class TrackingCog(commands.Cog):
                 except:
                     return
                 if 'has traveled in time' not in message_content.lower(): return
-                user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
                     except Exception as error:

@@ -29,7 +29,8 @@ class PetsCog(commands.Cog):
             message_content = message.content
             # Single pet adventure
             if 'your pet has started an adventure and will be back' in message_content.lower():
-                if message.interaction is not None: return
+                interaction = await functions.get_interaction(message)
+                if interaction is not None: return
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None
                 for msg in message_history:
@@ -69,8 +70,8 @@ class PetsCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
             if 'pet adventure(s) cancelled' in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
+                user = await functions.get_interaction_user(message)
+                if user is not None:
                     await message.channel.send(f'**{user.name}**, please use `/pets list` to update your pet reminders.')
                     return
                 message_history = await message.channel.history(limit=50).flatten()
@@ -135,10 +136,9 @@ class PetsCog(commands.Cog):
                     'pony': emojis.PET_PONY,
                     'panda': emojis.PET_PANDA,
                 }
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:

@@ -30,9 +30,9 @@ class HuntCog(commands.Cog):
 
             # Adventure cooldown
             if 'you have already looked around' in message_title.lower():
-                user_id = user_name = interaction_user = embed_user = None
-                if message.interaction is not None:
-                    interaction_user = message.interaction.user
+                user_id = user_name = embed_user = user_command = None
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is not None:
                     user_command = '/hunt'
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -56,7 +56,7 @@ class HuntCog(commands.Cog):
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in hunt cooldown message: {message.embeds[0].fields}')
                     return
-                if message.interaction is None:
+                if user_command is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -119,10 +119,10 @@ class HuntCog(commands.Cog):
             # Hunt
             if ('** found a' in message_content.lower()
                 and any(f'**{monster.lower()}**' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
                     user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
                     if user_name_search is not None:
                         user_name = user_name_search.group(1)
@@ -156,7 +156,7 @@ class HuntCog(commands.Cog):
                 hardmode = True if '(but stronger)' in message_content.lower() else False
                 alone = True if '(way stronger!!!)' in message_content.lower() else False
                 together = True if 'hunting together' in message_content.lower() else False
-                if message.interaction is None:
+                if not slash_command:
                     user_command = 'rpg hunt'
                 else:
                     user_command = '/hunt'
@@ -272,9 +272,9 @@ class HuntCog(commands.Cog):
             if ('pretends to be a zombie' in message_content.lower()
                 or 'fights the horde' in message_content.lower()
                 or 'thankfully, the horde did not notice' in message_content.lower()):
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
+                user_name = user_command = None
+                user = await functions.get_interaction_user(message)
+                if user is not None:
                     user_command = '/hunt'
                 else:
                     try:
@@ -282,7 +282,7 @@ class HuntCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in hunt event message: {message}')
+                        await errors.log_error(f'User not found in hunt event message: {message_content}')
                         return
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -291,7 +291,7 @@ class HuntCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in hunt event message: {message}')
+                    await errors.log_error(f'User not found in hunt event message: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -303,7 +303,7 @@ class HuntCog(commands.Cog):
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                 if not user_settings.alert_hunt.enabled: return
                 message_history = await message.channel.history(limit=50).flatten()
-                if message.interaction is None:
+                if user_command is None:
                     user_command_message = None
                     for msg in message_history:
                         if msg.content is not None:

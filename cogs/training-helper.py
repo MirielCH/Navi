@@ -22,16 +22,15 @@ class TrainingHelperCog(commands.Cog):
         message_content = message.content
         # Training helper
         if '** is training in the' in message_content.lower() and not 'in the mine!' in message_content.lower():
-            user_name = user = None
-            if message.interaction is not None:
-                user = message.interaction.user
-            else:
+            user_name = None
+            user = await functions.get_interaction_user(message)
+            if user is None:
                 try:
                     user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
                     user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in training helper message: {message}')
+                    await errors.log_error(f'User not found in training helper message: {message_content}')
                     return
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -40,7 +39,7 @@ class TrainingHelperCog(commands.Cog):
                         break
             if user is None:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in training helper message: {message}')
+                await errors.log_error(f'User not found in training helper message: {message_content}')
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)

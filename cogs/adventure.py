@@ -30,9 +30,9 @@ class AdventureCog(commands.Cog):
 
             # Adventure cooldown
             if 'you have already been in an adventure' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
+                user_id = user_name = user_command = None
+                user = await functions.get_interaction_user(message)
+                if user is not None:
                     user_command = '/adventure'
                 else:
                     try:
@@ -62,7 +62,7 @@ class AdventureCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
-                if message.interaction is None:
+                if user_command is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -102,16 +102,20 @@ class AdventureCog(commands.Cog):
             # Adventure
             if ('** found a' in message_content.lower()
                 and any(f'**{monster.lower()}**' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
+                user = await functions.get_interaction_user(message)
+                if user is not None:
+                    user_command = '/adventure'
+                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} mode: hardmode'
                 else:
+                    user_command = 'rpg adventure'
+                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} hardmode'
+                    user_name = None
                     try:
                         user_name = re.search("^\*\*(.+?)\*\* found a", message_content).group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in adventure message: {message}')
+                        await errors.log_error(f'User not found in adventure message: {message_content}')
                         return
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -120,7 +124,7 @@ class AdventureCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in adventure message: {message}')
+                    await errors.log_error(f'User not found in adventure message: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -131,12 +135,6 @@ class AdventureCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)
                 if not user_settings.alert_adventure.enabled: return
-                if message.interaction is None:
-                    user_command = 'rpg adventure'
-                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} hardmode'
-                else:
-                    user_command = '/adventure'
-                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} mode: hardmode'
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('adventure')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time

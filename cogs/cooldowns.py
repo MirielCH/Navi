@@ -32,10 +32,10 @@ class CooldownsCog(commands.Cog):
 
         if not 'check the short version of this command' in message_footer.lower(): return
 
-        user_id = user_name = user = None
-        if message.interaction is not None:
-            user = message.interaction.user
-        else:
+        user_id = user_name = None
+        user = await functions.get_interaction_user(message)
+        slash_command = True if user is not None else False
+        if user is None:
             try:
                 user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
             except:
@@ -73,7 +73,7 @@ class CooldownsCog(commands.Cog):
                 return
             if daily_search is not None:
                 daily_timestring = daily_search.group(1)
-                user_command = '/daily' if message.interaction is not None else 'rpg daily'
+                user_command = '/daily' if slash_command else 'rpg daily'
                 daily_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 cooldowns.append(['daily', daily_timestring.lower(), daily_message])
         if user_settings.alert_weekly.enabled:
@@ -85,7 +85,7 @@ class CooldownsCog(commands.Cog):
                 return
             if weekly_search is not None:
                 weekly_timestring = weekly_search.group(1)
-                user_command = '/weekly' if message.interaction is not None else 'rpg weekly'
+                user_command = '/weekly' if slash_command else 'rpg weekly'
                 weekly_message = user_settings.alert_weekly.message.replace('{command}', user_command)
                 cooldowns.append(['weekly', weekly_timestring.lower(), weekly_message])
         if user_settings.alert_lootbox.enabled:
@@ -97,16 +97,16 @@ class CooldownsCog(commands.Cog):
                 return
             if lb_search is not None:
                 lb_timestring = lb_search.group(1)
-                user_command = '/buy item: [lootbox]' if message.interaction is not None else 'rpg buy [lootbox]'
+                user_command = '/buy item: [lootbox]' if slash_command else 'rpg buy [lootbox]'
                 lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
         if user_settings.alert_adventure.enabled:
             if 'Adventure hardmode`**' in message_fields:
                 adv_search_string = 'Adventure hardmode`\*\* \(\*\*(.+?)\*\*'
-                adv_command = '/adventure mode: hardmode' if message.interaction is not None else 'rpg adventure hardmode'
+                adv_command = '/adventure mode: hardmode' if slash_command else 'rpg adventure hardmode'
             else:
                 adv_search_string = 'Adventure`\*\* \(\*\*(.+?)\*\*'
-                adv_command = '/adventure' if message.interaction is not None else 'rpg adventure'
+                adv_command = '/adventure' if slash_command else 'rpg adventure'
             try:
                 adv_search = re.search(adv_search_string, message_fields)
             except Exception as error:
@@ -119,9 +119,9 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['adventure', adv_timestring.lower(), adv_message])
         if user_settings.alert_training.enabled:
             if 'Ultraining`**' in message_fields:
-                tr_command = '/ultraining' if message.interaction is not None else 'rpg ultraining'
+                tr_command = '/ultraining' if slash_command else 'rpg ultraining'
             else:
-                tr_command = '/training' if message.interaction is not None else 'rpg training'
+                tr_command = '/training' if slash_command else 'rpg training'
             try:
                 tr_search = re.search("raining`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
@@ -141,7 +141,7 @@ class CooldownsCog(commands.Cog):
                 return
             if quest_search is not None:
                 quest_timestring = quest_search.group(1)
-                user_command = '/quest start' if message.interaction is not None else 'rpg quest'
+                user_command = '/quest start' if slash_command else 'rpg quest'
                 quest_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 cooldowns.append(['quest', quest_timestring.lower(), quest_message])
         if user_settings.alert_duel.enabled:
@@ -153,7 +153,7 @@ class CooldownsCog(commands.Cog):
                 return
             if duel_search is not None:
                 duel_timestring = duel_search.group(1)
-                user_command = '/duel' if message.interaction is not None else 'rpg duel'
+                user_command = '/duel' if slash_command else 'rpg duel'
                 duel_message = user_settings.alert_duel.message.replace('{command}', user_command)
                 cooldowns.append(['duel', duel_timestring.lower(), duel_message])
         if user_settings.alert_arena.enabled:
@@ -165,7 +165,7 @@ class CooldownsCog(commands.Cog):
                 return
             if arena_search is not None:
                 arena_timestring = arena_search.group(1)
-                user_command = '/arena' if message.interaction is not None else 'rpg arena'
+                user_command = '/arena' if slash_command else 'rpg arena'
                 arena_message = user_settings.alert_arena.message.replace('{command}', user_command)
                 cooldowns.append(['arena', arena_timestring.lower(), arena_message])
         if user_settings.alert_dungeon_miniboss.enabled:
@@ -177,7 +177,7 @@ class CooldownsCog(commands.Cog):
                 return
             if dungmb_search is not None:
                 dungmb_timestring = dungmb_search.group(1)
-                user_command = '/dungeon or /miniboss' if message.interaction is not None else 'rpg dungeon / miniboss'
+                user_command = '/dungeon or /miniboss' if slash_command else 'rpg dungeon / miniboss'
                 dungmb_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
                 cooldowns.append(['dungeon-miniboss', dungmb_timestring.lower(), dungmb_message])
         if user_settings.alert_horse_breed.enabled:
@@ -189,7 +189,7 @@ class CooldownsCog(commands.Cog):
                 return
             if horse_search is not None:
                 horse_timestring = horse_search.group(1)
-                user_command = '/horse breeding or /horse race' if message.interaction is not None else 'rpg horse breed / race'
+                user_command = '/horse breeding or /horse race' if slash_command else 'rpg horse breed / race'
                 horse_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
                 cooldowns.append(['horse', horse_timestring.lower(), horse_message])
         if user_settings.alert_vote.enabled:
@@ -201,7 +201,7 @@ class CooldownsCog(commands.Cog):
                 return
             if vote_search is not None:
                 vote_timestring = vote_search.group(1)
-                user_command = '/vote' if message.interaction is not None else 'rpg vote'
+                user_command = '/vote' if slash_command else 'rpg vote'
                 vote_message = user_settings.alert_vote.message.replace('{command}', user_command)
                 cooldowns.append(['vote', vote_timestring.lower(), vote_message])
         if user_settings.alert_farm.enabled:
@@ -213,7 +213,7 @@ class CooldownsCog(commands.Cog):
                 return
             if farm_search is not None:
                 farm_timestring = farm_search.group(1)
-                user_command = '/farm' if message.interaction is not None else 'rpg farm'
+                user_command = '/farm' if slash_command else 'rpg farm'
                 farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 cooldowns.append(['farm', farm_timestring.lower(), farm_message])
         if user_settings.alert_work.enabled:

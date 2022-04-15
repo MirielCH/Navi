@@ -22,9 +22,8 @@ class PetTournamentCog(commands.Cog):
         if message.embeds: return
         message_content = message.content
         if 'pet successfully sent to the pet tournament!' in message_content.lower():
-            if message.interaction is not None:
-                user = message.interaction.user
-            else:
+            user = await functions.get_interaction_user(message)
+            if user is None:
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None
                 for msg in message_history:

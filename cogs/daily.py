@@ -30,10 +30,9 @@ class DailyCog(commands.Cog):
 
             # Daily cooldown
             if 'you have claimed your daily rewards already' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -79,10 +78,9 @@ class DailyCog(commands.Cog):
 
             # Daily
             if "'s daily reward" in message_author.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -91,7 +89,7 @@ class DailyCog(commands.Cog):
                             user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         except Exception as error:
                             await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in daily message: {message}')
+                            await errors.log_error(f'User not found in daily message: {message_author}')
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
@@ -103,7 +101,7 @@ class DailyCog(commands.Cog):
                                 break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in daily message: {message}')
+                    await errors.log_error(f'User not found in daily message: {message_author}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

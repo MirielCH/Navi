@@ -38,10 +38,10 @@ class ClanCog(commands.Cog):
 
             # Clan cooldown
             if 'your guild has already raided or been upgraded' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                alert_message_prefix = '/' if user is not None else 'rpg '
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -75,7 +75,6 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:
@@ -91,6 +90,8 @@ class ClanCog(commands.Cog):
 
             # Clan overview
             if 'your guild was raided' in message_footer.lower():
+                user = await functions.get_interaction_user(message)
+                alert_message_prefix = '/' if user is not None else 'rpg '
                 if message.mentions: return # Yes that also disables it if you ping yourself but who does that
                 try:
                     clan_name = re.search("^\*\*(.+?)\*\*", message_description).group(1)
@@ -111,7 +112,6 @@ class ClanCog(commands.Cog):
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Stealth not found in clan message: {message.embeds[0].fields}')
                     return
-                alert_message_prefix = '/' if message.interaction is not None else 'rpg '
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:
@@ -132,9 +132,9 @@ class ClanCog(commands.Cog):
             # Guild upgrade
             if ('guild successfully upgraded!' in message_description.lower()
                 or 'guild upgrade failed!' in message_description.lower()):
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                alert_message_prefix = '/' if user is not None else 'rpg '
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -166,7 +166,6 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                alert_message_prefix = '/' if message.interaction is not None or message.type.value == 19 else 'rpg '
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:
@@ -184,10 +183,10 @@ class ClanCog(commands.Cog):
 
             # Guild raid
             if ('** RAIDED **' in message_description and ':crossed_swords:' in message_description.lower()):
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                alert_message_prefix = '/' if user is not None else 'rpg '
+                if user is None:
                     try:
                         user_name = re.search("\*\*(.+?)\*\* throws", message_field0).group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -228,7 +227,6 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                alert_message_prefix = '/' if message.interaction is not None or message.type.value == 19 else 'rpg '
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:

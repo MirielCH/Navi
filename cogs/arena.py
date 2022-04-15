@@ -29,10 +29,10 @@ class ArenaCog(commands.Cog):
 
         # Horse breed
         if 'you have started an arena recently' in message_title.lower():
-            user_id = user_name = user = None
-            if message.interaction is not None:
-                user = message.interaction.user
-            else:
+            user_id = user_name = None
+            user = await functions.get_interaction_user(message)
+            user_command = '/arena' if user is not None else 'rpg arena'
+            if user is None:
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                 except:
@@ -66,7 +66,6 @@ class ArenaCog(commands.Cog):
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed
-            user_command = f'/arena' if message.interaction is not None else 'rpg arena'
             reminder_message = user_settings.alert_arena.message.replace('{command}', user_command)
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'arena', time_left,

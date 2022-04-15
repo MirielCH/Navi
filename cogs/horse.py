@@ -30,10 +30,10 @@ class HorseCog(commands.Cog):
 
         # Horse cooldown
         if 'you have used this command recently' in message_title.lower():
-            user_id = user_name = user = None
-            if message.interaction is not None:
-                user = message.interaction.user
-            else:
+            user_id = user_name = None
+            user = await functions.get_interaction_user(message)
+            user_command = 'rpg horse breed' if user is None else '/horse breeding'
+            if user is None:
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                 except:
@@ -67,7 +67,6 @@ class HorseCog(commands.Cog):
             current_time = datetime.utcnow().replace(microsecond=0)
             time_elapsed = current_time - bot_answer_time
             time_left = time_left - time_elapsed
-            user_command = 'rpg horse breed' if message.interaction is None else '/horse breeding'
             reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'horse', time_left,

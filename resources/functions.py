@@ -8,6 +8,22 @@ from database import errors
 from resources import exceptions
 
 
+# --- Misc ---
+async def get_interaction(message: discord.Message) -> discord.User:
+    """Returns the interaction object if the message was triggered by a slash command. Returns None if no user was found."""
+    if message.reference is not None:
+        if message.reference.cached_message is not None:
+            message = message.reference.cached_message
+        else:
+            message = await message.channel.fetch_message(message.reference.message_id)
+    return message.interaction
+
+async def get_interaction_user(message: discord.Message) -> discord.User:
+    """Returns the user object if the message was triggered by a slash command. Returns None if no user was found."""
+    interaction = await get_interaction(message)
+    return interaction.user if interaction is not None else None
+
+
 # --- Parsing ---
 async def check_timestring(string: str) -> str:
     """Checks if a string is a valid timestring. Returns itself it valid.

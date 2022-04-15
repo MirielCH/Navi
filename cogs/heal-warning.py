@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, settings
+from resources import emojis, functions, exceptions, settings
 
 
 class HealWarningCog(commands.Cog):
@@ -22,17 +22,16 @@ class HealWarningCog(commands.Cog):
         message_content = message.content
 
         if '** found a' in message_content.lower() or 'are hunting together' in message_content.lower():
-            user_name = user = None
-            if message.interaction is not None:
-                user = message.interaction.user
-            else:
-                try:
-                    user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
-                    user_name_encoded = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message}')
-                    return
+            user_name = None
+            try:
+                user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
+                user_name_encoded = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+            except Exception as error:
+                await message.add_reaction(emojis.WARNING)
+                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message_content}')
+                return
+            user = await functions.get_interaction_user(message)
+            if user is None:
                 for member in message.guild.members:
                     member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     if member_name == user_name_encoded:
@@ -40,7 +39,7 @@ class HealWarningCog(commands.Cog):
                         break
             if user is None:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message}')
+                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message_content}')
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)

@@ -30,10 +30,10 @@ class WeeklyCog(commands.Cog):
 
             # Daily cooldown
             if 'you have claimed your weekly rewards already' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg weekly' if user is None else '/weekly'
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -67,7 +67,6 @@ class WeeklyCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                user_command = 'rpg weekly' if message.interaction is None else '/weekly'
                 reminder_message = user_settings.alert_weekly.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'weekly', time_left,
@@ -80,10 +79,10 @@ class WeeklyCog(commands.Cog):
 
             # Daily
             if "'s weekly reward" in message_author.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg weekly' if user is None else '/weekly'
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -92,7 +91,7 @@ class WeeklyCog(commands.Cog):
                             user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         except Exception as error:
                             await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in weekly message: {message}')
+                            await errors.log_error(f'User not found in weekly message: {message_author}')
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
@@ -104,7 +103,7 @@ class WeeklyCog(commands.Cog):
                                 break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in weekly message: {message}')
+                    await errors.log_error(f'User not found in weekly message: {message_author}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -123,7 +122,6 @@ class WeeklyCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                user_command = 'rpg weekly' if message.interaction is None else '/weekly'
                 reminder_message = user_settings.alert_weekly.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'weekly', time_left,

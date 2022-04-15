@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, settings
+from resources import emojis, exceptions, functions, settings
 
 
 class RubyCounterCog(commands.Cog):
@@ -30,10 +30,9 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from trades E and F
             if 'our trade is done then' in message_description.lower() and '<:ruby' in message_field.lower():
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         search_string = "\*\*(.+?)\*\*"
                         user_name = re.search(search_string, message_field).group(1)
@@ -77,10 +76,9 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from lootboxes
             if "'s lootbox" in message_author.lower() and '<:ruby' in message_field.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -124,10 +122,9 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from inventory
             if "'s inventory" in message_author.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -176,16 +173,15 @@ class RubyCounterCog(commands.Cog):
             message_content = message.content
             # Ruby training helper
             if '** is training in the mine!' in message_content.lower():
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message}')
+                        await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message_content}')
                         return
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -194,7 +190,7 @@ class RubyCounterCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message}')
+                    await errors.log_error(f'User not found in ruby training helper message for ruby counter: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -206,23 +202,22 @@ class RubyCounterCog(commands.Cog):
                     ruby_count = int(ruby_count.replace(',',''))
                 except Exception as error:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Ruby count not found in ruby training helper message for ruby counter: {message}')
+                    await errors.log_error(f'Ruby count not found in ruby training helper message for ruby counter: {message_content}')
                     return
                 answer = 'YES' if user_settings.rubies > ruby_count else 'NO'
                 await message.reply(f'`{answer}` (you have {user_settings.rubies:,} {emojis.RUBY})')
 
             # Rubies from work commands
             if '** got ' in message_content.lower() and '<:ruby' in message_content.lower():
-                user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     try:
                         user_name = re.search("\*\*(.+?)\*\* got", message_content, re.IGNORECASE).group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in work message for ruby counter: {message}')
+                        await errors.log_error(f'User not found in work message for ruby counter: {message_content}')
                         return
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -231,7 +226,7 @@ class RubyCounterCog(commands.Cog):
                             break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in work message for ruby counter: {message}')
+                    await errors.log_error(f'User not found in work message for ruby counter: {message_content}')
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -247,7 +242,7 @@ class RubyCounterCog(commands.Cog):
                         ruby_count = int(ruby_count.replace(',',''))
                     except:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'Ruby count not found in work message for ruby counter: {message}')
+                        await errors.log_error(f'Ruby count not found in work message for ruby counter: {message_content}')
                         return
                 ruby_count += user_settings.rubies
                 if ruby_count < 0: ruby_count == 0
@@ -255,9 +250,8 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ruby sword
             if '`ruby sword` successfully crafted' in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -282,9 +276,8 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ruby armor
             if '`ruby armor` successfully crafted' in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -309,9 +302,8 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting coin sword
             if '`coin sword` successfully crafted' in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:
@@ -336,9 +328,8 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ultra-edgy armor
             if '`ultra-edgy armor` successfully forged' in message_content.lower():
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user = await functions.get_interaction_user(message)
+                if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
                     for msg in message_history:

@@ -31,10 +31,10 @@ class QuestCog(commands.Cog):
 
             # Quest cooldown
             if 'you have already claimed a quest' in message_title.lower():
-                user_id = user_name = user = None
-                if message.interaction is not None:
-                    user = message.interaction.user
-                else:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -62,8 +62,9 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
-                if message.interaction is not None:
-                    user_command = '/quest start' if message.interaction.name == 'quest' else '/epic quest'
+                if slash_command:
+                    interaction = await functions.get_interaction(message)
+                    user_command = '/quest start' if interaction.name == 'quest' else '/epic quest'
                 else:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
@@ -95,25 +96,28 @@ class QuestCog(commands.Cog):
 
             # Epic Quest
             if '__wave #1__' in message_description.lower():
-                user_id = user_name = user = None
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = 'rpg epic quest' if user is None else '/epic quest'
+                if user is None:
                     try:
-                        user_name = re.search("^(.+?)'s epic quest", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in epic quest message: {message.embeds[0].fields}')
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
-                else:
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s epic quest", message_author).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in epic quest message: {message.embeds[0].fields}')
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                 if user is None:
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in epic quest message: {message.embeds[0].fields}')
@@ -135,7 +139,6 @@ class QuestCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                user_command = 'rpg epic quest' if message.interaction is None else '/epic quest'
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
@@ -151,28 +154,30 @@ class QuestCog(commands.Cog):
             # Quest
             if ('you did not accept the quest' in message_content.lower()
                 or 'got a **new quest**!' in message_content.lower()):
-                user_name = user = None
-                if message.mentions:
-                    quest_declined = True
-                    user = message.mentions[0]
-                else:
-                    quest_declined = False
-                    try:
-                        user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                    except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in quest message: {message}')
-                        return
-                    for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if member_name == user_name:
-                            user = member
-                            break
-                    if user is None:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in quest message: {message}')
-                        return
+                user_name = None
+                user = await functions.get_interaction_user(message)
+                user_command = '/quest start' if user is not None else 'rpg quest'
+                if user is None:
+                    if message.mentions:
+                        user = message.mentions[0]
+                    else:
+                        try:
+                            user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
+                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        except Exception as error:
+                            await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(f'User not found in quest message: {message_content}')
+                            return
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
+                if user is None:
+                    await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(f'User not found in quest message: {message_content}')
+                    return
+                quest_declined = True if message.mentions else False
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -193,7 +198,6 @@ class QuestCog(commands.Cog):
                     else:
                         time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                     time_left = timedelta(seconds=time_left_seconds)
-                user_command = '/quest start' if message.type.value == 19 else 'rpg quest'
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
