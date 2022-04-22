@@ -109,7 +109,9 @@ class PetHelperCog(commands.Cog):
                     commands = f'{commands} pat'
                 commands = f'`{commands.upper().strip()}`'
                 hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
-                actions = f'{hunger_emoji} {feeds} feeds, {emojis.PET_HAPPINESS} {pats} pats'
+                actions = f'{emojis.PET_HAPPINESS} {pats} pats, {hunger_emoji} {feeds} feeds'
+                if pats + feeds < 6:
+                    actions = f'{actions}, {emojis.PET_RANDOM} tame'
                 description = actions if slash_command else commands
                 embed = discord.Embed(description=description)
                 embed.set_footer(text=footer)
