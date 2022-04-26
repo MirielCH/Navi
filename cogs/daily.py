@@ -32,6 +32,7 @@ class DailyCog(commands.Cog):
             if 'you have claimed your daily rewards already' in message_title.lower():
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
+                user_command = 'rpg daily' if user is None else '/daily'
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -66,7 +67,7 @@ class DailyCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
-                reminder_message = user_settings.alert_daily.message.replace('{command}', 'rpg daily')
+                reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'daily', time_left,
                                                         message.channel.id, reminder_message)
@@ -80,6 +81,7 @@ class DailyCog(commands.Cog):
             if "'s daily reward" in message_author.lower():
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
+                user_command = 'rpg daily' if user is None else '/daily'
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
@@ -120,7 +122,7 @@ class DailyCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
-                reminder_message = user_settings.alert_daily.message.replace('{command}', 'rpg daily')
+                reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'daily', time_left,
                                                          message.channel.id, reminder_message)
