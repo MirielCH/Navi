@@ -28,7 +28,7 @@ class HuntCog(commands.Cog):
                 icon_url = embed.author.icon_url
             if embed.title: message_title = str(embed.title)
 
-            # Adventure cooldown
+            # Hunt cooldown
             if 'you have already looked around' in message_title.lower():
                 user_id = user_name = embed_user = user_command = None
                 interaction_user = await functions.get_interaction_user(message)
@@ -117,13 +117,15 @@ class HuntCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Hunt
-            if ('** found a' in message_content.lower()
+            if ('found a' in message_content.lower()
                 and any(f'**{monster.lower()}**' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
                     user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
+                    if user_name_search is None:
+                        user_name_search = re.search("\*\*(.+?)\*\* and", message_content)
                     if user_name_search is not None:
                         user_name = user_name_search.group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -194,7 +196,7 @@ class HuntCog(commands.Cog):
                     await self.bot.wait_until_ready()
                     partner_discord = self.bot.get_user(user_settings.partner_id)
                     # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
-                    if together and (f'**{user_settings.partner_name}** got ' in message_content):
+                    if together:
                         lootboxes = {
                             'common lootbox': emojis.LB_COMMON,
                             'uncommon lootbox': emojis.LB_UNCOMMON,
@@ -209,12 +211,17 @@ class HuntCog(commands.Cog):
                             'easter lootbox': emojis.EASTER_LOOTBOX,
                         }
                         partner_start = message_content.find(f'**{user_settings.partner_name}** got ')
+                        if partner_start == -1:
+                            partner_start = message_content.find(f'**{user_settings.partner_name}**:')
                         lb_search_content = message_content[partner_start:]
                         lootbox_alert = ''
                         for lb_name, lb_emoji in lootboxes.items():
                             try:
                                 lb_search = re.search(f"\*\* got (.+?) (.+?) {lb_name}", lb_search_content)
-                                if lb_search is None: continue
+                                if lb_search is None:
+                                    lb_search = re.search(f"\+(.+?) (.+?) {lb_name}", lb_search_content)
+                                if lb_search is None:
+                                    continue
                                 lb_amount = lb_search.group(1)
                             except:
                                 await errors.log_error(f'Error when looking for partner lootbox in: {lb_search_content}')
@@ -255,14 +262,13 @@ class HuntCog(commands.Cog):
                             f'feel free to take them hunting.'
                         )
                         await message.channel.send(hm_message)
-                if f'**{user.name}** got' in message_content:
-                    found_stuff = {
-                        'OMEGA lootbox': emojis.SURPRISE,
-                        'GODLY lootbox': emojis.SURPRISE,
-                    }
-                    for stuff_name, stuff_emoji in found_stuff.items():
-                        if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
-                            await message.add_reaction(stuff_emoji)
+                found_stuff = {
+                    'OMEGA lootbox': emojis.SURPRISE,
+                    'GODLY lootbox': emojis.SURPRISE,
+                }
+                for stuff_name, stuff_emoji in found_stuff.items():
+                    if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
+                        await message.add_reaction(stuff_emoji)
                 # Add an F if the user died
                 if ((message_content.find(f'**{user.name}** lost but ') > -1)
                     or (message_content.find('but lost fighting') > -1)):

@@ -325,7 +325,7 @@ MONSTERS_HUNT = (
     'Scaled Adult Dragon',
     'Scaled Old Dragon',
     'Void Fragment',
-    'Void Particle',
+    'Void Particles',
     'Void Shard',
     'Abyss Bug',
     'Nothing',
