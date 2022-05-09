@@ -7,6 +7,12 @@ Reminder / Helper for EPIC RPG. This reminder supports the latest slash commands
 • Rename `database/default_db.db` to `database/navi_db.db`.  
 • Change all custom emojis in `resources/emojis.py` to something the bot can see in your servers.
 
+# Required intents
+• guilds
+• members
+• message_content
+• messages
+
 # Required permissions
 • Send Messages  
 • Embed Links  
