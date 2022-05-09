@@ -1,11 +1,12 @@
 # functions.py
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import discord
 
 from database import errors
-from resources import exceptions
+from database import settings as settings_db
+from resources import emojis, exceptions
 
 
 # --- Misc ---
@@ -334,54 +335,54 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
     return message
 
 
-def get_training_answer(message_content: str) -> str:
+async def get_training_answer(message_content: str) -> str:
     """Returns the answer to a training question based on the message content."""
     answer = None
     if 'river!' in message_content:
         if '<:epicfish' in message_content:
-            answer = '3 / EPIC fish'
+            answer = '`3` / `EPIC fish`'
         elif '<:goldenfish' in message_content:
-            answer = '2 / golden fish'
+            answer = '`2` / `golden fish`'
         elif '<:normiefish' in message_content:
-            answer = '1 / normie fish'
+            answer = '`1` / `normie fish`'
     elif 'field!' in message_content:
         if '<:apple' in message_content:
             if '**first**' in message_content:
-                answer = 'A'
+                answer = '`A`'
             elif '**second**' in message_content:
-                answer = 'P'
+                answer = '`P`'
             elif '**third**' in message_content:
-                answer = 'P'
+                answer = '`P`'
             elif '**fourth**' in message_content:
-                answer = 'L'
+                answer = '`L`'
             elif '**fifth**' in message_content:
-                answer = 'E'
+                answer = '`E`'
         elif '<:banana' in message_content:
             if '**first**' in message_content:
-                answer = 'B'
+                answer = '`B`'
             elif '**second**' in message_content:
-                answer = 'A'
+                answer = '`A`'
             elif '**third**' in message_content:
-                answer = 'N'
+                answer = '`N`'
             elif '**fourth**' in message_content:
-                answer = 'A'
+                answer = '`A`'
             elif '**fifth**' in message_content:
-                answer = 'N'
+                answer = '`N`'
             elif '**sixth**' in message_content:
-                answer = 'A'
+                answer = '`A`'
     elif 'casino?' in message_content:
         if ':gem:' in message_content and '**diamond**' in message_content:
-            answer = 'YES'
+            answer = '`YES`'
         elif ':gift:' in message_content and '**gift**' in message_content:
-            answer = 'YES'
+            answer = '`YES`'
         elif ':game_die:' in message_content and '**dice**' in message_content:
-            answer = 'YES'
+            answer = '`YES`'
         elif ':coin:' in message_content and '**coin**' in message_content:
-            answer = 'YES'
+            answer = '`YES`'
         elif ':four_leaf_clover:' in message_content and '**four leaf clover**' in message_content:
-            answer = 'YES'
+            answer = '`YES`'
         else:
-            answer = 'NO'
+            answer = '`NO`'
     elif 'forest!' in message_content:
         if 'many <:wooden' in message_content:
             emoji = '<:wooden'
@@ -395,6 +396,27 @@ def get_training_answer(message_content: str) -> str:
             emoji = '<:hyper'
         start_question = message_content.find('how many ')
         message_content_list = message_content[0:start_question]
-        answer = message_content_list.count(emoji)
+        answer = f'`{message_content_list.count(emoji)}`'
+    elif 'void' in message_content:
+        all_settings = await settings_db.get_settings()
+        answer = ''
+        a16_seal_time = all_settings.get('a16_seal_time', None)
+        a17_seal_time = all_settings.get('a17_seal_time', None)
+        a18_seal_time = all_settings.get('a18_seal_time', None)
+        a19_seal_time = all_settings.get('a19_seal_time', None)
+        a20_seal_time = all_settings.get('a20_seal_time', None)
+        seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+        current_time = datetime.utcnow().replace(microsecond=0)
+        for area_no, seal_time in enumerate(seal_times, 16):
+            if seal_time is not None:
+                seal_time = datetime.fromisoformat(seal_time, )
+                if seal_time > current_time:
+                    time_left = seal_time - current_time
+                    answer = f'{answer}\nArea {area_no} closes in {time_left.days} days.'.strip()
+        if answer == '':
+            answer = (
+                f'No idea, lol.\n'
+                f'Please use {emojis.EPIC_RPG_LOGO_SMALL}`/void areas` before your next training.'
+            )
 
     return answer

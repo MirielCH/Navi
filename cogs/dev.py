@@ -313,79 +313,27 @@ class DevCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
-        import re
-        from database import users
-        from resources import exceptions
-        message_field_name = '<:catpet:703150997517893692> SUDDENLY, A **DRAGON** TIER **II** IS APPROACHING **Miruel**'
-        message_field_value = ':heart: **Happiness:** 12\n:taco: **Hunger:** 64'
-        user_name = user = None
-        try:
-            user_name = re.search("APPROACHING \*\*(.+?)\*\*", message_field_name).group(1)
-            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-        except Exception as error:
-            await ctx.message.add_reaction(emojis.WARNING)
-            #await errors.log_error(error)
-            return
-        for member in ctx.guild.members:
-            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-            if member_name == user_name:
-                user = member
-                break
-        if user is None:
-            await ctx.message.add_reaction(emojis.WARNING)
-            #await errors.log_error(f'User not found in pet catch message: {message}')
-            return
-        try:
-            user_settings: users.User = await users.get_user(user.id)
-        except exceptions.FirstTimeUserError:
-            return
-        if not user_settings.bot_enabled or not user_settings.pet_helper_enabled: return
-        try:
-            happiness = re.search("Happiness:\*\* (.+?)\\n", message_field_value).group(1)
-            happiness = int(happiness)
-            hunger = re.search("Hunger:\*\* (.+?)$", message_field_value).group(1)
-            hunger = int(hunger)
-        except Exception as error:
-            await ctx.message.add_reaction(emojis.WARNING)
-            #await errors.log_error(error)
-            return
-        feeds = hunger // 20
-        hunger_rest = hunger % 20
-        if hunger_rest >= 10:
-            feeds += 1
-            hunger_rest = hunger_rest - 18
-            if hunger_rest < 0: hunger_rest = 0
-        happiness_missing = (hunger_rest + 85) - happiness
-        pats = happiness_missing // 10
-        happiness_rest = happiness_missing % 10
-        if happiness_rest > 5: pats += 1
-        if feeds + pats > 6: pats = 6 - feeds
-        hunger_remaining_min = hunger - (feeds * 22)
-        if hunger_remaining_min < 0: hunger_remaining_min = 0
-        hunger_remaining_max = hunger - (feeds * 18)
-        if hunger_remaining_max < 0: hunger_remaining_max = 0
-        happiness_remaining_min = happiness + (pats * 8)
-        if happiness_remaining_min < 0: happiness_remaining_min = 0
-        happiness_remaining_max = happiness + (pats * 12)
-        if happiness_remaining_max < 0: happiness_remaining_max = 0
-        difference_best = happiness_remaining_max - hunger_remaining_min
-        difference_worst = happiness_remaining_min - hunger_remaining_max
-        chance_min = 100 / 85 * difference_worst
-        chance_max = 100 / 85 * difference_best
-        if chance_min > 100: chance_min = 100
-        if chance_max > 100: chance_max = 100
-
-        commands = ''
-        for x in range(0, feeds):
-            commands = f'{commands} feed'
-        for x in range(0, pats):
-            commands = f'{commands} pat'
-        embed = discord.Embed(
-            description = f'`{commands.upper().strip()}`'
-        )
-        #embed.add_field(name='COMMANDS', value=f'```{commands.upper().strip()}```', inline=False)
-        embed.set_footer(text=f'Catch chance: {chance_min:.2f} - {chance_max:.2f}%')
-        await ctx.reply(embed=embed)
+        from database import settings as settings_db
+        all_settings = await settings_db.get_settings()
+        answer = ''
+        a16_seal_time = all_settings.get('a16_seal_time', None)
+        a17_seal_time = all_settings.get('a17_seal_time', None)
+        a18_seal_time = all_settings.get('a18_seal_time', None)
+        a19_seal_time = all_settings.get('a19_seal_time', None)
+        a20_seal_time = all_settings.get('a20_seal_time', None)
+        seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+        current_time = datetime.utcnow().replace(microsecond=0)
+        for area_no, seal_time in enumerate(seal_times, 16):
+            if seal_time is not None:
+                seal_time = datetime.fromisoformat(seal_time, )
+                if seal_time > current_time:
+                    time_left = seal_time - current_time
+                    answer = f'{answer}\nArea {area_no}: `{time_left.days}`'.strip()
+        if answer == '':
+            answer = (
+                f'I don\'t know, sorry.\n'
+                f'To let me know, please use {emojis.EPIC_RPG_LOGO_SMALL}`/void areas` before the next training.'
+            )
 
 
 def setup(bot):
