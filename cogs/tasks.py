@@ -56,7 +56,7 @@ class TasksCog(commands.Cog):
                     try:
                         pet_reminders = (
                             await reminders.get_active_user_reminders(user_id=reminder.user_id, activity='pets',
-                                                                      end_time=reminder.end_time+timedelta(seconds=1))
+                                                                      end_time=reminder.end_time)
                         )
                     except exceptions.NoDataFoundError:
                         pet_reminders = ()
@@ -65,15 +65,14 @@ class TasksCog(commands.Cog):
                     else:
                         next_pet_reminder = pet_reminders[0]
                         time_left = next_pet_reminder.end_time - reminder.end_time
-                        if time_left.total_seconds() > 1:
-                            timestring = await functions.parse_timedelta_to_timestring(time_left)
-                            pet_amount_left = len(pet_reminders)
-                            pets_left = f'**{pet_amount_left}** pet'
-                            if pet_amount_left > 1: pets_left = f'{pets_left}s'
-                            messages[message_no] = (
-                                f'{messages[message_no]}'
-                                f'➜ {pets_left} left. Next pet will return in **{timestring}**.'
-                            )
+                        timestring = await functions.parse_timedelta_to_timestring(time_left)
+                        pet_amount_left = len(pet_reminders)
+                        pets_left = f'**{pet_amount_left}** pet'
+                        if pet_amount_left > 1: pets_left = f'{pets_left}s'
+                        messages[message_no] = (
+                            f'{messages[message_no]}'
+                            f'➜ {pets_left} left. Next pet will return in **{timestring}**.'
+                        )
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())

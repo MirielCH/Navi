@@ -259,7 +259,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
     ---------
     user_id: int - Limits reminders to this user if set.
     activity: str - Limits reminders to an activity that starts with this text.
-    end_time: datetime - Sets the threshold. If set, only selects reminders >= this time. If not set, uses current time.
+    end_time: datetime - Sets the threshold. If set, only selects reminders > this time. If not set, uses current time.
 
     Returns
     -------
