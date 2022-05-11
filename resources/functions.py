@@ -412,7 +412,7 @@ async def get_training_answer(message_content: str) -> str:
                 seal_time = datetime.fromisoformat(seal_time, )
                 if seal_time > current_time:
                     time_left = seal_time - current_time
-                    answer = f'{answer}\nArea {area_no} closes in {time_left.days} days.'.strip()
+                    answer = f'{answer}\nArea {area_no} will close in {time_left.days} days.'.strip()
         if answer == '':
             answer = (
                 f'No idea, lol.\n'
