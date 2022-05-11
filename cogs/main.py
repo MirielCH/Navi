@@ -125,6 +125,10 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `{prefix}rm` : Manage custom reminders'
     )
 
+    stats = (
+        f'{emojis.BP} `{prefix}stats` : Shows your command stats\n'
+    )
+
     user_settings = (
         f'{emojis.BP} `{prefix}on` / `off` : Turn the bot on/off\n'
         f'{emojis.BP} `{prefix}settings` : Check your settings\n'
@@ -165,6 +169,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         description =   f'Hey! **{ctx.author.name}**! Hello!'
     )
     embed.add_field(name='REMINDERS', value=reminder_management, inline=False)
+    embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
     embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
     embed.add_field(name='PARTNER SETTINGS', value=partner_settings, inline=False)
     embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)

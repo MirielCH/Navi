@@ -48,7 +48,7 @@ class TasksCog(commands.Cog):
                         message = f'**{user.name}**, {reminder_message}\n'
                     else:
                         message = f'{user.mention} {reminder_message}\n'
-                    if len(f'{messages[message_no]}{message}') > 1950:
+                    if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''
                     messages[message_no] = f'{messages[message_no]}{message}'
