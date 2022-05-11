@@ -180,15 +180,6 @@ class DevCog(commands.Cog):
     @dev.command()
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def sleepy(self, ctx: commands.Context, seconds: int) -> None:
-        """Sleepy potion test command"""
-        if ctx.prefix.lower() == 'rpg ': return
-        await reminders.reduce_reminder_time(ctx.author.id, timedelta(seconds=seconds))
-        await ctx.reply('Done.')
-
-    @dev.command()
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def shutdown(self, ctx: commands.Context) -> None:
         """Shut down the bot"""
         def check(m: discord.Message) -> bool:
@@ -287,25 +278,6 @@ class DevCog(commands.Cog):
             await ctx.reply(
                 f'Syntax is `{ctx.prefix}{ctx.command} [command]`'
                 )
-
-    # Convert timestring to iso format
-    @dev.command(aliases=('ts',))
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def timestamp(self, ctx: commands.Context, timestamp: int) -> None:
-        if ctx.prefix.lower() == 'rpg ': return
-        await ctx.send(datetime.fromtimestamp(timestamp).isoformat(sep=' '))
-
-    # List servers
-    @dev.command()
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def servers(self, ctx: commands.Context) -> None:
-        if ctx.prefix.lower() == 'rpg ': return
-        server_list = ''
-        for guild in self.bot.guilds:
-            server_list = f'{server_list}\n{emojis.BP} {guild.name}'
-        await ctx.send(server_list)
 
     # Test command
     @dev.command()
