@@ -5,7 +5,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
-from typing import Optional, Tuple
+from typing import List, Optional, Tuple
 
 from discord.ext import tasks
 
@@ -187,7 +187,7 @@ async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no guild was found.
+    exceptions.NoDataFoundError if no reminder was found.
     LookupError if something goes wrong reading the dict.
     ValueError if activity is "custom" and custom_id is None.
     Also logs all errors to the database.
@@ -251,8 +251,15 @@ async def get_clan_reminder(clan_name: str) -> Reminder:
     return reminder
 
 
-async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_active_user_reminders(user_id: Optional[int] = None, activity: Optional[str] = None,
+                                    end_time: Optional[datetime] = None) -> Tuple[Reminder]:
     """Gets all active reminders for all users or - if the argument user_id is set - for one user.
+
+    Arguments
+    ---------
+    user_id: int - Limits reminders to this user if set.
+    activity: str - Limits reminders to an activity that starts with this text.
+    end_time: datetime - Sets the threshold. If set, only selects reminders >= this time. If not set, uses current time.
 
     Returns
     -------
@@ -261,21 +268,29 @@ async def get_active_user_reminders(user_id: Optional[int] = None) -> Tuple[Remi
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no cooldown was found.
+    exceptions.NoDataFoundError if no reminder was found.
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """
     table = 'reminders_users'
     function_name = 'get_active_user_reminders'
-    if user_id is None:
-        sql = f'SELECT * FROM {table} WHERE end_time>? ORDER BY end_time'
+    sql = f'SELECT * FROM {table} WHERE end_time>?'
+    if end_time is None:
+        current_time = datetime.utcnow().replace(microsecond=0)
+        end_time_str = current_time.isoformat(sep=' ')
     else:
-        sql = f'SELECT * FROM {table} WHERE user_id=? AND end_time>? ORDER BY end_time'
+        end_time_str = end_time.isoformat(sep=' ')
+    queries = [end_time_str,]
+    if user_id is not None:
+        sql = f'{sql} AND user_id=?'
+        queries.append(user_id)
+    if activity is not None:
+        sql = f"{sql} AND activity LIKE ?"
+        queries.append(f'{activity}%')
+    sql = f'{sql} ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
-        current_time_str = current_time.isoformat(sep=' ')
-        cur.execute(sql, (current_time_str,)) if user_id is None else cur.execute(sql, (user_id, current_time_str))
+        cur.execute(sql, queries)
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(

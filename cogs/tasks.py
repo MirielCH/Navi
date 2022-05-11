@@ -9,7 +9,7 @@ import discord
 from discord.ext import commands, tasks
 
 from database import clans, errors, reminders, users
-from resources import emojis, exceptions, settings, strings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 running_tasks = {}
@@ -21,42 +21,70 @@ class TasksCog(commands.Cog):
         self.bot = bot
 
     # Task management
-    async def background_task(self, reminders: List[reminders.Reminder]) -> None:
+    async def background_task(self, reminders_list: List[reminders.Reminder]) -> None:
         """Background task for scheduling reminders"""
+        first_reminder = reminders_list[0]
         def get_time_left() -> timedelta:
             current_time = datetime.utcnow().replace(microsecond=0)
-            time_left = reminders[0].end_time - current_time
+            time_left = first_reminder.end_time - current_time
             if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
             return time_left
 
         try:
             await self.bot.wait_until_ready()
-            channel = self.bot.get_channel(reminders[0].channel_id)
-
-            if reminders[0].reminder_type == 'user':
+            channel = self.bot.get_channel(first_reminder.channel_id)
+            if first_reminder.reminder_type == 'user':
                 await self.bot.wait_until_ready()
-                user = self.bot.get_user(reminders[0].user_id)
+                user = self.bot.get_user(first_reminder.user_id)
                 user_settings = await users.get_user(user.id)
-                message = ''
-                for reminder in reminders:
-                    if reminders[0].activity == 'custom':
+                message_no = 1
+                messages = {message_no: ''}
+                for reminder in reminders_list:
+                    if reminder.activity == 'custom':
                         reminder_message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.format(message=reminder.message)
                     else:
                         reminder_message = reminder.message
                     if user_settings.dnd_mode_enabled:
-                        message = f'{message}**{user.name}**, {reminder_message}\n'
+                        message = f'**{user.name}**, {reminder_message}\n'
                     else:
-                        message = f'{message}{user.mention} {reminder_message}\n'
+                        message = f'{user.mention} {reminder_message}\n'
+                    if len(f'{messages[message_no]}{message}') > 1950:
+                        message_no += 1
+                        messages[message_no] = ''
+                    messages[message_no] = f'{messages[message_no]}{message}'
+                if reminder.activity.startswith('pets'):
+                    try:
+                        pet_reminders = (
+                            await reminders.get_active_user_reminders(user_id=reminder.user_id, activity='pets',
+                                                                      end_time=reminder.end_time+timedelta(seconds=1))
+                        )
+                    except exceptions.NoDataFoundError:
+                        pet_reminders = ()
+                    if not pet_reminders:
+                        messages[message_no] = f'{messages[message_no]}➜ There are no more pets on adventures.'
+                    else:
+                        next_pet_reminder = pet_reminders[0]
+                        time_left = next_pet_reminder.end_time - reminder.end_time
+                        if time_left.total_seconds() > 1:
+                            timestring = await functions.parse_timedelta_to_timestring(time_left)
+                            pet_amount_left = len(pet_reminders)
+                            pets_left = f'**{pet_amount_left}** pet'
+                            if pet_amount_left > 1: pets_left = f'{pets_left}s'
+                            messages[message_no] = (
+                                f'{messages[message_no]}'
+                                f'➜ {pets_left} left. Next pet will return in **{timestring}**.'
+                            )
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
                 except asyncio.CancelledError:
                     return
                 allowed_mentions = discord.AllowedMentions(users=[user,])
-                await channel.send(message.strip(), allowed_mentions=allowed_mentions)
+                for message in messages.values():
+                    await channel.send(message.strip(), allowed_mentions=allowed_mentions)
 
-            if reminders[0].reminder_type == 'clan':
-                clan = await clans.get_clan_by_clan_name(reminders[0].clan_name)
+            if first_reminder.reminder_type == 'clan':
+                clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
                 message_mentions = ''
                 for member_id in clan.member_ids:
                     if member_id is not None:
@@ -66,18 +94,18 @@ class TasksCog(commands.Cog):
                             message_mentions = f'{message_mentions}{member.mention} '
                 time_left = get_time_left()
                 await asyncio.sleep(time_left.total_seconds())
-                embed = discord.Embed(title=reminders[0].message)
+                embed = discord.Embed(title=first_reminder.message)
                 await channel.send(f'{message_mentions}\nIt\'s time for:', embed=embed)
 
-            running_tasks.pop(reminders[0].task_name, None)
+            running_tasks.pop(first_reminder.task_name, None)
         except Exception as error:
             await errors.log_error(error)
 
-    async def create_task(self, reminders: List[reminders.Reminder]) -> None:
+    async def create_task(self, reminders_list: List[reminders.Reminder]) -> None:
         """Creates a new background task"""
-        await self.delete_task(reminders[0].task_name)
-        task = self.bot.loop.create_task(self.background_task(reminders))
-        running_tasks[reminders[0].task_name] = task
+        await self.delete_task(reminders_list[0].task_name)
+        task = self.bot.loop.create_task(self.background_task(reminders_list))
+        running_tasks[reminders_list[0].task_name] = task
 
     async def delete_task(self, task_name: str) -> None:
         """Stops and deletes a running task if it exists"""
@@ -118,7 +146,14 @@ class TasksCog(commands.Cog):
         if user_reminders:
             for reminders_list in user_reminders.values():
                 reminders_list.sort(key=lambda reminder: reminder.activity)
-                await self.create_task(reminders_list)
+                pet_reminders = []
+                other_reminders = []
+                for reminder in reminders_list:
+                    if reminder.activity.startswith('pets'):
+                        pet_reminders.append(reminder)
+                    else:
+                        other_reminders.append(reminder)
+                await self.create_task(other_reminders + pet_reminders)
 
     @tasks.loop(minutes=2.0)
     async def delete_old_reminders(self) -> None:
