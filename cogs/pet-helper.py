@@ -29,6 +29,43 @@ class PetHelperCog(commands.Cog):
             # Pet catch
             if ('happiness' in message_field_value.lower() and 'hunger' in message_field_value.lower()
                 and 'suddenly' in message_field_name.lower()):
+
+                async def design_pet_catch_field(feeds: int, pats: int, slash: bool) -> str:
+                    """Returns an embed field with the commands and the catch chance"""
+                    if feeds + pats > 6: pats = 6 - feeds
+                    hunger_remaining_min = hunger - (feeds * 22)
+                    if hunger_remaining_min < 0: hunger_remaining_min = 0
+                    hunger_remaining_max = hunger - (feeds * 18)
+                    if hunger_remaining_max < 0: hunger_remaining_max = 0
+                    happiness_remaining_min = happiness + (pats * 8)
+                    if happiness_remaining_min < 0: happiness_remaining_min = 0
+                    happiness_remaining_max = happiness + (pats * 12)
+                    if happiness_remaining_max < 0: happiness_remaining_max = 0
+                    difference_best = happiness_remaining_max - hunger_remaining_min
+                    difference_worst = happiness_remaining_min - hunger_remaining_max
+                    chance_min = 100 / 85 * difference_worst
+                    chance_max = 100 / 85 * difference_best
+                    if chance_min > 100: chance_min = 100
+                    if chance_max > 100: chance_max = 100
+                    if chance_min != chance_max:
+                        chance = f'_Catch chance: {chance_min:.2f} - {chance_max:.2f}%_'
+                    else:
+                        chance = f'_Catch chance: {chance_max:.2f}%_'
+                    commands = ''
+                    for x in range(0,feeds):
+                        commands = f'{commands} feed'
+                    for x in range(0,pats):
+                        commands = f'{commands} pat'
+                    commands = f'`{commands.upper().strip()}`'
+                    hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
+                    actions = f'{emojis.PET_HAPPINESS} {pats} pats, {hunger_emoji} {feeds} feeds'
+                    if pats + feeds < 6:
+                        actions = f'{actions}, {emojis.PET_RANDOM} tame'
+                    field_value = actions if slash else commands
+                    field_value = f'{field_value}\n{chance}'
+
+                    return field_value
+
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -72,49 +109,33 @@ class PetHelperCog(commands.Cog):
                     await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Happiness or hunger not found in pet catch message for pet helper: {message.embeds[0].fields}')
                     return
-                feeds = hunger // 20
-                hunger_rest = hunger % 20
+                # Low risk
+                feeds, hunger_rest = divmod(hunger, 18)
                 if hunger_rest >= 9:
                     feeds += 1
-                    hunger_rest = hunger_rest - 18
-                    if hunger_rest < 0: hunger_rest = 0
+                    hunger_rest = 0
                 happiness_missing = (hunger_rest + 85) - happiness
-                pats = happiness_missing // 10
-                happiness_rest = happiness_missing % 10
+                pats, happiness_rest = divmod(happiness_missing, 8)
                 if happiness_rest > 0: pats += 1
-                if feeds + pats > 6: pats = 6 - feeds
-                hunger_remaining_min = hunger - (feeds * 22)
-                if hunger_remaining_min < 0: hunger_remaining_min = 0
-                hunger_remaining_max = hunger - (feeds * 18)
-                if hunger_remaining_max < 0: hunger_remaining_max = 0
-                happiness_remaining_min = happiness + (pats * 8)
-                if happiness_remaining_min < 0: happiness_remaining_min = 0
-                happiness_remaining_max = happiness + (pats * 12)
-                if happiness_remaining_max < 0: happiness_remaining_max = 0
-                difference_best = happiness_remaining_max - hunger_remaining_min
-                difference_worst = happiness_remaining_min - hunger_remaining_max
-                chance_min = 100 / 85 * difference_worst
-                chance_max = 100 / 85 * difference_best
-                if chance_min > 100: chance_min = 100
-                if chance_max > 100: chance_max = 100
-                if chance_min != chance_max:
-                    footer = f'Catch chance: {chance_min:.2f} - {chance_max:.2f}%'
+                field_low_risk = await design_pet_catch_field(feeds, pats, slash_command)
+                # High risk
+                feeds, hunger_rest = divmod(hunger, 22)
+                if hunger_rest >= 9:
+                    feeds += 1
+                    hunger_rest = 0
+                happiness_missing = (hunger_rest + 85) - happiness
+                pats, happiness_rest = divmod(happiness_missing, 12)
+                if happiness_rest > 0: pats += 1
+                if feeds + pats < 6:
+                    field_high_risk = await design_pet_catch_field(feeds, pats, slash_command)
                 else:
-                    footer = f'Catch chance: {chance_max:.2f}%'
-
-                commands = ''
-                for x in range(0,feeds):
-                    commands = f'{commands} feed'
-                for x in range(0,pats):
-                    commands = f'{commands} pat'
-                commands = f'`{commands.upper().strip()}`'
-                hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
-                actions = f'{emojis.PET_HAPPINESS} {pats} pats, {hunger_emoji} {feeds} feeds'
-                if pats + feeds < 6:
-                    actions = f'{actions}, {emojis.PET_RANDOM} tame'
-                description = actions if slash_command else commands
-                embed = discord.Embed(description=description)
-                embed.set_footer(text=footer)
+                    field_high_risk = field_low_risk
+                embed = discord.Embed()
+                if field_low_risk != field_high_risk:
+                    embed.add_field(name='LOW RISK', value=field_low_risk, inline=False)
+                    embed.add_field(name='HIGH RISK', value=field_high_risk, inline=False)
+                else:
+                    embed.description = field_low_risk
                 await message.reply(embed=embed)
 
 

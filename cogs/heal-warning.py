@@ -76,7 +76,7 @@ class HealWarningCog(commands.Cog):
                 await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Health not found in hunt together message for heal warning: {error}')
                 return
-            if health_lost > (health_remaining - (health_lost / 10)):
+            if health_lost > (health_remaining - (health_lost / 9)):
                 warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     await message.channel.send(f'{user.mention} {warning}')
