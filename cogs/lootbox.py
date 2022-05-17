@@ -80,7 +80,7 @@ class BuyCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Buy lootbox
-            if "lootbox` successfully bought for" in message_content.lower():
+            if "lootbox` successfully bought for" in message_content.lower() and not 'guild ring' in message_content.lower():
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg buy [lootbox]' if user is None else '/buy item: [lootbox]'
                 if user is None:

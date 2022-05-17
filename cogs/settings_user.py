@@ -112,7 +112,7 @@ class SettingsUserCog(commands.Cog):
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
                 activity = 'Dungeon / Miniboss' if reminder.activity == 'dungeon-miniboss' else reminder.activity
-                activity = activity.replace('-',' ').title()
+                activity = activity.replace('-',' ').capitalize()
                 field_command_reminders = (
                     f'{field_command_reminders}\n'
                     f'{emojis.BP} **`{activity}`** (**{timestring}**)'
