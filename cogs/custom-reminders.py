@@ -12,7 +12,7 @@ class CustomRemindersCog(commands.Cog):
     """Cog that contains custom reminder commands"""
     # --- Commands ---
     # rm
-    @commands.group(aliases=('rm','remind',), invoke_without_command=True)
+    @commands.group(aliases=('rm','remind',), invoke_without_command=True, case_insensitive=True)
     @commands.bot_has_permissions(send_messages=True)
     async def reminder(self, ctx: commands.Context, *args: str) -> None:
         """Sets custom reminders"""

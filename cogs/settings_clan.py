@@ -16,7 +16,7 @@ class SettingsClanCog(commands.Cog):
         self.bot = bot
 
     # Commands
-    @commands.group(name='guild', invoke_without_command=True)
+    @commands.group(name='guild', invoke_without_command=True, case_insensitive=True)
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def clan(self, ctx: commands.Context, *args: str) -> None:
         """Trigger clan command detection if no subcommand was found"""

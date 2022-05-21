@@ -15,7 +15,7 @@ class SettingsPartnerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    @commands.group(invoke_without_command=True)
+    @commands.group(invoke_without_command=True, case_insensitive=True)
     @commands.bot_has_permissions(send_messages=True)
     async def partner(self, ctx: commands.Context, *args: str) -> None:
         """Check/set current partner"""
