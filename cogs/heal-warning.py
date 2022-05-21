@@ -56,7 +56,7 @@ class HealWarningCog(commands.Cog):
                 message_content_user = message_content[:partner_start]
                 health_search = re.search('-(.+?) HP \(:heart: (.+?)/', message_content_user)
             else:
-                health_search = re.search(f'\*\*{user_name}\*\* lost (.+?) HP, remaining HP is (.+?)/', message_content)
+                health_search = re.search(f'\*\*{re.escape(user_name)}\*\* lost (.+?) HP, remaining HP is (.+?)/', message_content)
             if health_search is None:
                 if (f'{user_name}** lost but' not in message_content
                     and 'but lost fighting' not in message_content.lower()):

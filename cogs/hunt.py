@@ -122,19 +122,25 @@ class HuntCog(commands.Cog):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
+                hardmode = True if '(but stronger)' in message_content.lower() else False
+                alone = True if '(way stronger!!!)' in message_content.lower() else False
+                together = True if 'hunting together' in message_content.lower() else False
+                if together:
+                    name_search = re.search("\*\*(.+?)\*\* and \*\*(.+?)\*\*", message_content)
+                    user_name = name_search.group(1)
+                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    partner_name = name_search.group(2)
                 if user is None:
-                    user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
-                    if user_name_search is None:
-                        user_name_search = re.search("\*\*(.+?)\*\* and", message_content)
-                    if user_name_search is not None:
+                    if not together:
+                        user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
                         user_name = user_name_search.group(1)
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                        if user_name != 'Both players':
-                            for member in message.guild.members:
-                                member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
-                                if member_name == user_name:
-                                    user = member
-                                    break
+                    if user_name != 'Both players':
+                        for member in message.guild.members:
+                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            if member_name == user_name:
+                                user = member
+                                break
                     if user is None:
                         message_history = await message.channel.history(limit=50).flatten()
                         for msg in message_history:
@@ -150,14 +156,12 @@ class HuntCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
+                await user_settings.update(partner_name=partner_name)
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                 if not user_settings.alert_hunt.enabled: return
-                hardmode = True if '(but stronger)' in message_content.lower() else False
-                alone = True if '(way stronger!!!)' in message_content.lower() else False
-                together = True if 'hunting together' in message_content.lower() else False
                 if not slash_command:
                     user_command = 'rpg hunt'
                 else:
@@ -217,9 +221,9 @@ class HuntCog(commands.Cog):
                         lootbox_alert = ''
                         for lb_name, lb_emoji in lootboxes.items():
                             try:
-                                lb_search = re.search(f"\*\* got (.+?) (.+?) {lb_name}", lb_search_content)
+                                lb_search = re.search(f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", lb_search_content)
                                 if lb_search is None:
-                                    lb_search = re.search(f"\+(.+?) (.+?) {lb_name}", lb_search_content)
+                                    lb_search = re.search(f"\+(.+?) (.+?) {re.escape(lb_name)}", lb_search_content)
                                 if lb_search is None:
                                     continue
                                 lb_amount = lb_search.group(1)

@@ -70,7 +70,9 @@ class QuestCog(commands.Cog):
                     user_command_message = None
                     for msg in message_history:
                         if msg.content is not None:
-                            if msg.content.lower() in ('rpg quest','rpg epic quest') and msg.author == user:
+                            msg_content = msg.content.lower()
+                            if ((msg_content.startswith('rpg quest') or msg_content.startswitch('rpg epic quest'))
+                                and msg.author == user):
                                 user_command_message = msg
                                 break
                     if user_command_message is None:
