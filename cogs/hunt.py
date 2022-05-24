@@ -32,8 +32,7 @@ class HuntCog(commands.Cog):
             if 'you have already looked around' in message_title.lower():
                 user_id = user_name = embed_user = user_command = None
                 interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is not None:
-                    user_command = '/hunt'
+                if interaction_user is not None: user_command = '/hunt'
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                 except:
@@ -45,17 +44,17 @@ class HuntCog(commands.Cog):
                         await errors.log_error(f'User not found in hunt cooldown message: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
-                    embed_user = await message.guild.fetch_member(user_id)
+                    try:
+                        embed_user = await message.guild.fetch_member(user_id)
+                    except:
+                        pass
                 else:
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                         if member_name == user_name:
                             embed_user = member
+                            user_id = embed_user.id
                             break
-                if embed_user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in hunt cooldown message: {message.embeds[0].fields}')
-                    return
                 if user_command is None:
                     message_history = await message.channel.history(limit=50).flatten()
                     user_command_message = None
@@ -90,15 +89,21 @@ class HuntCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = time_left - time_elapsed
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                partner_cooldown = (cooldown.actual_cooldown()
+                                    * settings.DONOR_COOLDOWNS[partner_donor_tier])
+                user_cooldown = (cooldown.actual_cooldown()
+                                 * settings.DONOR_COOLDOWNS[user_donor_tier])
+                if user_id == user_settings.partner_id:
+                    time_left_seconds = (time_left.total_seconds()
+                                         + (user_cooldown - partner_cooldown)
+                                         - time_elapsed.total_seconds()
+                                         + 1)
+                    time_left = timedelta(seconds=time_left_seconds)
                 if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                     and interaction_user == embed_user):
-                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
-                    partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
-                    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                    partner_cooldown = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[partner_donor_tier])
-                    user_cooldown = (cooldown.actual_cooldown()
-                                     * settings.DONOR_COOLDOWNS[user_donor_tier])
                     time_left_seconds = (time_left.total_seconds()
                                          + (partner_cooldown - user_cooldown)
                                          - time_elapsed.total_seconds()
