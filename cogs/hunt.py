@@ -156,7 +156,7 @@ class HuntCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                await user_settings.update(partner_name=partner_name)
+                if together: await user_settings.update(partner_name=partner_name)
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:

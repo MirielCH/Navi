@@ -29,7 +29,7 @@ DEFAULT_MESSAGES = {
     'lootbox': DEFAULT_MESSAGE,
     'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and `{command}` to enter the next draw!',
     'not-so-mini-boss': DEFAULT_MESSAGE_EVENT,
-    'partner': '**{user}** found {lootbox} for you!',
+    'partner': '**{user}** found {loot} for you!',
     'pets': 'Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,

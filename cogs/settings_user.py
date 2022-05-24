@@ -3,6 +3,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import re
 
 import discord
 from discord.ext import commands
@@ -448,6 +449,27 @@ class SettingsUserCog(commands.Cog):
             if len(new_message) > 1024:
                 await ctx.reply('This is a command to set a new message, not to write a novel :thinking:')
                 return
+            for placeholder in re.finditer('\{[a-z]*\}', new_message):
+                placeholder_str = new_message[placeholder.start():placeholder.end()]
+                if placeholder_str not in strings.DEFAULT_MESSAGES[activity]:
+                    allowed_placeholders = ''
+                    for placeholder in re.finditer('\{[a-z]*\}', strings.DEFAULT_MESSAGES[activity]):
+                        allowed_placeholders = (
+                            f'{allowed_placeholders}\n'
+                            f'{emojis.BP} {strings.DEFAULT_MESSAGES[activity][placeholder.start():placeholder.end()]}'
+                        )
+                    if allowed_placeholders == '':
+                        allowed_placeholders = f'There are no placeholders available for this message.'
+                    else:
+                        allowed_placeholders = (
+                            f'Available placeholders for this message:\n'
+                            f'{allowed_placeholders.strip()}'
+                        )
+                    await ctx.reply(
+                        f'Invalid placeholder found.\n\n'
+                        f'{allowed_placeholders}'
+                    )
+                    return
             kwargs = {}
             kwargs[f'{activity_column}_message'] = new_message
             await user.update(**kwargs)
@@ -499,13 +521,13 @@ class SettingsUserCog(commands.Cog):
                     if action == 'enabled':
                         partner_message = (
                             f'{partner_message}\n'
-                            f'If you want to hardmode too, please activate hardmode mode and hunt solo.\n'
-                            f'Otherwise, enjoy the ride.'
+                            f'Please don\'t use `hunt together` until they turn it off. '
+                            f'If you want to hardmode too, please activate hardmode mode as well and hunt solo.'
                         )
                     else:
                         partner_message = (
                             f'{partner_message}\n'
-                            f'Feel free to take them hunting again.'
+                            f'Feel free to use `hunt togethter` again.'
                         )
                     await self.bot.wait_until_ready()
                     partner_channel = self.bot.get_channel(partner.partner_channel_id)
