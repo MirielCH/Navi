@@ -88,6 +88,7 @@ class DevCog(commands.Cog):
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
             await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            return
         if not answer.content.lower() in ['yes','y']:
             await ctx.send('Aborted')
             return

@@ -131,20 +131,21 @@ class SettingsUserCog(commands.Cog):
                 )
             embed.add_field(name='EVENTS', value=field_event_reminders.strip(), inline=False)
         if reminders_pets_list:
-            field_pets_reminders = ''
+            field_no = 1
+            pet_fields = {field_no: ''}
             for time_left_seconds, pet_ids in field_pets_list.items():
                 timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                 if ',' in pet_ids:
-                    field_pets_reminders = (
-                        f'{field_pets_reminders}\n'
-                        f'{emojis.BP} **`Pets {pet_ids}`** (**{timestring}**)'
-                    )
+                    pet_message = f'{emojis.BP} **`Pets {pet_ids}`** (**{timestring}**)'
                 else:
-                    field_pets_reminders = (
-                        f'{field_pets_reminders}\n'
-                        f'{emojis.BP} **`Pet {pet_ids}`** (**{timestring}**)'
-                    )
-            embed.add_field(name='PETS', value=field_pets_reminders.strip(), inline=False)
+                    pet_message = f'{emojis.BP} **`Pet {pet_ids}`** (**{timestring}**)'
+                if len(pet_fields[field_no]) + len(pet_message) > 1020:
+                    field_no += 1
+                    pet_fields[field_no] = ''
+                pet_fields[field_no] = f'{pet_fields[field_no]}\n{pet_message}'
+            for field_no, pet_field in pet_fields.items():
+                field_name = f'PETS {field_no}' if field_no > 1 else 'PETS'
+                embed.add_field(name=field_name, value=pet_field.strip(), inline=False)
         if clan_reminders:
             reminder = clan_reminders[0]
             time_left = reminder.end_time - current_time

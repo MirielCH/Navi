@@ -32,7 +32,6 @@ class PetHelperCog(commands.Cog):
 
                 async def design_pet_catch_field(feeds: int, pats: int, slash: bool) -> str:
                     """Returns an embed field with the commands and the catch chance"""
-                    if feeds + pats > 6: pats = 6 - feeds
                     hunger_remaining_min = hunger - (feeds * 22)
                     if hunger_remaining_min < 0: hunger_remaining_min = 0
                     hunger_remaining_max = hunger - (feeds * 18)
@@ -75,13 +74,13 @@ class PetHelperCog(commands.Cog):
                         if user_name_search is None:
                             user_name_search = re.search("^(.+?)'s bunny", message_author)
                         user_name = user_name_search.group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
                         await errors.log_error(f'User not found in pet catch message for pet helper: {message.embeds[0].fields}')
                         return
                     for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        member_name = await functions.encode_text(member.name)
                         if member_name == user_name:
                             user = member
                             break
@@ -117,6 +116,8 @@ class PetHelperCog(commands.Cog):
                 happiness_missing = (hunger_rest + 85) - happiness
                 pats, happiness_rest = divmod(happiness_missing, 8)
                 if happiness_rest > 0: pats += 1
+                if feeds + pats > 6: pats = 6 - feeds
+                command_amount_low_risk = feeds + pats
                 field_low_risk = await design_pet_catch_field(feeds, pats, slash_command)
                 # High risk
                 feeds, hunger_rest = divmod(hunger, 22)
@@ -126,16 +127,15 @@ class PetHelperCog(commands.Cog):
                 happiness_missing = (hunger_rest + 85) - happiness
                 pats, happiness_rest = divmod(happiness_missing, 12)
                 if happiness_rest > 0: pats += 1
-                if feeds + pats < 6:
-                    field_high_risk = await design_pet_catch_field(feeds, pats, slash_command)
-                else:
-                    field_high_risk = field_low_risk
+                if feeds + pats > 6: pats = 6 - feeds - 1
+                if pats < 0: pats = 0
+                command_amount_high_risk = feeds + pats
+                if command_amount_high_risk == command_amount_low_risk: pats -= 1
+                field_high_risk = await design_pet_catch_field(feeds, pats, slash_command)
                 embed = discord.Embed()
-                if field_low_risk != field_high_risk:
-                    embed.add_field(name='LOW RISK', value=field_low_risk, inline=False)
-                    embed.add_field(name='HIGH RISK', value=field_high_risk, inline=False)
-                else:
-                    embed.description = field_low_risk
+                high_skill_name = 'HIGHER CHANCE AT SKILL' if command_amount_low_risk < 6 else 'CHANCE AT SKILL'
+                embed.add_field(name='LOWEST RISK', value=field_low_risk, inline=False)
+                embed.add_field(name=high_skill_name, value=field_high_risk, inline=False)
                 await message.reply(embed=embed)
 
 

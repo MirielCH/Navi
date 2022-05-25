@@ -155,7 +155,8 @@ class QuestCog(commands.Cog):
             message_content = message.content
             # Quest
             if ('you did not accept the quest' in message_content.lower()
-                or 'got a **new quest**!' in message_content.lower()):
+                or 'got a **new quest**!' in message_content.lower()
+                or 'i don\'t think i can give you any quest here' in message_content.lower()):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = '/quest start' if user is not None else 'rpg quest'

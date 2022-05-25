@@ -45,8 +45,7 @@ class CustomRemindersCog(commands.Cog):
                     await ctx.reply(f'Please don\'t.')
                     return
         user: users.User = await users.get_user(ctx.author.id) # Only to stop if user is not registered
-        args = [arg.lower() for arg in args]
-        timestring = args[0]
+        timestring = args[0].lower()
         try:
             timestring = await functions.check_timestring(timestring)
         except Exception as error:
