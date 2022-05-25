@@ -280,7 +280,7 @@ class SettingsClanCog(commands.Cog):
                         member_id = int(member)
                     else:
                         username = member[:member.find('#')]
-                        discriminator = member[member.find('#')+1:]
+                        discriminator = member[member.find('#') + 1:]
                         member = discord.utils.get(message_before.guild.members,
                                                    name=username, discriminator=discriminator)
                         member_id = member.id
@@ -328,6 +328,33 @@ class SettingsClanCog(commands.Cog):
                 for member_id in clan.member_ids:
                     try:
                         user: users.User = await users.get_user(member_id)
+                        if user.clan_name != clan.clan_name:
+                            try:
+                                old_clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
+                                old_leader_id = None if old_clan.leader_id == member_id else old_clan.leader_id
+                                old_member_ids = []
+                                for old_member_id in old_clan.member_ids:
+                                    if old_member_id == member_id:
+                                        old_member_ids.append(None)
+                                    else:
+                                        old_member_ids.append(old_member_id)
+                                old_member_ids = sorted(old_member_ids, key=lambda id: (id is None, id))
+                                if old_leader_id is None and all(id is None for id in old_member_ids):
+                                    await old_clan.delete()
+                                    await message_after.channel.send(
+                                        f'Removed the guild **{old_clan.clan_name}** because it doesn\'t have any '
+                                        f'registered members anymore.'
+                                    )
+                                else:
+                                    await old_clan.update(leader_id=old_leader_id, member_ids=old_member_ids)
+                                    if old_leader_id is None:
+                                        await message_after.channel.send(
+                                            f'Note that the guild **{old_clan.clan_name}** doesn\'t have a leader '
+                                            f'registered anymore. Please tell one of the remaining members to use '
+                                            f'`rpg guild list` to update it.'
+                                        )
+                            except exceptions.NoDataFoundError:
+                                pass
                         await user.update(clan_name=clan.clan_name)
                         if user.clan_name != clan.clan_name:
                             await message_after.channel.send(strings.MSG_ERROR)
