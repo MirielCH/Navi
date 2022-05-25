@@ -96,12 +96,6 @@ class HuntCog(commands.Cog):
                                     * settings.DONOR_COOLDOWNS[partner_donor_tier])
                 user_cooldown = (cooldown.actual_cooldown()
                                  * settings.DONOR_COOLDOWNS[user_donor_tier])
-                if user_id == user_settings.partner_id:
-                    time_left_seconds = (time_left.total_seconds()
-                                         + (user_cooldown - partner_cooldown)
-                                         - time_elapsed.total_seconds()
-                                         + 1)
-                    time_left = timedelta(seconds=time_left_seconds)
                 if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                     and interaction_user == embed_user):
                     time_left_seconds = (time_left.total_seconds()
