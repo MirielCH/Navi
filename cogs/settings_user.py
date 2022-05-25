@@ -857,7 +857,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     field_event_reminders = (
         f'{emojis.BP} Big arena: `{await bool_to_text(user_settings.alert_big_arena.enabled)}`\n'
         f'{emojis.BP} Horse race: `{await bool_to_text(user_settings.alert_horse_race.enabled)}`\n'
-        f'{emojis.BP} Not so mini boss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
+        f'{emojis.BP} Minin\'tboss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
         f'{emojis.BP} Pet tournament: `{await bool_to_text(user_settings.alert_pet_tournament.enabled)}`\n'
     )
     if not user_settings.bot_enabled:

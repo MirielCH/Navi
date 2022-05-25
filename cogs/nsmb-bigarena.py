@@ -36,7 +36,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                         user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
                     except Exception as error:
                         await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message_content}')
+                        await errors.log_error(f'User not found in big-arena or minin\'tboss message: {message_content}')
                         return
                     for member in message.guild.members:
                         member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
@@ -45,7 +45,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                             break
             if user is None:
                 await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in big-arena or not-so-mini-boss message: {message_content}')
+                await errors.log_error(f'User not found in big-arena or minin\'tboss message: {message_content}')
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
@@ -62,18 +62,18 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 for msg in message_history:
                     if msg.content is not None:
                         if ((msg.content.lower().startswith('rpg ')
-                            and 'big arena join' in msg.content.lower() or 'not so mini boss join' in msg.content.lower())
+                            and 'big arena join' in msg.content.lower() or 'minintboss join' in msg.content.lower())
                             and msg.author == user):
                             user_command_message = msg
                             break
                 if user_command_message is None:
                     await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the big-arena or not-so-mini-boss message.')
+                    await errors.log_error('Couldn\'t find a command for the big-arena or minin\'tboss message.')
                     return
                 user_command = user_command_message.content.lower()
-            if ' not so mini ' in user_command or 'minint' in user_command:
+            if 'minint' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
-                event = 'not-so-mini-boss'
+                event = 'minin\'tboss'
                 reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
             else:
                 if not user_settings.alert_big_arena.enabled: return
