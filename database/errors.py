@@ -31,8 +31,10 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
     message = None
     if isinstance(ctx, commands.Context):
         message = ctx.message
+        user_input = ctx.message.content
     elif isinstance(ctx, discord.Message):
         message = ctx
+        user_input = 'N/A'
     if message is None:
         date_time = datetime.utcnow()
         user_input = 'N/A'
@@ -40,7 +42,6 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
         user_settings = 'N/A'
     else:
         date_time = message.created_at
-        user_input = message.content
         jump_url = message.jump_url
         try:
             from database import users

@@ -51,7 +51,10 @@ class ClanCog(commands.Cog):
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                                 await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in clan cooldown message: {message.embeds[0].fields}')
+                            await errors.log_error(
+                                f'User not found in clan cooldown message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
@@ -64,7 +67,10 @@ class ClanCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in clan cooldown message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'User not found in clan cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
@@ -100,7 +106,10 @@ class ClanCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Clan name not found in clan message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Clan name not found in clan message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
@@ -114,7 +123,10 @@ class ClanCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Stealth not found in clan message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Stealth not found in clan message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
@@ -149,7 +161,10 @@ class ClanCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the clan upgrade message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the clan upgrade message.',
+                            message
+                        )
                         return
                     user = user_command_message.author
                 try:
@@ -164,7 +179,10 @@ class ClanCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Stealth not found in clan upgrade message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Stealth not found in clan upgrade message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 await clan.update(stealth_current=stealth)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
@@ -199,7 +217,10 @@ class ClanCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in clan raid message: {message.embeds[0].fields}')
+                        await errors.log_error(
+                            f'User not found in clan raid message: {message.embeds[0].fields}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -209,7 +230,10 @@ class ClanCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in clan raid message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'User not found in clan raid message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
@@ -222,7 +246,10 @@ class ClanCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Energy not found in clan raid message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Energy not found in clan raid message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 clan_raid = await clans.insert_clan_raid(clan.clan_name, user.id, energy, current_time)

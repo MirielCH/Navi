@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, functions, exceptions, settings
+from resources import emojis, functions, exceptions, logs, settings
 
 
 class HealWarningCog(commands.Cog):
@@ -46,7 +46,14 @@ class HealWarningCog(commands.Cog):
             if user is None:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in hunt together message for heal warning: {message_content}')
+                await errors.log_error(
+                    f'User not found in hunt together message for heal warning: {message_content}',
+                    message
+                )
+                logs.logger.error(
+                    f'User not found in hunt together message for heal warning: {message_content}\n'
+                    f'Full guild.members list:\n{message.guild.members}'
+                )
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
@@ -64,7 +71,10 @@ class HealWarningCog(commands.Cog):
                     and 'but lost fighting' not in message_content.lower()):
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Health not found in hunt together message for heal warning: {message_content}')
+                    await errors.log_error(
+                        f'Health not found in hunt together message for heal warning: {message_content}',
+                        message
+                    )
                     return
             try:
                 if health_search is not None:
@@ -78,7 +88,10 @@ class HealWarningCog(commands.Cog):
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'Health not found in hunt together message for heal warning: {error}')
+                await errors.log_error(
+                    f'Health not found in hunt together message for heal warning: {error}',
+                    message
+                )
                 return
             if health_lost > (health_remaining - (health_lost / 9)):
                 warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'
@@ -97,7 +110,10 @@ class HealWarningCog(commands.Cog):
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message_content}')
+                await errors.log_error(
+                    f'User not found in hunt/adventure message for heal warning: {message_content}',
+                    message
+                )
                 return
             user = await functions.get_interaction_user(message)
             if user is None:
@@ -109,7 +125,10 @@ class HealWarningCog(commands.Cog):
             if user is None:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in hunt/adventure message for heal warning: {message_content}')
+                await errors.log_error(
+                    f'User not found in hunt/adventure message for heal warning: {message_content}',
+                    message
+                )
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
@@ -122,7 +141,10 @@ class HealWarningCog(commands.Cog):
                     and 'but lost fighting' not in message_content.lower()):
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Health not found in hunt/adventure message for heal warning: {message_content}')
+                    await errors.log_error(
+                        f'Health not found in hunt/adventure message for heal warning: {message_content}',
+                        message
+                    )
                     return
             try:
                 if health_search is not None:
@@ -136,7 +158,10 @@ class HealWarningCog(commands.Cog):
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'Health not found in hunt/adventure message for heal warning: {error}')
+                await errors.log_error(
+                    f'Health not found in hunt/adventure message for heal warning: {error}',
+                    message
+                )
                 return
             if health_lost > (health_remaining - (health_lost / 10)):
                 warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'

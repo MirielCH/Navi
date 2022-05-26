@@ -44,7 +44,10 @@ class FarmCog(commands.Cog):
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                                 await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in farm cooldown message: {message.embeds[0].fields}')
+                            await errors.log_error(
+                                f'User not found in farm cooldown message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
@@ -57,7 +60,10 @@ class FarmCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in farm cooldown message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'User not found in farm cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -76,7 +82,10 @@ class FarmCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the farm cooldown message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the farm cooldown message.',
+                            message
+                        )
                         return
                     user_command = user_command_message.content.lower()
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
@@ -109,7 +118,10 @@ class FarmCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in farm message: {message_content}')
+                        await errors.log_error(
+                            f'User not found in farm message: {message_content}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -119,7 +131,10 @@ class FarmCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in farm message: {message_content}')
+                    await errors.log_error(
+                        f'User not found in farm message: {message_content}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -181,7 +196,10 @@ class FarmCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in farm event message: {message_content}')
+                        await errors.log_error(
+                            f'User not found in farm event message: {message_content}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -191,7 +209,10 @@ class FarmCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in farm event message: {message_content}')
+                    await errors.log_error(
+                        f'User not found in farm event message: {message_content}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -214,7 +235,10 @@ class FarmCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the farm event message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the farm event message.',
+                            message
+                        )
                         return
                     user_command = user_command_message.content.lower()
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('farm')

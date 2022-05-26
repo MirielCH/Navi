@@ -44,7 +44,10 @@ class DungeonMinibossCog(commands.Cog):
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                                 await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in miniboss cooldown message: {message.embeds[0].fields}')
+                            await errors.log_error(
+                                f'User not found in miniboss cooldown message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
@@ -57,7 +60,10 @@ class DungeonMinibossCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in dungeon / miniboss cooldown message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'User not found in dungeon / miniboss cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

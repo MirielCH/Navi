@@ -28,7 +28,7 @@ class PetTournamentCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg pet') and ' tournament ' in msg.content.lower()
+                        if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' tournament ' in msg.content.lower()
                             and not msg.author.bot):
                             user_command_message = msg
                             break

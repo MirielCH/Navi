@@ -43,7 +43,10 @@ class BuyCog(commands.Cog):
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                                 await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in lootbox cooldown message: {message.embeds[0].fields}')
+                            await errors.log_error(
+                                f'User not found in lootbox cooldown message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
@@ -56,7 +59,10 @@ class BuyCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in lootbox cooldown message: {message.embeds[0].fields}')
+                    await(
+                        f'User not found in lootbox cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -90,7 +96,7 @@ class BuyCog(commands.Cog):
                     user_command_message = None
                     for msg in message_history:
                         if msg.content is not None:
-                            if (msg.content.lower().startswith('rpg buy ')
+                            if (msg.content.lower().replace(' ','').startswith('rpgbuy')
                                 and ('lb' in msg.content.lower() or 'lootbox' in msg.content.lower())
                                 and not msg.author.bot):
                                 user_command_message = msg
@@ -98,7 +104,10 @@ class BuyCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the lootbox message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the lootbox message.',
+                            message
+                        )
                         return
                     user = user_command_message.author
                 try:

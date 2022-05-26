@@ -79,7 +79,8 @@ class QuestCog(commands.Cog):
                     for msg in message_history:
                         if msg.content is not None:
                             msg_content = msg.content.lower()
-                            if ((msg_content.startswith('rpg quest') or msg_content.startswith('rpg epic quest'))
+                            if ((msg_content.replace(' ','').startswith('rpgquest')
+                                 or msg_content.replace(' ','').startswith('rpgepicquest'))
                                 and msg.author == user):
                                 user_command_message = msg
                                 break
@@ -151,18 +152,15 @@ class QuestCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
-                if quest_declined:
-                    time_left = timedelta(hours=1)
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                if cooldown.donor_affected:
+                    time_left_seconds = (cooldown.actual_cooldown()
+                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
+                                        - time_elapsed.total_seconds())
                 else:
-                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
-                    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                    if cooldown.donor_affected:
-                        time_left_seconds = (cooldown.actual_cooldown()
-                                            * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                            - time_elapsed.total_seconds())
-                    else:
-                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
-                    time_left = timedelta(seconds=time_left_seconds)
+                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                time_left = timedelta(seconds=time_left_seconds)
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,

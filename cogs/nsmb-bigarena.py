@@ -22,7 +22,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
         if message.embeds: return
         message_content = message.content
         if ('successfully registered for the next **big arena** event!' in message_content.lower()
-            or 'successfully registered for the next **not so "mini" boss** event!' in message_content.lower()
+            or 'successfully registered for the next **minin\'tboss** event!' in message_content.lower()
             or 'you are already registered!' in message_content.lower()):
             user_name = None
             user = await functions.get_interaction_user(message)

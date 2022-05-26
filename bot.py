@@ -29,7 +29,10 @@ async def on_error(event: str, message: discord.Message) -> None:
     error = sys.exc_info()
     traceback_str = "".join(traceback.format_tb(error[2]))
     traceback_message = traceback_str if settings.DEBUG_MODE else ''
-    await errors.log_error(f'Got an error in event {event}:\nError: {error[1]}\nTraceback: {traceback_str}')
+    await errors.log_error(
+        f'Got an error in event {event}:\nError: {error[1]}\nTraceback: {traceback_str}',
+        message
+    )
     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
         embed = discord.Embed(title='An error occured')
         embed.add_field(name='Event', value=f'`{event}`', inline=False)

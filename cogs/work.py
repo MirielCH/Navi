@@ -169,7 +169,7 @@ class WorkCog(commands.Cog):
                     for msg in message_history:
                         if msg.content is not None:
                             if (msg.content.lower().startswith('rpg ')
-                                and any(command in msg.content.lower() for command in strings.WORK_COMMANDS)
+                                and any(command.lower() in msg.content.lower() for command in strings.WORK_COMMANDS)
                                 and msg.author == user):
                                 user_command_message = msg
                                 break

@@ -35,7 +35,7 @@ class PetsCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg pet') and ' adv' in msg.content.lower()
+                        if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' adv' in msg.content.lower()
                             and not msg.author.bot):
                             user_command_message = msg
                             break
@@ -82,7 +82,7 @@ class PetsCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg pet') and ' cancel ' in msg.content.lower()
+                        if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' cancel ' in msg.content.lower()
                             and not msg.author.bot):
                             user_command_message = msg
                             break

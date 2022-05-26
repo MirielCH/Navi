@@ -42,7 +42,10 @@ class HuntCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in hunt cooldown message: {message.embeds[0].fields}')
+                        await errors.log_error(
+                            f'User not found in hunt cooldown message: {message.embeds[0].fields}',
+                            message
+                        )
                         return
                 if user_id is not None:
                     try:
@@ -61,14 +64,17 @@ class HuntCog(commands.Cog):
                     user_command_message = None
                     for msg in message_history:
                         if msg.content is not None:
-                            if msg.content.lower().startswith('rpg hunt'):
+                            if msg.content.lower().replace(' ','').startswith('rpghunt'):
                                 user_command_message = msg
                                 interaction_user = msg.author
                                 break
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the hunt cooldown message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the hunt cooldown message.',
+                            message
+                        )
                         return
                     user_command = user_command_message.content.lower()
                     user_command = user_command[8:].strip()
@@ -146,13 +152,16 @@ class HuntCog(commands.Cog):
                         message_history = await message.channel.history(limit=50).flatten()
                         for msg in message_history:
                             if msg.content is not None:
-                                if msg.content.lower().startswith('rpg hunt'):
+                                if msg.content.lower().replace(' ','').startswith('rpghunt'):
                                     user = msg.author
                                     break
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in hunt message: {message_content}')
+                    await errors.log_error(
+                        f'User not found in hunt message: {message_content}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -230,7 +239,10 @@ class HuntCog(commands.Cog):
                                     continue
                                 lb_amount = lb_search.group(1)
                             except:
-                                await errors.log_error(f'Error when looking for partner lootbox in: {lb_search_content}')
+                                await errors.log_error(
+                                    f'Error when looking for partner lootbox in: {lb_search_content}',
+                                    message
+                                )
                                 return
                             partner_message = (partner.alert_partner.message
                                                .replace('{user}', user.name)
@@ -251,7 +263,8 @@ class HuntCog(commands.Cog):
                                 await message.add_reaction(emojis.PARTNER_ALERT)
                             except Exception as error:
                                 await errors.log_error(
-                                    f'Had the following error while trying to send the partner alert:\n{error}'
+                                    f'Had the following error while trying to send the partner alert:\n{error}',
+                                    message
                                 )
                     if together and partner.hardmode_mode_enabled:
                         hm_message = user.mention if not user_settings.dnd_mode_enabled else f'**{user.name}**,'
@@ -295,7 +308,10 @@ class HuntCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in hunt event message: {message_content}')
+                        await(
+                            f'User not found in hunt event message: {message_content}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -305,7 +321,10 @@ class HuntCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in hunt event message: {message_content}')
+                    await errors.log_error(
+                        f'User not found in hunt event message: {message_content}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -328,7 +347,10 @@ class HuntCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the hunt event message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the hunt event message.',
+                            message
+                        )
                         return
                     user_command = user_command_message.content.lower()
                     user_command = user_command[8:].strip()

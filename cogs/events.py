@@ -21,7 +21,7 @@ class EventsCog(commands.Cog):
 
         if not message.embeds:
             message_content = message.content
-            if message_content.lower().startswith('rpg cel') and message_content.lower().endswith('dailyquest'):
+            if message_content.lower().replace(' ','').startswith('rpgcel') and message_content.lower().endswith('dailyquest'):
                 user = message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -50,7 +50,7 @@ class EventsCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg cel')
+                        if (msg.content.lower().replace(' ','').startswith('rpgcel')
                             and msg.content.lower().endswith('multiply')
                             and not msg.author.bot):
                             user_command_message = msg
@@ -58,7 +58,10 @@ class EventsCog(commands.Cog):
                 if user_command_message is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the cel multiply message.')
+                    await errors.log_error(
+                        'Couldn\'t find a command for the cel multiply message.',
+                        message
+                    )
                     return
                 user = user_command_message.author
                 try:
@@ -135,13 +138,16 @@ class EventsCog(commands.Cog):
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if msg.content.lower().startswith('rpg event') and not msg.author.bot:
+                        if msg.content.lower().replace(' ','').startswith('rpgevent') and not msg.author.bot:
                             user_command_message = msg
                             break
                 if user_command_message is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the events message.')
+                    await errors.log_error(
+                        'Couldn\'t find a command for the events message.',
+                        message
+                    )
                     return
                 user = user_command_message.author
             try:
@@ -156,7 +162,10 @@ class EventsCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Big arena cooldown not found in event message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Big arena cooldown not found in event message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 if big_arena_search is not None:
                     big_arena_timestring = big_arena_search.group(1)
@@ -168,7 +177,10 @@ class EventsCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Lottery cooldown not found in event message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Lottery cooldown not found in event message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 if lottery_search is not None:
                     lottery_timestring = lottery_search.group(1)
@@ -180,7 +192,10 @@ class EventsCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Pet tournament cooldown not found in event message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Pet tournament cooldown not found in event message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 if pet_search is not None:
                     pet_timestring = pet_search.group(1)
@@ -192,7 +207,10 @@ class EventsCog(commands.Cog):
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Horse race cooldown not found in event message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'Horse race cooldown not found in event message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 if horse_search is not None:
                     horse_timestring = horse_search.group(1)

@@ -42,7 +42,10 @@ class LotteryCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the lottery event message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the lottery event message.',
+                            message
+                        )
                         return
                     user = user_command_message.author
                 try:
@@ -79,7 +82,10 @@ class LotteryCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in lottery ticket message: {message_content}')
+                        await errors.log_error(
+                            f'User not found in lottery ticket message: {message_content}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -89,7 +95,10 @@ class LotteryCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in buy lottery ticket message: {message_content}')
+                    await errors.log_error(
+                        f'User not found in buy lottery ticket message: {message_content}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

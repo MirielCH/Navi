@@ -34,7 +34,10 @@ class HorseRaceCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in horse race message: {message_content}')
+                        await errors.log_error(
+                            f'User not found in horse race message: {message_content}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -44,7 +47,10 @@ class HorseRaceCog(commands.Cog):
             if user is None:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in horse race message: {message_content}')
+                await errors.log_error(
+                    f'User not found in horse race message: {message_content}',
+                    message
+                )
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)

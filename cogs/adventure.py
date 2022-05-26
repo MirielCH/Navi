@@ -59,7 +59,10 @@ class AdventureCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in adventure cooldown message: {message.embeds[0].fields}')
+                    await errors.log_error(
+                        f'User not found in adventure cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -78,7 +81,10 @@ class AdventureCog(commands.Cog):
                     if user_command_message is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the adventure cooldown message.')
+                        await errors.log_error(
+                            'Couldn\'t find a command for the adventure cooldown message.',
+                            message
+                        )
                         return
                     user_command = user_command_message.content.lower()
                     if ' adv ' in user_command or user_command.endswith(' adv'):
@@ -121,7 +127,10 @@ class AdventureCog(commands.Cog):
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in adventure message: {message_content}')
+                        await errors.log_error(
+                            f'User not found in adventure message: {message_content}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -131,7 +140,10 @@ class AdventureCog(commands.Cog):
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in adventure message: {message_content}')
+                    await errors.log_error(
+                        f'User not found in adventure message: {message_content}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
