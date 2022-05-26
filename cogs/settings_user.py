@@ -39,22 +39,24 @@ class SettingsUserCog(commands.Cog):
                     user_id = ctx.author.id
             else:
                 user_id = ctx.author.id
-        elif ctx.message.mentions:
-            mentioned_user = ctx.message.mentions[0]
-            if mentioned_user.bot:
-                await ctx.reply('Why would you check the reminders of a bot :face_with_raised_eyebrow:')
-                return
-            user_id = mentioned_user.id
         else:
             user_id = ctx.author.id
+        await self.bot.wait_until_ready()
+        user = self.bot.get_user(user_id)
+        if user is None:
+            await ctx.reply('Unable to find this user in any servers I\'m in.')
+            return
+        if user.bot:
+            await ctx.reply('Imagine trying to check the reminders of a bot.')
+            return
         try:
             user: users.User = await users.get_user(user_id)
         except exceptions.FirstTimeUserError:
-            if user_id == ctx.author.id:
+            if user == ctx.author:
                 raise
             else:
                 await ctx.reply('This user is not registered with this bot.')
-                return
+            return
         await self.bot.wait_until_ready()
         user_discord = self.bot.get_user(user_id)
         current_time = datetime.utcnow().replace(microsecond=0)

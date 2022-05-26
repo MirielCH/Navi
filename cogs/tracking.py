@@ -23,26 +23,35 @@ class TrackingCog(commands.Cog):
         """Returns current command statistics"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        if ctx.message.mentions:
-            mentioned_user = ctx.message.mentions[0]
-            if mentioned_user.bot:
-                await ctx.reply('Imaging trying to check the stats of a bot.')
-                return
-            user = mentioned_user
-            args = list(args)
-            matches = (f'<@!{user.id}>', f'<@{user.id}>')
-            for index, arg in enumerate(args):
-                if any(match in arg for match in matches):
-                    args.pop(index)
+        if args:
+            args = [arg.lower() for arg in args]
+            arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
+            if arg.isnumeric():
+                try:
+                    user_id = int(arg)
+                except:
+                    user_id = ctx.author.id
+                args.pop(0)
+            else:
+                user_id = ctx.author.id
         else:
-            user = ctx.author
-
-        try:
-            user_settings: users.User = await users.get_user(user.id)
-        except exceptions.FirstTimeUserError:
-            await ctx.reply(f'User **{user.name}** is not registered with this bot.')
+            user_id = ctx.author.id
+        await self.bot.wait_until_ready()
+        user = self.bot.get_user(user_id)
+        if user is None:
+            await ctx.reply('Unable to find this user in any servers I\'m in.')
             return
-
+        if user.bot:
+            await ctx.reply('Imagine trying to check the stats of a bot.')
+            return
+        try:
+            user_settings: users.User = await users.get_user(user_id)
+        except exceptions.FirstTimeUserError:
+            if user == ctx.author:
+                raise
+            else:
+                await ctx.reply('This user is not registered with this bot.')
+            return
         if not args or len(args) > 1:
             embed = await embed_stats_overview(ctx, user)
         if args:
@@ -122,7 +131,7 @@ def setup(bot):
 
 
 # --- Embeds ---
-async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> discord.Embed:
+async def embed_stats_overview(ctx: commands.Context, user: discord.User) -> discord.Embed:
     """Stats overview embed"""
 
     async def command_count(command: str, timeframe: timedelta) -> str:
@@ -152,7 +161,11 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.Member) -> d
         field_last_1y = f'{field_last_1y}\n{last_1y}'
         last_tt = await command_count(command, current_time-user_settings.last_tt)
         field_last_tt = f'{field_last_tt}\n{last_tt}'
-    field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(user_settings.last_tt.timestamp())}:f> UTC.'
+    try:
+        timestamp = user_settings.last_tt.timestamp()
+    except OSError as error: # Windows throws an error if datetime is set to 0 apparently
+        timestamp = 0
+    field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(timestamp)}:f> UTC.'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,

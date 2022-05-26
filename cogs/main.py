@@ -80,7 +80,7 @@ class MainCog(commands.Cog):
             )
         else:
             await errors.log_error(error, ctx)
-            await send_error()
+            if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
 
 
     # Events
