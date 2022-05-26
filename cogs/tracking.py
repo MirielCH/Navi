@@ -105,16 +105,22 @@ class TrackingCog(commands.Cog):
                     try:
                         user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
                     except Exception as error:
-                        await errors.log_error(f'Error while reading user name from time travel message:\n{error}')
+                        await errors.log_error(
+                            f'Error while reading user name from time travel message:\n{error}',
+                            message
+                        )
                         return
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    user_name = await functions.encode_text(user_name)
                     for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        member_name = await functions.encode_text(member.name)
                         if member_name == user_name:
                             user = member
                             break
                 if user is None:
-                    await errors.log_error(f'Couldn\'t find a user with user_name {user_name}.')
+                    await errors.log_error(
+                        f'Couldn\'t find a user with user_name {user_name}.',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

@@ -38,9 +38,10 @@ class HuntCog(commands.Cog):
                 except:
                     try:
                         user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        user_name = await functions.encode_text(user_name)
                     except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
                         await errors.log_error(f'User not found in hunt cooldown message: {message.embeds[0].fields}')
                         return
                 if user_id is not None:
@@ -50,7 +51,7 @@ class HuntCog(commands.Cog):
                         pass
                 else:
                     for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        member_name = await functions.encode_text(member.name)
                         if member_name == user_name:
                             embed_user = member
                             user_id = embed_user.id
@@ -65,7 +66,8 @@ class HuntCog(commands.Cog):
                                 interaction_user = msg.author
                                 break
                     if user_command_message is None:
-                        await message.add_reaction(emojis.WARNING)
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
                         await errors.log_error('Couldn\'t find a command for the hunt cooldown message.')
                         return
                     user_command = user_command_message.content.lower()
@@ -127,16 +129,16 @@ class HuntCog(commands.Cog):
                 if together:
                     name_search = re.search("\*\*(.+?)\*\* and \*\*(.+?)\*\*", message_content)
                     user_name = name_search.group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    user_name = await functions.encode_text(user_name)
                     partner_name = name_search.group(2)
                 if user is None:
                     if not together:
                         user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
                         user_name = user_name_search.group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        user_name = await functions.encode_text(user_name)
                     if user_name != 'Both players':
                         for member in message.guild.members:
-                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            member_name = await functions.encode_text(member.name)
                             if member_name == user_name:
                                 user = member
                                 break
@@ -148,7 +150,8 @@ class HuntCog(commands.Cog):
                                     user = msg.author
                                     break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in hunt message: {message_content}')
                     return
                 try:
@@ -288,18 +291,20 @@ class HuntCog(commands.Cog):
                 else:
                     try:
                         user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        user_name = await functions.encode_text(user_name)
                     except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
                         await errors.log_error(f'User not found in hunt event message: {message_content}')
                         return
                     for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        member_name = await functions.encode_text(member.name)
                         if member_name == user_name:
                             user = member
                             break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in hunt event message: {message_content}')
                     return
                 try:
@@ -321,7 +326,8 @@ class HuntCog(commands.Cog):
                                 user_command_message = msg
                                 break
                     if user_command_message is None:
-                        await message.add_reaction(emojis.WARNING)
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
                         await errors.log_error('Couldn\'t find a command for the hunt event message.')
                         return
                     user_command = user_command_message.content.lower()

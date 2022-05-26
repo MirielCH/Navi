@@ -40,22 +40,30 @@ class WorkCog(commands.Cog):
                     except:
                         try:
                             user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            user_name = await functions.encode_text(user_name)
                         except Exception as error:
-                            await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
+                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                                await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(
+                                f'User not found in work cooldown message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         for member in message.guild.members:
-                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            member_name = await functions.encode_text(member.name)
                             if member_name == user_name:
                                 user = member
                                 break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in work cooldown message: {message.embeds[0].fields}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in work cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -78,8 +86,12 @@ class WorkCog(commands.Cog):
                     if user_command_message is not None:
                         user_command = user_command_message.content.lower()
                     else:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error('Couldn\'t find a command for the work cooldown message.')
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            'Couldn\'t find a command for the work cooldown message.',
+                            message
+                        )
                         return
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
@@ -117,19 +129,27 @@ class WorkCog(commands.Cog):
                         user_name_search = re.search(search_string, message_content, re.IGNORECASE)
                         if user_name_search is not None: break
                     if user_name_search is None:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in work message: {message.content}')
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            f'User not found in work message: {message.content}',
+                            message
+                        )
                         return
                     user_name = user_name_search.group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    user_name = await functions.encode_text(user_name)
                     for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        member_name = await functions.encode_text(member.name)
                         if member_name == user_name:
                             user = member
                             break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found for user name {user_name}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found for user name {user_name}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

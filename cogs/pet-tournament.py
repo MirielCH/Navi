@@ -33,8 +33,12 @@ class PetTournamentCog(commands.Cog):
                             user_command_message = msg
                             break
                 if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for the pet tournament message.')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        'Couldn\'t find a command for the pet tournament message.',
+                        message
+                    )
                     return
                 user = user_command_message.author
             try:

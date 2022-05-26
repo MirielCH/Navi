@@ -56,7 +56,8 @@ class EventsCog(commands.Cog):
                             user_command_message = msg
                             break
                 if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error('Couldn\'t find a command for the cel multiply message.')
                     return
                 user = user_command_message.author
@@ -138,7 +139,8 @@ class EventsCog(commands.Cog):
                             user_command_message = msg
                             break
                 if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error('Couldn\'t find a command for the events message.')
                     return
                 user = user_command_message.author
@@ -152,7 +154,8 @@ class EventsCog(commands.Cog):
                 try:
                     big_arena_search = re.search("Big arena\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Big arena cooldown not found in event message: {message.embeds[0].fields}')
                     return
                 if big_arena_search is not None:
@@ -163,7 +166,8 @@ class EventsCog(commands.Cog):
                 try:
                     lottery_search = re.search("Lottery\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Lottery cooldown not found in event message: {message.embeds[0].fields}')
                     return
                 if lottery_search is not None:
@@ -174,7 +178,8 @@ class EventsCog(commands.Cog):
                 try:
                     pet_search = re.search("tournament\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Pet tournament cooldown not found in event message: {message.embeds[0].fields}')
                     return
                 if pet_search is not None:
@@ -185,7 +190,8 @@ class EventsCog(commands.Cog):
                 try:
                     horse_search = re.search("race\*\*: (.+?)\\n", message_field_value)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'Horse race cooldown not found in event message: {message.embeds[0].fields}')
                     return
                 if horse_search is not None:

@@ -40,8 +40,12 @@ class PetsCog(commands.Cog):
                             user_command_message = msg
                             break
                 if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for pet adventure message.')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        'Couldn\'t find a command for pet adventure message.',
+                        message
+                    )
                     return
                 user = user_command_message.author
                 arguments = user_command_message.content.split()
@@ -83,8 +87,12 @@ class PetsCog(commands.Cog):
                             user_command_message = msg
                             break
                 if user_command_message is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a command for pet cancel message.')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        'Couldn\'t find a command for pet cancel message.',
+                        message
+                    )
                     return
                 user = user_command_message.author
                 try:
@@ -97,8 +105,12 @@ class PetsCog(commands.Cog):
                 for arg in arguments:
                     if arg not in ('rpg','pets','pet','adventure','adv','cancel'): pet_ids.append(arg.upper())
                 if not pet_ids:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error('Couldn\'t find a pet ID for pet cancel message.')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        'Couldn\'t find a pet ID for pet cancel message.',
+                        message
+                    )
                     return
                 for pet_id in pet_ids:
                     activity = f'pets-{pet_id}'
@@ -144,22 +156,30 @@ class PetsCog(commands.Cog):
                     except:
                         try:
                             user_name = re.search("^(.+?)'s pets", message_author).group(1)
-                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            user_name = await functions.encode_text(user_name)
                         except Exception as error:
-                            await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in pet list message: {message.embeds[0].fields}')
+                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                                await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(
+                                f'User not found in pet list message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         for member in message.guild.members:
-                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            member_name = await functions.encode_text(member.name)
                             if member_name == user_name:
                                 user = member
                                 break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in pet list message: {message.embeds[0].fields}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in pet list message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -187,8 +207,12 @@ class PetsCog(commands.Cog):
                         time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
                         time_left = time_left - time_elapsed
                     except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'Pet id, action or timestring not found in pet list message: {message.embeds[0].fields}')
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            f'Pet id, action or timestring not found in pet list message: {message.embeds[0].fields}',
+                            message
+                        )
                         return
 
                     reminder_created = True

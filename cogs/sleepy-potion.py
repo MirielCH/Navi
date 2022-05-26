@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, settings
+from resources import emojis, exceptions, functions, settings
 
 
 class SleepyPotionCog(commands.Cog):
@@ -26,19 +26,27 @@ class SleepyPotionCog(commands.Cog):
             user_name = user = None
             try:
                 user_name = re.search("^\*\*(.+?)\*\* drinks", message_content).group(1)
-                user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                user_name = await functions.encode_text(user_name)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in sleepy potion message: {message_content}')
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
+                await errors.log_error(
+                    f'User not found in sleepy potion message: {message_content}',
+                    message
+                )
                 return
             for member in message.guild.members:
-                member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                member_name = await functions.encode_text(member.name)
                 if member_name == user_name:
                     user = member
                     break
             if user is None:
-                await message.add_reaction(emojis.WARNING)
-                await errors.log_error(f'User not found in sleepy potion message: {message_content}')
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
+                await errors.log_error(
+                    f'User not found in sleepy potion message: {message_content}',
+                    message
+                )
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)

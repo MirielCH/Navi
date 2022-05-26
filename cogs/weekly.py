@@ -39,22 +39,30 @@ class WeeklyCog(commands.Cog):
                     except:
                         try:
                             user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
-                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            user_name = await functions.encode_text(user_name)
                         except Exception as error:
-                            await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in weekly cooldown message: {message.embeds[0].fields}')
+                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                                await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(
+                                f'User not found in weekly cooldown message: {message.embeds[0].fields}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         for member in message.guild.members:
-                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            member_name = await functions.encode_text(member.name)
                             if member_name == user_name:
                                 user = member
                                 break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in weekly cooldown message: {message.embeds[0].fields}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in weekly cooldown message: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -88,22 +96,30 @@ class WeeklyCog(commands.Cog):
                     except:
                         try:
                             user_name = re.search("^(.+?)'s weekly reward", message_author).group(1)
-                            user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            user_name = await functions.encode_text(user_name)
                         except Exception as error:
-                            await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(f'User not found in weekly message: {message_author}')
+                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                                await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(
+                                f'User not found in weekly message: {message_author}',
+                                message
+                            )
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         for member in message.guild.members:
-                            member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                            member_name = await functions.encode_text(member.name)
                             if member_name == user_name:
                                 user = member
                                 break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in weekly message: {message_author}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in weekly message: {message_author}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

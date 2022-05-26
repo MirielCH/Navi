@@ -76,8 +76,12 @@ class PetHelperCog(commands.Cog):
                         user_name = user_name_search.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(f'User not found in pet catch message for pet helper: {message.embeds[0].fields}')
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            f'User not found in pet catch message for pet helper: {message.embeds[0].fields}',
+                            message
+                        )
                         return
                     for member in message.guild.members:
                         member_name = await functions.encode_text(member.name)
@@ -85,8 +89,12 @@ class PetHelperCog(commands.Cog):
                             user = member
                             break
                 if user is None:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'User not found in pet catch message for pet helper: {message.embeds[0].fields}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in pet catch message for pet helper: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -105,8 +113,12 @@ class PetHelperCog(commands.Cog):
                     hunger = hunger_search.group(1)
                     hunger = int(hunger)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(f'Happiness or hunger not found in pet catch message for pet helper: {message.embeds[0].fields}')
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'Happiness or hunger not found in pet catch message for pet helper: {message.embeds[0].fields}',
+                        message
+                    )
                     return
                 # Low risk
                 feeds, hunger_rest = divmod(hunger, 18)

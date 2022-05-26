@@ -41,21 +41,23 @@ class CooldownsCog(commands.Cog):
             except:
                 try:
                     user_name = re.search("^(.+?)'s cooldowns", message_author).group(1)
-                    user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    user_name = await functions.encode_text(user_name)
                 except Exception as error:
-                    await message.add_reaction(emojis.WARNING)
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
                     await errors.log_error(f'User not found in cooldown message: {message.embeds[0].fields}')
                     return
             if user_id is not None:
                 user = await message.guild.fetch_member(user_id)
             else:
                 for member in message.guild.members:
-                    member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                    member_name = await functions.encode_text(member.name)
                     if member_name == user_name:
                         user = member
                         break
         if user is None:
-            await message.add_reaction(emojis.WARNING)
+            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                await message.add_reaction(emojis.WARNING)
             await errors.log_error(f'User not found in cooldowns message: {message.embeds[0].fields}')
             return
         try:
@@ -68,7 +70,8 @@ class CooldownsCog(commands.Cog):
             try:
                 daily_search = re.search("Daily`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Daily cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if daily_search is not None:
@@ -80,7 +83,8 @@ class CooldownsCog(commands.Cog):
             try:
                 weekly_search = re.search("Weekly`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Weekly cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if weekly_search is not None:
@@ -92,7 +96,8 @@ class CooldownsCog(commands.Cog):
             try:
                 lb_search = re.search("Lootbox`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Lootbox cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if lb_search is not None:
@@ -110,7 +115,8 @@ class CooldownsCog(commands.Cog):
             try:
                 adv_search = re.search(adv_search_string, message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Adventure cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if adv_search is not None:
@@ -125,7 +131,8 @@ class CooldownsCog(commands.Cog):
             try:
                 tr_search = re.search("raining`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Training cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if tr_search is not None:
@@ -136,7 +143,8 @@ class CooldownsCog(commands.Cog):
             try:
                 quest_search = re.search("quest`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Quest cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if quest_search is not None:
@@ -148,7 +156,8 @@ class CooldownsCog(commands.Cog):
             try:
                 duel_search = re.search("Duel`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Duel cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if duel_search is not None:
@@ -160,7 +169,8 @@ class CooldownsCog(commands.Cog):
             try:
                 arena_search = re.search("rena`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Arena cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if arena_search is not None:
@@ -172,7 +182,8 @@ class CooldownsCog(commands.Cog):
             try:
                 dungmb_search = re.search("boss`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Miniboss cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if dungmb_search is not None:
@@ -184,7 +195,8 @@ class CooldownsCog(commands.Cog):
             try:
                 horse_search = re.search("race`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Horse cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if horse_search is not None:
@@ -196,7 +208,8 @@ class CooldownsCog(commands.Cog):
             try:
                 vote_search = re.search("Vote`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Vote cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if vote_search is not None:
@@ -208,7 +221,8 @@ class CooldownsCog(commands.Cog):
             try:
                 farm_search = re.search("Farm`\*\* \(\*\*(.+?)\*\*", message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Farm cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if farm_search is not None:
@@ -224,7 +238,8 @@ class CooldownsCog(commands.Cog):
             try:
                 work_search = re.search(work_search_string, message_fields)
             except Exception as error:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'Work cooldown not found in cooldown message: {message.embeds[0].fields}')
                 return
             if work_search is not None:

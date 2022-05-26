@@ -30,18 +30,20 @@ class HorseRaceCog(commands.Cog):
                 else:
                     try:
                         user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
-                        user_name = user_name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        user_name = await functions.encode_text(user_name)
                     except Exception as error:
-                        await message.add_reaction(emojis.WARNING)
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
                         await errors.log_error(f'User not found in horse race message: {message_content}')
                         return
                     for member in message.guild.members:
-                        member_name = member.name.encode('unicode-escape',errors='ignore').decode('ASCII').replace('\\','')
+                        member_name = await functions.encode_text(member.name)
                         if member_name == user_name:
                             user = member
                             break
             if user is None:
-                await message.add_reaction(emojis.WARNING)
+                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                    await message.add_reaction(emojis.WARNING)
                 await errors.log_error(f'User not found in horse race message: {message_content}')
                 return
             try:
