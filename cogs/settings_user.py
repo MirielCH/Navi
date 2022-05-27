@@ -267,6 +267,41 @@ class SettingsUserCog(commands.Cog):
             else:
                 await ctx.reply(strings.MSG_ERROR)
 
+    @commands.command()
+    @commands.bot_has_permissions(send_messages=True)
+    async def reactions(self, ctx: commands.Context, *args: str) -> None:
+        """Enables/disables Navi reactions"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}reactions [on|off]')
+
+        if not args:
+            await ctx.reply(syntax)
+        if args:
+            action = args[0].lower()
+            if action in ('on', 'enable', 'start'):
+                enabled = True
+                action = 'enabled'
+            elif action in ('off', 'disable', 'stop'):
+                enabled = False
+                action = 'disabled'
+            else:
+                await ctx.reply(syntax)
+                return
+            user: users.User = await users.get_user(ctx.author.id)
+            if user.reactions_enabled == enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, reactions {emojis.NAVI} are already {action}.'
+                )
+                return
+            await user.update(reactions_enabled=enabled)
+            if user.reactions_enabled == enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, reactions {emojis.NAVI} are now **{action}**.'
+                )
+            else:
+                await ctx.reply(strings.MSG_ERROR)
+
     @commands.command(aliases=('donator',))
     @commands.bot_has_permissions(send_messages=True)
     async def donor(self, ctx: commands.Context, *args: str) -> None:
@@ -730,14 +765,14 @@ class SettingsUserCog(commands.Cog):
         """Updates the time of the last time travel"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [message ID]')
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [message ID / link]')
         msg_syntax = (
             f'{syntax}\n\n'
-            f'Use the ID of the message that announced your time travel '
+            f'Use the ID or link of the message that announced your time travel '
             f'("**{ctx.author.name}** traveled in time :cyclone:").\n'
             f'If you don\'t have access to that message anymore, choose another message that is as close '
             f'to your last time travel as possible.\n'
-            f'Note that it does not matter if I can actually read the message, I only need the ID.'
+            f'Note that it does not matter if I can actually read the message, I only need the ID or link.'
         )
 
         user: users.User = await users.get_user(ctx.author.id)
@@ -745,7 +780,14 @@ class SettingsUserCog(commands.Cog):
         if not args:
             await ctx.reply(msg_syntax)
             return
-        message_id = args[0]
+        if 'discord.com/channels' in args[0]:
+            try:
+                message_id = re.search("\/[0-9]+\/[0-9]+\/(.+?)$", args[0]).group(1)
+            except:
+                await ctx.reply(f'No valid message ID or URL found.\n{syntax}')
+                return
+        else:
+            message_id = args[0]
         try:
             message_id = int(message_id)
             snowflake_binary = f'{message_id:064b}'
@@ -755,7 +797,7 @@ class SettingsUserCog(commands.Cog):
             tt_time = datetime.utcfromtimestamp(timestamp).replace(microsecond=0)
             tt_time_str = tt_time.isoformat(sep=' ')
         except:
-            await ctx.reply(f'Invalid message ID.\n{syntax}')
+            await ctx.reply(f'No valid message ID or URL found.\n{syntax}')
             return
         await user.update(last_tt=tt_time.isoformat(sep=' '))
         if user.last_tt != tt_time:
@@ -821,6 +863,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
         f'{emojis.BP} Heal warning: `{await bool_to_text(user_settings.heal_warning_enabled)}`\n'
         f'{emojis.BP} Pet helper: `{await bool_to_text(user_settings.pet_helper_enabled)}`\n'
+        f'{emojis.BP} Reactions {emojis.NAVI}: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
         f'{emojis.BP} Last TT: <t:{int(user_settings.last_tt.timestamp())}:f> UTC\n'

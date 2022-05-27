@@ -128,7 +128,8 @@ class TrackingCog(commands.Cog):
                     return
                 tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
-                if user_settings.last_tt == tt_time and user_settings.bot_enabled: await message.add_reaction(emojis.NAVI)
+                if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

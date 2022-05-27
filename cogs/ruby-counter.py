@@ -84,7 +84,8 @@ class RubyCounterCog(commands.Cog):
                 ruby_count += user_settings.rubies
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
             # Rubies from lootboxes
             if "'s lootbox" in message_author.lower() and '<:ruby' in message_field.lower():
@@ -142,7 +143,8 @@ class RubyCounterCog(commands.Cog):
                 ruby_count += user_settings.rubies
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
             # Rubies from inventory
             if "'s inventory" in message_author.lower():
@@ -203,7 +205,8 @@ class RubyCounterCog(commands.Cog):
                             )
                             return
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
         if not message.embeds:
             message_content = message.content
@@ -336,7 +339,8 @@ class RubyCounterCog(commands.Cog):
                 ruby_count = user_settings.rubies - 4
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting ruby armor
             if '`ruby armor` successfully crafted' in message_content.lower():
@@ -366,7 +370,8 @@ class RubyCounterCog(commands.Cog):
                 ruby_count = user_settings.rubies - 7
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting coin sword
             if '`coin sword` successfully crafted' in message_content.lower():
@@ -396,7 +401,8 @@ class RubyCounterCog(commands.Cog):
                 ruby_count = user_settings.rubies - 4
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting ultra-edgy armor
             if '`ultra-edgy armor` successfully forged' in message_content.lower():
@@ -426,7 +432,8 @@ class RubyCounterCog(commands.Cog):
                 ruby_count = user_settings.rubies - 400
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count: await message.add_reaction(emojis.NAVI)
+                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

@@ -69,7 +69,7 @@ class PetsCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
@@ -124,7 +124,7 @@ class PetsCog(commands.Cog):
                             f'{datetime.now()}: Had an error deleting the pet reminder with activity '
                             f'{activity}.'
                         )
-                await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -221,7 +221,7 @@ class PetsCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
                                                              message.channel.id, reminder_message)
                     )
-                if reminder_created: await message.add_reaction(emojis.NAVI)
+                if reminder_created and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

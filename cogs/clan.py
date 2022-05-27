@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime, timedelta
 
-from database import clans, errors, cooldowns, reminders
+from database import clans, errors, cooldowns, reminders, users
 from resources import emojis, exceptions, functions, settings, strings
 
 
@@ -77,6 +77,10 @@ class ClanCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.NoDataFoundError:
+                    user_settings = None
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -92,7 +96,10 @@ class ClanCog(commands.Cog):
                                                          clan.channel_id, alert_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings is None:
+                        await message.add_reaction(emojis.NAVI)
+                    else:
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
 
@@ -116,6 +123,10 @@ class ClanCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled or clan.channel_id is None: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.NoDataFoundError:
+                    user_settings = None
                 try:
                     stealth = re.search("STEALTH\*\*: (.+?)\\n", message_field1).group(1)
                     stealth = int(stealth)
@@ -141,7 +152,10 @@ class ClanCog(commands.Cog):
                                                          clan.channel_id, alert_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings is None:
+                        await message.add_reaction(emojis.NAVI)
+                    else:
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
@@ -172,6 +186,10 @@ class ClanCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.NoDataFoundError:
+                    user_settings = None
                 clan_stealth_before = clan.stealth_current
                 try:
                     stealth = re.search("--> \*\*(.+?)\*\*", message_field0).group(1)
@@ -199,7 +217,10 @@ class ClanCog(commands.Cog):
                                                          clan.channel_id, alert_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings is None:
+                        await message.add_reaction(emojis.NAVI)
+                    else:
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                     if clan.stealth_current >= clan.stealth_threshold: await message.add_reaction(emojis.YAY)
                     if clan.stealth_current == clan_stealth_before: await message.add_reaction(emojis.ANGRY)
                 else:
@@ -241,6 +262,10 @@ class ClanCog(commands.Cog):
                     return
                 if not clan.alert_enabled: return
                 try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.NoDataFoundError:
+                    user_settings = None
+                try:
                     energy = re.search("earned \*\*(.+?)\*\*", message_field1).group(1)
                     energy = int(energy)
                 except Exception as error:
@@ -272,7 +297,10 @@ class ClanCog(commands.Cog):
                                                          clan.channel_id, alert_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings is None:
+                        await message.add_reaction(emojis.NAVI)
+                    else:
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 

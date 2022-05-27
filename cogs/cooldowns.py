@@ -308,7 +308,7 @@ class CooldownsCog(commands.Cog):
                 if not reminder.record_exists:
                     await message.channel.send(strings.MSG_ERROR)
                     return
-        await message.add_reaction(emojis.NAVI)
+        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

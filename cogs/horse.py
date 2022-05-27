@@ -81,7 +81,7 @@ class HorseCog(commands.Cog):
                                                     message.channel.id, reminder_message)
             )
             if reminder.record_exists:
-                await message.add_reaction(emojis.NAVI)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
             else:
                 if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
 

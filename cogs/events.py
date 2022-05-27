@@ -37,7 +37,7 @@ class EventsCog(commands.Cog):
                                                             message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
@@ -79,7 +79,7 @@ class EventsCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
@@ -98,7 +98,7 @@ class EventsCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 if reminder.record_exists:
-                    await message.add_reaction(emojis.NAVI)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
@@ -240,7 +240,7 @@ class EventsCog(commands.Cog):
                     if not reminder.record_exists:
                         await message.channel.send(strings.MSG_ERROR)
                         return
-            if updated_reminder: await message.add_reaction(emojis.NAVI)
+            if updated_reminder and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

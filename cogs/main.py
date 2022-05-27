@@ -136,13 +136,17 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `{prefix}enable` / `disable` : Enable/disable specific reminders\n'
         f'{emojis.BP} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
         f'{emojis.BP} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
-        f'{emojis.BP} `{prefix}heal on` / `off` : Turn heal warning on/off\n'
         f'{emojis.BP} `{prefix}message` : Change the reminder messages\n'
+        f'{emojis.BP} `{prefix}reactions on` / `off` : Turn reactions {emojis.NAVI} on/off\n'
+        f'{emojis.BP} `{prefix}last-tt` : Manually change your last TT time\n'
+    )
+
+    helper_settings = (
+        f'{emojis.BP} `{prefix}heal on` / `off` : Turn heal warning on/off\n'
         f'{emojis.BP} `{prefix}pet-helper on` / `off` : Turn the pet catch helper on/off\n'
         f'{emojis.BP} `{prefix}ruby` : Check your current ruby count\n'
         f'{emojis.BP} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
         f'{emojis.BP} `{prefix}tr-helper on` / `off` : Turn the training helper on/off\n'
-        f'{emojis.BP} `{prefix}last-tt` : Manually change your last TT time\n'
     )
 
     partner_settings = (
@@ -171,6 +175,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     embed.add_field(name='REMINDERS', value=reminder_management, inline=False)
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
     embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
+    embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     embed.add_field(name='PARTNER SETTINGS', value=partner_settings, inline=False)
     embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)
     embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
