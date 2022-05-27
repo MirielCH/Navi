@@ -175,7 +175,7 @@ class SettingsUserCog(commands.Cog):
         try:
             user: users.User = await users.get_user(ctx.author.id)
             if user.bot_enabled:
-                await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned on.')
+                await ctx.reply(f'**{ctx.author.name}**, I\'m are already turned on.')
                 return
         except exceptions.FirstTimeUserError:
             user = await users.insert_user(ctx.author.id)
@@ -184,7 +184,7 @@ class SettingsUserCog(commands.Cog):
             await ctx.reply(strings.MSG_ERROR)
             return
         await ctx.reply(
-            f'Hey! **{ctx.author.name}**! Hello! Your reminders are now turned on.\n'
+            f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on.\n'
             f'Don\'t forget to set your donor tier with `{prefix}donor` and - if you are married - '
             f'the donor tier of your partner with `{prefix}partner donor`.\n'
             f'You can check all of your settings with `{prefix}settings`.'
@@ -201,10 +201,12 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         user: users.User = await users.get_user(ctx.author.id)
         if not user.bot_enabled:
-            await ctx.reply(f'**{ctx.author.name}**, your reminders are already turned off.')
+            await ctx.reply(f'**{ctx.author.name}**, I\'m already turned off.')
             return
         await ctx.reply(
-            f'**{ctx.author.name}**, turning off the bot will delete all of your active reminders. '
+            f'**{ctx.author.name}**, turning me off will turn off all helpers, the stats tracking'
+            f', and delete all of your active reminders. If you only want to turn off your reminders, consider using '
+            f'`{ctx.prefix}disable all` instead.\n'
             f'Are you sure? `[yes/no]`'
         )
         try:
@@ -226,7 +228,7 @@ class SettingsUserCog(commands.Cog):
         except exceptions.NoDataFoundError:
             pass
         await ctx.reply(
-            f'**{ctx.author.name}**, your reminders are now turned off.\n'
+            f'**{ctx.author.name}**, I\'m now turned off.\n'
             f'All active reminders were deleted.'
         )
 

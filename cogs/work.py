@@ -121,9 +121,10 @@ class WorkCog(commands.Cog):
                 if user is None:
                     search_strings = [
                         '[!1] \*\*(.+?)\*\* got',
-                        '[!1] (.+?)\*\* got',
                         '\?\?\?\?\? \*\*(.+?)\*\* got',
-                        '\*\*(.+?)\*\* got'
+                        'WOOAAAA!! (.+?)\*\* got',
+                        'WwWOoOOoOAAa!!!1 (.+?)\*\* got',
+                        '\*\*(.+?)\*\* got',
                     ]
                     for search_string in search_strings:
                         user_name_search = re.search(search_string, message_content, re.IGNORECASE)
@@ -147,7 +148,7 @@ class WorkCog(commands.Cog):
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
                     await errors.log_error(
-                        f'User not found for user name {user_name}',
+                        f'User not found for user name {user_name} in work message: {message.content}',
                         message
                     )
                     return
@@ -230,11 +231,11 @@ class WorkCog(commands.Cog):
                     await message.add_reaction(emojis.FIRE)
                 elif 'is this a **dream**??' in message_content.lower():
                     await message.add_reaction(emojis.FIRE)
-                elif 'nice!' in message_content.lower() and 'watermelon' in message_content.lower():
+                elif 'watermelon' in message_content.lower():
                     await message.add_reaction(emojis.PANDA_MELON)
-                elif 'this may be the luckiest moment of your life' in message_content.lower():
+                elif 'ultimate log' in message_content.lower():
                     await message.add_reaction(emojis.PANDA_COOL)
-                elif 'ooofff!!' in message_content.lower():
+                elif 'super fish' in message_content.lower():
                     await message.add_reaction(emojis.PANDA_FISH)
 
 
