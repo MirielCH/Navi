@@ -67,9 +67,9 @@ async def update_setting(name: str, value: str) -> None:
         raise ArgumentError('Arguments can\'t be None.')
     cur = settings.NAVI_DB.cursor()
     all_settings = await get_settings()
-    setting = all_settings.get(name, None)
+    setting = all_settings.get(name, 'No record')
     try:
-        if setting is None:
+        if setting == 'No record':
             sql = f'INSERT INTO {table} (name, value) VALUES (?, ?)'
             cur.execute(sql, (name, value))
         else:

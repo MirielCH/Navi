@@ -45,7 +45,7 @@ class TrainingHelperCog(commands.Cog):
                                 message
                             )
                             return
-                if updated_settings and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if updated_settings: await message.add_reaction(emojis.NAVI)
 
         if not message.embeds:
             message_content = message.content
