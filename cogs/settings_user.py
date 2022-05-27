@@ -175,7 +175,7 @@ class SettingsUserCog(commands.Cog):
         try:
             user: users.User = await users.get_user(ctx.author.id)
             if user.bot_enabled:
-                await ctx.reply(f'**{ctx.author.name}**, I\'m are already turned on.')
+                await ctx.reply(f'**{ctx.author.name}**, I\'m already turned on.')
                 return
         except exceptions.FirstTimeUserError:
             user = await users.insert_user(ctx.author.id)

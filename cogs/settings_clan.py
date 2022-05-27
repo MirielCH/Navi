@@ -24,6 +24,27 @@ class SettingsClanCog(commands.Cog):
             if ctx.message.mentions: return
             command = self.bot.get_command(name='clan_detection')
             if command is not None: await command.callback(command.cog, ctx, *args)
+        else:
+            guide = (
+                f'**Using guild reminders**\n'
+                f':one: Use `rpg guild list` or `/guild list` to add or update your guild.\n'
+                f':two: __Guild leader__: Use `{ctx.prefix}guild channel set` to set the guild channel.\n'
+                f':three: __Guild leader__: Turn on reminders with `navi guild reminder on`.\n'
+                f':four: __Guild leader__: Use `{ctx.prefix}guild stealth` to change the stealth threshold '
+                f'(95 default).\n'
+                f':five: Use `{ctx.prefix}guild leaderbord` or `{ctx.prefix}guild lb` to check the weekly raid '
+                f'leaderboard.\n\n'
+                f'**Notes**\n'
+                f'{emojis.BP} The guild channel does not need to be unique, you can have use the same channel for '
+                f'multiple guilds.\n'
+                f'{emojis.BP} Reminders are always sent to the guild channel. You can, however, raid or upgrade wherever '
+                f'you want, **as long as Navi can see it**. If you raid or upgrade somewhere else, use `rpg guild` or '
+                f'`/guild stats` here to create the reminder.\n'
+                f'{emojis.BP} Navi pings all guild members and thus needs no role. If you add or remove a guild member, '
+                f'simply use `rpg guild list` or `/guild list` again.\n'
+                f'{emojis.BP} Navi will tell you to upgrade until the threshold is reached and to raid afterwards.'
+            )
+            await ctx.reply(guide)
 
     @clan.group(name='channel', invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
@@ -154,6 +175,9 @@ class SettingsClanCog(commands.Cog):
         except exceptions.NoDataFoundError:
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
+        if clan.leader_id != ctx.author.id:
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
+            return
         if args:
             msg_wrong_argument = f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 95.'
             try:
@@ -165,6 +189,15 @@ class SettingsClanCog(commands.Cog):
                 await ctx.reply(msg_wrong_argument)
                 return
             await clan.update(stealth_threshold=new_threshold)
+            try:
+                reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+                if new_threshold <= clan.stealth_current:
+                    new_message = reminder.message.replace('upgrade','raid')
+                else:
+                    new_message = reminder.message.replace('raid','upgrade')
+                await reminder.update(message=new_message)
+            except exceptions.NoDataFoundError:
+                pass
             await ctx.reply(
                 f'**{ctx.author.name}**, the stealth threshold for the guild **{clan.clan_name}** is now '
                 f'**{clan.stealth_threshold}**.'
@@ -186,6 +219,15 @@ class SettingsClanCog(commands.Cog):
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
+            return
+        if clan.leader_id != ctx.author.id:
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
+            return
+        if clan.channel_id is None:
+            await ctx.reply(
+                f'**{ctx.author.name}**, you need to set a guild alert channel first. '
+                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild leader for this.'
+            )
             return
         if not args:
             action = 'enabled' if clan.alert_enabled else 'disabled'
