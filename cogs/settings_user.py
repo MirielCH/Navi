@@ -348,6 +348,7 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         action = ctx.invoked_with.lower()
         enabled = True if action == 'enable' else False
+        helper_action = 'on' if enabled else 'off'
         user: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{action} [activity]')
         possible_activities = 'Possible activities:'
@@ -355,6 +356,31 @@ class SettingsUserCog(commands.Cog):
             possible_activities = f'{possible_activities}\n{emojis.BP} `{activity}`'
         if not args:
             await ctx.reply(f'{syntax}\n\n{possible_activities}')
+            return
+        helper_check = ''.join(args).lower()
+        if 'heal' in helper_check:
+            await self.heal(ctx, helper_action)
+            return
+        if 'training' in helper_check and 'helper' in helper_check:
+            await self.trhelper(ctx, helper_action)
+            return
+        if 'ruby' in helper_check:
+            await self.ruby(ctx, helper_action)
+            return
+        if 'pet' in helper_check and 'helper' in helper_check:
+            await self.pethelper(ctx, helper_action)
+            return
+        if 'track' in helper_check:
+            await self.tracking(ctx, helper_action)
+            return
+        if 'reaction' in helper_check:
+            await self.reactions(ctx, helper_action)
+            return
+        if 'dnd' in helper_check:
+            await self.dnd(ctx, helper_action)
+            return
+        if 'hardmode' in helper_check:
+            await self.hardmode(ctx, helper_action)
             return
         if args[0].lower() == 'all':
             if not enabled:
@@ -379,7 +405,7 @@ class SettingsUserCog(commands.Cog):
             updated_activities.append(activity) if activity in strings.ACTIVITIES else ignored_activites.append(activity)
         if updated_activities:
             kwargs = {}
-            answer = f'{action.capitalize()}d alerts for the following activities:'
+            answer = f'{action.capitalize()}d reminders for the following activities:'
             for activity in updated_activities:
                 kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
                 answer = f'{answer}\n{emojis.BP}`{activity}`'

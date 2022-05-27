@@ -64,6 +64,7 @@ class TasksCog(commands.Cog):
                         messages[message_no] = f'{messages[message_no]}➜ There are no more pets on adventures.'
                     else:
                         next_pet_reminder = pet_reminders[0]
+                        next_pet_id = next_pet_reminder.activity.replace('pets-','')
                         time_left = next_pet_reminder.end_time - reminder.end_time
                         timestring = await functions.parse_timedelta_to_timestring(time_left)
                         pet_amount_left = len(pet_reminders)
@@ -71,7 +72,7 @@ class TasksCog(commands.Cog):
                         if pet_amount_left > 1: pets_left = f'{pets_left}s'
                         messages[message_no] = (
                             f'{messages[message_no]}'
-                            f'➜ {pets_left} left. Next pet will return in **{timestring}**.'
+                            f'➜ {pets_left} left. Next pet (`{next_pet_id}`) will return in **{timestring}**.'
                         )
                 time_left = get_time_left()
                 try:
