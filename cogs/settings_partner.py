@@ -29,7 +29,9 @@ class SettingsPartnerCog(commands.Cog):
             if user.partner_id is None:
                 await ctx.reply(
                     f'**{ctx.author.name}**, you don\'t have a partner set.\n'
-                    f'If you want to set a partner, use this command to ping them (`{prefix}partner @User`)'
+                    f'Setting a partner will allow you to set up partner lootbox alerts and the hardmode mode.\n\n'
+                    f'If you want to set a partner, use this command to ping them (`{prefix}partner @User`)\n'
+                    f'Note that your partner needs to be in the same server and needs to be able to answer.\n'
                 )
             else:
                 await self.bot.wait_until_ready()

@@ -46,7 +46,8 @@ CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
 MSG_ERROR = 'Whoops, something went wrong here.'
 MSG_NOT_CLAN_LEADER = (
     '**{username}**, you are not registered as a guild leader. Only guild leaders can do this.\n'
-    'If you are the guild leader, run `rpg guild list` add or update your guild in my database.'
+    'If you are the guild leader, run `rpg guild list` to add or update your guild in my database.\n\n'
+    'Also check `{prefix}guild` to see how guild reminders work.'
 )
 MSG_INVALID_ARGUMENT = 'Invalid argument. Check `{prefix}help` for the correct commands.'
 MSG_SYNTAX = 'The command syntax is `{syntax}`.'

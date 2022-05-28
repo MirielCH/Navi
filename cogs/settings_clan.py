@@ -94,7 +94,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name, prefix=ctx.prefix))
             return
         try:
             await ctx.reply(
@@ -130,7 +130,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name, prefix=ctx.prefix))
             return
         if clan.channel_id is None:
             await ctx.reply(
@@ -176,7 +176,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name, prefix=ctx.prefix))
             return
         if args:
             msg_wrong_argument = f'**{ctx.author.name}**, the stealth threshold needs to be a number between 1 and 95.'
@@ -221,12 +221,13 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.leader_id != ctx.author.id:
-            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name))
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name, prefix=ctx.prefix))
             return
         if clan.channel_id is None:
             await ctx.reply(
                 f'**{ctx.author.name}**, you need to set a guild alert channel first. '
-                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild leader for this.'
+                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild leader for this.\n\n'
+                f'Also check `{prefix}guild` to see how guild reminders work.'
             )
             return
         if not args:

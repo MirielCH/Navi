@@ -241,7 +241,12 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}dnd [on|off]')
 
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command toggles DND mode. If DND mode is on, I will not ping you on when I send a reminder.\n'
+                f'Note that this does not apply to guild reminders.\n\n'
+                f'{syntax}'
+            )
+            return
         if args:
             action = args[0].lower()
             if action in ('on', 'enable', 'start'):
@@ -355,6 +360,11 @@ class SettingsUserCog(commands.Cog):
         for activity in strings.ACTIVITIES_ALL:
             possible_activities = f'{possible_activities}\n{emojis.BP} `{activity}`'
         if not args:
+            await ctx.reply(
+                f'This command enables/disables specific reminders.\n'
+                f'{syntax}\n\n'
+                f'{possible_activities}'
+            )
             await ctx.reply(f'{syntax}\n\n{possible_activities}')
             return
         helper_check = ''.join(args).lower()
@@ -427,6 +437,8 @@ class SettingsUserCog(commands.Cog):
             answer = f'{answer}\n\nCouldn\'t find the following activites:'
             for activity in ignored_activites:
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
+                if 'guild' in activity:
+                    answer = f'{answer} (check `{ctx.prefix}guild` on how to set up guild reminders)'
         await ctx.reply(answer)
 
     @commands.command()
@@ -554,7 +566,13 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
 
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command toggles hardmode mode. If hardmode mode is on, your partner will be told to hunt solo '
+                f'whenever they use `hunt together` so you can hardmode in peace.\n'
+                f'Hardmode mode requires the partner to be set and your partner needs to have their partner alert '
+                f'channel set.\n\n'
+                f'{syntax}'
+            )
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -567,6 +585,13 @@ class SettingsUserCog(commands.Cog):
             await ctx.reply(syntax)
             return
         user: users.User = await users.get_user(ctx.author.id)
+        if user.partner_id is None:
+            await ctx.reply(
+                f'**{ctx.author.name}**, you don\'t have a partner set.\n'
+                f'This mode tells your partner to hunt solo, so you need to do that first.\n'
+                f'To set a partner, use `{ctx.prefix}partner`.'
+            )
+            return
         if user.hardmode_mode_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, hardmode mode is already {action}.'
@@ -575,7 +600,8 @@ class SettingsUserCog(commands.Cog):
         await user.update(hardmode_mode_enabled=enabled)
         if user.hardmode_mode_enabled == enabled:
             await ctx.reply(
-                f'**{ctx.author.name}**, hardmode mode is now **{action}**.'
+                f'**{ctx.author.name}**, hardmode mode is now **{action}**.\n'
+                f'Please note that your partner will only be properly notified if they have a partner alert channel set.'
             )
             if user.partner_id is not None:
                 await self.bot.wait_until_ready()
@@ -615,7 +641,12 @@ class SettingsUserCog(commands.Cog):
         if not args:
             if not user.ruby_counter_enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, the ruby counter is turned off. Use `{prefix}ruby on` to activate it.'
+                    f'This command toggles the ruby counter. The ruby counter keeps track of your rubies to be able to '
+                    f'answer the ruby training question.\n'
+                    f'Note that I can only do that if you use commands where I can see them.\n'
+                    f'If you used or gained rubies somewhere I couldn\'t see it, open your inventory to correct '
+                    f'the count.\n\n'
+                    f'{syntax}'
                 )
                 return
             await ctx.reply(
@@ -659,7 +690,12 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command toggles the training helper. The training helper will tell you the answer to '
+                f'training questions.\n'
+                f'Note that the ruby question is controlled separately with `{prefix}ruby [on|off]`\n\n'
+                f'{syntax}'
+            )
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -699,7 +735,11 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command toggles the pet helper. The pet helper will tell you the recommended commands to use '
+                f'when a pet appears.\n\n'
+                f'{syntax}'
+            )
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -732,7 +772,12 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
 
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command toggles the command tracking. If it\'s turned on, I will record how often you do certain '
+                f'commands\n'
+                f'You can use `{prefix}stats` to see your stats.\n\n'
+                f'{syntax}'
+            )
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -762,7 +807,13 @@ class SettingsUserCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command toggles the heal warning. The heal warning will try to tell you to heal '
+                f'if your HP gets low.\n'
+                f'Please note that adventures do higher damage than hunts. '
+                f'Always check your HP before doing an adventure regardless.\n\n'
+                f'{syntax}'
+            )
             return
         action = args[0].lower()
         if action in ('on', 'enable', 'start'):
@@ -887,13 +938,15 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
-        f'{emojis.BP} Heal warning: `{await bool_to_text(user_settings.heal_warning_enabled)}`\n'
-        f'{emojis.BP} Pet helper: `{await bool_to_text(user_settings.pet_helper_enabled)}`\n'
         f'{emojis.BP} Reactions {emojis.NAVI}: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
-        f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
-        f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
         f'{emojis.BP} Last TT: <t:{int(user_settings.last_tt.timestamp())}:f> UTC\n'
         f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{user_partner_channel_name}`\n'
+    )
+    field_helpers = (
+        f'{emojis.BP} Heal warning: `{await bool_to_text(user_settings.heal_warning_enabled)}`\n'
+        f'{emojis.BP} Pet helper: `{await bool_to_text(user_settings.pet_helper_enabled)}`\n'
+        f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
+        f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
     )
     field_partner = (
         f'{emojis.BP} Name: `{partner_name}`\n'
@@ -941,7 +994,8 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         title = f'{ctx.author.name}\'s settings'.upper(),
     )
     embed.add_field(name='USER', value=field_user, inline=True)
-    embed.add_field(name='PARTNER', value=field_partner, inline=True)
+    embed.add_field(name='HELPERS', value=field_helpers, inline=True)
+    embed.add_field(name='PARTNER', value=field_partner, inline=False)
     embed.add_field(name='GUILD', value=field_clan, inline=False)
     embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=True)
     embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=True)
