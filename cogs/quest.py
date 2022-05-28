@@ -32,7 +32,7 @@ class QuestCog(commands.Cog):
             if embed.description: message_description = embed.description
 
             # Guild quest check
-            if 'do a guild raid' in field_value.lower():
+            if 'do a guild raid' in field_value.lower() and 'are you looking for a quest' in message_description.lower():
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
@@ -371,6 +371,22 @@ class QuestCog(commands.Cog):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+
+            # Aborted guild quest
+            if 'you don\'t have a quest anymore' in message_content.lower() and message.mentions:
+                user = message.mentions[0]
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                try:
+                    clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
+                except exceptions.NoDataFoundError:
+                    return
+                if clan.quest_user_id is not None:
+                    if clan.quest_user_id == user.id:
+                        await clan.update(quest_user_id=None)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

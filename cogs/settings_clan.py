@@ -346,12 +346,18 @@ class SettingsClanCog(commands.Cog):
             emoji = getattr(emojis, f'LEADERBOARD_{index+1}')
             await self.bot.wait_until_ready()
             user = self.bot.get_user(best_raid.user_id)
-            field_best_raids = f'{field_best_raids}\n{emoji} **{best_raid.energy:,}** by <@{best_raid.user_id}>'
+            field_best_raids = (
+                f'{field_best_raids}\n'
+                f'{emoji} **{best_raid.energy:,}** {emojis.ENERGY} by <@{best_raid.user_id}>'
+            )
         for index, worst_raid in enumerate(leaderboard.worst_raids):
             emoji = getattr(emojis, f'LEADERBOARD_{index+1}')
             await self.bot.wait_until_ready()
             user = self.bot.get_user(worst_raid.user_id)
-            field_worst_raids = f'{field_worst_raids}\n{emoji} **{worst_raid.energy:,}** by <@{worst_raid.user_id}>'
+            field_worst_raids = (
+                f'{field_worst_raids}\n'
+                f'{emoji} **{worst_raid.energy:,}** {emojis.ENERGY} by <@{worst_raid.user_id}>'
+            )
         if field_best_raids == '': field_best_raids = f'{emojis.BP} _No cool raids yet._'
         if field_worst_raids == '': field_worst_raids = f'{emojis.BP} _No lame raids yet._'
         embed = discord.Embed(

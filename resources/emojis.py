@@ -10,7 +10,7 @@ LB_RARE = '<:erg_rarelootbox:770547275709415424>'
 LB_UNCOMMON = '<:erg_uncommonlootbox:770547275528667137>'
 
 # Clan leaderboard
-ENERGY = ':low_brightness:'
+ENERGY = '🔅'
 LEADERBOARD_1 = ':one:'
 LEADERBOARD_2 = ':two:'
 LEADERBOARD_3 = ':three:'

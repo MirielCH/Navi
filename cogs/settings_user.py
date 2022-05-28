@@ -152,9 +152,12 @@ class SettingsUserCog(commands.Cog):
             reminder = clan_reminders[0]
             time_left = reminder.end_time - current_time
             clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
-            if clan.quest_user_id is not None: time_left = time_left + timedelta(minutes=5)
+            if clan.quest_user_id is not None:
+                if clan.quest_user_id != user_id: time_left = time_left + timedelta(minutes=5)
             timestring = await functions.parse_timedelta_to_timestring(time_left)
-            embed.add_field(name='GUILD', value=f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)')
+            field_value = f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)'
+            if clan.quest_user_id == user_id: field_value = f'{field_value} (quest active)'
+            embed.add_field(name='GUILD', value=field_value)
         if reminders_custom_list:
             field_custom_reminders = ''
             for reminder in reminders_custom_list:

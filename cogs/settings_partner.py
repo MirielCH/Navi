@@ -67,7 +67,7 @@ class SettingsPartnerCog(commands.Cog):
                     await ctx.send('Aborted.')
                     return
             except asyncio.TimeoutError:
-                await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+                await ctx.send(f'**{ctx.author.name}**, your lazy partner didn\'t answer in time.')
                 return
             await user.update(partner_id=partner.user_id, partner_donor_tier=partner.user_donor_tier)
             await partner.update(partner_id=user.user_id, partner_donor_tier=user.user_donor_tier)
