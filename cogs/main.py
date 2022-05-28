@@ -161,7 +161,8 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `{prefix}guild channel` : Set the channel for guild reminders\n'
         f'{emojis.BP} `{prefix}guild leaderboard` : Check the weekly raid leaderboard\n'
         f'{emojis.BP} `{prefix}guild reminders on` / `off` : Turn guild reminders on or off\n'
-        f'{emojis.BP} `{prefix}guild stealth` : Set your stealth threshold'
+        f'{emojis.BP} `{prefix}guild stealth` : Set your stealth threshold\n'
+        f'{emojis.BP} `{prefix}guild upgrade-quests on` / `off` : Allow/deny quests below threshold\n'
     )
 
     server_settings = (

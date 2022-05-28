@@ -21,8 +21,10 @@ class Clan():
     clan_name: str
     leader_id: int
     member_ids: Tuple[int]
+    quest_user_id: int
     stealth_current: int
     stealth_threshold: int
+    upgrade_quests_enabled: bool
     record_exists: bool = True
 
     async def delete(self) -> None:
@@ -54,8 +56,10 @@ class Clan():
         self.channel_id = new_settings.channel_id
         self.leader_id = new_settings.leader_id
         self.member_ids = new_settings.member_ids
+        self.quest_user_id = new_settings.quest_user_id
         self.stealth_current = new_settings.stealth_current
         self.stealth_threshold = new_settings.stealth_threshold
+        self.upgrade_quests_enabled = new_settings.upgrade_quests_enabled
 
     async def update(self, **kwargs) -> None:
         """Updates the clan record in the database. Also calls refresh().
@@ -69,8 +73,10 @@ class Clan():
             clan_name: str
             leader_id: int
             member_ids: Union[Tuple[int],List[int]] (up to 10)
+            quest_user_id: int
             stealth_current: int
             stealth_threshold: int
+            upgrade_quests_enabled: bool
 
         Raises
         ------
@@ -138,8 +144,10 @@ async def _dict_to_clan(record: dict) -> Clan:
                  record['member9_id'],
                  record['member10_id'],
             ),
+            quest_user_id = record['quest_user_id'],
             stealth_current = record['stealth_current'],
             stealth_threshold = record['stealth_threshold'],
+            upgrade_quests_enabled = bool(record['upgrade_quests_enabled'])
         )
     except Exception as error:
         await errors.log_error(

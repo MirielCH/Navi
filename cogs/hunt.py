@@ -78,14 +78,15 @@ class HuntCog(commands.Cog):
                         return
                     user_command = user_command_message.content.lower()
                     user_command = user_command[8:].strip()
-                    if 'h ' in user_command or user_command.endswith('h'):
-                        user_command = user_command.replace('h','hardmode')
-                    if 't ' in user_command or user_command.endswith('t'):
-                        user_command = user_command.replace('t',' together')
-                    if 'a ' in user_command or user_command.endswith('a'):
-                        user_command = user_command.replace('a',' alone')
-                    user_command = " ".join(user_command.split())
-                    user_command = f'rpg hunt {user_command}'
+                    arguments = ''
+                    for argument in user_command.split():
+                        if argument in ('h', 'hardmode') and 'hardmode' not in arguments:
+                            arguments = f'{arguments} hardmode'
+                        if argument in ('t', 'together') and 'together' not in arguments:
+                            arguments = f'{arguments} together'
+                        if argument in ('a', 'alone') and 'alone' not in arguments:
+                            arguments = f'{arguments} alone'
+                    user_command = f'rpg hunt {arguments.strip()}'
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:

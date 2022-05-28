@@ -6,7 +6,7 @@ import re
 import discord
 from discord.ext import commands
 
-from database import cooldowns, errors, reminders, users
+from database import cooldowns, clans, errors, reminders, users
 from resources import emojis, exceptions, functions, settings, strings
 
 
@@ -22,12 +22,76 @@ class QuestCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = message_description = icon_url = ''
+            message_author = message_title = message_description = icon_url = field_value = ''
             if embed.author:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
+            if embed.fields:
+                field_value = embed.fields[0].value
             if embed.title: message_title = str(embed.title)
             if embed.description: message_description = embed.description
+
+            # Guild quest check
+            if 'do a guild raid' in field_value.lower():
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    try:
+                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                    except:
+                        try:
+                            user_name = re.search("^(.+?)'s quest", message_author).group(1)
+                            user_name = await functions.encode_text(user_name)
+                        except Exception as error:
+                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                                await message.add_reaction(emojis.WARNING)
+                            await errors.log_error(
+                                f'User not found in guild quest message: {message.embeds[0].fields}',
+                                message
+                            )
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        for member in message.guild.members:
+                            member_name = await functions.encode_text(member.name)
+                            if member_name == user_name:
+                                user = member
+                                break
+                if user is None:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in guild quest message: {message.embeds[0].fields}',
+                        message
+                    )
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                try:
+                    clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                except exceptions.NoDataFoundError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if not clan.alert_enabled: return
+                if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
+                    await message.reply(
+                        f'**{user.name}**, your guild doesn\'t allow doing guild quests below the '
+                        f'stealth threshold ({clan.stealth_threshold}).'
+                    )
+                    return
+                if clan.quest_user_id is not None:
+                    await message.reply(
+                        f'**{user.name}**, another guild member is already doing a guild quest.'
+                    )
+                    return
+                await user_settings.update(guild_quest_prompt_active=True)
+                await message.reply(
+                    f'**{user.name}**, if you accept this quest, the next guild reminder will ping you solo first. '
+                    f'You will have 5 minutes to raid before the other members are pinged.\n'
+                )
 
             # Quest cooldown
             if 'you have already claimed a quest' in message_title.lower():
@@ -296,6 +360,13 @@ class QuestCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
                 )
+                if user_settings.guild_quest_prompt_active:
+                    try:
+                        clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                        await clan.update(quest_user_id=user.id)
+                    except exceptions.NoDataFoundError:
+                        pass
+                    await user_settings.update(guild_quest_prompt_active=False)
                 if reminder.record_exists:
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:

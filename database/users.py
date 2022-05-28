@@ -51,6 +51,7 @@ class User():
     partner_id: int
     partner_name: str
     pet_helper_enabled: bool
+    guild_quest_prompt_active: bool
     reactions_enabled: bool
     rubies: int
     ruby_counter_enabled: bool
@@ -94,6 +95,7 @@ class User():
         self.partner_id = new_settings.partner_id
         self.partner_name = new_settings.partner_name
         self.pet_helper_enabled = new_settings.pet_helper_enabled
+        self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
@@ -153,6 +155,7 @@ class User():
             bot_enabled: bool
             clan_name: str
             dnd_mode_enabled: bool
+            guild_quest_prompt_active: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
             last_tt: datetime UTC
@@ -236,6 +239,7 @@ async def _dict_to_user(record: dict) -> User:
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
+            guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,

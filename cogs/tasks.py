@@ -24,8 +24,8 @@ class TasksCog(commands.Cog):
     async def background_task(self, reminders_list: List[reminders.Reminder]) -> None:
         """Background task for scheduling reminders"""
         first_reminder = reminders_list[0]
+        current_time = datetime.utcnow().replace(microsecond=0)
         def get_time_left() -> timedelta:
-            current_time = datetime.utcnow().replace(microsecond=0)
             time_left = first_reminder.end_time - current_time
             if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
             return time_left
@@ -77,14 +77,43 @@ class TasksCog(commands.Cog):
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
+                    allowed_mentions = discord.AllowedMentions(users=[user,])
+                    for message in messages.values():
+                        await channel.send(message.strip(), allowed_mentions=allowed_mentions)
                 except asyncio.CancelledError:
                     return
-                allowed_mentions = discord.AllowedMentions(users=[user,])
-                for message in messages.values():
-                    await channel.send(message.strip(), allowed_mentions=allowed_mentions)
 
             if first_reminder.reminder_type == 'clan':
                 clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
+                if clan.quest_user_id is not None:
+                    await self.bot.wait_until_ready()
+                    quest_user = self.bot.get_user(clan.quest_user_id)
+                    if quest_user is None:
+                        await errors.log_error(
+                            f'Quest user ID {clan.quest_user_id} didn\'t return a valid user object.'
+                        )
+                        await clan.update(quest_user_id=None)
+                    else:
+                        await clan.update(quest_user_id=None)
+                        time_left_all_members = timedelta(minutes=5)
+                        alert_message_prefix = '/' if '/guild' in clan.alert_message else 'rpg '
+                        if clan.stealth_current >= clan.stealth_threshold:
+                            alert_message = f'{alert_message_prefix}guild raid'
+                        else:
+                            alert_message = f'{alert_message_prefix}guild upgrade'
+                        time_left = get_time_left()
+                        try:
+                            await asyncio.sleep(time_left.total_seconds())
+                            await channel.send(
+                                f'{quest_user.mention} Hey! It\'s time for your raid quest. '
+                                f'You have 5 minutes, chop chop.'
+                            )
+                            reminder: reminders.Reminder = (
+                                await reminders.insert_clan_reminder(clan.clan_name, time_left_all_members,
+                                                                    clan.channel_id, alert_message)
+                            )
+                        except asyncio.CancelledError:
+                            return
                 message_mentions = ''
                 for member_id in clan.member_ids:
                     if member_id is not None:
@@ -93,10 +122,12 @@ class TasksCog(commands.Cog):
                         if member is not None:
                             message_mentions = f'{message_mentions}{member.mention} '
                 time_left = get_time_left()
-                await asyncio.sleep(time_left.total_seconds())
-                embed = discord.Embed(title=first_reminder.message)
-                await channel.send(f'{message_mentions}\nIt\'s time for:', embed=embed)
-
+                try:
+                    await asyncio.sleep(time_left.total_seconds())
+                    embed = discord.Embed(title=first_reminder.message)
+                    await channel.send(f'{message_mentions}\nIt\'s time for:', embed=embed)
+                except asyncio.CancelledError:
+                    return
             running_tasks.pop(first_reminder.task_name, None)
         except Exception as error:
             await errors.log_error(error)

@@ -151,6 +151,8 @@ class SettingsUserCog(commands.Cog):
         if clan_reminders:
             reminder = clan_reminders[0]
             time_left = reminder.end_time - current_time
+            clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
+            if clan.quest_user_id is not None: time_left = time_left + timedelta(minutes=5)
             timestring = await functions.parse_timedelta_to_timestring(time_left)
             embed.add_field(name='GUILD', value=f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)')
         if reminders_custom_list:
@@ -917,11 +919,12 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         if partner_partner_channel is not None: partner_partner_channel_name = partner_partner_channel.name
 
     # Get clan settings
-    clan_name = clan_alert_status = stealth_threshold = clan_channel_name = 'N/A'
+    clan_name = clan_alert_status = stealth_threshold = clan_channel_name = clan_upgrade_quests = 'N/A'
     try:
         clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         clan_name = clan_settings.clan_name
         clan_alert_status = await bool_to_text(clan_settings.alert_enabled)
+        clan_upgrade_quests = 'Allowed' if clan_settings.upgrade_quests_enabled else 'Not allowed'
         stealth_threshold = clan_settings.stealth_threshold
         if clan_settings.channel_id is not None:
             await bot.wait_until_ready()
@@ -929,7 +932,10 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
             clan_channel_name = clan_channel.name
     except exceptions.NoDataFoundError:
         pass
-
+    try:
+        tt_timestamp = int(user_settings.last_tt.timestamp())
+    except OSError as error: # Windows throws an error if datetime is set to 0 apparently
+        tt_timestamp = 0
     # Fields
     field_user = (
         f'{emojis.BP} Bot: `{await bool_to_text(user_settings.bot_enabled)}`\n'
@@ -939,7 +945,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
         f'{emojis.BP} Reactions {emojis.NAVI}: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
-        f'{emojis.BP} Last TT: <t:{int(user_settings.last_tt.timestamp())}:f> UTC\n'
+        f'{emojis.BP} Last TT: <t:{tt_timestamp}:f> UTC\n'
         f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{user_partner_channel_name}`\n'
     )
     field_helpers = (
@@ -959,7 +965,8 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Name: `{clan_name}`\n'
         f'{emojis.BP} Reminders: `{clan_alert_status}`\n'
         f'{emojis.BP} Alert channel: `{clan_channel_name}`\n'
-        f'{emojis.BP} Stealth threshold: `{stealth_threshold}`'
+        f'{emojis.BP} Stealth threshold: `{stealth_threshold}`\n'
+        f'{emojis.BP} Quests below threshold: `{clan_upgrade_quests}`\n'
     )
     field_reminders = (
         f'{emojis.BP} Adventure: `{await bool_to_text(user_settings.alert_adventure.enabled)}`\n'

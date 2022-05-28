@@ -31,18 +31,22 @@ class SettingsClanCog(commands.Cog):
                 f':two: __Guild leader__: Use `{ctx.prefix}guild channel set` to set the guild channel.\n'
                 f':three: __Guild leader__: Turn on reminders with `navi guild reminder on`.\n'
                 f':four: __Guild leader__: Use `{ctx.prefix}guild stealth` to change the stealth threshold '
-                f'(95 default).\n'
-                f':five: Use `{ctx.prefix}guild leaderbord` or `{ctx.prefix}guild lb` to check the weekly raid '
+                f'(90 default).\n'
+                f':five: __Guild leader__: Use `{ctx.prefix}guild upgrade-quests` to allow or deny guild members to do '
+                f'guild quests below stealth threshold (allowed by default).\n'
+                f':six: Use `{ctx.prefix}guild leaderbord` or `{ctx.prefix}guild lb` to check the weekly raid '
                 f'leaderboard.\n\n'
                 f'**Notes**\n'
-                f'{emojis.BP} The guild channel does not need to be unique, you can have use the same channel for '
+                f'{emojis.BP} The guild channel does not need to be unique, you can use the same channel for '
                 f'multiple guilds.\n'
                 f'{emojis.BP} Reminders are always sent to the guild channel. You can, however, raid or upgrade wherever '
                 f'you want, **as long as Navi can see it**. If you raid or upgrade somewhere else, use `rpg guild` or '
                 f'`/guild stats` here to create the reminder.\n'
                 f'{emojis.BP} Navi pings all guild members and thus needs no role. If you add or remove a guild member, '
                 f'simply use `rpg guild list` or `/guild list` again.\n'
-                f'{emojis.BP} Navi will tell you to upgrade until the threshold is reached and to raid afterwards.'
+                f'{emojis.BP} Navi will tell you to upgrade until the threshold is reached and to raid afterwards.\n'
+                f'{emojis.BP} If you accept a raid quest and guild quests are allowed, you will be pinged 5m before '
+                f'everyone else\n'
             )
             await ctx.reply(guide)
 
@@ -257,6 +261,69 @@ class SettingsClanCog(commands.Cog):
             if clan.alert_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, reminders for the guild **{clan.clan_name}** are now {action}.'
+                )
+            else:
+                await ctx.reply(strings.MSG_ERROR)
+
+    @clan.command(name='upgrade-quests', aliases=('upgradequests','upgradequest','upgrade-quest'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def clan_upgrade_quests(self, ctx: commands.Context, *args: str) -> None:
+        """Allow/deny guild quests below the stealth threshold"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        user: users.User = await users.get_user(ctx.author.id)
+        try:
+            clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
+        except exceptions.NoDataFoundError:
+            await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
+            return
+        if clan.leader_id != ctx.author.id:
+            await ctx.reply(strings.MSG_NOT_CLAN_LEADER.format(username=ctx.author.name, prefix=ctx.prefix))
+            return
+        if clan.channel_id is None:
+            await ctx.reply(
+                f'**{ctx.author.name}**, you need to set a guild alert channel first. '
+                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild leader for this.\n\n'
+                f'Also check `{prefix}guild` to see how guild reminders work.'
+            )
+            return
+        if not clan.alert_enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, you need turn on guild reminders first. '
+                f'Use `{ctx.prefix}guild reminders on` to do so. Note that you need to be the guild leader for this.\n\n'
+                f'Also check `{prefix}guild` to see how guild reminders work.'
+            )
+            return
+        if not args:
+            action = 'allowed' if clan.upgrade_quests_enabled else 'not allowed'
+            await ctx.reply(
+                f'**{ctx.author.name}**, guild members are currently **{action}** to do guild quests below the stealth '
+                f'threshold.\n'
+                f'Use `{prefix}guild upgrade-quests [on|off]` to change this.'
+            )
+            return
+        if args:
+            action = args[0]
+            if action in ('on','enable','start','allow','allowed'):
+                action = 'allowed'
+                enabled = True
+            elif action in ('off','disable','stop','deny','denied'):
+                action = 'not allowed'
+                enabled = False
+            else:
+                await ctx.reply(strings.MSG_INVALID_ARGUMENT.format(prefix=prefix))
+                return
+            if clan.upgrade_quests_enabled == enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, guild members are already **{action}** to do guild quests below the stealth '
+                    f'threshold.'
+                )
+                return
+            await clan.update(upgrade_quests_enabled=enabled)
+            if clan.upgrade_quests_enabled == enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, guild members are now **{action}** to do guild quests below the stealth '
+                    f'threshold.'
                 )
             else:
                 await ctx.reply(strings.MSG_ERROR)

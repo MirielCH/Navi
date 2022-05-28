@@ -79,7 +79,7 @@ class ClanCog(commands.Cog):
                 if not clan.alert_enabled: return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
-                except exceptions.NoDataFoundError:
+                except exceptions.FirstTimeUserError:
                     user_settings = None
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
@@ -123,10 +123,12 @@ class ClanCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled or clan.channel_id is None: return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.NoDataFoundError:
-                    user_settings = None
+                user_settings = None
+                if user is not None:
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        pass
                 try:
                     stealth = re.search("STEALTH\*\*: (.+?)\\n", message_field1).group(1)
                     stealth = int(stealth)
@@ -188,7 +190,7 @@ class ClanCog(commands.Cog):
                 if not clan.alert_enabled: return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
-                except exceptions.NoDataFoundError:
+                except exceptions.FirstTimeUserError:
                     user_settings = None
                 clan_stealth_before = clan.stealth_current
                 try:
@@ -263,7 +265,7 @@ class ClanCog(commands.Cog):
                 if not clan.alert_enabled: return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
-                except exceptions.NoDataFoundError:
+                except exceptions.FirstTimeUserError:
                     user_settings = None
                 try:
                     energy = re.search("earned \*\*(.+?)\*\*", message_field1).group(1)

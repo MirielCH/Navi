@@ -87,11 +87,13 @@ class AdventureCog(commands.Cog):
                         )
                         return
                     user_command = user_command_message.content.lower()
-                    if ' adv ' in user_command or user_command.endswith(' adv'):
-                        user_command = user_command.replace(' adv',' adventure')
-                    if ' h ' in user_command or user_command.endswith(' h'):
-                        user_command = user_command.replace(' h',' hardmode')
-                    user_command = " ".join(user_command.split())
+                    arguments = ''
+                    for argument in user_command.split():
+                        if argument in ('adv', 'adventure') and 'adventure' not in arguments:
+                            arguments = f'{arguments} adventure'
+                        if argument in ('h', 'hardmode') and 'hardmode' not in arguments:
+                            arguments = f'{arguments} hardmode'
+                    user_command = f'rpg {arguments.strip()}'
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
