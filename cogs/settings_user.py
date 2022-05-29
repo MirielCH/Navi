@@ -534,7 +534,7 @@ class SettingsUserCog(commands.Cog):
             if len(new_message) > 1024:
                 await ctx.reply('This is a command to set a new message, not to write a novel :thinking:')
                 return
-            for placeholder in re.finditer('\{[a-z]*\}', new_message):
+            for placeholder in re.finditer('\{[a-zA-Z0-9.,_\- ]*\}', new_message):
                 placeholder_str = new_message[placeholder.start():placeholder.end()]
                 if placeholder_str not in strings.DEFAULT_MESSAGES[activity]:
                     allowed_placeholders = ''
