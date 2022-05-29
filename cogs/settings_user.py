@@ -30,7 +30,9 @@ class SettingsUserCog(commands.Cog):
     async def list_reminders(self, ctx: commands.Context, *args: str) -> None:
         """Lists all active reminders"""
         if ctx.prefix.lower() == 'rpg ': return
-        if args:
+        if ctx.message.mentions:
+            user_id = ctx.message.mentions[0].id
+        elif args:
             arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
             if arg.isnumeric():
                 try:

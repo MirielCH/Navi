@@ -2,8 +2,8 @@
 """Provides access to the table "cooldowns" in the database"""
 
 from datetime import datetime
-from email.message import Message
 import sqlite3
+import traceback
 from typing import Optional, Union
 
 import discord
@@ -28,15 +28,36 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
     table = 'errors'
     function_name = 'log_error'
     sql = f'INSERT INTO {table} (date_time, user_input, error, user_settings, jump_url) VALUES (?, ?, ?, ?, ?)'
+    if hasattr(error, 'message'):
+        error_message = error.message
+    else:
+        error_message = str(error)
+    try:
+        module = error.__class__.__module__
+        if module is None or module == str.__class__.__module__:
+            error_message = error.__class__.__name__
+        if hasattr(error, '__traceback__'):
+            traceback_str = "".join(traceback.format_tb(error.__traceback__))
+        else:
+            traceback_str = 'N/A'
+        error_message = (
+            f'{error_message}\n\n'
+            f'Exception type:\n'
+            f'{module}.{error.__class__.__name__}\n\n'
+            f'Traceback:\n'
+            f'{traceback_str}'
+        )
+    except Exception as error:
+        error_message = f'{error_message}\n\nGot the following error while trying to get type and traceback:\n{error}'
     message = None
     if isinstance(ctx, commands.Context):
         message = ctx.message
-        user_input = ctx.message.content
+        user_input = message.content
     elif isinstance(ctx, discord.Message):
         message = ctx
-        user_input = 'N/A'
+        user_input = message.content
     if message is None:
-        date_time = datetime.utcnow()
+        date_time = datetime.utcnow(tzinfo=None)
         user_input = 'N/A'
         jump_url = 'N/A'
         user_settings = 'N/A'
@@ -51,9 +72,9 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
             user_settings = 'N/A'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (date_time, user_input, str(error), user_settings, jump_url))
+        cur.execute(sql, (date_time, user_input, error_message, user_settings, jump_url))
         logs.logger.error(
-            f'Time: {date_time}. User input: {user_input}. Error: {error}. User settings: {user_settings}. '
+            f'Time: {date_time}. User input: {user_input}. Error: {error_message}. User settings: {user_settings}. '
             f'Jump URL: {jump_url}'
         )
     except sqlite3.Error as error:

@@ -70,7 +70,7 @@ class MainCog(commands.Cog):
             if 'send_messages' in error.missing_permissions:
                 return
             if 'embed_links' in error.missing_perms:
-                await ctx.replay(error)
+                await ctx.reply(error)
             else:
                 await send_error()
         elif isinstance(error, exceptions.FirstTimeUserError):

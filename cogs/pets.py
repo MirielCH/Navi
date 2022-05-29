@@ -28,34 +28,47 @@ class PetsCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Single pet adventure
-            if 'your pet has started an adventure and will be back' in message_content.lower():
+            if ('your pet has started an adventure and will be back' in message_content.lower()
+                or 'pets have started an adventure!' in message_content.lower()):
                 interaction = await functions.get_interaction(message)
-                if interaction is not None: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' adv' in msg.content.lower()
-                            and not msg.author.bot):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        'Couldn\'t find a command for pet adventure message.',
-                        message
-                    )
-                    return
-                user = user_command_message.author
-                arguments = user_command_message.content.split()
-                pet_id = arguments[-1].upper()
-                if pet_id == 'EPIC': return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    user_command_message = None
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' adv' in msg.content.lower()
+                                and not msg.author.bot):
+                                user_command_message = msg
+                                break
+                    if user_command_message is None:
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            'Couldn\'t find a command for pet adventure message.',
+                            message
+                        )
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
+                if not user_settings.pet_tip_read:
+                    pet_message = f'**{user.name}**, please use `/pets list` or `rpg pets` to create pet reminders.'
+                    pet_message = (
+                        f'{pet_message}\n\n'
+                        f'Tip: This is done fastest by sorting pets by their status:\n'
+                        f'{emojis.BP} `/pets list sort: status` (click through all pages with active pets)\n'
+                        f'{emojis.BP} `rpg pets status`'
+                    ) # Message split up like this because I'm unsure if I want to always send the first part
+                    await user_settings.update(pet_tip_read=True)
+                    await message.reply(pet_message)
+                if interaction is not None or 'pets have started an adventure!' in message_content.lower(): return
+                arguments = user_command_message.content.split()
+                pet_id = arguments[-1].upper()
+                if pet_id == 'EPIC': return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 timestring = re.search("will be back in \*\*(.+?)\*\*", message_content).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
@@ -76,7 +89,9 @@ class PetsCog(commands.Cog):
             if 'pet adventure(s) cancelled' in message_content.lower():
                 user = await functions.get_interaction_user(message)
                 if user is not None:
-                    await message.channel.send(f'**{user.name}**, please use `/pets list` to update your pet reminders.')
+                    await message.reply(
+                        f'**{user.name}**, please use `/pets list` to update your pet reminders.'
+                    )
                     return
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None

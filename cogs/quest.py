@@ -78,18 +78,21 @@ class QuestCog(commands.Cog):
                 if not clan.alert_enabled: return
                 if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
                     await message.reply(
-                        f'**{user.name}**, your guild doesn\'t allow doing guild quests below the '
+                        f'{emojis.ERROR} Guild quest spot not available.\n'
+                        f'Your guild doesn\'t allow doing guild quests below the '
                         f'stealth threshold ({clan.stealth_threshold}).'
                     )
                     return
                 if clan.quest_user_id is not None:
                     await message.reply(
-                        f'**{user.name}**, another guild member is already doing a guild quest.'
+                        f'{emojis.ERROR} Guild quest spot not available.\n'
+                        f'Another guild member is already doing a guild quest.'
                     )
                     return
                 await user_settings.update(guild_quest_prompt_active=True)
                 await message.reply(
-                    f'**{user.name}**, if you accept this quest, the next guild reminder will ping you solo first. '
+                    f'{emojis.CHECK} Guild quest spot available.\n'
+                    f'If you accept this quest, the next guild reminder will ping you solo first. '
                     f'You will have 5 minutes to raid before the other members are pinged.\n'
                 )
 
@@ -361,11 +364,12 @@ class QuestCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 if user_settings.guild_quest_prompt_active:
-                    try:
-                        clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
-                        await clan.update(quest_user_id=user.id)
-                    except exceptions.NoDataFoundError:
-                        pass
+                    if not quest_declined:
+                        try:
+                            clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                            await clan.update(quest_user_id=user.id)
+                        except exceptions.NoDataFoundError:
+                            pass
                     await user_settings.update(guild_quest_prompt_active=False)
                 if reminder.record_exists:
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)

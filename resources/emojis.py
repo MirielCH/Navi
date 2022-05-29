@@ -40,6 +40,7 @@ PRESENT_GODLY = '<:erg_godlypresent:781654310911344650>'
 # Misc
 BLANK = '<:blank:837342790752534528>'
 BP = ':small_blue_diamond:'
+CHECK = '✅'
 CROSS = '❎'
 ERROR = '<:redcross:796796637695311963>'
 NAVI_DEV = '<:navi_dev:835580973072515112>'
