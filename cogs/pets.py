@@ -244,8 +244,15 @@ class PetsCog(commands.Cog):
                                 pet_emoji = emoji
                                 break
                         pet_action_timestring_search = re.search('Status__:\*\* (.+?) \| \*\*(.+?)\*\*', field.value)
-                        if pet_id_search is None or pet_action_timestring_search is None: continue
+                        if pet_id_search is None: continue
                         pet_id = pet_id_search.group(1)
+                        if pet_action_timestring_search is None:
+                            try:
+                                reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, f'pets-{pet_id}')
+                                await reminder.delete()
+                            except exceptions.NoDataFoundError:
+                                pass
+                            continue
                         pet_action = pet_action_timestring_search.group(1)
                         if pet_action not in ('learning','finding','drilling'): continue
                         pet_timestring = pet_action_timestring_search.group(2)
