@@ -77,7 +77,7 @@ class FunCog(commands.Cog):
                 if user is None:
                     user_name = None
                     try:
-                        user_name = re.search("\*\*(.+?)\*\* is now", message_content).group(1)
+                        user_name = re.search("car \*\*(.+?)\*\*", message_content).group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -147,7 +147,7 @@ class FunCog(commands.Cog):
                 if user is None:
                     user_name = None
                     try:
-                        user_name = re.search("\*\*(.+?)\*\* took the", message_content).group(1)
+                        user_name = re.search("\*\*(.+?)\*\* HITS", message_content).group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -182,7 +182,7 @@ class FunCog(commands.Cog):
                 if user is None:
                     user_name = None
                     try:
-                        user_name = re.search("\*\*(.+?)\*\* ran away", message_content).group(1)
+                        user_name = re.search("\*\*(.+?)\*\* fights", message_content).group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

@@ -35,7 +35,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
     try:
         module = error.__class__.__module__
         if module is None or module == str.__class__.__module__:
-            error_message = error.__class__.__name__
+            error_message = f'{error_message}\n{error.__class__.__name__}'
         if hasattr(error, '__traceback__'):
             traceback_str = "".join(traceback.format_tb(error.__traceback__))
         else:
