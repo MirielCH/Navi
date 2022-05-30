@@ -223,8 +223,16 @@ class ClanCog(commands.Cog):
                         await message.add_reaction(emojis.NAVI)
                     else:
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                    if clan.stealth_current >= clan.stealth_threshold: await message.add_reaction(emojis.YAY)
-                    if clan.stealth_current == clan_stealth_before: await message.add_reaction(emojis.ANGRY)
+                    if clan.stealth_current >= clan.stealth_threshold:
+                        if user_settings is None:
+                            await message.add_reaction(emojis.YAY)
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.YAY)
+                    if clan.stealth_current == clan_stealth_before:
+                        if user_settings is None:
+                            await message.add_reaction(emojis.ANGRY)
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.ANGRY)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 

@@ -29,7 +29,8 @@ class EventsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_tomorrow = datetime.utcnow().replace(day=current_time.day+1, hour=0, minute=2, microsecond=0)
+                midnight_today = datetime.utcnow().replace(hour=0, minute=2, microsecond=0)
+                midnight_tomorrow = midnight_today + timedelta(days=1)
                 time_to_midnight = midnight_tomorrow - current_time
                 reminder_message = 'Hey! It\'s time for `rpg cel dailyquest`!'
                 reminder: reminders.Reminder = (

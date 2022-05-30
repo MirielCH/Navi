@@ -171,7 +171,8 @@ class TrainingCog(commands.Cog):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
-                if 'better luck next time' in message_field1_value.lower(): await message.add_reaction(emojis.NOOB)
+                if 'better luck next time' in message_field1_value.lower():
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NOOB)
 
         if not message.embeds:
             message_content = message.content

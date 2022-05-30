@@ -58,8 +58,15 @@ class TrackingCog(commands.Cog):
             timestring = args[0]
             try:
                 timestring = await functions.check_timestring(timestring)
-            except Exception as error:
-                await ctx.reply(error)
+            except exceptions.InvalidTimestringError as error:
+                await ctx.reply(
+                    f'{error}\n'
+                    f'Supported time codes: `w`, `d`, `h`, `m`, `s`\n\n'
+                    f'Examples:\n'
+                    f'{emojis.BP} `{prefix}stats 30s`\n'
+                    f'{emojis.BP} `{prefix}stats 1h30m`\n'
+                    f'{emojis.BP} `{prefix}stats 7d`\n'
+                )
                 return
 
             time_left = await functions.parse_timestring_to_timedelta(timestring)

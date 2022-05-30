@@ -217,26 +217,27 @@ class WorkCog(commands.Cog):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
-                if 'quite a large leaf' in message_content.lower():
-                    await message.add_reaction(emojis.WOAH_THERE)
-                elif 'mined with too much force' in message_content.lower():
-                    await message.add_reaction(emojis.SWEATY)
-                elif 'for some reason, one of the fish was carrying' in message_content.lower():
-                    await message.add_reaction(emojis.FISHPOGGERS)
-                elif 'one of them had' in message_content.lower() and 'rubies in it' in message_content.lower():
-                    await message.add_reaction(emojis.WOW)
-                elif 'wooaaaa!!' in message_content.lower():
-                    await message.add_reaction(emojis.FIRE)
-                elif 'wwwooooooaaa!!!1' in message_content.lower():
-                    await message.add_reaction(emojis.FIRE)
-                elif 'is this a **dream**??' in message_content.lower():
-                    await message.add_reaction(emojis.FIRE)
-                elif 'watermelon' in message_content.lower():
-                    await message.add_reaction(emojis.PANDA_MELON)
-                elif 'ultimate log' in message_content.lower():
-                    await message.add_reaction(emojis.PANDA_COOL)
-                elif 'super fish' in message_content.lower():
-                    await message.add_reaction(emojis.PANDA_FISH)
+                if user_settings.reactions_enabled:
+                    if 'quite a large leaf' in message_content.lower():
+                        await message.add_reaction(emojis.WOAH_THERE)
+                    elif 'mined with too much force' in message_content.lower():
+                        await message.add_reaction(emojis.SWEATY)
+                    elif 'for some reason, one of the fish was carrying' in message_content.lower():
+                        await message.add_reaction(emojis.FISHPOGGERS)
+                    elif 'one of them had' in message_content.lower() and 'rubies in it' in message_content.lower():
+                        await message.add_reaction(emojis.WOW)
+                    elif 'wooaaaa!!' in message_content.lower():
+                        await message.add_reaction(emojis.FIRE)
+                    elif 'wwwooooooaaa!!!1' in message_content.lower():
+                        await message.add_reaction(emojis.FIRE)
+                    elif 'is this a **dream**??' in message_content.lower():
+                        await message.add_reaction(emojis.PEEPO_WOAH)
+                    elif 'watermelon' in message_content.lower():
+                        await message.add_reaction(emojis.PANDA_MELON)
+                    elif 'ultimate log' in message_content.lower():
+                        await message.add_reaction(emojis.PANDA_COOL)
+                    elif 'super fish' in message_content.lower():
+                        await message.add_reaction(emojis.PANDA_FISH)
 
 
 # Initialization

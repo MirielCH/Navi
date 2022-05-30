@@ -94,6 +94,7 @@ class QuestCog(commands.Cog):
                     f'{emojis.CHECK} Guild quest spot available.\n'
                     f'If you accept this quest, the next guild reminder will ping you solo first. '
                     f'You will have 5 minutes to raid before the other members are pinged.\n'
+                    f'Note that you will lose your spot if you don\'t answer in time.'
                 )
 
             # Quest cooldown

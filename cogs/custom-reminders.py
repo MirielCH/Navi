@@ -20,7 +20,7 @@ class CustomRemindersCog(commands.Cog):
         if prefix.lower() == 'rpg ': return
         syntax_add = (
             f'The syntax is `{prefix}rm [time] [text]`\n'
-            f'Support time codes: `w`, `d`, `h`, `m`, `s`\n\n'
+            f'Supported time codes: `w`, `d`, `h`, `m`, `s`\n\n'
             f'Example: `{prefix}rm 1h30m Coffee time!`'
         )
         syntax_delete = (

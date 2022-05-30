@@ -172,17 +172,22 @@ class AdventureCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'adventure', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                found_stuff = {
-                    'OMEGA lootbox': emojis.SURPRISE,
-                    'GODLY lootbox': emojis.SURPRISE,
-                }
-                for stuff_name, stuff_emoji in found_stuff.items():
-                    if stuff_name in message_content:
-                        await message.add_reaction(stuff_emoji)
+                if user_settings.reactions_enabled:
+                    found_stuff = {
+                        'OMEGA lootbox': emojis.SURPRISE,
+                        'GODLY lootbox': emojis.SURPRISE,
+                    }
+                    for stuff_name, stuff_emoji in found_stuff.items():
+                        if stuff_name in message_content:
+                            await message.add_reaction(stuff_emoji)
                 if reminder.record_exists:
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                # Add an F if the user died
+                if ((message_content.find(f'**{user.name}** lost but ') > -1)
+                    or (message_content.find('but lost fighting') > -1)):
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)
 
 
 # Initialization

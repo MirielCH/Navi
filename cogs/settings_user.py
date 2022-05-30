@@ -288,7 +288,10 @@ class SettingsUserCog(commands.Cog):
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}reactions [on|off]')
 
         if not args:
-            await ctx.reply(syntax)
+            await ctx.reply(
+                f'This command enables/disables all message reactions. Why would you ever turn them off tho?\n'
+                f'{syntax}'
+            )
         if args:
             action = args[0].lower()
             if action in ('on', 'enable', 'start'):
@@ -303,13 +306,13 @@ class SettingsUserCog(commands.Cog):
             user: users.User = await users.get_user(ctx.author.id)
             if user.reactions_enabled == enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, reactions {emojis.NAVI} are already {action}.'
+                    f'**{ctx.author.name}**, reactions are already {action}.'
                 )
                 return
             await user.update(reactions_enabled=enabled)
             if user.reactions_enabled == enabled:
                 await ctx.reply(
-                    f'**{ctx.author.name}**, reactions {emojis.NAVI} are now **{action}**.'
+                    f'**{ctx.author.name}**, reactions are now **{action}**.'
                 )
             else:
                 await ctx.reply(strings.MSG_ERROR)
@@ -478,13 +481,15 @@ class SettingsUserCog(commands.Cog):
             f'**Placeholders**\n'
             f'{emojis.BP} You can use placeholders in curly brackets such as \u007bcommand\u007d.\n'
             f'{emojis.BP} Check the default messages to see which placeholders you can use.\n\n'
+            f'**Emojis**\n'
+            f'{emojis.BP} You can use all emojis from this server + all default emojis.\n\n'
             f'{possible_activities}'
         )
         if not args:
             await ctx.reply(syntax_message)
             return
-        activity = args[0]
-        if activity == 'reset':
+        activity = args[0].lower()
+        if activity in ('reset','default'):
             await ctx.reply(
                 f'**{ctx.author.name}**, this will reset **all** messages to the default one. '
                 f'Are you sure? `[yes/no]`'
@@ -514,7 +519,9 @@ class SettingsUserCog(commands.Cog):
         if activity in strings.ACTIVITIES_ALIASES: activity = strings.ACTIVITIES_ALIASES[activity]
         if activity not in strings.ACTIVITIES:
             await ctx.reply(
-                f'I don\'t know an activity called `{activity}`.\n{syntax}\n\n{possible_activities}'
+                f'I don\'t know an activity called `{activity}`.\n'
+                f'{syntax}\n\n'
+                f'{possible_activities}'
             )
             return
         activity_column = strings.ACTIVITIES_COLUMNS[activity]
@@ -530,7 +537,7 @@ class SettingsUserCog(commands.Cog):
             args = list(args)
             args.pop(0)
             new_message = " ".join(args)
-            if new_message == 'reset': new_message = strings.DEFAULT_MESSAGES[activity]
+            if new_message.lower() in ('reset','default'): new_message = strings.DEFAULT_MESSAGES[activity]
             if len(new_message) > 1024:
                 await ctx.reply('This is a command to set a new message, not to write a novel :thinking:')
                 return
@@ -949,7 +956,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
-        f'{emojis.BP} Reactions {emojis.NAVI}: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
+        f'{emojis.BP} Reactions: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
         f'{emojis.BP} Last TT: <t:{tt_timestamp}:f> UTC\n'
         f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{user_partner_channel_name}`\n'
     )

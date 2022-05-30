@@ -176,11 +176,11 @@ class FarmCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if 'also got' in message_content.lower():
                     if 'potato seed**' in message_content.lower():
-                        await message.add_reaction(emojis.SEED_POTATO)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_POTATO)
                     elif 'carrot seed**' in message_content.lower():
-                        await message.add_reaction(emojis.SEED_CARROT)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_CARROT)
                     elif 'bread seed**' in message_content.lower():
-                        await message.add_reaction(emojis.SEED_BREAD)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_BREAD)
 
             # Farm event
             if ('hits the floor with the' in message_content.lower()

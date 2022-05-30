@@ -86,6 +86,8 @@ class HuntCog(commands.Cog):
                             arguments = f'{arguments} together'
                         if argument in ('a', 'alone') and 'alone' not in arguments:
                             arguments = f'{arguments} alone'
+                        if argument in ('n', 'new') and 'new' not in arguments:
+                            arguments = f'{arguments} new'
                     user_command = f'rpg hunt {arguments.strip()}'
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
@@ -133,6 +135,7 @@ class HuntCog(commands.Cog):
                 hardmode = True if '(but stronger)' in message_content.lower() else False
                 alone = True if '(way stronger!!!)' in message_content.lower() else False
                 together = True if 'hunting together' in message_content.lower() else False
+                new = True if '__**' in message_content.lower() else False
                 if together:
                     name_search = re.search("\*\*(.+?)\*\* and \*\*(.+?)\*\*", message_content)
                     user_name = name_search.group(1)
@@ -182,6 +185,7 @@ class HuntCog(commands.Cog):
                 if hardmode: user_command = f'{user_command} hardmode'
                 if alone: user_command = f'{user_command} alone'
                 if together: user_command = f'{user_command} together'
+                if new: user_command = f'{user_command} new'
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -261,7 +265,7 @@ class HuntCog(commands.Cog):
                                     lb_message = f'{partner_discord.mention} {lootbox_alert}'
                                 await self.bot.wait_until_ready()
                                 await self.bot.get_channel(partner.partner_channel_id).send(lb_message)
-                                await message.add_reaction(emojis.PARTNER_ALERT)
+                                if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
                             except Exception as error:
                                 await errors.log_error(
                                     f'Had the following error while trying to send the partner alert:\n{error}',
@@ -282,17 +286,18 @@ class HuntCog(commands.Cog):
                             f'feel free to take them hunting.'
                         )
                         await message.channel.send(hm_message)
-                found_stuff = {
-                    'OMEGA lootbox': emojis.SURPRISE,
-                    'GODLY lootbox': emojis.SURPRISE,
-                }
-                for stuff_name, stuff_emoji in found_stuff.items():
-                    if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
-                        await message.add_reaction(stuff_emoji)
-                # Add an F if the user died
-                if ((message_content.find(f'**{user.name}** lost but ') > -1)
-                    or (message_content.find('but lost fighting') > -1)):
-                    await message.add_reaction(emojis.RIP)
+                if user_settings.reactions_enabled:
+                    found_stuff = {
+                        'OMEGA lootbox': emojis.SURPRISE,
+                        'GODLY lootbox': emojis.SURPRISE,
+                    }
+                    for stuff_name, stuff_emoji in found_stuff.items():
+                        if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
+                            await message.add_reaction(stuff_emoji)
+                    # Add an F if the user died
+                    if ((message_content.find(f'**{user.name}** lost but ') > -1)
+                        or (message_content.find('but lost fighting') > -1)):
+                        await message.add_reaction(emojis.RIP)
 
             # Hunt event
             if ('pretends to be a zombie' in message_content.lower()

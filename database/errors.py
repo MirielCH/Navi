@@ -1,5 +1,5 @@
 # cooldowns.py
-"""Provides access to the table "cooldowns" in the database"""
+"""Provides access to the table "errors" in the database"""
 
 from datetime import datetime
 import sqlite3
