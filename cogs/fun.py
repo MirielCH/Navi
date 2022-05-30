@@ -52,11 +52,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
@@ -77,7 +73,7 @@ class FunCog(commands.Cog):
                 if user is None:
                     user_name = None
                     try:
-                        user_name = re.search("car \*\*(.+?)\*\*", message_content).group(1)
+                        user_name = re.search("car \*\*(.+?)\\n", message_content).group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -87,11 +83,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
@@ -105,7 +97,7 @@ class FunCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
-                await message.add_reaction(emojis.PEPE_LAUGH)
+                await message.add_reaction(emojis.PEEPO_JAIL)
 
             if 'again, it **exploded**' in message_content.lower():
                 user = await functions.get_interaction_user(message)
@@ -122,11 +114,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
@@ -157,11 +145,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
@@ -192,11 +176,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
@@ -227,11 +207,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
@@ -262,11 +238,7 @@ class FunCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)

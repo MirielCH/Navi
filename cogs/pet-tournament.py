@@ -47,20 +47,13 @@ class PetTournamentCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pet_tournament.enabled: return
                 timestring = re.search("next pet tournament is in \*\*(.+?)\*\*", message_content).group(1)
-                time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
-                time_left = time_left - time_elapsed
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'pet-tournament', time_left,
                                                         message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -96,11 +89,7 @@ class PetTournamentCog(commands.Cog):
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        for member in message.guild.members:
-                            member_name = await functions.encode_text(member.name)
-                            if member_name == user_name:
-                                user = member
-                                break
+                        user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
@@ -115,8 +104,8 @@ class PetTournamentCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pet_tournament.enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
-                today_20pm = datetime.utcnow().replace(hour=20, minute=0, microsecond=0)
-                today_8am = datetime.utcnow().replace(hour=8, minute=0, microsecond=0)
+                today_20pm = datetime.utcnow().replace(hour=20, minute=0, second=0, microsecond=0)
+                today_8am = datetime.utcnow().replace(hour=8, minute=0, second=0, microsecond=0)
                 tomorrow_8am = today_8am + timedelta(days=1)
                 if today_8am > current_time:
                     time_left = today_8am - current_time
@@ -129,10 +118,7 @@ class PetTournamentCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'pet-tournament', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
 # Initialization
 def setup(bot):

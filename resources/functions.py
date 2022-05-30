@@ -1,12 +1,13 @@
 # functions.py
 
 from datetime import datetime, timedelta
+from typing import Union
 
 import discord
 
-from database import errors
+from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
-from resources import emojis, exceptions
+from resources import emojis, exceptions, settings, strings
 
 
 # --- Misc ---
@@ -19,13 +20,56 @@ async def get_interaction(message: discord.Message) -> discord.User:
             message = await message.channel.fetch_message(message.reference.message_id)
     return message.interaction
 
+
 async def get_interaction_user(message: discord.Message) -> discord.User:
     """Returns the user object if the message was triggered by a slash command. Returns None if no user was found."""
     interaction = await get_interaction(message)
     return interaction.user if interaction is not None else None
 
 
-# --- Parsing ---
+async def add_reminder_reaction(message: discord.Message, reminder: reminders.Reminder,  user_settings: users.User) -> None:
+    """Adds a Navi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
+    if reminder.record_exists:
+        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+    else:
+        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+            await message.add_reaction(emojis.WARNING)
+            await message.channel.send(strings.MSG_ERROR)
+
+
+# Time calculations
+async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Union[discord.Member, None]:
+    """Returns the first guild member found by the given name"""
+    for member in guild.members:
+        member_name = await encode_text(member.name)
+        if member_name == user_name: return member
+
+
+async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
+    """Returns the time left for a reminder based on a cooldown."""
+    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
+    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+    current_time = datetime.utcnow().replace(microsecond=0)
+    time_elapsed = current_time - bot_answer_time
+    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+    if cooldown.donor_affected:
+        time_left_seconds = (cooldown.actual_cooldown()
+                             * settings.DONOR_COOLDOWNS[user_donor_tier]
+                             - time_elapsed.total_seconds())
+    else:
+        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+    return timedelta(seconds=time_left_seconds)
+
+
+async def calculate_time_left_from_timestring(message: discord.Message, timestring: str) -> timedelta:
+    """Returns the time left for a reminder based on a timestring."""
+    time_left = await parse_timestring_to_timedelta(timestring.lower())
+    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+    current_time = datetime.utcnow().replace(microsecond=0)
+    time_elapsed = current_time - bot_answer_time
+    return time_left - time_elapsed
+
+
 async def check_timestring(string: str) -> str:
     """Checks if a string is a valid timestring. Returns itself it valid.
 

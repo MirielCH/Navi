@@ -134,6 +134,16 @@ class SettingsUserCog(commands.Cog):
                     f'{emojis.BP} **`{activity}`** (**{timestring}**)'
                 )
             embed.add_field(name='EVENTS', value=field_event_reminders.strip(), inline=False)
+        if clan_reminders:
+            reminder = clan_reminders[0]
+            time_left = reminder.end_time - current_time
+            clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
+            if clan.quest_user_id is not None:
+                if clan.quest_user_id != user_id: time_left = time_left + timedelta(minutes=5)
+            timestring = await functions.parse_timedelta_to_timestring(time_left)
+            field_value = f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)'
+            if clan.quest_user_id == user_id: field_value = f'{field_value} (quest active)'
+            embed.add_field(name='GUILD', value=field_value)
         if reminders_pets_list:
             field_no = 1
             pet_fields = {field_no: ''}
@@ -150,16 +160,6 @@ class SettingsUserCog(commands.Cog):
             for field_no, pet_field in pet_fields.items():
                 field_name = f'PETS {field_no}' if field_no > 1 else 'PETS'
                 embed.add_field(name=field_name, value=pet_field.strip(), inline=False)
-        if clan_reminders:
-            reminder = clan_reminders[0]
-            time_left = reminder.end_time - current_time
-            clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
-            if clan.quest_user_id is not None:
-                if clan.quest_user_id != user_id: time_left = time_left + timedelta(minutes=5)
-            timestring = await functions.parse_timedelta_to_timestring(time_left)
-            field_value = f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)'
-            if clan.quest_user_id == user_id: field_value = f'{field_value} (quest active)'
-            embed.add_field(name='GUILD', value=field_value)
         if reminders_custom_list:
             field_custom_reminders = ''
             for reminder in reminders_custom_list:

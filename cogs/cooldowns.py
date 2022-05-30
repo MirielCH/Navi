@@ -53,11 +53,7 @@ class CooldownsCog(commands.Cog):
             if user_id is not None:
                 user = await message.guild.fetch_member(user_id)
             else:
-                for member in message.guild.members:
-                    member_name = await functions.encode_text(member.name)
-                    if member_name == user_name:
-                        user = member
-                        break
+                user = await functions.get_guild_member_by_name(message.guild, user_name)
         if user is None:
             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                 await message.add_reaction(emojis.WARNING)
@@ -296,10 +292,7 @@ class CooldownsCog(commands.Cog):
             cd_activity = cooldown[0]
             cd_timestring = cooldown[1]
             cd_message = cooldown[2]
-            time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
-            bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-            time_elapsed = current_time - bot_answer_time
-            time_left = time_left - time_elapsed
+            time_left = await functions.calculate_time_left_from_timestring(message, cd_timestring)
             if time_left.total_seconds() > 0:
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, cd_activity, time_left,

@@ -52,11 +52,7 @@ class FarmCog(commands.Cog):
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        for member in message.guild.members:
-                            member_name = await functions.encode_text(member.name)
-                            if member_name == user_name:
-                                user = member
-                                break
+                        user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
@@ -89,20 +85,13 @@ class FarmCog(commands.Cog):
                         return
                     user_command = user_command_message.content.lower()
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
-                time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
-                time_left = time_left - time_elapsed
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if not message.embeds:
             message_content = message.content
@@ -123,11 +112,7 @@ class FarmCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
@@ -154,26 +139,13 @@ class FarmCog(commands.Cog):
                     user_command = 'rpg farm potato' if not slash_command else '/farm seed: potato'
                 else:
                     user_command = 'rpg farm' if not slash_command else '/farm'
-                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('farm')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                time_elapsed = current_time - bot_answer_time
-                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                if cooldown.donor_affected:
-                    time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                        - time_elapsed.total_seconds())
-                else:
-                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
-                time_left = timedelta(seconds=time_left_seconds)
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if 'also got' in message_content.lower():
                     if 'potato seed**' in message_content.lower():
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_POTATO)
@@ -201,11 +173,7 @@ class FarmCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
@@ -241,27 +209,13 @@ class FarmCog(commands.Cog):
                         )
                         return
                     user_command = user_command_message.content.lower()
-                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('farm')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
-                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                if cooldown.donor_affected:
-                    time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                        - time_elapsed.total_seconds())
-                else:
-                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
-                time_left = timedelta(seconds=time_left_seconds)
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
 # Initialization

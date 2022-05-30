@@ -59,11 +59,7 @@ class ClanCog(commands.Cog):
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        for member in message.guild.members:
-                            member_name = await functions.encode_text(member.name)
-                            if member_name == user_name:
-                                user = member
-                                break
+                        user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
@@ -82,11 +78,7 @@ class ClanCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     user_settings = None
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
-                time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
-                time_left = time_left - time_elapsed
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
                 else:
@@ -253,11 +245,7 @@ class ClanCog(commands.Cog):
                             message
                         )
                         return
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)

@@ -38,11 +38,7 @@ class HealWarningCog(commands.Cog):
                 return
             user = await functions.get_interaction_user(message)
             if user is None:
-                for member in message.guild.members:
-                    member_name = await functions.encode_text(member.name)
-                    if member_name == user_name_encoded:
-                        user = member
-                        break
+                user = await functions.get_guild_member_by_name(message.guild, user_name)
             if user is None:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -117,11 +113,7 @@ class HealWarningCog(commands.Cog):
                 return
             user = await functions.get_interaction_user(message)
             if user is None:
-                for member in message.guild.members:
-                    member_name = await functions.encode_text(member.name)
-                    if member_name == user_name_encoded:
-                        user = member
-                        break
+                user = await functions.get_guild_member_by_name(message.guild, user_name)
             if user is None:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)

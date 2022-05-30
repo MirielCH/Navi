@@ -37,10 +37,7 @@ class EventsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'cel-daily', time_to_midnight,
                                                             message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if message.author.id != settings.EPIC_RPG_ID: return
         if not message.embeds:
@@ -79,10 +76,7 @@ class EventsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'cel-multiply', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             if 'you cannot multiply your celebration coins' in message_content.lower() and message.mentions:
                 user = message.mentions[0]
@@ -98,10 +92,7 @@ class EventsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'cel-multiply', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             """
             if 'you already completed the quest of today!' in message_content.lower() and message.mentions:

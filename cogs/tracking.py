@@ -118,11 +118,7 @@ class TrackingCog(commands.Cog):
                         )
                         return
                     user_name = await functions.encode_text(user_name)
-                    for member in message.guild.members:
-                        member_name = await functions.encode_text(member.name)
-                        if member_name == user_name:
-                            user = member
-                            break
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     await errors.log_error(
                         f'Couldn\'t find a user with user_name {user_name}.',
