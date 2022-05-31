@@ -33,8 +33,8 @@ class MainCog(commands.Cog):
         if ctx.prefix.lower() == 'rpg ':
             return
         message = (
-            f'Sorry, you can\'t invite this bot.\n'
-            f'However, I made it open source, feel free to run it yourself.\n'
+            f'Sorry, you can\'t invite me.\n'
+            f'However, I am fully open source on an MIT license, so feel free to run me yourself.\n'
             f'https://github.com/Miriel-py/Navi'
         )
         await ctx.reply(message)

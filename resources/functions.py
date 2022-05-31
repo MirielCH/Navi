@@ -262,6 +262,7 @@ async def encode_text(text: str) -> str:
         .encode('unicode-escape',errors='ignore')
         .decode('ASCII')
         .replace('\\','')
+        .strip('*')
     )
 
     return text
@@ -274,6 +275,7 @@ def encode_text_non_async(text: str) -> str:
         .encode('unicode-escape',errors='ignore')
         .decode('ASCII')
         .replace('\\','')
+        .strip('*')
     )
 
     return text

@@ -120,7 +120,7 @@ class HuntCog(commands.Cog):
             message_content = message.content
             # Hunt
             if ('found a' in message_content.lower()
-                and any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT)):
+                and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
