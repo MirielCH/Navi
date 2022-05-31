@@ -65,8 +65,8 @@ class TasksCog(commands.Cog):
                     else:
                         next_pet_reminder = pet_reminders[0]
                         next_pet_id = next_pet_reminder.activity.replace('pets-','')
-                        time_left = next_pet_reminder.end_time - reminder.end_time
-                        timestring = await functions.parse_timedelta_to_timestring(time_left)
+                        time_left_next = next_pet_reminder.end_time - reminder.end_time
+                        timestring = await functions.parse_timedelta_to_timestring(time_left_next)
                         pet_amount_left = len(pet_reminders)
                         pets_left = f'**{pet_amount_left}** pet'
                         if pet_amount_left > 1: pets_left = f'{pets_left}s'

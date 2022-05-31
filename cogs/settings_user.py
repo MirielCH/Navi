@@ -541,14 +541,14 @@ class SettingsUserCog(commands.Cog):
             if len(new_message) > 1024:
                 await ctx.reply('This is a command to set a new message, not to write a novel :thinking:')
                 return
-            for placeholder in re.finditer('\{[a-zA-Z0-9.,_\- ]*\}', new_message):
-                placeholder_str = new_message[placeholder.start():placeholder.end()]
+            for placeholder in re.finditer('\{(.+?)\}', new_message):
+                placeholder_str = placeholder.group(1)
                 if placeholder_str not in strings.DEFAULT_MESSAGES[activity]:
                     allowed_placeholders = ''
-                    for placeholder in re.finditer('\{[a-z]*\}', strings.DEFAULT_MESSAGES[activity]):
+                    for placeholder in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
                         allowed_placeholders = (
                             f'{allowed_placeholders}\n'
-                            f'{emojis.BP} {strings.DEFAULT_MESSAGES[activity][placeholder.start():placeholder.end()]}'
+                            f'{emojis.BP} {{{placeholder.group(1)}}}'
                         )
                     if allowed_placeholders == '':
                         allowed_placeholders = f'There are no placeholders available for this message.'

@@ -2,8 +2,8 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import datetime
 import importlib
+import re
 import sys
 
 import discord
@@ -286,27 +286,12 @@ class DevCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
-        from database import settings as settings_db
-        all_settings = await settings_db.get_settings()
-        answer = ''
-        a16_seal_time = all_settings.get('a16_seal_time', None)
-        a17_seal_time = all_settings.get('a17_seal_time', None)
-        a18_seal_time = all_settings.get('a18_seal_time', None)
-        a19_seal_time = all_settings.get('a19_seal_time', None)
-        a20_seal_time = all_settings.get('a20_seal_time', None)
-        seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-        current_time = datetime.utcnow().replace(microsecond=0)
-        for area_no, seal_time in enumerate(seal_times, 16):
-            if seal_time is not None:
-                seal_time = datetime.fromisoformat(seal_time, )
-                if seal_time > current_time:
-                    time_left = seal_time - current_time
-                    answer = f'{answer}\nArea {area_no}: `{time_left.days}`'.strip()
-        if answer == '':
-            answer = (
-                f'I don\'t know, sorry.\n'
-                f'To let me know, please use {emojis.EPIC_RPG_LOGO_SMALL}`/void areas` before the next training.'
-            )
+        string = (
+            f'This is a {{place holder}} and {{anotherone}}'
+        )
+        match = re.search('\{(.+?)\}', string)
+        matches = re.findall('\{(.+?)\}', string)
+        await ctx.reply(matches)
 
 
 def setup(bot):
