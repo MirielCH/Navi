@@ -1,15 +1,12 @@
 # dungeon-miniboss.py
 
-import asyncio
-from datetime import datetime
 import re
-from typing import Tuple
 
 import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, settings
+from resources import emojis, exceptions, functions, settings
 
 
 class DungeonMinibossCog(commands.Cog):

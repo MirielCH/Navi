@@ -5,12 +5,11 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
-from typing import List, Optional, Tuple
+from typing import Optional, Tuple
 
 from discord.ext import tasks
 
 from database import errors
-import database
 from resources import exceptions, settings, strings
 
 

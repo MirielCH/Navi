@@ -1,13 +1,12 @@
 # daily.py
 
-from datetime import datetime, timedelta
 import re
 
 import discord
 from discord.ext import commands
 
-from database import cooldowns, errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from database import errors, reminders, users
+from resources import emojis, exceptions, functions, settings
 
 
 class DailyCog(commands.Cog):

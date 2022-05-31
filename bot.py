@@ -75,6 +75,7 @@ EXTENSIONS = [
         'cogs.tracking',
         'cogs.training',
         'cogs.training-helper',
+        'cogs.vote',
         'cogs.weekly',
         'cogs.work',
     ]

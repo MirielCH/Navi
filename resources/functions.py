@@ -43,6 +43,7 @@ async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Unio
     for member in guild.members:
         member_name = await encode_text(member.name)
         if member_name == user_name: return member
+    return None
 
 
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:

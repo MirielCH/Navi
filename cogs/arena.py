@@ -4,7 +4,6 @@ import re
 
 import discord
 from discord.ext import commands
-from datetime import datetime
 
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, settings

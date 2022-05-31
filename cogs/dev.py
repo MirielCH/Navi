@@ -2,14 +2,14 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import datetime
 import importlib
 import sys
 
 import discord
 from discord.ext import commands
 
-from database import cooldowns, reminders
+from database import cooldowns
 from resources import emojis, strings
 
 

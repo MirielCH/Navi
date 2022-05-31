@@ -7,8 +7,6 @@ from math import ceil
 import sqlite3
 from typing import Tuple
 
-from discord.ext import commands
-
 from database import errors
 from resources import exceptions, settings, strings
 

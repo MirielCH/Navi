@@ -1,6 +1,5 @@
 # lottery.py
 
-from datetime import datetime
 import re
 
 import discord
@@ -54,20 +53,13 @@ class LotteryCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
                 timestring = re.search("Next draw\*\*: (.+?)$", message_field).group(1)
-                time_left = await functions.parse_timestring_to_timedelta(timestring.lower())
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
-                time_left = time_left - time_elapsed
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if not message.embeds:
             message_content = message.content

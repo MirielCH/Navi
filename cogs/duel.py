@@ -1,6 +1,5 @@
 # duel.py
 
-from datetime import datetime
 import re
 
 import discord

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, settings, strings
+from resources import emojis, exceptions, functions, logs, settings
 
 
 class PetsCog(commands.Cog):
@@ -250,7 +250,7 @@ class PetsCog(commands.Cog):
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
                         await errors.log_error(
-                            f'Pet id, action or timestring not found in pet list message: {message.embeds[0].fields}',
+                            f'Pet id, action or timestring not found in pet list field: {field.value}',
                             message
                         )
                         return

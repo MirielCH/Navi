@@ -1,13 +1,13 @@
 # training.py
 
-from datetime import datetime, timedelta
+from datetime import datetime
 import re
 
 import discord
 from discord.ext import commands
 
-from database import cooldowns, errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, settings, strings
+from database import errors, reminders, tracking, users
+from resources import emojis, exceptions, functions, settings
 
 
 class TrainingCog(commands.Cog):
