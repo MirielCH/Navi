@@ -25,6 +25,9 @@ class VoteCog(commands.Cog):
 
                 # Vote cooldown
                 if field.name.lower() == 'next vote rewards':
+                    timestring_search = re.search("Cooldown: \*\*(.+?)\*\*", field.value)
+                    if timestring_search is None: return
+                    timestring = timestring_search.group(1)
                     user = await functions.get_interaction_user(message)
                     user_command = 'rpg vote' if user is None else '/vote'
                     if user is None:
@@ -47,7 +50,6 @@ class VoteCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled or not user_settings.alert_vote.enabled: return
-                    timestring = re.search("Cooldown: \*\*(.+?)\*\*", field.value).group(1)
                     time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                     reminder_message = user_settings.alert_vote.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
