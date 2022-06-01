@@ -112,6 +112,7 @@ class WorkCog(commands.Cog):
                         '\?\?\?\?\? \*\*(.+?)\*\* got',
                         'WOOAAAA!! (.+?)\*\* got',
                         'WwWOoOOoOAAa!!!1 (.+?)\*\* got',
+                        '\.\.\. \*\*(.+?)\*\* got',
                         '\*\*(.+?)\*\* got',
                     ]
                     for search_string in search_strings:
