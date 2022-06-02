@@ -91,6 +91,13 @@ class MainCog(commands.Cog):
                 f'**{ctx.author.name}**, looks like I don\'t know you yet.\n'
                 f'Use `{ctx.prefix}on` to activate me first.'
             )
+        elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
+                                commands.ExpectedClosingQuoteError)):
+            await ctx.reply(
+                f'**{ctx.author.name}**, whatever you just entered contained invalid characters I can\'t process.\n'
+                f'Please try that again.'
+            )
+            await errors.log_error(error, ctx)
         else:
             await errors.log_error(error, ctx)
             if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
