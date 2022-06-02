@@ -71,8 +71,7 @@ class FarmCog(commands.Cog):
                     user_command_message = None
                     for msg in message_history:
                         if msg.content is not None:
-                            if (msg.content.lower().startswith('rpg ') and 'farm' in msg.content.lower()
-                                and msg.author == user):
+                            if msg.content.lower().replace(' ','').startswith('rpgfarm') and msg.author == user:
                                 user_command_message = msg
                                 break
                     if user_command_message is None:
@@ -83,7 +82,13 @@ class FarmCog(commands.Cog):
                             message
                         )
                         return
-                    user_command = user_command_message.content.lower()
+                    user_command = 'rpg farm'
+                    if user_command_message.content.lower().startswith('rpgfarmcarrot'):
+                        user_command = f'{user_command} carrot'
+                    elif user_command_message.content.lower().startswith('rpgfarmpotato'):
+                        user_command = f'{user_command} potato'
+                    elif user_command_message.content.lower().startswith('rpgfarmbread'):
+                        user_command = f'{user_command} bread'
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
