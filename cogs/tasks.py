@@ -251,7 +251,7 @@ class TasksCog(commands.Cog):
                         f'{best_user_praise} (_Best raid: {weekly_report.best_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
                 if weekly_report.worst_raid is None:
-                    message = f'{message}{emojis.BP} There were no cool raids. How lame.\n'
+                    message = f'{message}{emojis.BP} There were no lame raids. How lame.\n'
                 else:
                     await self.bot.wait_until_ready()
                     worst_user = self.bot.get_user(weekly_report.worst_raid.user_id)

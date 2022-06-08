@@ -58,7 +58,7 @@ class SettingsPartnerCog(commands.Cog):
                 )
                 return
             await ctx.reply(
-                f'{new_partner.mention}, **{ctx.author.name}** wants to set you as his partner. '
+                f'{new_partner.mention}, **{ctx.author.name}** wants to set you as their partner. '
                 f'Do you accept? `[yes/no]`'
             )
             try:

@@ -84,7 +84,7 @@ class HuntCog(commands.Cog):
                             arguments = f'{arguments} alone'
                         if argument in ('n', 'new') and 'new' not in arguments:
                             arguments = f'{arguments} new'
-                    user_command = f'rpg hunt {arguments.strip()}'
+                    user_command = f'rpg hunt {arguments.strip()}'.strip()
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
@@ -215,9 +215,11 @@ class HuntCog(commands.Cog):
                             'GODLY present': emojis.PRESENT_GODLY,
                             'easter lootbox': emojis.EASTER_LOOTBOX,
                         }
-                        partner_start = message_content.find(f'**{user_settings.partner_name}** got ')
-                        if partner_start == -1:
-                            partner_start = message_content.find(f'**{user_settings.partner_name}**:')
+                        partner_loot_start = message_content.find(f'**{user_settings.partner_name}** got ')
+                        if partner_loot_start == -1:
+                            partner_loot_start = message_content.find(f'**{user_settings.partner_name}**:')
+                        if partner_loot_start != -1:
+                            partner_start = partner_loot_start
                         lb_search_content = message_content[partner_start:]
                         lootbox_alert = ''
                         for lb_name, lb_emoji in lootboxes.items():

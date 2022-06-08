@@ -35,6 +35,7 @@ class FarmCog(commands.Cog):
                 if user is not None:
                     user_command = '/farm'
                 else:
+                    user_command = 'rpg farm'
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
@@ -72,6 +73,12 @@ class FarmCog(commands.Cog):
                     for msg in message_history:
                         if msg.content is not None:
                             if msg.content.lower().replace(' ','').startswith('rpgfarm') and msg.author == user:
+                                if user_command_message.content.lower().startswith('rpgfarmcarrot'):
+                                    user_command = f'{user_command} carrot'
+                                elif user_command_message.content.lower().startswith('rpgfarmpotato'):
+                                    user_command = f'{user_command} potato'
+                                elif user_command_message.content.lower().startswith('rpgfarmbread'):
+                                    user_command = f'{user_command} bread'
                                 user_command_message = msg
                                 break
                     if user_command_message is None:
@@ -82,13 +89,6 @@ class FarmCog(commands.Cog):
                             message
                         )
                         return
-                    user_command = 'rpg farm'
-                    if user_command_message.content.lower().startswith('rpgfarmcarrot'):
-                        user_command = f'{user_command} carrot'
-                    elif user_command_message.content.lower().startswith('rpgfarmpotato'):
-                        user_command = f'{user_command} potato'
-                    elif user_command_message.content.lower().startswith('rpgfarmbread'):
-                        user_command = f'{user_command} bread'
                 timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
