@@ -80,7 +80,11 @@ class TrainingHelperCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
                 answer = await functions.get_training_answer(message_content.lower())
-                await message.reply(answer)
+                if user_settings.dnd_mode_enabled:
+                    await message.reply(answer)
+                else:
+                    answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
+                    await message.reply(answer)
 
 
 # Initialization

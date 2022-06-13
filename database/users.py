@@ -52,6 +52,7 @@ class User():
     partner_name: str
     pet_helper_enabled: bool
     pet_tip_read: bool
+    ping_after_message: bool
     guild_quest_prompt_active: bool
     reactions_enabled: bool
     rubies: int
@@ -97,6 +98,7 @@ class User():
         self.partner_name = new_settings.partner_name
         self.pet_helper_enabled = new_settings.pet_helper_enabled
         self.pet_tip_read = new_settings.pet_tip_read
+        self.ping_after_message = new_settings.ping_after_message
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.rubies = new_settings.rubies
@@ -167,6 +169,7 @@ class User():
             partner_name: str
             pet_helper_enabled: bool
             pet_tip_read: bool
+            ping_after_message: bool
             reactions_enabled: bool
             rubies: int
             ruby_counter_enabled: bool
@@ -252,6 +255,7 @@ async def _dict_to_user(record: dict) -> User:
             partner_name = record['partner_name'],
             pet_helper_enabled = record['pet_helper_enabled'],
             pet_tip_read = bool(record['pet_tip_read']),
+            ping_after_message = bool(record['ping_after_message']),
             reactions_enabled = bool(record['reactions_enabled']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),

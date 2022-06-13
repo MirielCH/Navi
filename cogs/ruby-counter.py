@@ -238,8 +238,10 @@ class RubyCounterCog(commands.Cog):
                         message
                     )
                     return
-                answer = 'YES' if user_settings.rubies > ruby_count else 'NO'
-                await message.reply(f'`{answer}` (you have {user_settings.rubies:,} {emojis.RUBY})')
+                answer = '`YES`' if user_settings.rubies > ruby_count else '`NO`'
+                if not user_settings.dnd_mode_enabled:
+                    answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
+                await message.reply(f'{answer} (you have {user_settings.rubies:,} {emojis.RUBY})')
 
             # Rubies from selling
             if '`ruby` successfully sold' in message_content.lower():

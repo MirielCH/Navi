@@ -194,7 +194,8 @@ class SettingsUserCog(commands.Cog):
             f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on.\n'
             f'Don\'t forget to set your donor tier with `{prefix}donor` and - if you are married - '
             f'the donor tier of your partner with `{prefix}partner donor`.\n'
-            f'You can check all of your settings with `{prefix}settings`.'
+            f'You can check all of your settings with `{prefix}settings`.\n\n'
+            f'Note: I only work if EPIC RPG is set to **English**.'
         )
 
     @commands.command(aliases=('stop',))
@@ -351,6 +352,45 @@ class SettingsUserCog(commands.Cog):
                 f'Please note that the `hunt together` cooldown can only be accurately calculated if '
                 f'`{prefix}partner donor [tier]` is set correctly as well.'
             )
+
+    @commands.command(name='ping-mode', aliases=('pingmode',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def ping_mode(self, ctx: commands.Context, *args: str) -> None:
+        """Sets user ping mode"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'`{prefix}ping-mode [before | after]`')
+        user: users.User = await users.get_user(ctx.author.id)
+        if not args:
+            await ctx.reply(
+                f'This command controls whether I will ping you before or after the reminder message.\n'
+                f'{syntax}\n\n'
+                f'Note that this setting has no effect if DND mode is turned on.'
+            )
+            return
+        setting = args[0].lower()
+        if setting in ('before', 'front', 'first', 'start'):
+            enabled = False
+            setting = 'before'
+        elif setting in ('after', 'back', 'last', 'end'):
+            enabled = True
+            setting = 'after'
+        else:
+            await ctx.reply(syntax)
+            return
+        if user.ping_after_message == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, I\'m already set to ping you **{setting}** the reminder message.'
+            )
+            return
+        await user.update(ping_after_message=enabled)
+        if user.ping_after_message == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, I\'m now set to ping you **{setting}** the reminder message.\n'
+                f'Note that this setting has no effect if DND mode is turned on.'
+            )
+        else:
+            await ctx.reply(strings.MSG_ERROR)
 
     @commands.command(aliases=('disable',))
     @commands.bot_has_permissions(send_messages=True)
@@ -913,6 +953,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     # Get user settings
     user_partner_channel_name = 'N/A'
     user_settings: users.User = await users.get_user(ctx.author.id)
+    ping_mode_setting = 'After' if user_settings.ping_after_message else 'Before'
     if user_settings.partner_channel_id is not None:
         await bot.wait_until_ready()
         user_partner_channel = bot.get_channel(user_settings.partner_channel_id)
@@ -956,6 +997,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
+        f'{emojis.BP} Ping mode: `{ping_mode_setting}` reminder message\n'
         f'{emojis.BP} Reactions: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
         f'{emojis.BP} Last TT: <t:{tt_timestamp}:f> UTC\n'
         f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{user_partner_channel_name}`\n'
