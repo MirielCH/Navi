@@ -92,7 +92,10 @@ class HealWarningCog(commands.Cog):
             if health_lost > (health_remaining - (health_lost / 9)):
                 warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
-                    await message.channel.send(f'{user.mention} {warning}')
+                    if user_settings.ping_after_message:
+                        await message.channel.send(f'{warning} {user.mention}')
+                    else:
+                        await message.channel.send(f'{user.mention} {warning}')
                 else:
                     await message.channel.send(f'**{user.name}**, {warning}')
 
@@ -158,7 +161,10 @@ class HealWarningCog(commands.Cog):
             if health_lost > (health_remaining - (health_lost / 10)):
                 warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
-                    await message.channel.send(f'{user.mention} {warning}')
+                    if user_settings.ping_after_message:
+                        await message.channel.send(f'{warning} {user.mention}')
+                    else:
+                        await message.channel.send(f'{user.mention} {warning}')
                 else:
                     await message.channel.send(f'**{user.name}**, {warning}')
 

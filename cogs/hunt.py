@@ -249,7 +249,10 @@ class HuntCog(commands.Cog):
                                 if partner.dnd_mode_enabled:
                                     lb_message = f'**{partner_discord.name}**, {lootbox_alert}'
                                 else:
-                                    lb_message = f'{partner_discord.mention} {lootbox_alert}'
+                                    if partner.ping_after_message:
+                                        lb_message = f'{lootbox_alert} {partner_discord.mention}'
+                                    else:
+                                        lb_message = f'{partner_discord.mention} {lootbox_alert}'
                                 await self.bot.wait_until_ready()
                                 await self.bot.get_channel(partner.partner_channel_id).send(lb_message)
                                 if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
@@ -259,19 +262,31 @@ class HuntCog(commands.Cog):
                                     message
                                 )
                     if together and partner.hardmode_mode_enabled:
-                        hm_message = user.mention if not user_settings.dnd_mode_enabled else f'**{user.name}**,'
                         hm_message = (
-                            f'{hm_message} **{partner_discord.name}** is currently **hardmoding**.\n'
+                            f'**{partner_discord.name}** is currently **hardmoding**.\n'
                             f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
                         )
+                        if user_settings.dnd_mode_enabled:
+                            hm_message = f'**{user.name}**, {hm_message}'
+                        else:
+                            if user_settings.ping_after_message:
+                                hm_message = f'{hm_message} {user.mention}'
+                            else:
+                                hm_message = f'{user.mention} {hm_message}'
                         await message.channel.send(hm_message)
                     elif not together and not partner.hardmode_mode_enabled:
                         partner_discord = self.bot.get_user(user_settings.partner_id)
-                        hm_message = user.mention if not user_settings.dnd_mode_enabled else f'**{user.name}**,'
                         hm_message = (
-                            f'{hm_message} **{partner_discord.name}** is not hardmoding, '
+                            f'**{partner_discord.name}** is not hardmoding, '
                             f'feel free to take them hunting.'
                         )
+                        if user_settings.dnd_mode_enabled:
+                            hm_message = f'**{user.name}**, {hm_message}'
+                        else:
+                            if user_settings.ping_after_message:
+                                hm_message = f'{hm_message} {user.mention}'
+                            else:
+                                hm_message = f'{user.mention} {hm_message}'
                         await message.channel.send(hm_message)
                 if user_settings.reactions_enabled:
                     found_stuff = {
