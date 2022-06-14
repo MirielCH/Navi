@@ -37,7 +37,11 @@ class ClanCog(commands.Cog):
             if embed.footer: message_footer = str(embed.footer.text)
 
             # Clan cooldown
-            if 'your guild has already raided or been upgraded' in message_title.lower():
+            search_strings = [
+                'your guild has already raided or been upgraded', #English
+                'tu guild ya hizo un asalto o fue mejorado', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 alert_message_prefix = '/' if user is not None else 'rpg '
@@ -45,8 +49,10 @@ class ClanCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -77,7 +83,9 @@ class ClanCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     user_settings = None
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if clan.stealth_current >= clan.stealth_threshold:
                     alert_message = f'{alert_message_prefix}guild raid'
@@ -96,7 +104,11 @@ class ClanCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
 
             # Clan overview
-            if 'your guild was raided' in message_footer.lower():
+            search_strings = [
+                'your guild was raided', #English
+                'tu guild fue asaltado', #Spanish
+            ]
+            if any(search_string in message_footer.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 alert_message_prefix = '/' if user is not None else 'rpg '
                 if message.mentions: return # Yes that also disables it if you ping yourself but who does that
@@ -121,8 +133,13 @@ class ClanCog(commands.Cog):
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
                         pass
+                search_patterns = [
+                    "STEALTH\*\*: (.+?)\\n", #English
+                    "SIGILO\*\*: (.+?)\\n", #Spanish
+                ]
+                stealth_match = await functions.get_match_from_patterns(search_patterns, message_field1)
                 try:
-                    stealth = re.search("STEALTH\*\*: (.+?)\\n", message_field1).group(1)
+                    stealth = stealth_match.group(1)
                     stealth = int(stealth)
                     await clan.update(stealth_current=stealth)
                 except Exception as error:
@@ -154,8 +171,12 @@ class ClanCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
             # Guild upgrade
-            if ('guild successfully upgraded!' in message_description.lower()
-                or 'guild upgrade failed!' in message_description.lower()):
+            search_strings = [
+                'guild successfully upgraded!', #English success
+                'guild upgrade failed!', #English fail
+                'el guild fue exitosamente mejorado!', #Spanish success
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 alert_message_prefix = '/' if user is not None else 'rpg '
                 if user is None:
@@ -229,13 +250,23 @@ class ClanCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
             # Guild raid
-            if ('** RAIDED **' in message_description and ':crossed_swords:' in message_description.lower()):
+            search_strings = [
+                '** RAIDED **', #English
+                '** ASALTÓ **', #Spanish
+            ]
+            if (any(search_string in message_description for search_string in search_strings)
+                and ':crossed_swords:' in message_description.lower()):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 alert_message_prefix = '/' if user is not None else 'rpg '
                 if user is None:
+                    search_patterns = [
+                        "\*\*(.+?)\*\* throws", #English
+                        "\*\*(.+?)\*\* tiró", #Spanish
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_field0)
                     try:
-                        user_name = re.search("\*\*(.+?)\*\* throws", message_field0).group(1)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -263,8 +294,13 @@ class ClanCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     user_settings = None
+                search_patterns = [
+                    "earned \*\*(.+?)\*\*", #English
+                    "ganó \*\*(.+?)\*\*", #Spanish
+                ]
+                energy_match = await functions.get_match_from_patterns(search_patterns, message_field1)
                 try:
-                    energy = re.search("earned \*\*(.+?)\*\*", message_field1).group(1)
+                    energy = energy_match.group(1)
                     energy = int(energy)
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

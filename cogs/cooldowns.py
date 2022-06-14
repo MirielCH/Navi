@@ -30,7 +30,11 @@ class CooldownsCog(commands.Cog):
             message_fields = f'{message_fields}\n{str(field.value)}'.strip()
         if embed.footer: message_footer = str(embed.footer.text)
 
-        if not 'check the short version of this command' in message_footer.lower(): return
+        search_strings = [
+            'check the short version of this command', #English
+            'revisa la versión más corta de este comando', #Spanish
+        ]
+        if all(search_string not in message_footer.lower() for search_string in search_strings): return
 
         user_id = user_name = None
         user = await functions.get_interaction_user(message)
@@ -39,8 +43,10 @@ class CooldownsCog(commands.Cog):
             try:
                 user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
             except:
+                user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                          message_author)
                 try:
-                    user_name = re.search("^(.+?)'s cooldowns", message_author).group(1)
+                    user_name = user_name_match.group(1)
                     user_name = await functions.encode_text(user_name)
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -70,7 +76,7 @@ class CooldownsCog(commands.Cog):
         cooldowns = []
         if user_settings.alert_daily.enabled:
             try:
-                daily_search = re.search("Daily`\*\* \(\*\*(.+?)\*\*", message_fields)
+                daily_search = re.search("daily`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -86,7 +92,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['daily', daily_timestring.lower(), daily_message])
         if user_settings.alert_weekly.enabled:
             try:
-                weekly_search = re.search("Weekly`\*\* \(\*\*(.+?)\*\*", message_fields)
+                weekly_search = re.search("weekly`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -102,7 +108,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['weekly', weekly_timestring.lower(), weekly_message])
         if user_settings.alert_lootbox.enabled:
             try:
-                lb_search = re.search("Lootbox`\*\* \(\*\*(.+?)\*\*", message_fields)
+                lb_search = re.search("lootbox`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -117,14 +123,14 @@ class CooldownsCog(commands.Cog):
                 lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
         if user_settings.alert_adventure.enabled:
-            if 'Adventure hardmode`**' in message_fields:
-                adv_search_string = 'Adventure hardmode`\*\* \(\*\*(.+?)\*\*'
+            if 'adventure hardmode`**' in message_fields.lower():
+                adv_search_string = 'adventure hardmode`\*\* \(\*\*(.+?)\*\*'
                 adv_command = '/adventure mode: hardmode' if slash_command else 'rpg adventure hardmode'
             else:
-                adv_search_string = 'Adventure`\*\* \(\*\*(.+?)\*\*'
+                adv_search_string = 'adventure`\*\* \(\*\*(.+?)\*\*'
                 adv_command = '/adventure' if slash_command else 'rpg adventure'
             try:
-                adv_search = re.search(adv_search_string, message_fields)
+                adv_search = re.search(adv_search_string, message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -138,7 +144,7 @@ class CooldownsCog(commands.Cog):
                 adv_message = user_settings.alert_adventure.message.replace('{command}', adv_command)
                 cooldowns.append(['adventure', adv_timestring.lower(), adv_message])
         if user_settings.alert_training.enabled:
-            if 'Ultraining`**' in message_fields:
+            if 'ultraining`**' in message_fields.lower():
                 tr_command = '/ultraining' if slash_command else 'rpg ultraining'
             else:
                 tr_command = '/training' if slash_command else 'rpg training'
@@ -158,7 +164,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['training', tr_timestring.lower(), tr_message])
         if user_settings.alert_quest.enabled:
             try:
-                quest_search = re.search("quest`\*\* \(\*\*(.+?)\*\*", message_fields)
+                quest_search = re.search("quest`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -174,7 +180,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['quest', quest_timestring.lower(), quest_message])
         if user_settings.alert_duel.enabled:
             try:
-                duel_search = re.search("Duel`\*\* \(\*\*(.+?)\*\*", message_fields)
+                duel_search = re.search("duel`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -190,7 +196,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['duel', duel_timestring.lower(), duel_message])
         if user_settings.alert_arena.enabled:
             try:
-                arena_search = re.search("rena`\*\* \(\*\*(.+?)\*\*", message_fields)
+                arena_search = re.search("rena`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -206,7 +212,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['arena', arena_timestring.lower(), arena_message])
         if user_settings.alert_dungeon_miniboss.enabled:
             try:
-                dungmb_search = re.search("boss`\*\* \(\*\*(.+?)\*\*", message_fields)
+                dungmb_search = re.search("boss`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -222,7 +228,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['dungeon-miniboss', dungmb_timestring.lower(), dungmb_message])
         if user_settings.alert_horse_breed.enabled:
             try:
-                horse_search = re.search("race`\*\* \(\*\*(.+?)\*\*", message_fields)
+                horse_search = re.search("race`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -238,7 +244,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['horse', horse_timestring.lower(), horse_message])
         if user_settings.alert_vote.enabled:
             try:
-                vote_search = re.search("Vote`\*\* \(\*\*(.+?)\*\*", message_fields)
+                vote_search = re.search("vote`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -254,7 +260,7 @@ class CooldownsCog(commands.Cog):
                 cooldowns.append(['vote', vote_timestring.lower(), vote_message])
         if user_settings.alert_farm.enabled:
             try:
-                farm_search = re.search("Farm`\*\* \(\*\*(.+?)\*\*", message_fields)
+                farm_search = re.search("farm`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -269,12 +275,14 @@ class CooldownsCog(commands.Cog):
                 farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 cooldowns.append(['farm', farm_timestring.lower(), farm_message])
         if user_settings.alert_work.enabled:
-            if 'Mine`**' in message_fields: work_search_string = 'Mine`\*\* \(\*\*(.+?)\*\*'
-            elif 'Pickaxe`**' in message_fields: work_search_string = 'Pickaxe`\*\* \(\*\*(.+?)\*\*'
-            elif 'Drill`**' in message_fields: work_search_string = 'Drill`\*\* \(\*\*(.+?)\*\*'
-            else: work_search_string = 'Dynamite`\*\* \(\*\*(.+?)\*\*'
+            search_patterns = [
+                'mine`\*\* \(\*\*(.+?)\*\*',
+                'pickaxe`\*\* \(\*\*(.+?)\*\*',
+                'drill`\*\* \(\*\*(.+?)\*\*',
+                'dynamite`\*\* \(\*\*(.+?)\*\*',
+            ]
             try:
-                work_search = re.search(work_search_string, message_fields)
+                work_match = await functions.get_match_from_patterns(search_patterns, message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)
@@ -283,11 +291,10 @@ class CooldownsCog(commands.Cog):
                     message
                 )
                 return
-            if work_search is not None:
-                work_timestring = work_search.group(1)
+            if work_match is not None:
+                work_timestring = work_match.group(1)
                 work_message = user_settings.alert_work.message.replace('{command}', 'work command')
                 cooldowns.append(['work', work_timestring.lower(), work_message])
-        current_time = datetime.utcnow().replace(microsecond=0)
         for cooldown in cooldowns:
             cd_activity = cooldown[0]
             cd_timestring = cooldown[1]
@@ -296,7 +303,7 @@ class CooldownsCog(commands.Cog):
             if time_left.total_seconds() > 0:
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, cd_activity, time_left,
-                                                            message.channel.id, cd_message, overwrite_message=False)
+                                                         message.channel.id, cd_message, overwrite_message=False)
                 )
                 if not reminder.record_exists:
                     await message.channel.send(strings.MSG_ERROR)

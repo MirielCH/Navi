@@ -1,7 +1,8 @@
 # functions.py
 
 from datetime import datetime, timedelta
-from typing import Union
+import re
+from typing import List, Union
 
 import discord
 
@@ -37,7 +38,18 @@ async def add_reminder_reaction(message: discord.Message, reminder: reminders.Re
             await message.channel.send(strings.MSG_ERROR)
 
 
-# Time calculations
+# --- Regex ---
+async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
+    """Searches a string for a regex patterns out of a list of patterns and returns the first match.
+    Returns None if no match is found.
+    """
+    for pattern in patterns:
+        match = re.search(pattern, string)
+        if match is not None: break
+    return match
+
+
+# --- Time calculations ---
 async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Union[discord.Member, None]:
     """Returns the first guild member found by the given name"""
     for member in guild.members:

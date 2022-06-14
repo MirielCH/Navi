@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class DungeonMinibossCog(commands.Cog):
@@ -28,15 +28,21 @@ class DungeonMinibossCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Dungeon / Miniboss cooldown
-            if 'you have been in a fight with a boss recently' in message_title.lower():
+            search_strings = [
+                'you have been in a fight with a boss recently', #English
+                'has estado en una pelea con un boss recientemente', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -63,7 +69,9 @@ class DungeonMinibossCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_dungeon_miniboss.enabled: return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', 'rpg dungeon / miniboss')
                 reminder: reminders.Reminder = (

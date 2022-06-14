@@ -29,15 +29,21 @@ class HuntCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Hunt cooldown
-            if 'you have already looked around' in message_title.lower():
+            search_strings = [
+                'you have already looked around', #English
+                'ya has mirado a tu alrededor', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = None
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is not None: user_command = '/hunt'
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                 except:
+                    user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                              message_author)
                     try:
-                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -90,7 +96,9 @@ class HuntCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
@@ -119,24 +127,52 @@ class HuntCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Hunt
-            if ('found a' in message_content.lower()
+            search_patterns = [
+                'found a', #English
+                'encontró', #Spanish
+            ]
+            if (any(search_pattern in message_content.lower() for search_pattern in search_patterns)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = None
+                hardmode = together = alone = False
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
-                hardmode = True if '(but stronger)' in message_content.lower() else False
-                alone = True if '(way stronger!!!)' in message_content.lower() else False
-                together = True if 'hunting together' in message_content.lower() else False
+                search_patterns = [
+                    '(but stronger)', #English
+                    '(pero más fuerte)', #Spanish
+                ]
+                if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                    hardmode = True
+                search_patterns = [
+                    '(but way stronger!!!)', #English
+                    '(pero más fuerte!!!)', #Spanish
+                ]
+                if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                    alone = True
+                search_patterns = [
+                    'hunting together', #English
+                    'stan cazando juntos', #Spanish
+                ]
+                if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                    together = True
                 new = True if '__**' in message_content.lower() else False
                 if together:
-                    name_search = re.search("\*\*(.+?)\*\* and \*\*(.+?)\*\*", message_content)
-                    user_name = name_search.group(1)
+                    search_patterns = [
+                        "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
+                        "\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                    ]
+                    name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    user_name = name_match.group(1)
                     user_name = await functions.encode_text(user_name)
-                    partner_name = name_search.group(2)
+                    partner_name = name_match.group(2)
                 if user is None:
                     if not together:
-                        user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
-                        user_name = user_name_search.group(1)
+                        search_patterns = [
+                            "\*\*(.+?)\*\* found a", #English
+                            "\*\*(.+?)\*\* encontró a", #Spanish
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     if user_name != 'Both players':
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
@@ -224,12 +260,14 @@ class HuntCog(commands.Cog):
                         lootbox_alert = ''
                         for lb_name, lb_emoji in lootboxes.items():
                             try:
-                                lb_search = re.search(f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", lb_search_content)
-                                if lb_search is None:
-                                    lb_search = re.search(f"\+(.+?) (.+?) {re.escape(lb_name)}", lb_search_content)
-                                if lb_search is None:
-                                    continue
-                                lb_amount = lb_search.group(1)
+                                search_patterns = [
+                                    f"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
+                                    f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
+                                    f"\*\* consiguió (.+?) (.+?) {re.escape(lb_name)}", #Spanish
+                                ]
+                                lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
+                                if lb_match is None: continue
+                                lb_amount = lb_match.group(1)
                             except:
                                 await errors.log_error(
                                     f'Error when looking for partner lootbox in: {lb_search_content}',
@@ -239,7 +277,10 @@ class HuntCog(commands.Cog):
                             partner_message = (partner.alert_partner.message
                                                .replace('{user}', user.name)
                                                .replace('{loot}', f'{lb_amount} {lb_emoji} {lb_name}'))
-                            lootbox_alert = partner_message if lootbox_alert == '' else f'{lootbox_alert}\nAlso: {partner_message}'
+                            if lootbox_alert == '':
+                                lootbox_alert = partner_message
+                            else:
+                                f'{lootbox_alert}\nAlso: {partner_message}'
                         lootbox_alert = lootbox_alert.strip()
                         if (partner.partner_channel_id is not None
                             and partner.alert_partner.enabled
@@ -297,14 +338,20 @@ class HuntCog(commands.Cog):
                         if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
                             await message.add_reaction(stuff_emoji)
                     # Add an F if the user died
-                    if ((message_content.find(f'**{user.name}** lost but ') > -1)
-                        or (message_content.find('but lost fighting') > -1)):
+                    search_strings = [
+                        f'**{user.name}** lost but ', #English 1
+                        'but lost fighting', #English 2
+                    ]
+                    if any(search_string in message_content for search_string in search_strings):
                         await message.add_reaction(emojis.RIP)
 
             # Hunt event
-            if ('pretends to be a zombie' in message_content.lower()
-                or 'fights the horde' in message_content.lower()
-                or 'thankfully, the horde did not notice' in message_content.lower()):
+            search_strings = [
+                'pretends to be a zombie', # English 1
+                'fights the horde', # English 2
+                'thankfully, the horde did not notice', # English 3
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command = None
                 user = await functions.get_interaction_user(message)
                 if user is not None:

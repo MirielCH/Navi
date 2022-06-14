@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class FarmCog(commands.Cog):
@@ -29,7 +29,11 @@ class FarmCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Farm cooldown
-            if 'you have farmed already' in message_title.lower():
+            search_strings = [
+                'you have farmed already', #English
+                'ya cultivaste recientemente', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
                 user = await functions.get_interaction_user(message)
                 if user is not None:
@@ -39,8 +43,10 @@ class FarmCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -89,7 +95,9 @@ class FarmCog(commands.Cog):
                             message
                         )
                         return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -101,13 +109,21 @@ class FarmCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Farm
-            if 'have grown from the seed' in message_content.lower():
+            search_strings = [
+               'have grown from the seed', #English
+               'crecieron de la semilla', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
+                    search_patterns = [
+                        "^\*\*(.+?)\*\* plant", #English & Spanish
+                    ]
                     try:
-                        user_name = re.search("^\*\*(.+?)\*\* plants", message_content).group(1)
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -136,11 +152,23 @@ class FarmCog(commands.Cog):
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 if not user_settings.alert_farm.enabled: return
                 message_history = await message.channel.history(limit=50).flatten()
-                if 'bread seed in the ground' in message_content.lower():
+                search_strings_bread = [
+                    'bread seed in the ground', #English
+                    'bread seed en el suelo', #Spanish
+                ]
+                search_strings_carrot = [
+                    'carrot seed in the ground', #English
+                    'carrot seed en el suelo', #Spanish
+                ]
+                search_strings_potato = [
+                    'potato seed in the ground', #English
+                    'potato seed en el suelo', #Spanish
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings_bread):
                     user_command = 'rpg farm bread' if not slash_command else '/farm seed: bread'
-                elif 'carrot seed in the ground' in message_content.lower():
+                elif any(search_string in message_content.lower() for search_string in search_strings_carrot):
                     user_command = 'rpg farm carrot' if not slash_command else '/farm seed: carrot'
-                elif 'potato seed in the ground' in message_content.lower():
+                elif any(search_string in message_content.lower() for search_string in search_strings_potato):
                     user_command = 'rpg farm potato' if not slash_command else '/farm seed: potato'
                 else:
                     user_command = 'rpg farm' if not slash_command else '/farm'
@@ -151,7 +179,11 @@ class FarmCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if 'also got' in message_content.lower():
+                search_strings = [
+                    'also got', #English
+                    'también consiguió', #Spanish
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings):
                     if 'potato seed**' in message_content.lower():
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_POTATO)
                     elif 'carrot seed**' in message_content.lower():

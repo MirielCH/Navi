@@ -29,7 +29,11 @@ class AdventureCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Adventure cooldown
-            if 'you have already been in an adventure' in message_title.lower():
+            search_strings = [
+                'you have already been in an adventure', #English
+                'ya has estado en una aventura', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
                 user = await functions.get_interaction_user(message)
                 if user is not None:
@@ -38,8 +42,10 @@ class AdventureCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -90,7 +96,9 @@ class AdventureCog(commands.Cog):
                         if argument in ('h', 'hardmode') and 'hardmode' not in arguments:
                             arguments = f'{arguments} hardmode'
                     user_command = f'rpg {arguments.strip()}'
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -102,18 +110,33 @@ class AdventureCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Adventure
-            if ('** found a' in message_content.lower()
+            search_patterns = [
+                'found a', #English
+                'encontró', #Spanish
+            ]
+            if (any(search_pattern in message_content.lower() for search_pattern in search_patterns)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user = await functions.get_interaction_user(message)
+                search_patterns = [
+                    '(but stronger)', #English
+                    '(pero más fuerte)', #Spanish
+                ]
                 if user is not None:
                     user_command = '/adventure'
-                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} mode: hardmode'
+                    if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                        user_command = f'{user_command} mode: hardmode'
                 else:
                     user_command = 'rpg adventure'
-                    if '(but stronger)' in message_content.lower(): user_command = f'{user_command} hardmode'
+                    if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                        user_command = f'{user_command} hardmode'
                     user_name = None
                     try:
-                        user_name = re.search("^\*\*(.+?)\*\* found a", message_content).group(1)
+                        search_patterns = [
+                            "^\*\*(.+?)\*\* found a", #English
+                            "^\*\*(.+?)\*\* encontró a", #Spanish
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
