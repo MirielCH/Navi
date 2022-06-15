@@ -31,9 +31,9 @@ class TasksCog(commands.Cog):
             return time_left
 
         try:
-            channel = await self.bot.fetch_channel(first_reminder.channel_id)
+            channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
             if first_reminder.reminder_type == 'user':
-                user = await self.bot.fetch_user(first_reminder.user_id)
+                user = await functions.get_discord_user(self.bot, first_reminder.user_id)
                 user_settings = await users.get_user(user.id)
                 message_no = 1
                 messages = {message_no: ''}
@@ -233,7 +233,7 @@ class TasksCog(commands.Cog):
                 if weekly_report.best_raid is None:
                     message = f'{message}{emojis.BP} There were no cool raids. Not cool.\n'
                 else:
-                    best_user = await self.bot.fetch_user(weekly_report.best_raid.user_id)
+                    best_user = await functions.get_discord_user(self.bot, weekly_report.best_raid.user_id)
                     best_user_praise = weekly_report.praise.format(username=best_user.name)
                     message = (
                         f'{message}{emojis.BP} '
@@ -242,13 +242,13 @@ class TasksCog(commands.Cog):
                 if weekly_report.worst_raid is None:
                     message = f'{message}{emojis.BP} There were no lame raids. How lame.\n'
                 else:
-                    worst_user = await self.bot.fetch_user(weekly_report.worst_raid.user_id)
+                    worst_user = await functions.get_discord_user(self.bot, weekly_report.worst_raid.user_id)
                     worst_user_roast = weekly_report.roast.format(username=worst_user.name)
                     message = (
                         f'{message}{emojis.BP} '
                         f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
-                clan_channel = await self.bot.fetch_channel(clan.channel_id)
+                clan_channel = await functions.get_discord_channel(self.bot, clan.channel_id)
                 await clan_channel.send(message)
             # Delete leaderboard
             await clans.delete_clan_leaderboard()

@@ -198,7 +198,7 @@ class HuntCog(commands.Cog):
                 partner_start = len(message_content)
                 if user_settings.partner_id is not None:
                     partner: users.User = await users.get_user(user_settings.partner_id)
-                    partner_discord = await self.bot.fetch_user(user_settings.partner_id)
+                    partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
                     # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                     if together:
                         lootboxes = {
@@ -252,7 +252,7 @@ class HuntCog(commands.Cog):
                                         lb_message = f'{lootbox_alert} {partner_discord.mention}'
                                     else:
                                         lb_message = f'{partner_discord.mention} {lootbox_alert}'
-                                channel = await self.bot.fetch_channel(partner.partner_channel_id)
+                                channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
                                 await channel.send(lb_message)
                                 if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
                             except Exception as error:
@@ -274,7 +274,7 @@ class HuntCog(commands.Cog):
                                 hm_message = f'{user.mention} {hm_message}'
                         await message.channel.send(hm_message)
                     elif not together and not partner.hardmode_mode_enabled:
-                        partner_discord = await self.bot.fetch_user(user_settings.partner_id)
+                        partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
                         hm_message = (
                             f'**{partner_discord.name}** is not hardmoding, '
                             f'feel free to take them hunting.'

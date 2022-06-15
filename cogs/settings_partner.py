@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import users
-from resources import emojis, exceptions, strings
+from resources import emojis, exceptions, functions, strings
 
 
 class SettingsPartnerCog(commands.Cog):
@@ -34,7 +34,7 @@ class SettingsPartnerCog(commands.Cog):
                     f'Note that your partner needs to be in the same server and needs to be able to answer.\n'
                 )
             else:
-                partner = await self.bot.fetch_user(user.partner_id)
+                partner = await functions.get_discord_user(self.bot, user.partner_id)
                 await ctx.reply(
                     f'Your current partner is **{partner.name}**.\n'
                     f'If you want to change this, use this command to ping your new partner (`{prefix}partner @User`)\n'

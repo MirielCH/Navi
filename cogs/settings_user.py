@@ -43,9 +43,8 @@ class SettingsUserCog(commands.Cog):
                 user_id = ctx.author.id
         else:
             user_id = ctx.author.id
-        try:
-            user = await self.bot.fetch_user(user_id)
-        except discord.NotFound:
+        user = await functions.get_discord_user(self.bot, user_id)
+        if user is None:
             await ctx.reply('This user doesn\'t exist.')
             return
         if user.bot:
@@ -59,7 +58,7 @@ class SettingsUserCog(commands.Cog):
             else:
                 await ctx.reply('This user is not registered with this bot.')
             return
-        user_discord = await self.bot.fetch_user(user_id)
+        user_discord = await functions.get_discord_user(self.bot, user_id)
         current_time = datetime.utcnow().replace(microsecond=0)
         try:
             user_reminders = await reminders.get_active_user_reminders(user.user_id)
@@ -657,7 +656,7 @@ class SettingsUserCog(commands.Cog):
                 f'Please note that your partner will only be properly notified if they have a partner alert channel set.'
             )
             if user.partner_id is not None:
-                partner_discord = await self.bot.fetch_user(user.partner_id)
+                partner_discord = await functions.get_discord_user(self.bot, user.partner_id)
                 partner: users.User = await users.get_user(user.partner_id)
                 if partner.partner_channel_id is not None:
                     partner_message = partner_discord.mention if not user.dnd_mode_enabled else f'**{partner_discord.name}**,'
@@ -673,7 +672,7 @@ class SettingsUserCog(commands.Cog):
                             f'{partner_message}\n'
                             f'Feel free to use `hunt togethter` again.'
                         )
-                    partner_channel = await self.bot.fetch_channel(partner.partner_channel_id)
+                    partner_channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
                     await partner_channel.send(partner_message)
 
         else:
@@ -952,7 +951,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     user_settings: users.User = await users.get_user(ctx.author.id)
     ping_mode_setting = 'After' if user_settings.ping_after_message else 'Before'
     if user_settings.partner_channel_id is not None:
-        user_partner_channel = await bot.fetch_channel(user_settings.partner_channel_id)
+        user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
         user_partner_channel_name = user_partner_channel.name
 
     # Get partner settings
@@ -960,10 +959,10 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     partner_partner_channel_name = 'N/A'
     if user_settings.partner_id is not None:
         partner_settings: users.User = await users.get_user(user_settings.partner_id)
-        partner = await bot.fetch_user(user_settings.partner_id)
+        partner = await functions.get_discord_user(bot, user_settings.partner_id)
         partner_name = f'{partner.name}#{partner.discriminator}'
         partner_hardmode_status = await bool_to_text(partner_settings.hardmode_mode_enabled)
-        partner_partner_channel = await bot.fetch_channel(partner_settings.partner_channel_id)
+        partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
         if partner_partner_channel is not None: partner_partner_channel_name = partner_partner_channel.name
 
     # Get clan settings
@@ -975,7 +974,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         clan_upgrade_quests = 'Allowed' if clan_settings.upgrade_quests_enabled else 'Not allowed'
         stealth_threshold = clan_settings.stealth_threshold
         if clan_settings.channel_id is not None:
-            clan_channel = await bot.fetch_channel(clan_settings.channel_id)
+            clan_channel = await functions.get_discord_channel(bot, clan_settings.channel_id)
             clan_channel_name = clan_channel.name
     except exceptions.NoDataFoundError:
         pass

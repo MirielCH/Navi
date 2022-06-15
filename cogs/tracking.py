@@ -36,9 +36,8 @@ class TrackingCog(commands.Cog):
                 user_id = ctx.author.id
         else:
             user_id = ctx.author.id
-        try:
-            user = await self.bot.fetch_user(user_id)
-        except discord.NotFound:
+        user = await functions.get_discord_user(self.bot, user_id)
+        if user is None:
             await ctx.reply('This user doesn\'t exist.')
             return
         if user.bot:
