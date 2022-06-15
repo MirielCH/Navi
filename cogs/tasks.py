@@ -31,11 +31,9 @@ class TasksCog(commands.Cog):
             return time_left
 
         try:
-            await self.bot.wait_until_ready()
-            channel = self.bot.get_channel(first_reminder.channel_id)
+            channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
             if first_reminder.reminder_type == 'user':
-                await self.bot.wait_until_ready()
-                user = self.bot.get_user(first_reminder.user_id)
+                user = await functions.get_discord_user(self.bot, first_reminder.user_id)
                 user_settings = await users.get_user(user.id)
                 message_no = 1
                 messages = {message_no: ''}
@@ -89,41 +87,30 @@ class TasksCog(commands.Cog):
             if first_reminder.reminder_type == 'clan':
                 clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
                 if clan.quest_user_id is not None:
-                    await self.bot.wait_until_ready()
-                    quest_user = self.bot.get_user(clan.quest_user_id)
-                    if quest_user is None:
-                        await errors.log_error(
-                            f'Quest user ID {clan.quest_user_id} didn\'t return a valid user object.'
-                        )
-                        await clan.update(quest_user_id=None)
+                    await clan.update(quest_user_id=None)
+                    time_left_all_members = timedelta(minutes=5)
+                    alert_message_prefix = '/' if '/guild' in clan.alert_message else 'rpg '
+                    if clan.stealth_current >= clan.stealth_threshold:
+                        alert_message = f'{alert_message_prefix}guild raid'
                     else:
-                        await clan.update(quest_user_id=None)
-                        time_left_all_members = timedelta(minutes=5)
-                        alert_message_prefix = '/' if '/guild' in clan.alert_message else 'rpg '
-                        if clan.stealth_current >= clan.stealth_threshold:
-                            alert_message = f'{alert_message_prefix}guild raid'
-                        else:
-                            alert_message = f'{alert_message_prefix}guild upgrade'
-                        time_left = get_time_left()
-                        try:
-                            await asyncio.sleep(time_left.total_seconds())
-                            await channel.send(
-                                f'{quest_user.mention} Hey! It\'s time for your raid quest. '
-                                f'You have 5 minutes, chop chop.'
-                            )
-                            reminder: reminders.Reminder = (
-                                await reminders.insert_clan_reminder(clan.clan_name, time_left_all_members,
-                                                                    clan.channel_id, alert_message)
-                            )
-                        except asyncio.CancelledError:
-                            return
+                        alert_message = f'{alert_message_prefix}guild upgrade'
+                    time_left = get_time_left()
+                    try:
+                        await asyncio.sleep(time_left.total_seconds())
+                        await channel.send(
+                            f'<@{clan.quest_user_id}> Hey! It\'s time for your raid quest. '
+                            f'You have 5 minutes, chop chop.'
+                        )
+                        reminder: reminders.Reminder = (
+                            await reminders.insert_clan_reminder(clan.clan_name, time_left_all_members,
+                                                                clan.channel_id, alert_message)
+                        )
+                    except asyncio.CancelledError:
+                        return
                 message_mentions = ''
                 for member_id in clan.member_ids:
                     if member_id is not None:
-                        await self.bot.wait_until_ready()
-                        member = self.bot.get_user(member_id)
-                        if member is not None:
-                            message_mentions = f'{message_mentions}{member.mention} '
+                        message_mentions = f'{message_mentions}<@{member_id}> '
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
@@ -246,8 +233,7 @@ class TasksCog(commands.Cog):
                 if weekly_report.best_raid is None:
                     message = f'{message}{emojis.BP} There were no cool raids. Not cool.\n'
                 else:
-                    await self.bot.wait_until_ready()
-                    best_user = self.bot.get_user(weekly_report.best_raid.user_id)
+                    best_user = await functions.get_discord_user(self.bot, weekly_report.best_raid.user_id)
                     best_user_praise = weekly_report.praise.format(username=best_user.name)
                     message = (
                         f'{message}{emojis.BP} '
@@ -256,15 +242,13 @@ class TasksCog(commands.Cog):
                 if weekly_report.worst_raid is None:
                     message = f'{message}{emojis.BP} There were no lame raids. How lame.\n'
                 else:
-                    await self.bot.wait_until_ready()
-                    worst_user = self.bot.get_user(weekly_report.worst_raid.user_id)
+                    worst_user = await functions.get_discord_user(self.bot, weekly_report.worst_raid.user_id)
                     worst_user_roast = weekly_report.roast.format(username=worst_user.name)
                     message = (
                         f'{message}{emojis.BP} '
                         f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
-                await self.bot.wait_until_ready()
-                clan_channel = self.bot.get_channel(clan.channel_id)
+                clan_channel = await functions.get_discord_channel(self.bot, clan.channel_id)
                 await clan_channel.send(message)
             # Delete leaderboard
             await clans.delete_clan_leaderboard()

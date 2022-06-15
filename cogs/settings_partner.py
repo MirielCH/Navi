@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import users
-from resources import emojis, exceptions, strings
+from resources import emojis, exceptions, functions, strings
 
 
 class SettingsPartnerCog(commands.Cog):
@@ -34,8 +34,7 @@ class SettingsPartnerCog(commands.Cog):
                     f'Note that your partner needs to be in the same server and needs to be able to answer.\n'
                 )
             else:
-                await self.bot.wait_until_ready()
-                partner = self.bot.get_user(user.partner_id)
+                partner = await functions.get_discord_user(self.bot, user.partner_id)
                 await ctx.reply(
                     f'Your current partner is **{partner.name}**.\n'
                     f'If you want to change this, use this command to ping your new partner (`{prefix}partner @User`)\n'
@@ -171,8 +170,7 @@ class SettingsPartnerCog(commands.Cog):
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.partner_channel_id is not None:
-            await self.bot.wait_until_ready()
-            channel = self.bot.get_channel(user.partner_channel_id)
+            channel = await self.bot.fetch_channel(user.partner_channel_id)
             await ctx.reply(
                 f'Your current partner alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                 f'If you want to change this, use `{prefix}partner channel set` within your new alert channel.\n'
@@ -232,7 +230,7 @@ class SettingsPartnerCog(commands.Cog):
             )
             return
         await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(user.partner_channel_id)
+        channel = await self.bot.fetch_channel(user.partner_channel_id)
         try:
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to remove `{channel.name}` as your partner alert channel? '

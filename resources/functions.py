@@ -37,6 +37,30 @@ async def add_reminder_reaction(message: discord.Message, reminder: reminders.Re
             await message.channel.send(strings.MSG_ERROR)
 
 
+async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
+    """Checks the user cache for a user and makes an additional API call if not found. Returns None if user not found."""
+    await bot.wait_until_ready()
+    user = bot.get_user(user_id)
+    if user is None:
+        try:
+            user = await bot.fetch_user(user_id)
+        except discord.NotFound:
+            pass
+    return user
+
+
+async def get_discord_channel(bot: discord.Bot, channel_id: int) -> discord.User:
+    """Checks the channel cache for a channel and makes an additional API call if not found. Returns None if channel not found."""
+    await bot.wait_until_ready()
+    channel = bot.get_channel(channel_id)
+    if channel is None:
+        try:
+            channel = await bot.fetch_channel(channel_id)
+        except discord.NotFound:
+            pass
+    return channel
+
+
 # Time calculations
 async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Union[discord.Member, None]:
     """Returns the first guild member found by the given name"""
