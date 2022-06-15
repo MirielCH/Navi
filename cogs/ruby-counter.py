@@ -140,27 +140,42 @@ class RubyCounterCog(commands.Cog):
             # Rubies from inventory
             if "'s inventory" in message_author.lower():
                 user_id = user_name = None
-                user = await functions.get_interaction_user(message)
-                if user is None:
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    for msg in message_history:
+                        if msg.content is not None:
+                            msg_content = msg.content.lower().replace(' ','')
+                            if msg_content.startswith('rpgi'):
+                                interaction_user = msg.author
+                                break
+                    if interaction_user is None:
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            'Couldn\'t find an interaction user for the inventory message.',
+                            message
+                        )
+                        return
+                try:
+                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                except:
                     try:
-                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                    except:
-                        try:
-                            user_name = re.search("^(.+?)'s inventory", message_author).group(1)
-                            user_name = await functions.encode_text(user_name)
-                        except Exception as error:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                f'User not found in inventory message for ruby counter: {message.embeds[0].fields}',
-                                message
-                            )
-                            return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
+                        user_name = re.search("^(.+?)'s inventory", message_author).group(1)
+                        user_name = await functions.encode_text(user_name)
+                    except Exception as error:
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            f'User not found in inventory message for ruby counter: {message.embeds[0].fields}',
+                            message
+                        )
+                        return
+                if user_id is not None:
+                    embed_user = await message.guild.fetch_member(user_id)
+                else:
+                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if embed_user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
                     await errors.log_error(
@@ -168,8 +183,9 @@ class RubyCounterCog(commands.Cog):
                         message
                     )
                     return
+                if embed_user != interaction_user: return
                 try:
-                    user_settings: users.User = await users.get_user(user.id)
+                    user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
