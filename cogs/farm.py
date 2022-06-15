@@ -152,23 +152,15 @@ class FarmCog(commands.Cog):
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 if not user_settings.alert_farm.enabled: return
                 message_history = await message.channel.history(limit=50).flatten()
-                search_strings_bread = [
-                    'bread seed in the ground', #English
-                    'bread seed en el suelo', #Spanish
+                search_strings = [
+                    '{} in the ground', #English
+                    '{} en el suelo', #Spanish
                 ]
-                search_strings_carrot = [
-                    'carrot seed in the ground', #English
-                    'carrot seed en el suelo', #Spanish
-                ]
-                search_strings_potato = [
-                    'potato seed in the ground', #English
-                    'potato seed en el suelo', #Spanish
-                ]
-                if any(search_string in message_content.lower() for search_string in search_strings_bread):
+                if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm bread' if not slash_command else '/farm seed: bread'
-                elif any(search_string in message_content.lower() for search_string in search_strings_carrot):
+                elif any(search_string.format('carrot seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm carrot' if not slash_command else '/farm seed: carrot'
-                elif any(search_string in message_content.lower() for search_string in search_strings_potato):
+                elif any(search_string.format('potato seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm potato' if not slash_command else '/farm seed: potato'
                 else:
                     user_command = 'rpg farm' if not slash_command else '/farm'

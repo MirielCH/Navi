@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import clans, reminders, users
-from resources import emojis, exceptions, settings, strings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class SettingsClanCog(commands.Cog):
@@ -66,8 +66,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.channel_id is not None:
-            await self.bot.wait_until_ready()
-            channel = self.bot.get_channel(clan.channel_id)
+            channel = await functions.get_discord_channel(self.bot, clan.channel_id)
             await ctx.reply(
                 f'Your current guild alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                 f'If you want to change this, use `{prefix}guild channel set` within your new alert channel.\n'
@@ -141,8 +140,7 @@ class SettingsClanCog(commands.Cog):
                 f'**{ctx.author.name}**, you don\'t have a guild alert channel set, there is no need to reset it.\n'
             )
             return
-        await self.bot.wait_until_ready()
-        channel = self.bot.get_channel(clan.channel_id)
+        channel = await functions.get_discord_channel(self.bot, clan.channel_id)
         try:
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to remove `{channel.name}` as the alert channel for '
@@ -345,7 +343,6 @@ class SettingsClanCog(commands.Cog):
         for index, best_raid in enumerate(leaderboard.best_raids):
             emoji = getattr(emojis, f'LEADERBOARD_{index+1}')
             await self.bot.wait_until_ready()
-            user = self.bot.get_user(best_raid.user_id)
             field_best_raids = (
                 f'{field_best_raids}\n'
                 f'{emoji} **{best_raid.energy:,}** {emojis.ENERGY} by <@{best_raid.user_id}>'
@@ -353,7 +350,6 @@ class SettingsClanCog(commands.Cog):
         for index, worst_raid in enumerate(leaderboard.worst_raids):
             emoji = getattr(emojis, f'LEADERBOARD_{index+1}')
             await self.bot.wait_until_ready()
-            user = self.bot.get_user(worst_raid.user_id)
             field_worst_raids = (
                 f'{field_worst_raids}\n'
                 f'{emoji} **{worst_raid.energy:,}** {emojis.ENERGY} by <@{worst_raid.user_id}>'
@@ -422,9 +418,8 @@ class SettingsClanCog(commands.Cog):
                             await clans.delete_clan_leaderboard(clan.clan_name)
                             await clan.delete()
                             await self.bot.wait_until_ready()
-                            leader = self.bot.get_user(clan.leader_id)
                             await message_after.channel.send(
-                                f'{leader.mention} Found two guilds with unmatching members with you as a leader which '
+                                f'<@{clan.leader_id}> Found two guilds with unmatching members with you as a leader which '
                                 f'is an invalid state I can\'t resolve.\n'
                                 f'As a consequence I deleted the guild **{clan.clan_name}** including **all settings and '
                                 f'the leaderboard** from the database and added **{clan_name}** as a new guild.\n\n'

@@ -286,12 +286,10 @@ class DevCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
-        string = (
-            f'This is a {{place holder}} and {{anotherone}}'
-        )
-        match = re.search('\{(.+?)\}', string)
-        matches = re.findall('\{(.+?)\}', string)
-        await ctx.reply(matches)
+        how_many_none = 0
+        for user in self.bot.users:
+            if user is None: how_many_none += 1
+        await ctx.reply(f'Length of `bot.users`: {len(self.bot.users)} ({how_many_none} are None)')
 
 
 def setup(bot):

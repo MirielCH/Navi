@@ -36,10 +36,9 @@ class TrackingCog(commands.Cog):
                 user_id = ctx.author.id
         else:
             user_id = ctx.author.id
-        await self.bot.wait_until_ready()
-        user = self.bot.get_user(user_id)
+        user = await functions.get_discord_user(self.bot, user_id)
         if user is None:
-            await ctx.reply('Unable to find this user in any servers I\'m in.')
+            await ctx.reply('This user doesn\'t exist.')
             return
         if user.bot:
             await ctx.reply('Imagine trying to check the stats of a bot.')
