@@ -340,9 +340,13 @@ class HuntCog(commands.Cog):
                     search_strings = [
                         f'**{user.name}** lost but ', #English 1
                         'but lost fighting', #English 2
+                        'both lost fighting', #English 3
+                        f'**{user.name}** perdió pero ', #Spanish 1 - UNCONFIRMED
+                        'pero perdió luchando', #Spanish 2
+                        'ambos perdieron luchando', #Spanish 3
                     ]
                     if any(search_string in message_content for search_string in search_strings):
-                        await message.add_reaction(emojis.RIP)
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)
 
             # Hunt event
             search_strings = [

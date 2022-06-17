@@ -192,8 +192,7 @@ class SettingsUserCog(commands.Cog):
             f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on.\n'
             f'Don\'t forget to set your donor tier with `{prefix}donor` and - if you are married - '
             f'the donor tier of your partner with `{prefix}partner donor`.\n'
-            f'You can check all of your settings with `{prefix}settings`.\n\n'
-            f'Note: I only work if EPIC RPG is set to **English**.'
+            f'You can check all of your settings with `{prefix}settings`.'
         )
 
     @commands.command(aliases=('stop',))

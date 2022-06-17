@@ -34,9 +34,6 @@ class FunCog(commands.Cog):
 
         if not message.embeds and message.author.id == settings.EPIC_RPG_ID:
             message_content = message.content
-            laugh_terms = [
-                'You just lost your lootbox',
-            ]
             if 'died fighting the **mysterious man**' in message_content.lower():
                 user = await functions.get_interaction_user(message)
                 if user is None:

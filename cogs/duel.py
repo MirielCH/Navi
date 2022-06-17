@@ -30,6 +30,7 @@ class DuelCog(commands.Cog):
             # Duel cooldown
             search_strings = [
                 'you have been in a duel recently', #English
+                'estuviste en un duelo recientemente', #Spanish
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None

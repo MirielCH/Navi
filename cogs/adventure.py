@@ -180,8 +180,13 @@ class AdventureCog(commands.Cog):
                             await message.add_reaction(stuff_emoji)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 # Add an F if the user died
-                if ((message_content.find(f'**{user.name}** lost but ') > -1)
-                    or (message_content.find('but lost fighting') > -1)):
+                search_strings = [
+                    f'**{user.name}** lost but ', #English 1
+                    'but lost fighting', #English 2
+                    f'**{user.name}** perdió pero ', #Spanish 1 - UNCONFIRMED
+                    'pero perdió luchando', #Spanish 2
+                ]
+                if any(search_string in message_content for search_string in search_strings):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)
 
 

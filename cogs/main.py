@@ -190,12 +190,16 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
         f'{emojis.BP} `{prefix}prefix` : Check / set the bot prefix'
     )
 
+    supported_languages = (
+        f'{emojis.BP} :flag_us: English\n'
+        f'{emojis.BP} :flag_es: Spanish\n'
+    )
+
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'NAVI',
         description =   f'Hey! **{ctx.author.name}**! Hello!'
     )
-    embed.set_footer(text='Note: EPIC RPG needs to be set to English.')
     embed.add_field(name='REMINDERS', value=reminder_management, inline=False)
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
     embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
@@ -203,6 +207,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     embed.add_field(name='PARTNER SETTINGS', value=partner_settings, inline=False)
     embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)
     embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
+    embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
 
     return embed
 
