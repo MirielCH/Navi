@@ -68,7 +68,7 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
     Returns None if no match is found.
     """
     for pattern in patterns:
-        match = re.search(pattern, string)
+        match = re.search(pattern, string, re.IGNORECASE)
         if match is not None: break
     return match
 
@@ -421,39 +421,76 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
 async def get_training_answer(message_content: str) -> str:
     """Returns the answer to a training question based on the message content."""
     answer = None
-    if 'river!' in message_content:
+    search_strings_river = [
+        'river!', #English
+        'río!', #Spanish
+    ]
+    search_strings_field = [
+        'field!', #English
+        'campo!', #Spanish
+    ]
+    search_strings_casino = [
+        'casino?', #English & Spanish
+    ]
+    search_strings_forest = [
+        'forest!', #English
+        'bosque!', #Spanish
+    ]
+    search_strings_void = [
+        'void', #English
+        'vacío', #Spanish, UNCONFIRMED
+    ]
+    if any(search_string in message_content for search_string in search_strings_river):
         if '<:epicfish' in message_content:
             answer = '`3` / `EPIC fish`'
         elif '<:goldenfish' in message_content:
             answer = '`2` / `golden fish`'
         elif '<:normiefish' in message_content:
             answer = '`1` / `normie fish`'
-    elif 'field!' in message_content:
+    elif any(search_string in message_content for search_string in search_strings_field):
+        search_strings_first = [
+            '**first**', #English
+            '**primera**', #Spanish
+        ]
+        search_strings_second = [
+            '**second**', #English
+            '**segunda**', #Spanish
+        ]
+        search_strings_third = [
+            '**third**', #English
+            '**tercera**', #Spanish
+        ]
+        search_strings_fourth = [
+            '**fourth**', #English
+            '**cuarta**', #Spanish
+        ]
+        search_strings_fifth = [
+            '**fifth**', #English
+            '**quinta**', #Spanish
+        ]
+        search_strings_sixth = [
+            '**sixth**', #English
+            '**sexta**', #Spanish
+        ]
+        banana = 'BANANA'
+        apple = 'APPLE'
+        if any(search_string in message_content for search_string in search_strings_first):
+            letter = 1
+        elif any(search_string in message_content for search_string in search_strings_second):
+            letter = 2
+        elif any(search_string in message_content for search_string in search_strings_third):
+            letter = 3
+        elif any(search_string in message_content for search_string in search_strings_fourth):
+            letter = 4
+        elif any(search_string in message_content for search_string in search_strings_fifth):
+            letter = 5
+        elif any(search_string in message_content for search_string in search_strings_sixth):
+            letter = 6
         if '<:apple' in message_content:
-            if '**first**' in message_content:
-                answer = '`A`'
-            elif '**second**' in message_content:
-                answer = '`P`'
-            elif '**third**' in message_content:
-                answer = '`P`'
-            elif '**fourth**' in message_content:
-                answer = '`L`'
-            elif '**fifth**' in message_content:
-                answer = '`E`'
+            return f'`{apple[letter-1]}`'
         elif '<:banana' in message_content:
-            if '**first**' in message_content:
-                answer = '`B`'
-            elif '**second**' in message_content:
-                answer = '`A`'
-            elif '**third**' in message_content:
-                answer = '`N`'
-            elif '**fourth**' in message_content:
-                answer = '`A`'
-            elif '**fifth**' in message_content:
-                answer = '`N`'
-            elif '**sixth**' in message_content:
-                answer = '`A`'
-    elif 'casino?' in message_content:
+            return f'`{banana[letter-1]}`'
+    elif any(search_string in message_content for search_string in search_strings_casino):
         if ':gem:' in message_content and '**diamond**' in message_content:
             answer = '`YES`'
         elif ':gift:' in message_content and '**gift**' in message_content:
@@ -466,21 +503,27 @@ async def get_training_answer(message_content: str) -> str:
             answer = '`YES`'
         else:
             answer = '`NO`'
-    elif 'forest!' in message_content:
-        if 'many <:wooden' in message_content:
-            emoji = '<:wooden'
-        elif 'many <:epic' in message_content:
-            emoji = '<:epic'
-        elif 'many <:super' in message_content:
-            emoji = '<:super'
-        elif 'many <:mega' in message_content:
-            emoji = '<:mega'
-        elif 'many <:hyper' in message_content:
-            emoji = '<:hyper'
-        start_question = message_content.find('how many ')
+    elif any(search_string in message_content for search_string in search_strings_forest):
+        search_patterns = [
+            'many (.+?) do', #English
+            'cuantos (.+?) ves', #Spanish
+        ]
+        emoji_match = await get_match_from_patterns(search_patterns, message_content)
+        try:
+            emoji = emoji_match.group(1)
+        except:
+            await errors.log_error(f'Log emoji not found in training answer function: {message_content}')
+            return
+        search_strings = [
+            'how many ', #English
+            'cuantos ', #Spanish
+        ]
+        for search_string in search_strings:
+            start_question = message_content.find(search_string)
+            if start_question != -1: break
         message_content_list = message_content[0:start_question]
         answer = f'`{message_content_list.count(emoji)}`'
-    elif 'void' in message_content:
+    elif any(search_string in message_content for search_string in search_strings_void):
         all_settings = await settings_db.get_settings()
         answer = ''
         a16_seal_time = all_settings.get('a16_seal_time', None)

@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class RubyCounterCog(commands.Cog):
@@ -29,14 +29,19 @@ class RubyCounterCog(commands.Cog):
                 icon_url = embed.author.icon_url
 
             # Rubies from trades E and F
-            if 'our trade is done then' in message_description.lower() and '<:ruby' in message_field.lower():
+            search_strings = [
+                'our trade is done then', #English
+                'nuestro intercambio está hecho entonces', #Spanish
+            ]
+            if (any(search_string in message_description.lower() for search_string in search_strings)
+                and '<:ruby' in message_field.lower()):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     try:
                         search_string = "\*\*(.+?)\*\*"
                         user_name = re.search(search_string, message_field).group(1)
-                        if user_name == 'EPIC NPC': user_name = re.search(search_string, message_field).group(2)
+                        if user_name in strings.EPIC_NPC_NAMES: user_name = re.search(search_string, message_field).group(2)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -60,7 +65,9 @@ class RubyCounterCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                epic_npc_pos = message_field.find('**EPIC NPC**')
+                for name in strings.EPIC_NPC_NAMES:
+                    epic_npc_pos = message_field.find(name)
+                    if epic_npc_pos != -1: break
                 ruby_pos = message_field.find('<:ruby')
                 trade_type = 'F' if ruby_pos > epic_npc_pos else 'E'
                 search_string = "603304907650629653> x(.+?) \\n"  if trade_type == 'E' else "603304907650629653> x(.+?)$"
@@ -83,15 +90,25 @@ class RubyCounterCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from lootboxes
-            if "'s lootbox" in message_author.lower() and '<:ruby' in message_field.lower():
+            search_strings = [
+                "'s lootbox", #English
+                "— lootbox", #Spanish
+            ]
+            if (any(search_string in message_author.lower() for search_string in search_strings)
+                and '<:ruby' in message_field.lower()):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?)'s lootbox", #English
+                            "^(.+?) — lootbox", #Spanish
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s lootbox", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -138,15 +155,24 @@ class RubyCounterCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from inventory
-            if "'s inventory" in message_author.lower():
+            search_strings = [
+                "'s inventory", #English
+                "— inventory", #Spanish
+            ]
+            if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?)'s inventory", #English
+                            "^(.+?) — inventory", #Spanish
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s inventory", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -198,7 +224,11 @@ class RubyCounterCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Ruby training helper
-            if '** is training in the mine!' in message_content.lower():
+            search_strings = [
+                '** is training in the mine!', #English
+                '** está entrenando en la mina!', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
@@ -209,7 +239,7 @@ class RubyCounterCog(commands.Cog):
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
                         await errors.log_error(
-                            f'User not found in ruby training helper message for ruby counter: {message_content}',
+                            f'User not found in ruby training message for ruby counter: {message_content}',
                             message
                         )
                         return
@@ -218,7 +248,7 @@ class RubyCounterCog(commands.Cog):
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
                     await errors.log_error(
-                        f'User not found in ruby training helper message for ruby counter: {message_content}',
+                        f'User not found in ruby training message for ruby counter: {message_content}',
                         message
                     )
                     return
@@ -227,14 +257,19 @@ class RubyCounterCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
+                search_patterns = [
+                    'more than (.+?) <:ruby', #English
+                    'más de (.+?) <:ruby', #Spanish
+                ]
+                ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 try:
-                    ruby_count = re.search('more than (.+?) <:ruby', message_content).group(1)
+                    ruby_count = ruby_count_match.group(1)
                     ruby_count = int(ruby_count.replace(',',''))
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
                     await errors.log_error(
-                        f'Ruby count not found in ruby training helper message for ruby counter: {message_content}',
+                        f'Ruby count not found in ruby training message for ruby counter: {message_content}',
                         message
                     )
                     return
@@ -244,7 +279,11 @@ class RubyCounterCog(commands.Cog):
                 await message.reply(f'{answer} (you have {user_settings.rubies:,} {emojis.RUBY})')
 
             # Rubies from selling
-            if '`ruby` successfully sold' in message_content.lower():
+            search_strings = [
+                '`ruby` successfully sold', #English
+                '`ruby` vendido(s) exitosamente', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
@@ -286,12 +325,22 @@ class RubyCounterCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from work commands
-            if '** got ' in message_content.lower() and '<:ruby' in message_content.lower():
+            search_strings = [
+                '** got ', #English
+                '** consiguió ', #Spanish
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings)
+                and '<:ruby' in message_content.lower()):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
+                    search_patterns = [
+                        '\*\*(.+?)\*\* got', #English
+                        '\*\*(.+?)\*\* consiguió', #Spanish
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                     try:
-                        user_name = re.search("\*\*(.+?)\*\* got", message_content, re.IGNORECASE).group(1)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -315,27 +364,34 @@ class RubyCounterCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
+                search_patterns = [
+                    '\*\* got (.+?) <:ruby', #English mine commands
+                    ' had (.+?) <:ruby', #English proc pickup commands
+                    '\*\* consiguió (.+?) <:ruby', #Spanish mine commands
+                    'llevaba dentro (.+?) <:ruby', #Spanish proc pickup commands, RECHECK
+                ]
+                ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                 try:
-                    ruby_count = re.search('\*\* got (.+?) <:ruby', message_content, re.IGNORECASE).group(1)
+                    ruby_count = ruby_count_match.group(1)
                     ruby_count = int(ruby_count.replace(',',''))
                 except Exception as error:
-                    try:
-                        ruby_count = re.search(' had (.+?) <:ruby', message_content).group(1)
-                        ruby_count = int(ruby_count.replace(',',''))
-                    except:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'Ruby count not found in work message for ruby counter: {message_content}',
-                            message
-                        )
-                        return
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'Ruby count not found in work message for ruby counter: {message_content}',
+                        message
+                    )
+                    return
                 ruby_count += user_settings.rubies
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(rubies=ruby_count)
 
             # Rubies from crafting ruby sword
-            if '`ruby sword` successfully crafted' in message_content.lower():
+            search_strings = [
+                '`ruby sword` successfully crafted', #English
+                '`ruby sword` crafteado(s) exitosamente', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
@@ -366,7 +422,11 @@ class RubyCounterCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting ruby armor
-            if '`ruby armor` successfully crafted' in message_content.lower():
+            search_strings = [
+                '`ruby armor` successfully crafted', #English
+                '`ruby armor` crafteado(s) exitosamente', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
@@ -397,7 +457,11 @@ class RubyCounterCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting coin sword
-            if '`coin sword` successfully crafted' in message_content.lower():
+            search_strings = [
+                '`coin sword` successfully crafted', #English
+                '`coin sword` crafteado(s) exitosamente', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
@@ -428,7 +492,11 @@ class RubyCounterCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting ultra-edgy armor
-            if '`ultra-edgy armor` successfully forged' in message_content.lower():
+            search_strings = [
+                '`ultra-edgy armor` successfully crafted', #English
+                '`ultra-edgy armor` crafteado(s) exitosamente', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     message_history = await message.channel.history(limit=50).flatten()

@@ -27,8 +27,16 @@ class PetHelperCog(commands.Cog):
                 message_author = str(embed.author.name)
 
             # Pet catch
-            if ('happiness' in message_field_value.lower() and 'hunger' in message_field_value.lower()
-                and 'suddenly' in message_field_name.lower()):
+            search_strings_name = [
+                'suddenly', #English
+                'de repente', #Spanish
+            ]
+            search_strings_value = [
+                'happiness', #English
+                'felicidad', #Spanish
+            ]
+            if (any(search_string in message_field_name.lower() for search_string in search_strings_name)
+                and any(search_string in message_field_value.lower() for search_string in search_strings_value)):
 
                 async def design_pet_catch_field(feeds: int, pats: int, slash: bool) -> str:
                     """Returns an embed field with the commands and the catch chance"""
@@ -69,11 +77,19 @@ class PetHelperCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
+                    search_patterns = [
+                        "APPROACHING \*\*(.+?)\*\*", #English
+                        "ACERCANDO A \*\*(.+?)\*\*", #Spanish
+                    ]
                     try:
-                        user_name_search = re.search("APPROACHING \*\*(.+?)\*\*", message_field_name)
-                        if user_name_search is None:
-                            user_name_search = re.search("^(.+?)'s bunny", message_author)
-                        user_name = user_name_search.group(1)
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
+                        if user_name_match is None:
+                            search_patterns = [
+                                "^(.+?)'s bunny", #English
+                                "^(.+?) — bunny", #Spanish, UNCONFIRMED
+                            ]
+                            user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -98,15 +114,21 @@ class PetHelperCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.pet_helper_enabled: return
                 try:
-                    happiness_search = re.search("Happiness\*\*: (.+?)\\n", message_field_value)
-                    if happiness_search is None:
-                        happiness_search = re.search("Happiness: (.+?)\\n", message_field_value)
-                    happiness = happiness_search.group(1)
+                    search_patterns_happiness = [
+                        'happiness\**: (.+?)\\n', #English
+                        'felicidad\**: (.+?)\\n', #Spanish
+                    ]
+                    search_patterns_hunger = [
+                        'hunger\**: (.+?)$', #English
+                        'hambre\**: (.+?)$', #Spanish
+                    ]
+                    happiness_match = await functions.get_match_from_patterns(search_patterns_happiness,
+                                                                              message_field_value.lower())
+                    happiness = happiness_match.group(1)
                     happiness = int(happiness)
-                    hunger_search = re.search("Hunger\*\*: (.+?)$", message_field_value)
-                    if hunger_search is None:
-                        hunger_search = re.search("Hunger: (.+?)$", message_field_value)
-                    hunger = hunger_search.group(1)
+                    hunger_match = await functions.get_match_from_patterns(search_patterns_hunger,
+                                                                           message_field_value.lower())
+                    hunger = hunger_match.group(1)
                     hunger = int(hunger)
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

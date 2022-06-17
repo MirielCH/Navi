@@ -84,7 +84,11 @@ class TrackingCog(commands.Cog):
             if not message.embeds:
                 message_content = message.content
                 # Epic Guard
-                if 'we have to check you are actually playing' in message_content.lower():
+                search_strings = [
+                    'we have to check you are actually playing', #English
+                    'tenemos que revisar que realmente estés jugando', #Spanish
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
                     if user is None:
                         if message.mentions:
@@ -105,33 +109,42 @@ class TrackingCog(commands.Cog):
                     message_content = str(message.embeds[0].description)
                 except:
                     return
-                if 'has traveled in time' not in message_content.lower(): return
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\* has", message_content).group(1)
-                    except Exception as error:
+                search_strings = [
+                    'has traveled in time', #English
+                    'viajó en el tiempo', #Spanish
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings):
+                    user = await functions.get_interaction_user(message)
+                    if user is None:
+                        search_patterns = [
+                            '\*\*(.+?)\*\* has', #English
+                            '\*\*(.+?)\*\* viajó', #English
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        try:
+                            user_name = user_name_match.group(1)
+                            user_name = await functions.encode_text(user_name)
+                        except Exception as error:
+                            await errors.log_error(
+                                f'Error while reading user name from time travel message:\n{error}',
+                                message
+                            )
+                            return
+                        user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if user is None:
                         await errors.log_error(
-                            f'Error while reading user name from time travel message:\n{error}',
+                            f'Couldn\'t find a user with user_name {user_name}.',
                             message
                         )
                         return
-                    user_name = await functions.encode_text(user_name)
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await errors.log_error(
-                        f'Couldn\'t find a user with user_name {user_name}.',
-                        message
-                    )
-                    return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
-                if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:
-                    await message.add_reaction(emojis.NAVI)
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+                    if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:
+                        await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

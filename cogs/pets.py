@@ -28,8 +28,13 @@ class PetsCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Single pet adventure
-            if ('your pet has started an adventure and will be back' in message_content.lower()
-                or 'pets have started an adventure!' in message_content.lower()):
+            search_strings = [
+                'your pet has started an adventure and will be back', #English 1 pet
+                'pets have started an adventure!', #English multiple pets
+                'tu mascota empezó una aventura y volverá', #Spanish 1 pet
+                'tus mascotas han comenzado una aventura!', #Spanish multiple pets
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction(message)
                 user = await functions.get_interaction_user(message)
                 if user is None:
@@ -65,14 +70,28 @@ class PetsCog(commands.Cog):
                     ) # Message split up like this because I'm unsure if I want to always send the first part
                     await user_settings.update(pet_tip_read=True)
                     await message.reply(pet_message)
-                if 'for some completely unknown reason, the following pets are back instantly' in message_content.lower():
+                search_strings = [
+                    'the following pets are back instantly', #English
+                    'las siguientes mascotas están de vuelta instantaneamente', #Spanish, CHECK AFTER LAUNCH
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
-                if interaction is not None or 'pets have started an adventure!' in message_content.lower(): return
+                if interaction is not None: return
+                search_strings = [
+                    'pets have started an adventure!', #English
+                    'tus mascotas han comenzado una aventura!', #Spanish
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings): return
                 arguments = user_command_message.content.split()
                 pet_id = arguments[-1].upper()
                 if pet_id == 'EPIC': return
                 current_time = datetime.utcnow().replace(microsecond=0)
-                timestring = re.search("will be back in \*\*(.+?)\*\*", message_content).group(1)
+                search_patterns = [
+                    'will be back in \*\*(.+?)\*\*', #English
+                    'volverá en \*\*(.+?)\*\*', #Spanish
+                ]
+                timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}','')
                 reminder: reminders.Reminder = (
@@ -81,7 +100,11 @@ class PetsCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            if 'pet adventure(s) cancelled' in message_content.lower():
+            search_strings = [
+                'pet adventure(s) cancelled', #English
+                'mascota(s) cancelada(s)', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is not None:
                     await message.reply(
@@ -136,7 +159,11 @@ class PetsCog(commands.Cog):
                         )
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
-            if 'it came back instantly!!' in message_content.lower():
+            search_strings = [
+                'it came back instantly!!', #English
+                'it came back instantly!!', #Spanish, MISSING
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     message_history = await message.channel.history(limit=50).flatten()
@@ -172,7 +199,11 @@ class PetsCog(commands.Cog):
             if embed.description: message_description = str(embed.description)
 
             # Pet list
-            if 'pets can collect items and coins, more information' in message_description.lower():
+            search_strings = [
+                'pets can collect items and coins, more information', #English
+                'las mascotas puedes recoger items y coins, más información', #Spanish
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
                 pet_names_emojis = {
                     'cat': emojis.PET_CAT,
                     'dog': emojis.PET_DOG,
@@ -191,8 +222,13 @@ class PetsCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?)'s pets", #English
+                            "^(.+?) — pets", #Spanish
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s pets", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

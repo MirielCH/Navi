@@ -370,3 +370,8 @@ COOLDOWN_TIMESTRING_PATTERNS = [
     "wait at least \*\*(.+?)\*\*...", #English
     "espera al menos \*\*(.+?)\*\*...", #Spanish
 ]
+
+EPIC_NPC_NAMES = [
+    'EPIC NPC', #English
+    'NPC ÉPICO', #Spanish
+]

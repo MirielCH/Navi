@@ -26,7 +26,13 @@ class LotteryCog(commands.Cog):
             if embed.fields: message_field = embed.fields[0].value
 
             # Lottery event check
-            if 'join with `rpg lottery' in message_description.lower():
+            search_strings = [
+                'join with `rpg lottery', #English 1
+                'join with `/lottery', #English 2
+                'participa con `rpg lottery', #Spanish 1
+                'participa con `/lottery', #Spanish 2
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg buy lottery ticket' if user is None else '/lottery amount: [1-10]'
                 if user is None:
@@ -52,7 +58,12 @@ class LotteryCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
-                timestring = re.search("Next draw\*\*: (.+?)$", message_field).group(1)
+                search_patterns = [
+                    'next draw\*\*: (.+?)$', #English
+                    'siguiente ronda\*\*: (.+?)$', #Spanish
+                ]
+                timestring_match = await functions.get_match_from_patterns(search_patterns, message_field.lower())
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -64,7 +75,11 @@ class LotteryCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Buy lottery ticket
-            if "lottery ticket successfully bought" in message_content.lower():
+            search_strings = [
+                'lottery ticket successfully bought', #English
+                'lottery ticket` comprados exitosamente', #Spanish
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg buy lottery ticket' if user is None else '/lottery amount: [1-10]'
                 if user is None:
@@ -93,7 +108,12 @@ class LotteryCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
-                timestring = re.search("the winner in \*\*(.+?)\*\*", message_content).group(1)
+                search_patterns = [
+                    'the winner in \*\*(.+?)\*\*', #English
+                    'el ganador en \*\*(.+?)\*\*', #Spanish
+                ]
+                timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

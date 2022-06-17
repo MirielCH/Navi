@@ -29,7 +29,11 @@ class WorkCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Work cooldown
-            if 'you have already got some resources' in message_title.lower():
+            search_strings = [
+                'you have already got some resources', #English
+                'ya conseguiste algunos recursos', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -37,8 +41,10 @@ class WorkCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -88,7 +94,9 @@ class WorkCog(commands.Cog):
                             message
                         )
                         return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -100,20 +108,41 @@ class WorkCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Work
-            excluded_strings = ('hunting together','** found','** plants','** throws', 'new quest')
-            if ('** got ' in message_content.lower()
-                and not any(string in message_content.lower() for string in excluded_strings)):
+            excluded_strings = [
+                'hunting together', #English 1
+                '** found', #English 2
+                '** plants', #English 3
+                '** throws', #English 4
+                'new quest' #English 5
+                'stan cazando juntos', #Spanish 1
+                '** encontró', #Spanish 2
+                '** planta', #Spanish 3
+                '** throws', #Spanish 4, MISSING, EVENT STRING
+                'nueva misión' #Spanish 5
+            ]
+            search_strings = [
+                '** got ', #English
+                '** consiguió ', #Spanish
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings)
+                and all(search_string not in message_content.lower() for search_string in excluded_strings)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    search_strings = [
-                        '[!1] \*\*(.+?)\*\* got',
-                        '\?\?\?\?\? \*\*(.+?)\*\* got',
-                        'WOOAAAA!! (.+?)\*\* got',
-                        'WwWOoOOoOAAa!!!1 (.+?)\*\* got',
-                        '\.\.\. \*\*(.+?)\*\* got',
-                        '\*\*(.+?)\*\* got',
+                    search_patterns = [
+                        '[!1] \*\*(.+?)\*\* got', #English 1
+                        '\?\?\?\?\? \*\*(.+?)\*\* got', #English 2
+                        'WOOAAAA!! (.+?)\*\* got', #English 3
+                        'WwWOoOOoOAAa!!!1 (.+?)\*\* got', #English 4
+                        '\.\.\. \*\*(.+?)\*\* got', #English 5
+                        '\*\*(.+?)\*\* got', #English 6
+                        '[!1] \*\*(.+?)\*\* consiguió', #Spanish 1, UNCONFIRMED
+                        '\?\?\?\?\? \*\*(.+?)\*\* consiguió', #Spanish 2, UNCONFIRMED
+                        'WOOAAAA!! (.+?)\*\* consiguió', #Spanish 3, UNCONFIRMED
+                        'WwWOoOOoOAAa!!!1 (.+?)\*\* consiguió', #Spanish 4, UNCONFIRMED
+                        '\.\.\. \*\*(.+?)\*\* consiguió', #Spanish 5, UNCONFIRMED
+                        '\*\*(.+?)\*\* consiguió', #Spanish 6
                     ]
                     for search_string in search_strings:
                         user_name_search = re.search(search_string, message_content, re.IGNORECASE)
@@ -162,24 +191,86 @@ class WorkCog(commands.Cog):
                     if user_command_message is not None:
                         user_command = user_command_message.content.lower()
                     else:
-                        if ('three chainsaw' in message_content.lower()
-                        or 'is this a **dream**??' in message_content.lower()
-                        or 'this may be the luckiest moment of your life' in message_content.lower()):
+                        search_strings_chainsaw = [
+                            'three chainsaw', #English 1
+                            'is this a **dream**??', #English 2
+                            'this may be the luckiest moment of your life', #English 3
+                            'tres motosierras', #Spanish 1
+                            'is this a **dream**??', #Spanish 2
+                            'this may be the luckiest moment of your life', #Spanish 3
+                        ]
+                        search_strings_bowsaw = [
+                            'two bow saw', #English
+                            'dos arcos de sierra', #Spanish
+                        ]
+                        search_strings_axe = [
+                            'axe', #English
+                            'hacha', #Spanish
+                        ]
+                        search_strings_bigboat = [
+                            'three nets', #English
+                            'tres redes', #Spanish
+                        ]
+                        search_strings_boat = [
+                            'two nets', #English
+                            'dos redes', #Spanish
+                        ]
+                        search_strings_net = [
+                            'a **net**', #English
+                            'una **red**', #Spanish
+                        ]
+                        search_strings_greenhouse = [
+                            'two tractors', #English
+                            'dos tractores', #Spanish
+                        ]
+                        search_strings_tractor = [
+                            'tractor', #English & Spanish
+                        ]
+                        search_strings_ladder = [
+                            'both hands', #English
+                            'ambas manos', #Spanish
+                        ]
+                        search_strings_dynamite = [
+                            'four drills', #English
+                            'cuatro taladros', #Spanish
+                        ]
+                        search_strings_drill = [
+                            'two drills', #English
+                            'dos taladros', #Spanish
+                        ]
+                        search_strings_pickaxe = [
+                            'pickaxe', #English
+                            'un pico', #Spanish
+                        ]
+                        if any(search_string in message_content.lower() for search_string in search_strings_chainsaw):
                             action = 'chainsaw'
-                        elif 'two bow saw' in message_content.lower(): action = 'bowsaw'
-                        elif 'axe' in message_content.lower(): action = 'axe'
-                        elif 'log' in message_content.lower(): action = 'chop'
-                        elif 'three nets' in message_content.lower(): action = 'bigboat'
-                        elif 'a **net**' in message_content.lower(): action = 'net'
-                        elif 'fish' in message_content.lower(): action = 'fish'
-                        elif 'two tractors' in message_content.lower(): action = 'greenhouse'
-                        elif 'tractor' in message_content.lower(): action = 'tractor'
-                        elif 'both hands' in message_content.lower(): action = 'ladder'
-                        elif 'apple' in message_content.lower() or 'banana' in message_content.lower(): action = 'pickup'
-                        elif 'four drills' in message_content.lower(): action = 'dynamite'
-                        elif 'two drills' in message_content.lower(): action = 'drill'
-                        elif 'pickaxe' in message_content.lower(): action = 'pickaxe'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_bowsaw):
+                            action = 'bowsaw'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_axe):
+                            action = 'axe'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_bigboat):
+                            action = 'bigboat'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_boat):
+                            action = 'boat'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_net):
+                            action = 'net'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_greenhouse):
+                            action = 'greenhouse'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_tractor):
+                            action = 'tractor'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_ladder):
+                            action = 'ladder'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_dynamite):
+                            action = 'dynamite'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_drill):
+                            action = 'drill'
+                        elif any(search_string in message_content.lower() for search_string in search_strings_pickaxe):
+                            action = 'pickaxe'
                         elif 'coins' in message_content.lower() or 'ruby' in message_content.lower(): action = 'mine'
+                        elif 'log' in message_content.lower(): action = 'chop'
+                        elif 'fish' in message_content.lower(): action = 'fish'
+                        elif 'apple' in message_content.lower() or 'banana' in message_content.lower():
+                            action = 'pickup'
                         else: action = '[work command]'
                         user_command = f'rpg {action}'
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
@@ -190,19 +281,35 @@ class WorkCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.reactions_enabled:
-                    if 'quite a large leaf' in message_content.lower():
+                    search_strings_chop_proc = [
+                        'quite a large leaf', #English
+                        'una bastante grande', #Spanish
+                    ]
+                    search_strings_mine_proc = [
+                        'mined with too much force', #English
+                        'minó con demasiada fuerza', #Spanish
+                    ]
+                    search_strings_fish_proc = [
+                        'for some reason, one of the fish was carrying', #English
+                        'por alguna razón, uno de los peces llevaba', #Spanish
+                    ]
+                    search_strings_pickup_proc = [
+                        'rubies in it', #English
+                        'uno de ellos llevaba', #Spanish, RECHECK AT LAUNCH
+                    ]
+                    if any(search_string in message_content.lower() for search_string in search_strings_chop_proc):
                         await message.add_reaction(emojis.WOAH_THERE)
-                    elif 'mined with too much force' in message_content.lower():
+                    elif any(search_string in message_content.lower() for search_string in search_strings_mine_proc):
                         await message.add_reaction(emojis.SWEATY)
-                    elif 'for some reason, one of the fish was carrying' in message_content.lower():
+                    elif any(search_string in message_content.lower() for search_string in search_strings_fish_proc):
                         await message.add_reaction(emojis.FISHPOGGERS)
-                    elif 'one of them had' in message_content.lower() and 'rubies in it' in message_content.lower():
+                    elif any(search_string in message_content.lower() for search_string in search_strings_pickup_proc):
                         await message.add_reaction(emojis.WOW)
-                    elif 'wooaaaa!!' in message_content.lower():
+                    elif 'mega log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
-                    elif 'wwwooooooaaa!!!1' in message_content.lower():
+                    elif 'hyper log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
-                    elif 'is this a **dream**??' in message_content.lower():
+                    elif 'ultra log' in message_content.lower():
                         await message.add_reaction(emojis.PEEPO_WOAH)
                     elif 'watermelon' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_MELON)
