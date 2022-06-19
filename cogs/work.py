@@ -144,10 +144,8 @@ class WorkCog(commands.Cog):
                         '\.\.\. \*\*(.+?)\*\* consiguió', #Spanish 5, UNCONFIRMED
                         '\*\*(.+?)\*\* consiguió', #Spanish 6
                     ]
-                    for search_string in search_strings:
-                        user_name_search = re.search(search_string, message_content, re.IGNORECASE)
-                        if user_name_search is not None: break
-                    if user_name_search is None:
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match is None:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                             await message.add_reaction(emojis.WARNING)
                         await errors.log_error(
@@ -155,7 +153,7 @@ class WorkCog(commands.Cog):
                             message
                         )
                         return
-                    user_name = user_name_search.group(1)
+                    user_name = user_name_match.group(1)
                     user_name = await functions.encode_text(user_name)
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:

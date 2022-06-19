@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class TrainingCog(commands.Cog):
@@ -31,7 +31,11 @@ class TrainingCog(commands.Cog):
             if len(embed.fields) > 1: message_field1_value = embed.fields[1].value
 
             # Training cooldown
-            if 'you have trained already' in message_title.lower():
+            search_strings = [
+                'you have trained already', #English
+                'ya entrenaste', #Spanish
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -39,8 +43,10 @@ class TrainingCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -89,10 +95,11 @@ class TrainingCog(commands.Cog):
                         )
                         return
                     user_command = user_command_message.content.lower()
-                    if user_command.endswith(' ultr'): user_command = user_command.replace(' ultr',' ultraining')
-                    if user_command.endswith(' tr'): user_command = user_command.replace(' tr',' training')
-                    user_command = " ".join(user_command.split())
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                    if ' ultr' in user_command: user_command = 'rpg ultraining'
+                    if ' tr' in user_command: user_command = 'rpg training'
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -101,7 +108,12 @@ class TrainingCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            if '**epic npc**: well done, **' in message_description.lower():
+            search_strings = [
+                '**: well done, **', #English
+                '**: bien hecho, **', #Spanish
+            ]
+            if (any(search_string in message_description.lower() for search_string in search_strings)
+                and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = '/ultraining' if user is not None else 'rpg ultraining'
@@ -148,8 +160,13 @@ class TrainingCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Training
-            if ('well done, **' in message_content.lower()
-                or 'better luck next time, **' in message_content.lower()):
+            search_strings = [
+                'well done, **', #English success
+                'better luck next time, **', #English fail
+                'bien hecho, **', #Spanish success
+                'mejor suerte la próxima vez, **', #Spanish fail
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = '/training' if user is not None else 'rpg training'

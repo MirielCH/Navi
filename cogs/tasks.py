@@ -88,6 +88,7 @@ class TasksCog(commands.Cog):
                 clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
                 if clan.quest_user_id is not None:
                     await self.bot.wait_until_ready()
+                    quest_user_id = clan.quest_user_id
                     await clan.update(quest_user_id=None)
                     time_left_all_members = timedelta(minutes=5)
                     alert_message_prefix = '/' if '/guild' in clan.alert_message else 'rpg '
@@ -99,7 +100,7 @@ class TasksCog(commands.Cog):
                     try:
                         await asyncio.sleep(time_left.total_seconds())
                         await channel.send(
-                            f'<@{clan.quest_user_id}> Hey! It\'s time for your raid quest. '
+                            f'<@{quest_user_id}> Hey! It\'s time for your raid quest. '
                             f'You have 5 minutes, chop chop.'
                         )
                         reminder: reminders.Reminder = (
