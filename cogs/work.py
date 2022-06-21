@@ -113,12 +113,12 @@ class WorkCog(commands.Cog):
                 '** found', #English 2
                 '** plants', #English 3
                 '** throws', #English 4
-                'new quest' #English 5
+                'new quest', #English 5
                 'stan cazando juntos', #Spanish 1
                 '** encontró', #Spanish 2
                 '** planta', #Spanish 3
                 '** throws', #Spanish 4, MISSING, EVENT STRING
-                'nueva misión' #Spanish 5
+                'nueva misión', #Spanish 5
             ]
             search_strings = [
                 '** got ', #English
