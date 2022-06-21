@@ -1,5 +1,6 @@
 # nsmb-bigarena.py
 
+import calendar
 from datetime import datetime, timedelta
 import re
 
@@ -94,9 +95,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             current_time = datetime.utcnow().replace(microsecond=0)
             if 'minint' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
-                next_tuesday = today + timedelta((1-today.weekday()) % 7)
-                next_thursday = today + timedelta((3-today.weekday()) % 7)
-                next_saturday = today + timedelta((5-today.weekday()) % 7)
+                next_tuesday = today + timedelta((calendar.TUESDAY - 1 - today.weekday()) % 7 + 1)
+                next_thursday = today + timedelta((calendar.THURSDAY - 1 - today.weekday()) % 7 + 1)
+                next_saturday = today + timedelta((calendar.SATURDAY - 1 - today.weekday()) % 7 + 1)
                 time_left_tuesday = next_tuesday - current_time
                 time_left_thursday = next_thursday - current_time
                 time_left_saturday = next_saturday - current_time
@@ -105,9 +106,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
             else:
                 if not user_settings.alert_big_arena.enabled: return
-                next_monday = today + timedelta((0-today.weekday()) % 7)
-                next_wednesday = today + timedelta((2-today.weekday()) % 7)
-                next_friday = today + timedelta((4-today.weekday()) % 7)
+                next_monday = today + timedelta((calendar.MONDAY - 1 - today.weekday()) % 7 + 1)
+                next_wednesday = today + timedelta((calendar.WEDNESDAY - 1 - today.weekday()) % 7 + 1)
+                next_friday = today + timedelta((calendar.FRIDAY - 1 - today.weekday()) % 7 + 1)
                 time_left_monday = next_monday - current_time
                 time_left_wednesday = next_wednesday - current_time
                 time_left_friday = next_friday - current_time
