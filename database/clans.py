@@ -192,7 +192,7 @@ async def _dict_to_clan_raid(record: dict) -> ClanRaid:
 
 # Read Data
 async def get_clan_by_user_id(user_id: int) -> Clan:
-    """Gets all settings for a clan (EPIC RPG guild) from a user id. The provided user can be a member or the leader.
+    """Gets all settings for a clan (EPIC RPG guild) from a user id. The provided user can be a member or the owner.
 
     Returns
     -------

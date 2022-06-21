@@ -957,12 +957,14 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     # Get partner settings
     partner_name = partner_hardmode_status = 'N/A'
     partner_partner_channel_name = 'N/A'
+    partner_partner_channel = None
     if user_settings.partner_id is not None:
         partner_settings: users.User = await users.get_user(user_settings.partner_id)
         partner = await functions.get_discord_user(bot, user_settings.partner_id)
         partner_name = f'{partner.name}#{partner.discriminator}'
         partner_hardmode_status = await bool_to_text(partner_settings.hardmode_mode_enabled)
-        partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
+        if partner_settings.partner_channel_id is not None:
+            partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
         if partner_partner_channel is not None: partner_partner_channel_name = partner_partner_channel.name
 
     # Get clan settings

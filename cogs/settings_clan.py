@@ -26,13 +26,16 @@ class SettingsClanCog(commands.Cog):
             if command is not None: await command.callback(command.cog, ctx, *args)
         else:
             guide = (
-                f'**Using guild reminders**\n'
+                f'**Overview**\n'
+                f'Guild reminders work differently than the other reminders. Guild reminders are sent to a guild channel '
+                f'and always ping **all** guild members.\n\n'
+                f'**Setting up guild reminders**\n'
                 f':one: Use `rpg guild list` or `/guild list` to add or update your guild.\n'
-                f':two: __Guild leader__: Use `{ctx.prefix}guild channel set` to set the guild channel.\n'
-                f':three: __Guild leader__: Turn on reminders with `navi guild reminder on`.\n'
-                f':four: __Guild leader__: Use `{ctx.prefix}guild stealth` to change the stealth threshold '
+                f':two: __Guild owner__: Use `{ctx.prefix}guild channel set` to set the guild channel.\n'
+                f':three: __Guild owner__: Turn on reminders with `navi guild reminder on`.\n'
+                f':four: __Guild owner__: Use `{ctx.prefix}guild stealth` to change the stealth threshold '
                 f'(90 default).\n'
-                f':five: __Guild leader__: Use `{ctx.prefix}guild upgrade-quests` to allow or deny guild members to do '
+                f':five: __Guild owner__: Use `{ctx.prefix}guild upgrade-quests` to allow or deny guild members to do '
                 f'guild quests below stealth threshold (allowed by default).\n'
                 f':six: Use `{ctx.prefix}guild leaderbord` or `{ctx.prefix}guild lb` to check the weekly raid '
                 f'leaderboard.\n\n'
@@ -228,7 +231,7 @@ class SettingsClanCog(commands.Cog):
         if clan.channel_id is None:
             await ctx.reply(
                 f'**{ctx.author.name}**, you need to set a guild alert channel first. '
-                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild leader for this.\n\n'
+                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild owner for this.\n\n'
                 f'Also check `{prefix}guild` to see how guild reminders work.'
             )
             return
@@ -281,14 +284,14 @@ class SettingsClanCog(commands.Cog):
         if clan.channel_id is None:
             await ctx.reply(
                 f'**{ctx.author.name}**, you need to set a guild alert channel first. '
-                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild leader for this.\n\n'
+                f'Use `{ctx.prefix}guild channel set` to do so. Note that you need to be the guild owner for this.\n\n'
                 f'Also check `{prefix}guild` to see how guild reminders work.'
             )
             return
         if not clan.alert_enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, you need turn on guild reminders first. '
-                f'Use `{ctx.prefix}guild reminders on` to do so. Note that you need to be the guild leader for this.\n\n'
+                f'Use `{ctx.prefix}guild reminders on` to do so. Note that you need to be the guild owner for this.\n\n'
                 f'Also check `{prefix}guild` to see how guild reminders work.'
             )
             return
@@ -419,7 +422,7 @@ class SettingsClanCog(commands.Cog):
                             await clan.delete()
                             await self.bot.wait_until_ready()
                             await message_after.channel.send(
-                                f'<@{clan.leader_id}> Found two guilds with unmatching members with you as a leader which '
+                                f'<@{clan.leader_id}> Found two guilds with unmatching members with you as an owner which '
                                 f'is an invalid state I can\'t resolve.\n'
                                 f'As a consequence I deleted the guild **{clan.clan_name}** including **all settings and '
                                 f'the leaderboard** from the database and added **{clan_name}** as a new guild.\n\n'
@@ -460,7 +463,7 @@ class SettingsClanCog(commands.Cog):
                                     await old_clan.update(leader_id=old_leader_id, member_ids=old_member_ids)
                                     if old_leader_id is None:
                                         await message_after.channel.send(
-                                            f'Note that the guild **{old_clan.clan_name}** doesn\'t have a leader '
+                                            f'Note that the guild **{old_clan.clan_name}** doesn\'t have an owner '
                                             f'registered anymore. Please tell one of the remaining members to use '
                                             f'`rpg guild list` to update it.'
                                         )
