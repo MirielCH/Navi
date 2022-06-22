@@ -35,7 +35,7 @@ class HorseCog(commands.Cog):
         if any(search_string in message_title.lower() for search_string in search_strings):
             user_id = user_name = None
             user = await functions.get_interaction_user(message)
-            user_command = 'rpg horse breed' if user is None else '/horse breeding'
+            user_command = 'rpg horse breed / race' if user is None else '/horse breeding or /horse race'
             if user is None:
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))

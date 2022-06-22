@@ -1039,6 +1039,9 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Minin\'tboss: `{await bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}`\n'
         f'{emojis.BP} Pet tournament: `{await bool_to_text(user_settings.alert_pet_tournament.enabled)}`\n'
     )
+    field_messages = (
+        f'{emojis.BP} To customize reminder messages, check out `{ctx.prefix}message`\n'
+    )
     if not user_settings.bot_enabled:
         field_reminders = f'**These settings are ignored because your reminders are off.**\n{field_reminders}'
 
@@ -1052,6 +1055,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     embed.add_field(name='GUILD', value=field_clan, inline=False)
     embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=True)
     embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=True)
+    embed.add_field(name='REMINDER MESSAGES', value=field_messages, inline=False)
 
     return embed
 
