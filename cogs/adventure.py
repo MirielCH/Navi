@@ -183,7 +183,7 @@ class AdventureCog(commands.Cog):
                 search_strings = [
                     f'**{user.name}** lost but ', #English 1
                     'but lost fighting', #English 2
-                    f'**{user.name}** perdió pero ', #Spanish 1 - UNCONFIRMED
+                    f'**{user.name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
                 ]
                 if any(search_string in message_content for search_string in search_strings):

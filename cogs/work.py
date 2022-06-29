@@ -1,12 +1,12 @@
 # work.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 import discord
 from discord.ext import commands
 
-from database import errors, reminders, tracking, users
+from database import cooldowns, errors, reminders, tracking, users
 from resources import emojis, exceptions, functions, settings, strings
 
 
@@ -119,6 +119,7 @@ class WorkCog(commands.Cog):
                 '** planta', #Spanish 3
                 '** throws', #Spanish 4, MISSING, EVENT STRING
                 'nueva misión', #Spanish 5
+                ':crossed_sword:', #Ruby dragon event, all languages
             ]
             search_strings = [
                 '** got ', #English
@@ -187,15 +188,15 @@ class WorkCog(commands.Cog):
                                 user_command_message = msg
                                 break
                     if user_command_message is not None:
-                        user_command = user_command_message.content.lower()
+                        for command in strings.WORK_COMMANDS:
+                            if command in user_command_message.content.lower():
+                                user_command = f'rpg {command}'
+                                break
                     else:
                         search_strings_chainsaw = [
                             'three chainsaw', #English 1
-                            'is this a **dream**??', #English 2
-                            'this may be the luckiest moment of your life', #English 3
-                            'tres motosierras', #Spanish 1
-                            'is this a **dream**??', #Spanish 2
-                            'this may be the luckiest moment of your life', #Spanish 3
+                            'ultra log', #All languages
+                            'ultimate log', #All languages
                         ]
                         search_strings_bowsaw = [
                             'two bow saw', #English
@@ -315,6 +316,102 @@ class WorkCog(commands.Cog):
                         await message.add_reaction(emojis.PANDA_COOL)
                     elif 'super fish' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_FISH)
+
+            # Work event non-slash (always English)
+            search_strings = [
+                'it seems like the dragon just had 1 point of life',
+                'the dragon did not move an inch',
+                'you slept well and the items respawned',
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                interaction = await functions.get_interaction(message)
+                if interaction is not None: return
+                user_name = user_command = None
+                try:
+                    user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
+                    user_name = await functions.encode_text(user_name)
+                except Exception as error:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await(
+                        f'User not found in work event non-slash message: {message_content}',
+                        message
+                    )
+                    return
+                user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if user is None:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in work event non-slash message: {message_content}',
+                        message
+                    )
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                if user_settings.tracking_enabled:
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                if not user_settings.alert_work.enabled: return
+                message_history = await message.channel.history(limit=50).flatten()
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if (msg.content.lower().startswith('rpg ')
+                            and any(command.lower() in msg.content.lower() for command in strings.WORK_COMMANDS)
+                            and msg.author == user):
+                            user_command_message = msg
+                            break
+                if user_command_message is None:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        'Couldn\'t find a command for the work event non-slash message.',
+                        message
+                    )
+                    return
+                for command in strings.WORK_COMMANDS:
+                    if command in user_command_message:
+                        user_command = f'rpg {command}'
+                        break
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
+                reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            # Work event slash (all languages)
+            if  (':x:' in message_content.lower()
+                 or ':crossed_swords:' in message_content.lower()
+                 or ':zzz:' in message_content.lower()):
+                user_name = user_command = None
+                interaction = await functions.get_interaction(message)
+                if interaction is None: return
+                if interaction.name not in strings.WORK_COMMANDS: return
+                user_command = f'/{interaction.name}'
+                user = interaction.user
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                if user_settings.tracking_enabled:
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                if not user_settings.alert_work.enabled: return
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
+                reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'work', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
 
 
 # Initialization

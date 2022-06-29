@@ -175,6 +175,7 @@ class ClanCog(commands.Cog):
                 'guild successfully upgraded!', #English success
                 'guild upgrade failed!', #English fail
                 'el guild fue exitosamente mejorado!', #Spanish success
+                'guild upgrade failed!', #Spanish fail - MISSING
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

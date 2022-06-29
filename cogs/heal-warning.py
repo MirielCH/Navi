@@ -78,7 +78,7 @@ class HealWarningCog(commands.Cog):
                 search_strings = [
                     f'{user_name}** lost but', #English 1
                     'but lost fighting', #English 1
-                    f'{user_name}** perdió pero ', #Spanish 1 - UNCONFIRMED
+                    f'{user_name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
