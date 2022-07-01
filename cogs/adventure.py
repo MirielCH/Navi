@@ -133,7 +133,7 @@ class AdventureCog(commands.Cog):
                     try:
                         search_patterns = [
                             "^\*\*(.+?)\*\* found a", #English
-                            "^\*\*(.+?)\*\* encontró a", #Spanish
+                            "^\*\*(.+?)\*\* encontró", #Spanish
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                         user_name = user_name_match.group(1)
@@ -181,9 +181,7 @@ class AdventureCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 # Add an F if the user died
                 search_strings = [
-                    f'**{user.name}** lost but ', #English 1
                     'but lost fighting', #English 2
-                    f'**{user.name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
                 ]
                 if any(search_string in message_content for search_string in search_strings):
