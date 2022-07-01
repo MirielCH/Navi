@@ -259,9 +259,9 @@ class FunCog(commands.Cog):
 
                 # Lost pet reaction
                 search_strings = [
-                    '** got bored and left', #English
-                    'aburrió y se fue', #Spanish, UNCONFIRMED
-                    '** ficou entediado e foi embora', #Portuguese
+                    'got bored and left', #English
+                    'se aburrió y se fue', #Spanish
+                    'ficou entediado e foi embora', #Portuguese
                 ]
                 if any(search_string in field.value.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
@@ -292,7 +292,7 @@ class FunCog(commands.Cog):
                 search_strings = [
                     'lootbox opened', #English
                     'lootbox abierta', #Spanish
-                    'lootbox aberta', #Portuguese, UNCONFIRMED
+                    'lootbox aberto', #Portuguese
                 ]
                 if any(search_string in field.name.lower() for search_string in search_strings):
                     if '+1' in field.value.lower() and field.value.lower().count('<:') == 1:

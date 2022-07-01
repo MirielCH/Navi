@@ -87,7 +87,7 @@ class PetHelperCog(commands.Cog):
                         if user_name_match is None:
                             search_patterns = [
                                 "^(.+?)'s bunny", #English
-                                "^(.+?) — bunny", #Spanish, UNCONFIRMED
+                                "^(.+?) — bunny", #Spanish, Portuguese UNCONFIRMED
                             ]
                             user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         user_name = user_name_match.group(1)

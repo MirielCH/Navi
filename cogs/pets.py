@@ -168,7 +168,7 @@ class PetsCog(commands.Cog):
             search_strings = [
                 'it came back instantly!!', #English
                 'volvio al instante!!', #Spanish
-                'volvio al instante!!', #Portuguese, MISSING
+                'voltou instantaneamente!!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

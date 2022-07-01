@@ -306,22 +306,22 @@ class WorkCog(commands.Cog):
                     search_strings_chop_proc = [
                         'quite a large leaf', #English
                         'una bastante grande', #Spanish
-                        'uma folha bem grande', #Portuguese, RECHECK AT LAUNCH
+                        'uma folha bem grande', #Portuguese
                     ]
                     search_strings_mine_proc = [
                         'mined with too much force', #English
                         'minó con demasiada fuerza', #Spanish
-                        'minó con demasiada fuerza', #Portugese, MISSING
+                        'minerado com muita força', #Portugese
                     ]
                     search_strings_fish_proc = [
                         'for some reason, one of the fish was carrying', #English
                         'por alguna razón, uno de los peces llevaba', #Spanish
-                        'por alguna razón, uno de los peces llevaba', #Portuguese, MISSING
+                        'por algum motivo, um dos peixes estava carregando', #Portuguese
                     ]
                     search_strings_pickup_proc = [
                         'rubies in it', #English
-                        'uno de ellos llevaba', #Spanish, RECHECK AT LAUNCH
-                        'uno de ellos llevaba', #Portuguese, MISSING
+                        'uno de ellos llevaba', #Spanish
+                        'um deles tinha', #Portuguese
                     ]
                     if any(search_string in message_content.lower() for search_string in search_strings_chop_proc):
                         await message.add_reaction(emojis.WOAH_THERE)
