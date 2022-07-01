@@ -32,6 +32,7 @@ class AdventureCog(commands.Cog):
             search_strings = [
                 'you have already been in an adventure', #English
                 'ya has estado en una aventura', #Spanish
+                'você já esteve em uma aventura', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
@@ -113,6 +114,7 @@ class AdventureCog(commands.Cog):
             search_strings = [
                 'found a', #English
                 'encontró', #Spanish
+                'encontrou', #Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
@@ -120,6 +122,7 @@ class AdventureCog(commands.Cog):
                 search_strings = [
                     '(but stronger)', #English
                     '(pero más fuerte)', #Spanish
+                    '(só que mais forte)', #Portuguese
                 ]
                 if user is not None:
                     user_command = '/adventure'
@@ -133,7 +136,8 @@ class AdventureCog(commands.Cog):
                     try:
                         search_patterns = [
                             "^\*\*(.+?)\*\* found a", #English
-                            "^\*\*(.+?)\*\* encontró a", #Spanish
+                            "^\*\*(.+?)\*\* encontró", #Spanish
+                            "^\*\*(.+?)\*\* encontrou", #Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                         user_name = user_name_match.group(1)
@@ -181,10 +185,9 @@ class AdventureCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 # Add an F if the user died
                 search_strings = [
-                    f'**{user.name}** lost but ', #English 1
-                    'but lost fighting', #English 2
-                    f'**{user.name}** perdió pero ', #Spanish 1
-                    'pero perdió luchando', #Spanish 2
+                    'but lost fighting', #English
+                    'pero perdió luchando', #Spanish
+                    'mas perdeu a luta', #Portuguese
                 ]
                 if any(search_string in message_content for search_string in search_strings):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)
