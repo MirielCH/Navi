@@ -497,15 +497,43 @@ async def get_training_answer(message_content: str) -> str:
         elif '<:banana' in message_content:
             return f'`{banana[letter-1]}`'
     elif any(search_string in message_content for search_string in search_strings_casino):
-        if ':gem:' in message_content and '**diamond**' in message_content:
+        search_strings_diamond = [
+            '**diamond**',  #English
+            '**diamante**',  #Spanish, Portuguese
+        ]
+        search_strings_gift = [
+            '**gift**',  #English
+            '**regalo**',  #Spanish
+            '**presente**',  #Portuguese
+        ]
+        search_strings_dice = [
+            '**dice**',  #English
+            '**dado**',  #Spanish, Portuguese
+        ]
+        search_strings_coin = [
+            '**coin**',  #English
+            '**moneda**',  #Spanish, UNCONFIRMED
+            '**moeda**',  #Portuguese, UNCONFIRMED
+        ]
+        search_strings_clover = [
+            '**four leaf clover**',  #English
+            '**trébol de cuatro hojas**',  #Spanish
+            '**trevo de quatro folhas**',  #Portuguese
+        ]
+        if (':gem:' in message_content
+            and any(search_string in message_content for search_string in search_strings_diamond)):
             answer = '`YES`'
-        elif ':gift:' in message_content and '**gift**' in message_content:
+        elif (':gift:' in message_content
+              and any(search_string in message_content for search_string in search_strings_gift)):
             answer = '`YES`'
-        elif ':game_die:' in message_content and '**dice**' in message_content:
+        elif (':game_die:' in message_content
+              and any(search_string in message_content for search_string in search_strings_dice)):
             answer = '`YES`'
-        elif ':coin:' in message_content and '**coin**' in message_content:
+        elif (':coin:' in message_content
+              and any(search_string in message_content for search_string in search_strings_coin)):
             answer = '`YES`'
-        elif ':four_leaf_clover:' in message_content and '**four leaf clover**' in message_content:
+        elif (':four_leaf_clover:' in message_content
+              and any(search_string in message_content for search_string in search_strings_clover)):
             answer = '`YES`'
         else:
             answer = '`NO`'
