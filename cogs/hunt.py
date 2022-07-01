@@ -32,6 +32,7 @@ class HuntCog(commands.Cog):
             search_strings = [
                 'you have already looked around', #English
                 'ya has mirado a tu alrededor', #Spanish
+                'você já olhou ao seu redor', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = None
@@ -130,6 +131,7 @@ class HuntCog(commands.Cog):
             search_strings = [
                 'found a', #English
                 'encontró', #Spanish
+                'encontrou', #Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
@@ -140,14 +142,17 @@ class HuntCog(commands.Cog):
                 search_strings_hardmode = [
                     '(but stronger)', #English
                     '(pero más fuerte)', #Spanish
+                    '(só que mais forte)', #Portuguese
                 ]
                 search_strings_together = [
                     'hunting together', #English
                     'stan cazando juntos', #Spanish
+                    'estão caçando juntos', #Portuguese
                 ]
                 search_strings_alone = [
                     '(but way stronger!!!)', #English
                     '(pero más fuerte!!!)', #Spanish
+                    '(muito mais forte!!!)', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
                     hardmode = True
@@ -160,6 +165,7 @@ class HuntCog(commands.Cog):
                     search_patterns = [
                         "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
                         "\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                        "\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
                     ]
                     name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     user_name = name_match.group(1)
@@ -169,7 +175,7 @@ class HuntCog(commands.Cog):
                     if not together:
                         search_patterns = [
                             "\*\*(.+?)\*\* found a", #English
-                            "\*\*(.+?)\*\* encontró a", #Spanish
+                            "\*\*(.+?)\*\* encontr", #Spanish, Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                         user_name = user_name_match.group(1)
@@ -262,7 +268,7 @@ class HuntCog(commands.Cog):
                                 search_patterns = [
                                     f"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
                                     f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
-                                    f"\*\* consiguió (.+?) (.+?) {re.escape(lb_name)}", #Spanish
+                                    f"\*\* cons(e|i)gui(ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
                                 ]
                                 lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
                                 if lb_match is None: continue
@@ -344,6 +350,9 @@ class HuntCog(commands.Cog):
                         f'**{user.name}** perdió pero ', #Spanish 1
                         'pero perdió luchando', #Spanish 2
                         'ambos perdieron luchando', #Spanish 3
+                        f'**{user.name}** perdeu, mas ', #Portuguese 1
+                        'mais perdeu a luta', #Portuguese 2
+                        'ambos perderam a luta', #Portuguese 3, UNCONFIRMED
                     ]
                     if any(search_string in message_content for search_string in search_strings):
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)

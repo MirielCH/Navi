@@ -31,6 +31,7 @@ class BuyCog(commands.Cog):
             search_strings = [
                 'you have already bought a lootbox', #English
                 'ya compraste una lootbox', #Spanish
+                'você já comprou uma lootbox', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -85,8 +86,8 @@ class BuyCog(commands.Cog):
             message_content = message.content
             # Buy lootbox
             search_strings = [
-                'lootbox` successfully bought for', #English
-                'lootbox` comprado(s) exitosamente por', #Spanish
+                'lootbox` successfully bought', #English
+                'lootbox` comprado(s)', #Spanish, Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and not 'guild ring' in message_content.lower()

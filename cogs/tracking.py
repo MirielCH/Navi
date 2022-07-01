@@ -87,6 +87,7 @@ class TrackingCog(commands.Cog):
                 search_strings = [
                     'we have to check you are actually playing', #English
                     'tenemos que revisar que realmente estés jugando', #Spanish
+                    'temos que verificar se você está realmente jogando', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
@@ -112,6 +113,7 @@ class TrackingCog(commands.Cog):
                 search_strings = [
                     'has traveled in time', #English
                     'viajó en el tiempo', #Spanish
+                    'tempo de viagem', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
@@ -119,6 +121,7 @@ class TrackingCog(commands.Cog):
                         search_patterns = [
                             '\*\*(.+?)\*\* has', #English
                             '\*\*(.+?)\*\* viajó', #English
+                            '\*\*(.+?)\*\* tempo', #Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                         try:

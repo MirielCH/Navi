@@ -35,10 +35,12 @@ class QuestCog(commands.Cog):
             search_strings_guild_raid = [
                 'do a guild raid', #English
                 'has una guild raid', #Spanish
+                'faça uma guild raid', #Portuguese
             ]
             search_strings_quest = [
                 'are you looking for a quest', #English
                 'estas buscando una misión', #Spanish
+                'está procurando uma missão', #Portuguese
             ]
             if (any(search_string in field_value.lower() for search_string in search_strings_guild_raid)
                 and any(search_string in message_description.lower() for search_string in search_strings_quest)):
@@ -111,6 +113,7 @@ class QuestCog(commands.Cog):
             search_strings = [
                 'you have already claimed a quest', #English
                 'ya reclamaste una misión', #Spanish
+                'você já reivindicou uma missão', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -187,7 +190,8 @@ class QuestCog(commands.Cog):
             # Quest in void areas
             search_strings = [
                 'i don\'t think i can give you any quest here', #English
-                'no creo que pueda darte ninguna misión aquí', #Spanish
+                'misión aquí', #Spanish
+                'missão aqui', #Portuguese, UNCONFIRMED
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -240,7 +244,8 @@ class QuestCog(commands.Cog):
             # Epic Quest
             search_strings = [
                 '__wave #1__', #English
-                '__oleada #1__', #Spanish, UNCONFIRMED
+                '__oleada #1__', #Spanish
+                '__onda #1__', #Portuguese
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -317,6 +322,8 @@ class QuestCog(commands.Cog):
                 'you did not accept the quest', #English declined
                 'consiguió una **nueva misión**', #Spanish accepted
                 'no aceptaste la misión', #Spanish declined
+                'conseguiu uma **nova missão**', #Portuguese accepted
+                'você não aceitou a missão', #Portuguese declined
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
@@ -393,6 +400,7 @@ class QuestCog(commands.Cog):
             search_strings = [
                 'you don\'t have a quest anymore', #English
                 'ya no tienes una misión', #Spanish
+                'você não tem mais uma missão', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings) and message.mentions:
                 user = message.mentions[0]

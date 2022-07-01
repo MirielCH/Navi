@@ -24,6 +24,7 @@ class PetTournamentCog(commands.Cog):
             search_strings = [
                 'pet successfully sent to the pet tournament!', #English
                 'mascota exitosamente enviada al torneo de mascotas!', #Spanish
+                'pet enviado com sucesso para o torneio de mascotes!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -53,6 +54,7 @@ class PetTournamentCog(commands.Cog):
                 search_patterns = [
                     'next pet tournament is in \*\*(.+?)\*\*', #English
                     'el siguiente torneo es el \*\*(.+?)\*\*', #Spanish
+                    'o próximo torneio é o \*\*(.+?)\*\*', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
                 timestring = timestring_match.group(1)
@@ -77,11 +79,13 @@ class PetTournamentCog(commands.Cog):
             search_strings = [
                 'pets can collect items and coins, more information', #English
                 'las mascotas puedes recoger items y coins, más información', #Spanish
+                'pets podem coletar itens e coins, mais informações', #Portuguese
             ]
             if any(search_string in embed_description.lower() for search_string in search_strings):
                 search_patterns = [
                     'pet id "(.+?)" registered', #English
                     'la mascota "(.+?)" está registrada', #Spanish
+                    'de pet "(.+?)" está registrado', #Portuguese
                 ]
                 pet_tournament_match = await functions.get_match_from_patterns(search_patterns, embed_footer.lower())
                 if pet_tournament_match is None: return
@@ -93,7 +97,7 @@ class PetTournamentCog(commands.Cog):
                     except:
                         search_patterns = [
                             "^(.+?)'s pets", #English
-                            "^(.+?) — pets", #Spanish
+                            "^(.+?) — pets", #Spanish, Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, embed_author)
                         try:

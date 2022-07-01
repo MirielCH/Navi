@@ -40,6 +40,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 'your guild has already raided or been upgraded', #English
                 'tu guild ya hizo un asalto o fue mejorado', #Spanish
+                'sua guild já raidou ou foi atualizada', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -107,6 +108,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 'your guild was raided', #English
                 'tu guild fue asaltado', #Spanish
+                'sua guild foi raidad', #Portuguese
             ]
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -136,6 +138,7 @@ class ClanCog(commands.Cog):
                 search_patterns = [
                     "STEALTH\*\*: (.+?)\\n", #English
                     "SIGILO\*\*: (.+?)\\n", #Spanish
+                    "FURTIVIDADE\*\*: (.+?)\\n", #Portuguese
                 ]
                 stealth_match = await functions.get_match_from_patterns(search_patterns, message_field1)
                 try:
@@ -174,6 +177,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 'upgrade', #English
                 'mejora', #Spanish
+                'melhoria', #Portuguese
             ]
             if any(search_string == message_field0.name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -252,6 +256,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 '** RAIDED **', #English
                 '** ASALTÓ **', #Spanish
+                '** RAIDOU **', #Portuguese
             ]
             if (any(search_string in message_description for search_string in search_strings)
                 and ':crossed_swords:' in message_description.lower()):
@@ -262,6 +267,7 @@ class ClanCog(commands.Cog):
                     search_patterns = [
                         "\*\*(.+?)\*\* throws", #English
                         "\*\*(.+?)\*\* tiró", #Spanish
+                        "\*\*(.+?)\*\* jogou", #Portuguese
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_field0)
                     try:
@@ -296,6 +302,7 @@ class ClanCog(commands.Cog):
                 search_patterns = [
                     "earned \*\*(.+?)\*\*", #English
                     "ganó \*\*(.+?)\*\*", #Spanish
+                    "ganhou \*\*(.+?)\*\*", #Portuguese
                 ]
                 energy_match = await functions.get_match_from_patterns(search_patterns, message_field1)
                 try:

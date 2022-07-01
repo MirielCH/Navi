@@ -32,6 +32,7 @@ class RubyCounterCog(commands.Cog):
             search_strings = [
                 'our trade is done then', #English
                 'nuestro intercambio está hecho entonces', #Spanish
+                'nossa troca é feita então', #Portuguese
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and '<:ruby' in message_field.lower()):
@@ -92,7 +93,7 @@ class RubyCounterCog(commands.Cog):
             # Rubies from lootboxes
             search_strings = [
                 "'s lootbox", #English
-                "— lootbox", #Spanish
+                "— lootbox", #Spanish, Portuguese
             ]
             if (any(search_string in message_author.lower() for search_string in search_strings)
                 and '<:ruby' in message_field.lower()):
@@ -104,7 +105,7 @@ class RubyCounterCog(commands.Cog):
                     except:
                         search_patterns = [
                             "^(.+?)'s lootbox", #English
-                            "^(.+?) — lootbox", #Spanish
+                            "^(.+?) — lootbox", #Spanish, Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
@@ -157,7 +158,7 @@ class RubyCounterCog(commands.Cog):
             # Rubies from inventory
             search_strings = [
                 "'s inventory", #English
-                "— inventory", #Spanish
+                "— inventory", #Spanish, Portuguese
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -168,7 +169,7 @@ class RubyCounterCog(commands.Cog):
                     except:
                         search_patterns = [
                             "^(.+?)'s inventory", #English
-                            "^(.+?) — inventory", #Spanish
+                            "^(.+?) — inventory", #Spanish, Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
@@ -227,6 +228,7 @@ class RubyCounterCog(commands.Cog):
             search_strings = [
                 '** is training in the mine!', #English
                 '** está entrenando en la mina!', #Spanish
+                '** está treinando na mina!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
@@ -281,7 +283,7 @@ class RubyCounterCog(commands.Cog):
             # Rubies from selling
             search_strings = [
                 '`ruby` successfully sold', #English
-                '`ruby` vendido(s) exitosamente', #Spanish
+                '`ruby` vendido(s)', #Spanish, Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -328,6 +330,8 @@ class RubyCounterCog(commands.Cog):
             search_strings = [
                 '** got ', #English
                 '** consiguió ', #Spanish
+                '** conseguiu ', #Portuguese 1
+                '** recebeu ', #Portuguese 2
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and '<:ruby' in message_content.lower()):
@@ -336,7 +340,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     search_patterns = [
                         '\*\*(.+?)\*\* got', #English
-                        '\*\*(.+?)\*\* consiguió', #Spanish
+                        '\*\*(.+?)\*\* cons(e|i)gui(ó|u)', #Spanish, Portuguese
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                     try:
@@ -367,8 +371,9 @@ class RubyCounterCog(commands.Cog):
                 search_patterns = [
                     '\*\* got (.+?) <:ruby', #English mine commands
                     ' had (.+?) <:ruby', #English proc pickup commands
-                    '\*\* consiguió (.+?) <:ruby', #Spanish mine commands
+                    '\*\* cons(e|i)gui(ó|u) (.+?) <:ruby', #Spanish, Portuguese mine commands
                     'llevaba dentro (.+?) <:ruby', #Spanish proc pickup commands, RECHECK
+                    'llevaba dentro (.+?) <:ruby', #Portuguese proc pickup commands, MISSING
                 ]
                 ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                 try:
@@ -389,7 +394,8 @@ class RubyCounterCog(commands.Cog):
             # Rubies from crafting ruby sword
             search_strings = [
                 '`ruby sword` successfully crafted', #English
-                '`ruby sword` crafteado(s) exitosamente', #Spanish
+                '`ruby sword` crafteado(s)', #Spanish
+                '`ruby sword` craftado(s)', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -424,7 +430,8 @@ class RubyCounterCog(commands.Cog):
             # Rubies from crafting ruby armor
             search_strings = [
                 '`ruby armor` successfully crafted', #English
-                '`ruby armor` crafteado(s) exitosamente', #Spanish
+                '`ruby armor` crafteado(s)', #Spanish
+                '`ruby armor` craftado(s)', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -459,7 +466,8 @@ class RubyCounterCog(commands.Cog):
             # Rubies from crafting coin sword
             search_strings = [
                 '`coin sword` successfully crafted', #English
-                '`coin sword` crafteado(s) exitosamente', #Spanish
+                '`coin sword` crafteado(s)', #Spanish
+                '`coin sword` craftado(s)', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -494,7 +502,8 @@ class RubyCounterCog(commands.Cog):
             # Rubies from crafting ultra-edgy armor
             search_strings = [
                 '`ultra-edgy armor` successfully crafted', #English
-                '`ultra-edgy armor` crafteado(s) exitosamente', #Spanish
+                '`ultra-edgy armor` crafteado(s)', #Spanish
+                '`ultra-edgy armor` craftado(s)', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

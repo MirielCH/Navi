@@ -258,7 +258,12 @@ class FunCog(commands.Cog):
                 field = embed.fields[0]
 
                 # Lost pet reaction
-                if '** got bored and left' in field.value.lower():
+                search_strings = [
+                    '** got bored and left', #English
+                    'aburrió y se fue', #Spanish, UNCONFIRMED
+                    '** ficou entediado e foi embora', #Portuguese
+                ]
+                if any(search_string in field.value.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
                     if user is None:
                         message_history = await message.channel.history(limit=50).flatten()

@@ -29,11 +29,11 @@ class PetHelperCog(commands.Cog):
             # Pet catch
             search_strings_name = [
                 'suddenly', #English
-                'de repente', #Spanish
+                'de repente', #Spanish, Portuguese
             ]
             search_strings_value = [
                 'happiness', #English
-                'felicidad', #Spanish
+                'felicidad', #Spanish, Portuguese
             ]
             if (any(search_string in message_field_name.lower() for search_string in search_strings_name)
                 and any(search_string in message_field_value.lower() for search_string in search_strings_value)):
@@ -80,6 +80,7 @@ class PetHelperCog(commands.Cog):
                     search_patterns = [
                         "APPROACHING \*\*(.+?)\*\*", #English
                         "ACERCANDO A \*\*(.+?)\*\*", #Spanish
+                        "APROXIMANDO DE \*\*(.+?)\*\*", #Portuguese
                     ]
                     try:
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
@@ -116,11 +117,12 @@ class PetHelperCog(commands.Cog):
                 try:
                     search_patterns_happiness = [
                         'happiness\**: (.+?)\\n', #English
-                        'felicidad\**: (.+?)\\n', #Spanish
+                        'felicidade?\**: (.+?)\\n', #Spanish, Portuguese
                     ]
                     search_patterns_hunger = [
                         'hunger\**: (.+?)$', #English
                         'hambre\**: (.+?)$', #Spanish
+                        'fome\**: (.+?)$', #Portuguese
                     ]
                     happiness_match = await functions.get_match_from_patterns(search_patterns_happiness,
                                                                               message_field_value.lower())

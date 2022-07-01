@@ -193,6 +193,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
         f'{emojis.BP} :flag_es: Spanish\n'
+        f'{emojis.BP} :flag_br: Portuguese\n'
     )
 
     embed = discord.Embed(

@@ -33,6 +33,7 @@ class CooldownsCog(commands.Cog):
         search_strings = [
             'check the short version of this command', #English
             'revisa la versión más corta de este comando', #Spanish
+            'verifique a versão curta deste comando', #Portuguese
         ]
         if all(search_string not in message_footer.lower() for search_string in search_strings): return
 

@@ -125,6 +125,7 @@ class EventsCog(commands.Cog):
             search_strings = [
                 'normal events', #English
                 'eventos normales', #Spanish
+                'eventos normais', #Portuguese
             ]
             if any(search_string in message_field_name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

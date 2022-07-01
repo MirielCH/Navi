@@ -34,6 +34,7 @@ class TrainingCog(commands.Cog):
             search_strings = [
                 'you have trained already', #English
                 'ya entrenaste', #Spanish
+                'você já treinou', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -111,6 +112,7 @@ class TrainingCog(commands.Cog):
             search_strings = [
                 '**: well done, **', #English
                 '**: bien hecho, **', #Spanish
+                '**: muito bem, **', #Portuguese
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
@@ -154,7 +156,11 @@ class TrainingCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if 'better luck next time' in message_field1_value.lower():
+                search_strings = [
+                    'better luck next time', #English
+                    'próxima vez', #Spanish, Portuguese
+                ]
+                if any(search_string in message_field1_value.lower() for search_string in search_strings):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NOOB)
 
         if not message.embeds:
@@ -164,7 +170,8 @@ class TrainingCog(commands.Cog):
                 'well done, **', #English success
                 'better luck next time, **', #English fail
                 'bien hecho, **', #Spanish success
-                'mejor suerte la próxima vez, **', #Spanish fail
+                'próxima vez, **', #Spanish, Portuguese fail
+                'muito bem, **', #Portuguese success
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
@@ -172,7 +179,7 @@ class TrainingCog(commands.Cog):
                 user_command = '/training' if user is not None else 'rpg training'
                 if user is None:
                     try:
-                        user_name = re.search(", \*\*(.+?)\*\* !", message_content).group(1)
+                        user_name = re.search(", \*\*(.+?)\*\*", message_content).group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
