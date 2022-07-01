@@ -23,6 +23,7 @@ class HorseRaceCog(commands.Cog):
         search_strings = [
             'the next race is in', #English
             'la siguiente carrera es en', #Spanish
+            'próxima corrida é em', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = None
@@ -59,6 +60,7 @@ class HorseRaceCog(commands.Cog):
             search_patterns = [
                 'next race is in \*\*(.+?)\*\*', #English
                 'la siguiente carrera es en \*\*(.+?)\*\*', #Spanish
+                'próxima corrida é em \*\*(.+?)\*\*', #Portuguese
             ]
             timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
             timestring = timestring_match.group(1)

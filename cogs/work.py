@@ -32,6 +32,7 @@ class WorkCog(commands.Cog):
             search_strings = [
                 'you have already got some resources', #English
                 'ya conseguiste algunos recursos', #Spanish
+                'você já tem alguns recursos', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -109,21 +110,24 @@ class WorkCog(commands.Cog):
             message_content = message.content
             # Work
             excluded_strings = [
-                'hunting together', #English 1
-                '** found', #English 2
-                '** plants', #English 3
-                '** throws', #English 4
-                'new quest', #English 5
-                'stan cazando juntos', #Spanish 1
-                '** encontró', #Spanish 2
-                '** planta', #Spanish 3
-                '** throws', #Spanish 4, MISSING, EVENT STRING
-                'nueva misión', #Spanish 5
+                'hunting together', #English, hunt
+                '** found', #English, hunt/adventure
+                '** plant', #English, Spanish, Portuguese, farm
+                '** throws', #English, world boss
+                'new quest', #English, quest
+                'stan cazando juntos', #Spanish, hunt
+                '** encontr', #Spanish, Portuguese, hunt/adventure
+                '** throws', #Spanish, MISSING, world boss
+                'nueva misión', #Spanish, quest
+                'estão caçando juntos', #Portuguese, hunt
+                '** throws', #Portuguese, MISSING, world boss
+                'nova missão', #Portuguese, quest
                 ':crossed_sword:', #Ruby dragon event, all languages
             ]
             search_strings = [
                 '** got ', #English
                 '** consiguió ', #Spanish
+                '** conseguiu ', #Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in excluded_strings)):
@@ -144,6 +148,12 @@ class WorkCog(commands.Cog):
                         'WwWOoOOoOAAa!!!1 (.+?)\*\* consiguió', #Spanish 4, UNCONFIRMED
                         '\.\.\. \*\*(.+?)\*\* consiguió', #Spanish 5, UNCONFIRMED
                         '\*\*(.+?)\*\* consiguió', #Spanish 6
+                        '[!1] \*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 1, UNCONFIRMED
+                        '\?\?\?\?\? \*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 2, UNCONFIRMED
+                        'WOOAAAA!! (.+?)\*\* (recebeu|conseguiu)', #Portuguese 3, UNCONFIRMED
+                        'WwWOoOOoOAAa!!!1 (.+?)\*\* (recebeu|conseguiu)', #Portuguese 4, UNCONFIRMED
+                        '\.\.\. \*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 5, UNCONFIRMED
+                        '\*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 6
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match is None:
@@ -194,52 +204,65 @@ class WorkCog(commands.Cog):
                                 break
                     else:
                         search_strings_chainsaw = [
-                            'three chainsaw', #English 1
+                            'three chainsaw', #English
+                            'tres motosierras', #Spanish
+                            'três serras', #Portuguese
                             'ultra log', #All languages
                             'ultimate log', #All languages
                         ]
                         search_strings_bowsaw = [
                             'two bow saw', #English
                             'dos arcos de sierra', #Spanish
+                            'dois serra de arcos', #Portuguese
                         ]
                         search_strings_axe = [
                             'axe', #English
                             'hacha', #Spanish
+                            'machado', #Portuguese
                         ]
                         search_strings_bigboat = [
                             'three nets', #English
                             'tres redes', #Spanish
+                            'três redes', #Portuguese
                         ]
                         search_strings_boat = [
                             'two nets', #English
                             'dos redes', #Spanish
+                            'duas redes', #Portuguese
                         ]
                         search_strings_net = [
                             'a **net**', #English
                             'una **red**', #Spanish
+                            'uma **rede**', #Portuguese
                         ]
                         search_strings_greenhouse = [
                             'two tractors', #English
                             'dos tractores', #Spanish
+                            'dois tratores', #Portuguese
                         ]
                         search_strings_tractor = [
                             'tractor', #English & Spanish
+                            'trator', #Portuguese
                         ]
                         search_strings_ladder = [
                             'both hands', #English
                             'ambas manos', #Spanish
+                            'ambas as mãos', #Portuguese
                         ]
                         search_strings_dynamite = [
                             'four drills', #English
                             'cuatro taladros', #Spanish
+                            'quatro brocas', #Portuguese
                         ]
                         search_strings_drill = [
                             'two drills', #English
                             'dos taladros', #Spanish
+                            'duas brocas', #Portuguese
                         ]
                         search_strings_pickaxe = [
                             'pickaxe', #English
                             'un pico', #Spanish
+                            'uma picareta', #Portuguese
                         ]
                         if any(search_string in message_content.lower() for search_string in search_strings_chainsaw):
                             action = 'chainsaw'
@@ -283,18 +306,22 @@ class WorkCog(commands.Cog):
                     search_strings_chop_proc = [
                         'quite a large leaf', #English
                         'una bastante grande', #Spanish
+                        'uma folha bem grande', #Portuguese, RECHECK AT LAUNCH
                     ]
                     search_strings_mine_proc = [
                         'mined with too much force', #English
                         'minó con demasiada fuerza', #Spanish
+                        'minó con demasiada fuerza', #Portugese, MISSING
                     ]
                     search_strings_fish_proc = [
                         'for some reason, one of the fish was carrying', #English
                         'por alguna razón, uno de los peces llevaba', #Spanish
+                        'por alguna razón, uno de los peces llevaba', #Portuguese, MISSING
                     ]
                     search_strings_pickup_proc = [
                         'rubies in it', #English
                         'uno de ellos llevaba', #Spanish, RECHECK AT LAUNCH
+                        'uno de ellos llevaba', #Portuguese, MISSING
                     ]
                     if any(search_string in message_content.lower() for search_string in search_strings_chop_proc):
                         await message.add_reaction(emojis.WOAH_THERE)

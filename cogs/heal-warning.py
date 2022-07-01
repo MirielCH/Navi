@@ -25,12 +25,14 @@ class HealWarningCog(commands.Cog):
         search_strings = [
             'are hunting together', #English
             'stan cazando juntos', #Spanish
+            'estão caçando juntos', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = None
             search_patterns = [
                     "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
                     "\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                    "\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
                 ]
             user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
             try:
@@ -72,6 +74,7 @@ class HealWarningCog(commands.Cog):
                 search_patterns = [
                     f'\*\*{re.escape(user_name)}\*\* lost (.+?) hp, remaining hp is (.+?)/', #English
                     f'\*\*{re.escape(user_name)}\*\* perdió (.+?) hp, la hp restante es (.+?)/', #Spanish
+                    f'\*\*{re.escape(user_name)}\*\* perdeu (.+?) hp, restam (.+?)/', #Portuguese
                 ]
                 health_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
             if health_match is None:
@@ -80,6 +83,8 @@ class HealWarningCog(commands.Cog):
                     'but lost fighting', #English 1
                     f'{user_name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
+                    f'{user_name}** perdeu, mas ', #Portuguese 1
+                    'mas perdeu a luta', #Portuguese 2
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -120,6 +125,7 @@ class HealWarningCog(commands.Cog):
         search_strings = [
             '** found a', #English
             '** encontró', #Spanish
+            '** encontrou', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = None
@@ -154,14 +160,17 @@ class HealWarningCog(commands.Cog):
             search_patterns = [
                 'lost (.+?) hp, remaining hp is (.+?)/', #English
                 '[perdió|perdiste] (.+?) hp, la hp restante es (.+?)/', #Spanish
+                'perdeu (.+?) hp, restam (.+?)/', #Spanish
             ]
             health_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
             if health_match is None:
                 search_strings = [
                     f'{user_name}** lost but', #English 1
                     'but lost fighting', #English 1
-                    f'{user_name}** perdió pero ', #Spanish 1 - UNCONFIRMED
+                    f'{user_name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
+                    f'{user_name}** perdeu, mas ', #Portuguese 1
+                    'mas perdeu a luta', #Portuguese 2
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

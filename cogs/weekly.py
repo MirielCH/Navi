@@ -31,6 +31,7 @@ class WeeklyCog(commands.Cog):
             search_strings = [
                 'you have claimed your weekly rewards already', #English
                 'ya reclamaste tu recompenza semanal', #Spanish
+                'você já reivindicou sua recompensa semanal', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -84,7 +85,7 @@ class WeeklyCog(commands.Cog):
             # Weekly
             search_strings = [
                "'s weekly reward", #English
-               " — weekly", #Spanish
+               " — weekly", #Spanish, Portuguese
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None

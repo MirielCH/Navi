@@ -373,6 +373,7 @@ class SettingsClanCog(commands.Cog):
             search_strings = [
                 'loading the epic guild member list...', #English
                 'cargando la lista épica de miembros...', #Spanish
+                'carregando lista de membros épica...', #Portuguese
             ]
             if any(search_string in message_before.content.lower() for search_string in search_strings):
                 message_clan_name = str(message_after.embeds[0].fields[0].name)
@@ -380,7 +381,7 @@ class SettingsClanCog(commands.Cog):
                 message_clan_leader = str(message_after.embeds[0].footer.text)
                 search_patterns = [
                     '^\*\*(.+?)\*\* members', #English
-                    '^Miembros de \*\*(.+?)\*\*', #Spanish
+                    '^Mi?embros de \*\*(.+?)\*\*', #Spanish, Portuguese
                 ]
                 clan_name_match = await functions.get_match_from_patterns(search_patterns, message_clan_name)
                 try:
@@ -395,7 +396,7 @@ class SettingsClanCog(commands.Cog):
                     return
                 search_patterns = [
                     'Owner: (.+?)$', #English
-                    'Lider: (.+?)$', #Spanish
+                    'Lider: (.+?)$', #Spanish, Portuguese
                 ]
                 clan_leader_match = await functions.get_match_from_patterns(search_patterns, message_clan_leader)
                 try:
@@ -404,7 +405,7 @@ class SettingsClanCog(commands.Cog):
                     if settings.DEBUG_MODE or message_after.guild.id in settings.DEV_GUILDS:
                         await message_after.add_reaction(emojis.WARNING)
                     await errors.log_error(
-                        f'Clan leader not found in guild list message: {message_clan_leader}',
+                        f'Clan owner not found in guild list message: {message_clan_leader}',
                         message_after
                     )
                     return

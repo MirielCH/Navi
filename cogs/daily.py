@@ -31,6 +31,7 @@ class DailyCog(commands.Cog):
             search_strings = [
                 'you have claimed your daily rewards already', #English
                 'ya reclamaste tu recompensa diaria', #Spanish
+                'você já reivindicou sua recompensa diária', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -84,7 +85,7 @@ class DailyCog(commands.Cog):
             # Daily
             search_strings = [
                "'s daily reward", #English
-               " — daily", #Spanish
+               " — daily", #Spanish, Portuguese
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -96,7 +97,7 @@ class DailyCog(commands.Cog):
                     except:
                         search_patterns = [
                             "^(.+?)'s daily reward", #English
-                            "^(.+?) — daily", #Spanish
+                            "^(.+?) — daily", #Spanish, Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:

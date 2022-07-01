@@ -32,6 +32,7 @@ class FarmCog(commands.Cog):
             search_strings = [
                 'you have farmed already', #English
                 'ya cultivaste recientemente', #Spanish
+                'você plantou recentemente', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
@@ -112,6 +113,7 @@ class FarmCog(commands.Cog):
             search_strings = [
                'have grown from the seed', #English
                'crecieron de la semilla', #Spanish
+               'partir da semente', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
@@ -119,7 +121,7 @@ class FarmCog(commands.Cog):
                 slash_command = True if user is not None else False
                 if user is None:
                     search_patterns = [
-                        "^\*\*(.+?)\*\* plant", #English & Spanish
+                        "^\*\*(.+?)\*\* plant", #English, Spanish, Portuguese
                     ]
                     try:
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
@@ -155,6 +157,7 @@ class FarmCog(commands.Cog):
                 search_strings = [
                     '{} in the ground', #English
                     '{} en el suelo', #Spanish
+                    '{} no solo', #Portuguese
                 ]
                 if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm bread' if not slash_command else '/farm seed: bread'
@@ -174,6 +177,7 @@ class FarmCog(commands.Cog):
                 search_strings = [
                     'also got', #English
                     'también consiguió', #Spanish
+                    'também conseguiu', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):
                     if 'potato seed**' in message_content.lower():

@@ -23,14 +23,15 @@ class ClanCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = icon_url = message_footer = message_field0 = ''
+            message_author = message_title = icon_url = message_footer = message_field0_name = message_field0_value = ''
             message_field1 = message_description = ''
             if embed.author:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.title: message_title = str(embed.title)
             if embed.fields:
-                message_field0 = embed.fields[0].value
+                message_field0_name = embed.fields[0].name
+                message_field0_value = embed.fields[0].value
                 if len(embed.fields) > 1:
                     message_field1 = embed.fields[1].value
             if embed.description: message_description = str(embed.description)
@@ -40,6 +41,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 'your guild has already raided or been upgraded', #English
                 'tu guild ya hizo un asalto o fue mejorado', #Spanish
+                'sua guild já raidou ou foi atualizada', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -107,6 +109,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 'your guild was raided', #English
                 'tu guild fue asaltado', #Spanish
+                'sua guild foi raidad', #Portuguese
             ]
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -136,6 +139,7 @@ class ClanCog(commands.Cog):
                 search_patterns = [
                     "STEALTH\*\*: (.+?)\\n", #English
                     "SIGILO\*\*: (.+?)\\n", #Spanish
+                    "FURTIVIDADE\*\*: (.+?)\\n", #Portuguese
                 ]
                 stealth_match = await functions.get_match_from_patterns(search_patterns, message_field1)
                 try:
@@ -174,8 +178,9 @@ class ClanCog(commands.Cog):
             search_strings = [
                 'upgrade', #English
                 'mejora', #Spanish
+                'melhoria', #Portuguese
             ]
-            if any(search_string == message_field0.name.lower() for search_string in search_strings):
+            if any(search_string == message_field0_name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 alert_message_prefix = '/' if user is not None else 'rpg '
                 if user is None:
@@ -206,7 +211,7 @@ class ClanCog(commands.Cog):
                     user_settings = None
                 clan_stealth_before = clan.stealth_current
                 try:
-                    stealth = re.search("--> \*\*(.+?)\*\*", message_field0).group(1)
+                    stealth = re.search("--> \*\*(.+?)\*\*", message_field0_value).group(1)
                     stealth = int(stealth)
                 except Exception as error:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -252,6 +257,7 @@ class ClanCog(commands.Cog):
             search_strings = [
                 '** RAIDED **', #English
                 '** ASALTÓ **', #Spanish
+                '** RAIDOU **', #Portuguese
             ]
             if (any(search_string in message_description for search_string in search_strings)
                 and ':crossed_swords:' in message_description.lower()):
@@ -262,8 +268,9 @@ class ClanCog(commands.Cog):
                     search_patterns = [
                         "\*\*(.+?)\*\* throws", #English
                         "\*\*(.+?)\*\* tiró", #Spanish
+                        "\*\*(.+?)\*\* jogou", #Portuguese
                     ]
-                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_field0)
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_field0_value)
                     try:
                         user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
@@ -296,6 +303,7 @@ class ClanCog(commands.Cog):
                 search_patterns = [
                     "earned \*\*(.+?)\*\*", #English
                     "ganó \*\*(.+?)\*\*", #Spanish
+                    "ganhou \*\*(.+?)\*\*", #Portuguese
                 ]
                 energy_match = await functions.get_match_from_patterns(search_patterns, message_field1)
                 try:

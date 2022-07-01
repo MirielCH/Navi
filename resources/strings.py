@@ -363,15 +363,16 @@ TRACKED_COMMANDS = (
 # Translations
 COOLDOWN_USERNAME_PATTERNS = [
     "^(.+?)'s cooldown", #English
-    "^(.+?) — cooldown", #Spanish
+    "^(.+?) — cooldown", #Spanish, Portuguese
 ]
 
 COOLDOWN_TIMESTRING_PATTERNS = [
     "wait at least \*\*(.+?)\*\*...", #English
     "espera al menos \*\*(.+?)\*\*...", #Spanish
+    "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
 ]
 
 EPIC_NPC_NAMES = [
     'EPIC NPC', #English
-    'NPC ÉPICO', #Spanish
+    'NPC ÉPICO', #Spanish, Portuguese
 ]

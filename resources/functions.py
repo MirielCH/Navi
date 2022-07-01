@@ -424,21 +424,24 @@ async def get_training_answer(message_content: str) -> str:
     search_strings_river = [
         'river!', #English
         'río!', #Spanish
+        'rio!', #Portuguese
     ]
     search_strings_field = [
         'field!', #English
-        'campo!', #Spanish
+        'campo!', #Spanish, Portuguese
     ]
     search_strings_casino = [
         'casino?', #English & Spanish
+        'cassino?', #Portuguese
     ]
     search_strings_forest = [
         'forest!', #English
-        'bosque!', #Spanish
+        'bosque!', #Spanish, Portuguese
     ]
     search_strings_void = [
         'void', #English
         'vacío', #Spanish, UNCONFIRMED
+        'vazio', #Portuguese, UNCONFIRMED
     ]
     if any(search_string in message_content for search_string in search_strings_river):
         if '<:epicfish' in message_content:
@@ -451,26 +454,29 @@ async def get_training_answer(message_content: str) -> str:
         search_strings_first = [
             '**first**', #English
             '**primera**', #Spanish
+            '**primeira**', #Portuguese
         ]
         search_strings_second = [
             '**second**', #English
-            '**segunda**', #Spanish
+            '**segunda**', #Spanish, Portuguese
         ]
         search_strings_third = [
             '**third**', #English
             '**tercera**', #Spanish
+            '**terceira**', #Portuguese
         ]
         search_strings_fourth = [
             '**fourth**', #English
             '**cuarta**', #Spanish
+            '**quarta**', #Portuguese
         ]
         search_strings_fifth = [
             '**fifth**', #English
-            '**quinta**', #Spanish
+            '**quinta**', #Spanish, Portuguese
         ]
         search_strings_sixth = [
             '**sixth**', #English
-            '**sexta**', #Spanish
+            '**sexta**', #Spanish, Portuguese
         ]
         banana = 'BANANA'
         apple = 'APPLE'
@@ -507,6 +513,7 @@ async def get_training_answer(message_content: str) -> str:
         search_patterns = [
             'many (.+?) do', #English
             'cuantos (.+?) ves', #Spanish
+            'quantas (.+?) vezes', #Portuguese
         ]
         emoji_match = await get_match_from_patterns(search_patterns, message_content)
         try:
@@ -517,6 +524,7 @@ async def get_training_answer(message_content: str) -> str:
         search_strings = [
             'how many ', #English
             'cuantos ', #Spanish
+            'quantas ', #Portuguese
         ]
         for search_string in search_strings:
             start_question = message_content.find(search_string)

@@ -29,8 +29,9 @@ class HorseCog(commands.Cog):
 
         # Horse cooldown
         search_strings = [
-                'you have used this command recently', #English
+                'you have used this command recently', #Engli
                 'usaste este comando recientemente', #Spanish
+                'você usou este comando recentementesh', #Portuguese
             ]
         if any(search_string in message_title.lower() for search_string in search_strings):
             user_id = user_name = None

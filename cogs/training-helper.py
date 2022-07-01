@@ -28,6 +28,7 @@ class TrainingHelperCog(commands.Cog):
             search_strings = [
                 'help us unseal the next areas!', #English
                 'ayudanos a abrir las siguientes áreas!', #Spanish
+                'ajude-nos a abrir as seguintes áreas!', #Portuguese
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 updated_settings = False
@@ -35,6 +36,7 @@ class TrainingHelperCog(commands.Cog):
                     search_strings = [
                         'unsealed', #English
                         'abiert', #Spanish, UNCONFIRMED
+                        'aberto', #Portuguese, UNCONFIRMED
                     ]
                     if any(search_string in field.value.lower() for search_string in search_strings):
                         try:
@@ -61,10 +63,12 @@ class TrainingHelperCog(commands.Cog):
             search_strings_included = [
                 '** is training in the', #English
                 '** está entrenando', #Spanish
+                '** está treinando', #Portuguese
             ]
             search_strings_not_included = [
                 'in the mine!', #English
                 'en la mina!', #Spanish
+                'na mina!', #Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings_included)
                 and all(search_string not in message_content.lower() for search_string in search_strings_not_included)):

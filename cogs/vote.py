@@ -27,10 +27,13 @@ class VoteCog(commands.Cog):
                 search_strings = [
                     'next vote rewards', #English
                     'recompensas del siguiente voto', #Spanish
+                    'recompensas do próximo voto', #Portuguese
                 ]
                 if any(search_string in field.name.lower() for search_string in search_strings):
                     search_patterns = [
                         'cooldown: \*\*(.+?)\*\*', #English
+                        'cooldown: \*\*(.+?)\*\*', #Spanish, MISSING
+                        'cooldown: \*\*(.+?)\*\*', #Portuguese, MISSING
                     ]
                     timestring_match = await functions.get_match_from_patterns(search_patterns, field.value.lower())
                     if timestring_match is None: return

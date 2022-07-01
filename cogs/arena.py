@@ -30,6 +30,7 @@ class ArenaCog(commands.Cog):
         search_strings = [
             'you have started an arena recently', #English
             'empezaste una arena recientemente', #Spanish
+            'você recentemente iniciou uma arena', #Portuguese
         ]
         if any(search_string in message_title.lower() for search_string in search_strings):
             user_id = user_name = None

@@ -29,8 +29,8 @@ class LotteryCog(commands.Cog):
             search_strings = [
                 'join with `rpg lottery', #English 1
                 'join with `/lottery', #English 2
-                'participa con `rpg lottery', #Spanish 1
-                'participa con `/lottery', #Spanish 2
+                'participa con `/lottery', #Spanis
+                'participe com `/lottery', #Portuguese
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -61,6 +61,7 @@ class LotteryCog(commands.Cog):
                 search_patterns = [
                     'next draw\*\*: (.+?)$', #English
                     'siguiente ronda\*\*: (.+?)$', #Spanish
+                    'próximo sorteio\*\*: (.+?)$', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_field.lower())
                 timestring = timestring_match.group(1)
@@ -77,7 +78,7 @@ class LotteryCog(commands.Cog):
             # Buy lottery ticket
             search_strings = [
                 'lottery ticket successfully bought', #English
-                'lottery ticket` comprados exitosamente', #Spanish
+                'lottery ticket` comprado', #Spanish, Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -111,6 +112,7 @@ class LotteryCog(commands.Cog):
                 search_patterns = [
                     'the winner in \*\*(.+?)\*\*', #English
                     'el ganador en \*\*(.+?)\*\*', #Spanish
+                    'o vencedor em \*\*(.+?)\*\*', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
                 timestring = timestring_match.group(1)

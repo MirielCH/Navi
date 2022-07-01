@@ -33,6 +33,8 @@ class PetsCog(commands.Cog):
                 'pets have started an adventure!', #English multiple pets
                 'tu mascota empezó una aventura y volverá', #Spanish 1 pet
                 'tus mascotas han comenzado una aventura!', #Spanish multiple pets
+                'seu pet começou uma aventura e voltará', #Portuguese 1 pet
+                'seus pets começaram uma aventura!', #Portuguese multiple pets
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction(message)
@@ -72,7 +74,8 @@ class PetsCog(commands.Cog):
                     await message.reply(pet_message)
                 search_strings = [
                     'the following pets are back instantly', #English
-                    'las siguientes mascotas están de vuelta instantaneamente', #Spanish, CHECK AFTER LAUNCH
+                    'las siguientes mascotas están de vuelta instantaneamente', #Spanish
+                    'os seguintes pets voltaram instantaneamente', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
@@ -80,6 +83,7 @@ class PetsCog(commands.Cog):
                 search_strings = [
                     'pets have started an adventure!', #English
                     'tus mascotas han comenzado una aventura!', #Spanish
+                    'seus pets começaram uma aventura!', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings): return
                 arguments = user_command_message.content.split()
@@ -89,6 +93,7 @@ class PetsCog(commands.Cog):
                 search_patterns = [
                     'will be back in \*\*(.+?)\*\*', #English
                     'volverá en \*\*(.+?)\*\*', #Spanish
+                    'voltará em \*\*(.+?)\*\*', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
                 timestring = timestring_match.group(1)
@@ -103,6 +108,7 @@ class PetsCog(commands.Cog):
             search_strings = [
                 'pet adventure(s) cancelled', #English
                 'mascota(s) cancelada(s)', #Spanish
+                'pets cancelada(s)', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -162,6 +168,7 @@ class PetsCog(commands.Cog):
             search_strings = [
                 'it came back instantly!!', #English
                 'volvio al instante!!', #Spanish
+                'volvio al instante!!', #Portuguese, MISSING
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -202,6 +209,7 @@ class PetsCog(commands.Cog):
             search_strings = [
                 'pets can collect items and coins, more information', #English
                 'las mascotas puedes recoger items y coins, más información', #Spanish
+                'pets podem coletar itens e coins, mais informações', #Portuguese
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 pet_names_emojis = {

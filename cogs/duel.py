@@ -31,6 +31,7 @@ class DuelCog(commands.Cog):
             search_strings = [
                 'you have been in a duel recently', #English
                 'estuviste en un duelo recientemente', #Spanish
+                'você estava em um duelo recentemente', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
