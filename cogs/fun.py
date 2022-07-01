@@ -289,7 +289,12 @@ class FunCog(commands.Cog):
 
                 # Shitty lootbox reaction
                 shitty_lootbox_found = False
-                if 'lootbox opened' in field.name.lower():
+                search_strings = [
+                    'lootbox opened', #English
+                    'lootbox abierta', #Spanish
+                    'lootbox aberta', #Portuguese, UNCONFIRMED
+                ]
+                if any(search_string in field.name.lower() for search_string in search_strings):
                     if '+1' in field.value.lower() and field.value.lower().count('<:') == 1:
                         if 'wooden log' in field.value.lower() or 'normie fish' in field.value.lower():
                             shitty_lootbox_found = True
