@@ -110,24 +110,24 @@ class AdventureCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Adventure
-            search_patterns = [
+            search_strings = [
                 'found a', #English
                 'encontró', #Spanish
             ]
-            if (any(search_pattern in message_content.lower() for search_pattern in search_patterns)
+            if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user = await functions.get_interaction_user(message)
-                search_patterns = [
+                search_strings = [
                     '(but stronger)', #English
                     '(pero más fuerte)', #Spanish
                 ]
                 if user is not None:
                     user_command = '/adventure'
-                    if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                    if any(search_string in message_content.lower() for search_string in search_strings):
                         user_command = f'{user_command} mode: hardmode'
                 else:
                     user_command = 'rpg adventure'
-                    if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                    if any(search_string in message_content.lower() for search_string in search_strings):
                         user_command = f'{user_command} hardmode'
                     user_name = None
                     try:

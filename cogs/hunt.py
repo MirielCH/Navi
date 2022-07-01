@@ -127,34 +127,34 @@ class HuntCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Hunt
-            search_patterns = [
+            search_strings = [
                 'found a', #English
                 'encontró', #Spanish
             ]
-            if (any(search_pattern in message_content.lower() for search_pattern in search_patterns)
+            if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = None
                 hardmode = together = alone = False
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
-                search_patterns = [
+                search_strings_hardmode = [
                     '(but stronger)', #English
                     '(pero más fuerte)', #Spanish
                 ]
-                if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
-                    hardmode = True
-                search_patterns = [
-                    '(but way stronger!!!)', #English
-                    '(pero más fuerte!!!)', #Spanish
-                ]
-                if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
-                    alone = True
-                search_patterns = [
+                search_strings_together = [
                     'hunting together', #English
                     'stan cazando juntos', #Spanish
                 ]
-                if any(search_pattern in message_content.lower() for search_pattern in search_patterns):
+                search_strings_alone = [
+                    '(but way stronger!!!)', #English
+                    '(pero más fuerte!!!)', #Spanish
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
+                    hardmode = True
+                if any(search_string in message_content.lower() for search_string in search_strings_together):
                     together = True
+                if any(search_string in message_content.lower() for search_string in search_strings_alone):
+                    alone = True
                 new = True if '__**' in message_content.lower() else False
                 if together:
                     search_patterns = [

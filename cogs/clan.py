@@ -172,12 +172,10 @@ class ClanCog(commands.Cog):
 
             # Guild upgrade
             search_strings = [
-                'guild successfully upgraded!', #English success
-                'guild upgrade failed!', #English fail
-                'el guild fue exitosamente mejorado!', #Spanish success
-                'guild upgrade failed!', #Spanish fail - MISSING
+                'upgrade', #English
+                'mejora', #Spanish
             ]
-            if any(search_string in message_description.lower() for search_string in search_strings):
+            if any(search_string == message_field0.name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 alert_message_prefix = '/' if user is not None else 'rpg '
                 if user is None:
