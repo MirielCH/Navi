@@ -158,7 +158,7 @@ class RubyCounterCog(commands.Cog):
                 "— inventory", #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
-                user_id = user_name = None
+                user_id = user_name = embed_user = None
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
                     message_history = await message.channel.history(limit=50).flatten()
@@ -176,28 +176,28 @@ class RubyCounterCog(commands.Cog):
                             message
                         )
                         return
+                try:
+                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
+                except:
+                    search_patterns = [
+                        "^(.+?) — inventory", #All languages
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                     try:
-                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                    except:
-                        search_patterns = [
-                            "^(.+?) — inventory", #All languages
-                        ]
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
-                        try:
-                            user_name = user_name_match.group(1)
-                            user_name = await functions.encode_text(user_name)
-                        except Exception as error:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                f'User not found in inventory message for ruby counter: {message.embeds[0].fields}',
-                                message
-                            )
-                            return
-                    if user_id is not None:
-                        embed_user = await message.guild.fetch_member(user_id)
-                    else:
-                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                        user_name = user_name_match.group(1)
+                        user_name = await functions.encode_text(user_name)
+                    except Exception as error:
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            f'User not found in inventory message for ruby counter: {message.embeds[0].fields}',
+                            message
+                        )
+                        return
+                if user_id is not None:
+                    embed_user = await message.guild.fetch_member(user_id)
+                else:
+                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if embed_user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)

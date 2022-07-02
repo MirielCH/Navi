@@ -150,7 +150,7 @@ class CooldownsCog(commands.Cog):
             else:
                 tr_command = '/training' if slash_command else 'rpg training'
             try:
-                tr_search = re.search("raining`\*\* \(\*\*(.+?)\*\*", message_fields)
+                tr_search = re.search("raining`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                     await message.add_reaction(emojis.WARNING)

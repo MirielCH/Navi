@@ -331,17 +331,17 @@ class WorkCog(commands.Cog):
                         await message.add_reaction(emojis.FISHPOGGERS)
                     elif any(search_string in message_content.lower() for search_string in search_strings_pickup_proc):
                         await message.add_reaction(emojis.WOW)
-                    elif 'mega log' in message_content.lower():
+                    elif 'mega log' in message_content.lower() or '**mega** log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
-                    elif 'hyper log' in message_content.lower():
+                    elif 'hyper log' in message_content.lower() or '**hyper** log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
-                    elif 'ultra log' in message_content.lower():
+                    elif 'ultra log' in message_content.lower() or '**ultra** log' in message_content.lower():
                         await message.add_reaction(emojis.PEEPO_WOAH)
                     elif 'watermelon' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_MELON)
-                    elif 'ultimate log' in message_content.lower():
+                    elif 'ultimate log' in message_content.lower() or '**ultimate** log' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_COOL)
-                    elif 'super fish' in message_content.lower():
+                    elif 'super fish' in message_content.lower() or '**super** log' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_FISH)
 
             # Work event non-slash (always English)
@@ -401,7 +401,7 @@ class WorkCog(commands.Cog):
                     )
                     return
                 for command in strings.WORK_COMMANDS:
-                    if command in user_command_message:
+                    if command in user_command_message.content.lower():
                         user_command = f'rpg {command}'
                         break
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')

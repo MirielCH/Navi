@@ -40,7 +40,7 @@ class ClanCog(commands.Cog):
             # Clan cooldown
             search_strings = [
                 'your guild has already raided or been upgraded', #English
-                'tu guild ya hizo un asalto o fue mejorado', #Spanish
+                'tu guild ya hizo un raideo o fue mejorado', #Spanish
                 'sua guild já raidou ou foi atualizada', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
