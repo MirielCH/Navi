@@ -231,8 +231,7 @@ class PetsCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s pets", #English
-                            "^(.+?) — pets", #Spanish
+                            "^(.+?) — pets", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:

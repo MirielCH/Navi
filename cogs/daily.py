@@ -84,8 +84,7 @@ class DailyCog(commands.Cog):
 
             # Daily
             search_strings = [
-               "'s daily reward", #English
-               " — daily", #Spanish, Portuguese
+               " — daily", #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None

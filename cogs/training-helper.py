@@ -35,7 +35,7 @@ class TrainingHelperCog(commands.Cog):
                 for field in embed.fields:
                     search_strings = [
                         'unsealed', #English
-                        'abiert', #Spanish, UNCONFIRMED
+                        'abierto', #Spanish
                         'aberto', #Portuguese, UNCONFIRMED
                     ]
                     if any(search_string in field.value.lower() for search_string in search_strings):

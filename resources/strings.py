@@ -362,8 +362,7 @@ TRACKED_COMMANDS = (
 
 # Translations
 COOLDOWN_USERNAME_PATTERNS = [
-    "^(.+?)'s cooldown", #English
-    "^(.+?) — cooldown", #Spanish, Portuguese
+    "^(.+?) — cooldown", #All languages
 ]
 
 COOLDOWN_TIMESTRING_PATTERNS = [

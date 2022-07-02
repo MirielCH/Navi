@@ -34,7 +34,7 @@ class QuestCog(commands.Cog):
             # Guild quest check
             search_strings_guild_raid = [
                 'do a guild raid', #English
-                'has una guild raid', #Spanish
+                'has un guild raid', #Spanish
                 'faça uma guild raid', #Portuguese
             ]
             search_strings_quest = [
@@ -51,8 +51,7 @@ class QuestCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s quest", #English
-                            "^(.+?) — quest", #Spanish
+                            "^(.+?) — quest", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
@@ -201,8 +200,7 @@ class QuestCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s quest", #English
-                            "^(.+?) — quest", #Spanish
+                            "^(.+?) — quest", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
@@ -256,8 +254,7 @@ class QuestCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s epic quest", #English
-                            "^(.+?) — epic quest", #Spanish
+                            "^(.+?) — epic quest", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:

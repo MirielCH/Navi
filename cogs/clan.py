@@ -108,7 +108,7 @@ class ClanCog(commands.Cog):
             # Clan overview
             search_strings = [
                 'your guild was raided', #English
-                'tu guild fue asaltado', #Spanish
+                'tu guild fue raideado', #Spanish
                 'sua guild foi raidad', #Portuguese
             ]
             if any(search_string in message_footer.lower() for search_string in search_strings):

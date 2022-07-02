@@ -22,12 +22,16 @@ class HealWarningCog(commands.Cog):
         message_content = message.content
 
         # Hunt together
-        search_strings = [
+        search_strings_hunt_together = [
             'are hunting together', #English
-            'stan cazando juntos', #Spanish
-            'estão caçando juntos', #Portuguese
+            'cazando juntos', #Spanish
+            'caçando juntos', #Portuguese
         ]
-        if any(search_string in message_content.lower() for search_string in search_strings):
+        search_strings_hunt_adv = [
+            '** found a', #English
+            '** encontr', #Spanish, Portuguese
+        ]
+        if any(search_string in message_content.lower() for search_string in search_strings_hunt_together):
             user_name = None
             search_patterns = [
                     "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
@@ -122,12 +126,7 @@ class HealWarningCog(commands.Cog):
                     await message.channel.send(f'**{user.name}**, {warning}')
 
         # Hunt solo and adventure
-        search_strings = [
-            '** found a', #English
-            '** encontró', #Spanish
-            '** encontrou', #Portuguese
-        ]
-        if any(search_string in message_content.lower() for search_string in search_strings):
+        elif any(search_string in message_content.lower() for search_string in search_strings_hunt_adv):
             user_name = None
             try:
                 user_name_match = re.search("^\*\*(.+?)\*\* ", message_content)
@@ -159,7 +158,7 @@ class HealWarningCog(commands.Cog):
             if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
             search_patterns = [
                 'lost (.+?) hp, remaining hp is (.+?)/', #English
-                '[perdió|perdiste] (.+?) hp, la hp restante es (.+?)/', #Spanish
+                '(?:perdió|perdiste) (.+?) hp, la hp restante es (.+?)/', #Spanish
                 'perdeu (.+?) hp, restam (.+?)/', #Spanish
             ]
             health_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())

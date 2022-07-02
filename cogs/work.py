@@ -111,16 +111,16 @@ class WorkCog(commands.Cog):
             # Work
             excluded_strings = [
                 'hunting together', #English, hunt
+                'cazando juntos', #Spanish, hunt
+                'caçando juntos', #Portuguese, hunt
                 '** found', #English, hunt/adventure
+                '** encontr', #Spanish, Portuguese, hunt/adventure
                 '** plant', #English, Spanish, Portuguese, farm
                 '** throws', #English, world boss
+                '** tiró', #Spanish, MISSING, world boss
+                '** jogou', #Portuguese, MISSING, world boss
                 'new quest', #English, quest
-                'stan cazando juntos', #Spanish, hunt
-                '** encontr', #Spanish, Portuguese, hunt/adventure
-                '** throws', #Spanish, MISSING, world boss
                 'nueva misión', #Spanish, quest
-                'estão caçando juntos', #Portuguese, hunt
-                '** throws', #Portuguese, MISSING, world boss
                 'nova missão', #Portuguese, quest
                 ':crossed_sword:', #Ruby dragon event, all languages
             ]
@@ -148,12 +148,12 @@ class WorkCog(commands.Cog):
                         'WwWOoOOoOAAa!!!1 (.+?)\*\* consiguió', #Spanish 4, UNCONFIRMED
                         '\.\.\. \*\*(.+?)\*\* consiguió', #Spanish 5, UNCONFIRMED
                         '\*\*(.+?)\*\* consiguió', #Spanish 6
-                        '[!1] \*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 1, UNCONFIRMED
-                        '\?\?\?\?\? \*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 2, UNCONFIRMED
-                        'WOOAAAA!! (.+?)\*\* (recebeu|conseguiu)', #Portuguese 3, UNCONFIRMED
-                        'WwWOoOOoOAAa!!!1 (.+?)\*\* (recebeu|conseguiu)', #Portuguese 4, UNCONFIRMED
-                        '\.\.\. \*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 5, UNCONFIRMED
-                        '\*\*(.+?)\*\* (recebeu|conseguiu)', #Portuguese 6
+                        '[!1] \*\*(.+?)\*\* (?:recebeu|conseguiu)', #Portuguese 1, UNCONFIRMED
+                        '\?\?\?\?\? \*\*(.+?)\*\* (?:recebeu|conseguiu)', #Portuguese 2, UNCONFIRMED
+                        'WOOAAAA!! (.+?)\*\* (?:recebeu|conseguiu)', #Portuguese 3, UNCONFIRMED
+                        'WwWOoOOoOAAa!!!1 (.+?)\*\* (?:recebeu|conseguiu)', #Portuguese 4, UNCONFIRMED
+                        '\.\.\. \*\*(.+?)\*\* (?:recebeu|conseguiu)', #Portuguese 5, UNCONFIRMED
+                        '\*\*(.+?)\*\* (?:recebeu|conseguiu)', #Portuguese 6
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match is None:

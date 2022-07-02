@@ -29,8 +29,8 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             'se registró exitosamente para el evento de **big arena**!', #Spanish 1
             'se registró exitosamente para el evento de **minin\'tboss**!', #Spanish 2
             'ya estás en registro!', #Spanish 3
-            'se registrou exitosamente para o evento de **minin\'tboss**!', #Portuguese 1
-            'se registrou exitosamente para o evento de **big arena**!', #Portuguese 2
+            'se inscreveu com sucesso no evento **minin\'tboss**!', #Portuguese 1
+            'se inscreveu com sucesso no evento **big arena**!', #Portuguese 2
             'você já está em registro!', #Portuguese 3
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
@@ -96,30 +96,22 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     )
                     return
                 user_command = user_command_message.content.lower()
-            today = datetime.utcnow().replace(hour=18, minute=0, second=0, microsecond=0)
-            current_time = datetime.utcnow().replace(microsecond=0)
             if 'minint' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
-                next_tuesday = today + timedelta((calendar.TUESDAY - 1 - today.weekday()) % 7 + 1)
-                next_thursday = today + timedelta((calendar.THURSDAY - 1 - today.weekday()) % 7 + 1)
-                next_saturday = today + timedelta((calendar.SATURDAY - 1 - today.weekday()) % 7 + 1)
-                time_left_tuesday = next_tuesday - current_time
-                time_left_thursday = next_thursday - current_time
-                time_left_saturday = next_saturday - current_time
-                time_left = min(time_left_tuesday, time_left_thursday, time_left_saturday)
                 event = 'minin\'tboss'
                 reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
             else:
                 if not user_settings.alert_big_arena.enabled: return
-                next_monday = today + timedelta((calendar.MONDAY - 1 - today.weekday()) % 7 + 1)
-                next_wednesday = today + timedelta((calendar.WEDNESDAY - 1 - today.weekday()) % 7 + 1)
-                next_friday = today + timedelta((calendar.FRIDAY - 1 - today.weekday()) % 7 + 1)
-                time_left_monday = next_monday - current_time
-                time_left_wednesday = next_wednesday - current_time
-                time_left_friday = next_friday - current_time
-                time_left = min(time_left_monday, time_left_wednesday, time_left_friday)
                 event = 'big-arena'
                 reminder_message = user_settings.alert_big_arena.message.replace('{event}', event.replace('-',' '))
+            search_patterns = [
+                    'next event is in \*\*(.+?)\*\*', #English
+                    'siguiente evento es en \*\*(.+?)\*\*', #Spanish
+                    'próximo evento (?:será|é) em \*\*(.+?)\*\*', #Portuguese
+                ]
+            timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+            timestring = timestring_match.group(1)
+            time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, event, time_left,
                                                      message.channel.id, reminder_message)

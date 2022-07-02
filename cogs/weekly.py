@@ -84,8 +84,7 @@ class WeeklyCog(commands.Cog):
 
             # Weekly
             search_strings = [
-               "'s weekly reward", #English
-               " — weekly", #Spanish, Portuguese
+               " — weekly", #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -96,8 +95,7 @@ class WeeklyCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s weekly reward", #English
-                            "^(.+?) — weekly", #Spanish
+                            "^(.+?) — weekly", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:

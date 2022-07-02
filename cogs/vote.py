@@ -31,9 +31,7 @@ class VoteCog(commands.Cog):
                 ]
                 if any(search_string in field.name.lower() for search_string in search_strings):
                     search_patterns = [
-                        'cooldown: \*\*(.+?)\*\*', #English
-                        'cooldown: \*\*(.+?)\*\*', #Spanish, MISSING
-                        'cooldown: \*\*(.+?)\*\*', #Portuguese, MISSING
+                        'cooldown: \*\*(.+?)\*\*', #All languages
                     ]
                     timestring_match = await functions.get_match_from_patterns(search_patterns, field.value.lower())
                     if timestring_match is None: return

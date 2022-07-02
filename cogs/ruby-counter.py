@@ -92,8 +92,7 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from lootboxes
             search_strings = [
-                "'s lootbox", #English
-                "— lootbox", #Spanish, Portuguese
+                "— lootbox", #All languages
             ]
             if (any(search_string in message_author.lower() for search_string in search_strings)
                 and '<:ruby' in message_field.lower()):
@@ -104,8 +103,7 @@ class RubyCounterCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s lootbox", #English
-                            "^(.+?) — lootbox", #Spanish, Portuguese
+                            "^(.+?) — lootbox", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
@@ -157,8 +155,7 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from inventory
             search_strings = [
-                "'s inventory", #English
-                "— inventory", #Spanish, Portuguese
+                "— inventory", #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -168,8 +165,7 @@ class RubyCounterCog(commands.Cog):
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
                         search_patterns = [
-                            "^(.+?)'s inventory", #English
-                            "^(.+?) — inventory", #Spanish, Portuguese
+                            "^(.+?) — inventory", #All languages
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
@@ -262,6 +258,7 @@ class RubyCounterCog(commands.Cog):
                 search_patterns = [
                     'more than (.+?) <:ruby', #English
                     'más de (.+?) <:ruby', #Spanish
+                    'mais de (.+?) <:ruby', #Portuguese
                 ]
                 ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 try:
@@ -340,7 +337,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     search_patterns = [
                         '\*\*(.+?)\*\* got', #English
-                        '\*\*(.+?)\*\* cons(e|i)gui(ó|u)', #Spanish, Portuguese
+                        '\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u)', #Spanish, Portuguese
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                     try:
@@ -371,9 +368,9 @@ class RubyCounterCog(commands.Cog):
                 search_patterns = [
                     '\*\* got (.+?) <:ruby', #English mine commands
                     ' had (.+?) <:ruby', #English proc pickup commands
-                    '\*\* cons(e|i)gui(ó|u) (.+?) <:ruby', #Spanish, Portuguese mine commands
-                    'llevaba dentro (.+?) <:ruby', #Spanish proc pickup commands, RECHECK
-                    'llevaba dentro (.+?) <:ruby', #Portuguese proc pickup commands, MISSING
+                    '\*\* cons(?:e|i)gui(?:ó|u) (.+?) <:ruby', #Spanish, Portuguese mine commands
+                    'llevaba dentro (.+?) <:ruby', #Spanish proc pickup commands
+                    'deles tinha (.+?) <:ruby', #Portuguese proc pickup commands
                 ]
                 ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                 try:

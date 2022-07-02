@@ -541,7 +541,7 @@ async def get_training_answer(message_content: str) -> str:
         search_patterns = [
             'many (.+?) do', #English
             'cuantos (.+?) ves', #Spanish
-            'quantas (.+?) vezes', #Portuguese
+            'quantas (.+?) você', #Portuguese
         ]
         emoji_match = await get_match_from_patterns(search_patterns, message_content)
         try:

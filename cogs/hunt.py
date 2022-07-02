@@ -130,8 +130,7 @@ class HuntCog(commands.Cog):
             # Hunt
             search_strings = [
                 'found a', #English
-                'encontró', #Spanish
-                'encontrou', #Portuguese
+                'encontr', #Spanish, Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
@@ -146,12 +145,12 @@ class HuntCog(commands.Cog):
                 ]
                 search_strings_together = [
                     'hunting together', #English
-                    'stan cazando juntos', #Spanish
-                    'estão caçando juntos', #Portuguese
+                    'cazando juntos', #Spanish
+                    'caçando juntos', #Portuguese
                 ]
                 search_strings_alone = [
                     '(but way stronger!!!)', #English
-                    '(pero más fuerte!!!)', #Spanish
+                    '(mucho más fuerte!!!)', #Spanish
                     '(muito mais forte!!!)', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
@@ -256,7 +255,14 @@ class HuntCog(commands.Cog):
                             'GODLY present': emojis.PRESENT_GODLY,
                             'easter lootbox': emojis.EASTER_LOOTBOX,
                         }
-                        partner_loot_start = message_content.find(f'**{user_settings.partner_name}** got ')
+                        search_strings = [
+                            f'**{user_settings.partner_name}** got ', #English
+                            f'**{user_settings.partner_name}** consiguió ', #Spanish
+                            f'**{user_settings.partner_name}** conseguiu ', #Portuguese
+                        ]
+                        for search_string in search_strings:
+                            partner_loot_start = message_content.find(search_string)
+                            if partner_loot_start != -1: break
                         if partner_loot_start == -1:
                             partner_loot_start = message_content.find(f'**{user_settings.partner_name}**:')
                         if partner_loot_start != -1:
@@ -268,7 +274,7 @@ class HuntCog(commands.Cog):
                                 search_patterns = [
                                     f"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
                                     f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
-                                    f"\*\* cons(e|i)gui(ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
+                                    f"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
                                 ]
                                 lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
                                 if lb_match is None: continue
