@@ -349,7 +349,7 @@ async def get_leaderboard(clan: Clan) -> ClanLeaderboard:
     """
     table = 'clans_raids'
     function_name = 'get_leaderboard'
-    stealth_threshold = 500
+    stealth_threshold = 1000
     sql = f'SELECT * FROM {table} WHERE clan_name=? AND energy>={stealth_threshold} ORDER BY energy DESC LIMIT 5'
     try:
         cur = settings.NAVI_DB.cursor()

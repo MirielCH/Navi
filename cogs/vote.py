@@ -24,10 +24,18 @@ class VoteCog(commands.Cog):
                 field = message.embeds[0].fields[0]
 
                 # Vote cooldown
-                if field.name.lower() == 'next vote rewards':
-                    timestring_search = re.search("Cooldown: \*\*(.+?)\*\*", field.value)
-                    if timestring_search is None: return
-                    timestring = timestring_search.group(1)
+                search_strings = [
+                    'next vote rewards', #English
+                    'recompensas del siguiente voto', #Spanish
+                    'recompensas do próximo voto', #Portuguese
+                ]
+                if any(search_string in field.name.lower() for search_string in search_strings):
+                    search_patterns = [
+                        'cooldown: \*\*(.+?)\*\*', #All languages
+                    ]
+                    timestring_match = await functions.get_match_from_patterns(search_patterns, field.value.lower())
+                    if timestring_match is None: return
+                    timestring = timestring_match.group(1)
                     user = await functions.get_interaction_user(message)
                     user_command = 'rpg vote' if user is None else '/vote'
                     if user is None:

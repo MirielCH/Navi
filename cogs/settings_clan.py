@@ -6,8 +6,8 @@ import asyncio
 import discord
 from discord.ext import commands
 
-from database import clans, reminders, users
-from resources import emojis, exceptions, settings, strings
+from database import clans, errors, reminders, users
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class SettingsClanCog(commands.Cog):
@@ -69,7 +69,7 @@ class SettingsClanCog(commands.Cog):
             await ctx.reply(strings.MSG_CLAN_NOT_REGISTERED)
             return
         if clan.channel_id is not None:
-            channel = await self.bot.fetch_channel(clan.channel_id)
+            channel = await functions.get_discord_channel(self.bot, clan.channel_id)
             await ctx.reply(
                 f'Your current guild alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                 f'If you want to change this, use `{prefix}guild channel set` within your new alert channel.\n'
@@ -143,7 +143,7 @@ class SettingsClanCog(commands.Cog):
                 f'**{ctx.author.name}**, you don\'t have a guild alert channel set, there is no need to reset it.\n'
             )
             return
-        channel = await self.bot.fetch_channel(clan.channel_id)
+        channel = await functions.get_discord_channel(self.bot, clan.channel_id)
         try:
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to remove `{channel.name}` as the alert channel for '
@@ -373,12 +373,45 @@ class SettingsClanCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Fires when a message is edited"""
         if message_before.author.id == settings.EPIC_RPG_ID:
-            if message_before.content.find('loading the EPIC guild member list...') > -1:
+            search_strings = [
+                'loading the epic guild member list...', #English
+                'cargando la lista épica de miembros...', #Spanish
+                'carregando lista de membros épica...', #Portuguese
+            ]
+            if any(search_string in message_before.content.lower() for search_string in search_strings):
                 message_clan_name = str(message_after.embeds[0].fields[0].name)
                 message_clan_members = str(message_after.embeds[0].fields[0].value)
                 message_clan_leader = str(message_after.embeds[0].footer.text)
-                clan_name = message_clan_name.replace(' members','').replace('**','')
-                clan_leader = message_clan_leader.replace('Owner: ','')
+                search_patterns = [
+                    '^\*\*(.+?)\*\* members', #English
+                    '^Mi?embros de \*\*(.+?)\*\*', #Spanish, Portuguese
+                ]
+                clan_name_match = await functions.get_match_from_patterns(search_patterns, message_clan_name)
+                try:
+                    clan_name = clan_name_match.group(1)
+                except Exception as error:
+                    if settings.DEBUG_MODE or message_after.guild.id in settings.DEV_GUILDS:
+                        await message_after.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'Clan name not found in guild list message: {message_clan_name}',
+                        message_after
+                    )
+                    return
+                search_patterns = [
+                    'Owner: (.+?)$', #English
+                    'Lider: (.+?)$', #Spanish, Portuguese
+                ]
+                clan_leader_match = await functions.get_match_from_patterns(search_patterns, message_clan_leader)
+                try:
+                    clan_leader = clan_leader_match.group(1)
+                except Exception as error:
+                    if settings.DEBUG_MODE or message_after.guild.id in settings.DEV_GUILDS:
+                        await message_after.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'Clan owner not found in guild list message: {message_clan_leader}',
+                        message_after
+                    )
+                    return
                 clan_members = message_clan_members.replace('ID: ','').replace('**','')
                 clan_members = clan_members.split('\n')
                 clan_member_ids = []

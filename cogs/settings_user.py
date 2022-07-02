@@ -192,8 +192,7 @@ class SettingsUserCog(commands.Cog):
             f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on.\n'
             f'Don\'t forget to set your donor tier with `{prefix}donor` and - if you are married - '
             f'the donor tier of your partner with `{prefix}partner donor`.\n'
-            f'You can check all of your settings with `{prefix}settings`.\n\n'
-            f'Note: I only work if EPIC RPG is set to **English**.'
+            f'You can check all of your settings with `{prefix}settings`.'
         )
 
     @commands.command(aliases=('stop',))
@@ -963,8 +962,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         partner = await functions.get_discord_user(bot, user_settings.partner_id)
         partner_name = f'{partner.name}#{partner.discriminator}'
         partner_hardmode_status = await bool_to_text(partner_settings.hardmode_mode_enabled)
-        if partner_settings.partner_channel_id is not None:
-            partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
+        partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
         if partner_partner_channel is not None: partner_partner_channel_name = partner_partner_channel.name
 
     # Get clan settings

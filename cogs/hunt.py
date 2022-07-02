@@ -29,15 +29,22 @@ class HuntCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Hunt cooldown
-            if 'you have already looked around' in message_title.lower():
+            search_strings = [
+                'you have already looked around', #English
+                'ya has mirado a tu alrededor', #Spanish
+                'você já olhou ao seu redor', #Portuguese
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = None
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is not None: user_command = '/hunt'
                 try:
                     user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                 except:
+                    user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                              message_author)
                     try:
-                        user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -90,7 +97,9 @@ class HuntCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
@@ -119,24 +128,56 @@ class HuntCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Hunt
-            if ('found a' in message_content.lower()
+            search_strings = [
+                'found a', #English
+                'encontr', #Spanish, Portuguese
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = None
+                hardmode = together = alone = False
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
-                hardmode = True if '(but stronger)' in message_content.lower() else False
-                alone = True if '(way stronger!!!)' in message_content.lower() else False
-                together = True if 'hunting together' in message_content.lower() else False
+                search_strings_hardmode = [
+                    '(but stronger)', #English
+                    '(pero más fuerte)', #Spanish
+                    '(só que mais forte)', #Portuguese
+                ]
+                search_strings_together = [
+                    'hunting together', #English
+                    'cazando juntos', #Spanish
+                    'caçando juntos', #Portuguese
+                ]
+                search_strings_alone = [
+                    '(but way stronger!!!)', #English
+                    '(mucho más fuerte!!!)', #Spanish
+                    '(muito mais forte!!!)', #Portuguese
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
+                    hardmode = True
+                if any(search_string in message_content.lower() for search_string in search_strings_together):
+                    together = True
+                if any(search_string in message_content.lower() for search_string in search_strings_alone):
+                    alone = True
                 new = True if '__**' in message_content.lower() else False
                 if together:
-                    name_search = re.search("\*\*(.+?)\*\* and \*\*(.+?)\*\*", message_content)
-                    user_name = name_search.group(1)
+                    search_patterns = [
+                        "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
+                        "\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                        "\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
+                    ]
+                    name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    user_name = name_match.group(1)
                     user_name = await functions.encode_text(user_name)
-                    partner_name = name_search.group(2)
+                    partner_name = name_match.group(2)
                 if user is None:
                     if not together:
-                        user_name_search = re.search("\*\*(.+?)\*\* found a", message_content)
-                        user_name = user_name_search.group(1)
+                        search_patterns = [
+                            "\*\*(.+?)\*\* found a", #English
+                            "\*\*(.+?)\*\* encontr", #Spanish, Portuguese
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     if user_name != 'Both players':
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
@@ -214,7 +255,14 @@ class HuntCog(commands.Cog):
                             'GODLY present': emojis.PRESENT_GODLY,
                             'easter lootbox': emojis.EASTER_LOOTBOX,
                         }
-                        partner_loot_start = message_content.find(f'**{user_settings.partner_name}** got ')
+                        search_strings = [
+                            f'**{user_settings.partner_name}** got ', #English
+                            f'**{user_settings.partner_name}** consiguió ', #Spanish
+                            f'**{user_settings.partner_name}** conseguiu ', #Portuguese
+                        ]
+                        for search_string in search_strings:
+                            partner_loot_start = message_content.find(search_string)
+                            if partner_loot_start != -1: break
                         if partner_loot_start == -1:
                             partner_loot_start = message_content.find(f'**{user_settings.partner_name}**:')
                         if partner_loot_start != -1:
@@ -223,12 +271,14 @@ class HuntCog(commands.Cog):
                         lootbox_alert = ''
                         for lb_name, lb_emoji in lootboxes.items():
                             try:
-                                lb_search = re.search(f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", lb_search_content)
-                                if lb_search is None:
-                                    lb_search = re.search(f"\+(.+?) (.+?) {re.escape(lb_name)}", lb_search_content)
-                                if lb_search is None:
-                                    continue
-                                lb_amount = lb_search.group(1)
+                                search_patterns = [
+                                    f"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
+                                    f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
+                                    f"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
+                                ]
+                                lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
+                                if lb_match is None: continue
+                                lb_amount = lb_match.group(1)
                             except:
                                 await errors.log_error(
                                     f'Error when looking for partner lootbox in: {lb_search_content}',
@@ -238,7 +288,10 @@ class HuntCog(commands.Cog):
                             partner_message = (partner.alert_partner.message
                                                .replace('{user}', user.name)
                                                .replace('{loot}', f'{lb_amount} {lb_emoji} {lb_name}'))
-                            lootbox_alert = partner_message if lootbox_alert == '' else f'{lootbox_alert}\nAlso: {partner_message}'
+                            if lootbox_alert == '':
+                                lootbox_alert = partner_message
+                            else:
+                                f'{lootbox_alert}\nAlso: {partner_message}'
                         lootbox_alert = lootbox_alert.strip()
                         if (partner.partner_channel_id is not None
                             and partner.alert_partner.enabled
@@ -296,36 +349,47 @@ class HuntCog(commands.Cog):
                         if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
                             await message.add_reaction(stuff_emoji)
                     # Add an F if the user died
-                    if ((message_content.find(f'**{user.name}** lost but ') > -1)
-                        or (message_content.find('but lost fighting') > -1)):
-                        await message.add_reaction(emojis.RIP)
+                    search_strings = [
+                        f'**{user.name}** lost but ', #English 1
+                        'but lost fighting', #English 2
+                        'both lost fighting', #English 3
+                        f'**{user.name}** perdió pero ', #Spanish 1
+                        'pero perdió luchando', #Spanish 2
+                        'ambos perdieron luchando', #Spanish 3
+                        f'**{user.name}** perdeu, mas ', #Portuguese 1
+                        'mais perdeu a luta', #Portuguese 2
+                        'ambos perderam a luta', #Portuguese 3, UNCONFIRMED
+                    ]
+                    if any(search_string in message_content for search_string in search_strings):
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)
 
-            # Hunt event
-            if ('pretends to be a zombie' in message_content.lower()
-                or 'fights the horde' in message_content.lower()
-                or 'thankfully, the horde did not notice' in message_content.lower()):
+            # Hunt event non-slash (always English)
+            search_strings = [
+                'pretends to be a zombie',
+                'fights the horde',
+                'thankfully, the horde did not notice',
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                interaction = await functions.get_interaction_user(message)
+                if interaction is not None: return
                 user_name = user_command = None
-                user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '/hunt'
-                else:
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await(
-                            f'User not found in hunt event message: {message_content}',
-                            message
-                        )
-                        return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
+                try:
+                    user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
+                    user_name = await functions.encode_text(user_name)
+                except Exception as error:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await(
+                        f'User not found in hunt event non-slash message: {message_content}',
+                        message
+                    )
+                    return
+                user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
                     await errors.log_error(
-                        f'User not found in hunt event message: {message_content}',
+                        f'User not found in hunt event non-slash message: {message_content}',
                         message
                     )
                     return
@@ -339,32 +403,73 @@ class HuntCog(commands.Cog):
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                 if not user_settings.alert_hunt.enabled: return
                 message_history = await message.channel.history(limit=50).flatten()
-                if user_command is None:
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if (msg.content.lower().startswith('rpg ') and 'hunt' in msg.content.lower()
-                                and msg.author == user):
-                                user_command_message = msg
-                                break
-                    if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the hunt event message.',
-                            message
-                        )
-                        return
-                    user_command = user_command_message.content.lower()
-                    user_command = user_command[8:].strip()
-                    if 'h ' in user_command or user_command.endswith(' h'):
-                        user_command = user_command.replace('h','hardmode')
-                    if 't ' in user_command or user_command.endswith(' t'):
-                        user_command = user_command.replace('t',' together')
-                    if 'a ' in user_command or user_command.endswith(' a'):
-                        user_command = user_command.replace('a',' alone')
-                    user_command = " ".join(user_command.split())
-                    user_command = f'rpg hunt {user_command}'
+                user_command_message = None
+                for msg in message_history:
+                    if msg.content is not None:
+                        if (msg.content.lower().startswith('rpg ') and 'hunt' in msg.content.lower()
+                            and msg.author == user):
+                            user_command_message = msg
+                            break
+                if user_command_message is None:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        'Couldn\'t find a command for the hunt event non-slash message.',
+                        message
+                    )
+                    return
+                user_command = user_command_message.content.lower()
+                user_command = user_command[8:].strip()
+                if 'h ' in user_command or user_command.endswith(' h'):
+                    user_command = user_command.replace('h','hardmode')
+                if 't ' in user_command or user_command.endswith(' t'):
+                    user_command = user_command.replace('t',' together')
+                if 'a ' in user_command or user_command.endswith(' a'):
+                    user_command = user_command.replace('a',' alone')
+                user_command = " ".join(user_command.split())
+                user_command = f'rpg hunt {user_command}'
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                time_elapsed = current_time - bot_answer_time
+                together = True if user_settings.partner_id is not None else False
+                if together and user_settings.partner_donor_tier < user_settings.user_donor_tier:
+                    donor_tier = user_settings.partner_donor_tier
+                else:
+                    donor_tier = user_settings.user_donor_tier
+                donor_tier = 3 if donor_tier > 3 else donor_tier
+                if cooldown.donor_affected:
+                    time_left_seconds = (cooldown.actual_cooldown()
+                                        * settings.DONOR_COOLDOWNS[donor_tier]
+                                        - time_elapsed.total_seconds())
+                else:
+                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                time_left = timedelta(seconds=time_left_seconds)
+                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            # Hunt event slash (all languages)
+            if  (('<:zombie' in message_content.lower() and '#2' in message_content.lower())
+                 or ':crossed_swords:' in message_content.lower()
+                 or ':sweat_drops:' in message_content.lower()):
+                user_name = user_command = None
+                interaction = await functions.get_interaction(message)
+                if interaction is None: return
+                if interaction.name != 'hunt': return
+                user_command = '/hunt'
+                user = interaction.user
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                if user_settings.tracking_enabled:
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                if not user_settings.alert_hunt.enabled: return
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time

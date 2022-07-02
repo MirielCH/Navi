@@ -1,13 +1,13 @@
 # farm.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 import discord
 from discord.ext import commands
 
-from database import errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, settings
+from database import cooldowns, errors, reminders, tracking, users
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class FarmCog(commands.Cog):
@@ -29,7 +29,12 @@ class FarmCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Farm cooldown
-            if 'you have farmed already' in message_title.lower():
+            search_strings = [
+                'you have farmed already', #English
+                'ya cultivaste recientemente', #Spanish
+                'você plantou recentemente', #Portuguese
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
                 user = await functions.get_interaction_user(message)
                 if user is not None:
@@ -39,8 +44,10 @@ class FarmCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -89,7 +96,9 @@ class FarmCog(commands.Cog):
                             message
                         )
                         return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -101,13 +110,22 @@ class FarmCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Farm
-            if 'have grown from the seed' in message_content.lower():
+            search_strings = [
+               'have grown from the seed', #English
+               'crecieron de la semilla', #Spanish
+               'partir da semente', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
+                    search_patterns = [
+                        "^\*\*(.+?)\*\* plant", #English, Spanish, Portuguese
+                    ]
                     try:
-                        user_name = re.search("^\*\*(.+?)\*\* plants", message_content).group(1)
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        user_name = user_name_match.group(1)
                         user_name = await functions.encode_text(user_name)
                     except Exception as error:
                         if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -136,11 +154,16 @@ class FarmCog(commands.Cog):
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 if not user_settings.alert_farm.enabled: return
                 message_history = await message.channel.history(limit=50).flatten()
-                if 'bread seed in the ground' in message_content.lower():
+                search_strings = [
+                    '{} in the ground', #English
+                    '{} en el suelo', #Spanish
+                    '{} no solo', #Portuguese
+                ]
+                if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm bread' if not slash_command else '/farm seed: bread'
-                elif 'carrot seed in the ground' in message_content.lower():
+                elif any(search_string.format('carrot seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm carrot' if not slash_command else '/farm seed: carrot'
-                elif 'potato seed in the ground' in message_content.lower():
+                elif any(search_string.format('potato seed') in message_content.lower() for search_string in search_strings):
                     user_command = 'rpg farm potato' if not slash_command else '/farm seed: potato'
                 else:
                     user_command = 'rpg farm' if not slash_command else '/farm'
@@ -151,7 +174,12 @@ class FarmCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if 'also got' in message_content.lower():
+                search_strings = [
+                    'also got', #English
+                    'también consiguió', #Spanish
+                    'também conseguiu', #Portuguese
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings):
                     if 'potato seed**' in message_content.lower():
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_POTATO)
                     elif 'carrot seed**' in message_content.lower():
@@ -159,31 +187,29 @@ class FarmCog(commands.Cog):
                     elif 'bread seed**' in message_content.lower():
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.SEED_BREAD)
 
-            # Farm event
+            # Farm event non-slash (always English)
             if ('hits the floor with the' in message_content.lower()
                 or 'is about to plant another seed' in message_content.lower()):
-                user_name = user_command = None
-                user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '/farm'
-                else:
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in farm event message: {message_content}',
-                            message
-                        )
-                        return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
+                interaction = await functions.get_interaction(message)
+                if interaction is not None: return
+                user_name = user_command = user_command_message = None
+                try:
+                    user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
+                    user_name = await functions.encode_text(user_name)
+                except Exception as error:
+                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                        await message.add_reaction(emojis.WARNING)
+                    await errors.log_error(
+                        f'User not found in farm event non-slash message: {message_content}',
+                        message
+                    )
+                    return
+                user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
                         await message.add_reaction(emojis.WARNING)
                     await errors.log_error(
-                        f'User not found in farm event message: {message_content}',
+                        f'User not found in farm event non-slash message: {message_content}',
                         message
                     )
                     return
@@ -196,24 +222,34 @@ class FarmCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 if not user_settings.alert_farm.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                if user_command is None:
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if (msg.content.lower().startswith('rpg ') and 'farm' in msg.content.lower()
-                                and msg.author == user):
-                                user_command_message = msg
-                                break
-                    if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the farm event message.',
-                            message
-                        )
-                        return
-                    user_command = user_command_message.content.lower()
+                user_command = 'rpg farm'
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
+                reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'farm', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            # Farm event slash (all languages)
+            if  (('<:seed' in message_content.lower() and '!!' in message_content.lower())
+                 or ':crossed_swords:' in message_content.lower()
+                 or ':sweat_drops:' in message_content.lower()):
+                user_name = user_command = None
+                interaction = await functions.get_interaction(message)
+                if interaction is None: return
+                if interaction.name != 'farm': return
+                user_command = '/farm'
+                user = interaction.user
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                if user_settings.tracking_enabled:
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                if not user_settings.alert_farm.enabled: return
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

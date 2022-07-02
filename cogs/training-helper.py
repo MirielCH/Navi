@@ -25,10 +25,20 @@ class TrainingHelperCog(commands.Cog):
             message_description = ''
             if embed.description: message_description = embed.description
             # Void area unseal times
-            if 'help us unseal the next areas!' in message_description.lower():
+            search_strings = [
+                'help us unseal the next areas!', #English
+                'ayudanos a abrir las siguientes áreas!', #Spanish
+                'ajude-nos a abrir as seguintes áreas!', #Portuguese
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
                 updated_settings = False
                 for field in embed.fields:
-                    if 'unsealed' in field.value.lower():
+                    search_strings = [
+                        'unsealed', #English
+                        'abierto', #Spanish
+                        'aberto', #Portuguese, UNCONFIRMED
+                    ]
+                    if any(search_string in field.value.lower() for search_string in search_strings):
                         try:
                             area_no = int(field.name[-2:])
                             seal_timestring = re.search("__: (.+?)$", field.value).group(1).replace(' ','')
@@ -50,7 +60,18 @@ class TrainingHelperCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Training helper
-            if '** is training in the' in message_content.lower() and not 'in the mine!' in message_content.lower():
+            search_strings_included = [
+                '** is training in the', #English
+                '** está entrenando', #Spanish
+                '** está treinando', #Portuguese
+            ]
+            search_strings_not_included = [
+                'in the mine!', #English
+                'en la mina!', #Spanish
+                'na mina!', #Portuguese
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings_included)
+                and all(search_string not in message_content.lower() for search_string in search_strings_not_included)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:

@@ -1,5 +1,7 @@
 # nsmb-bigarena.py
 
+import calendar
+from datetime import datetime, timedelta
 import re
 
 import discord
@@ -20,9 +22,18 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
         if message.author.id != settings.EPIC_RPG_ID: return
         if message.embeds: return
         message_content = message.content
-        if ('successfully registered for the next **big arena** event!' in message_content.lower()
-            or 'successfully registered for the next **minin\'tboss** event!' in message_content.lower()
-            or 'you are already registered!' in message_content.lower()):
+        search_strings = [
+            'successfully registered for the next **big arena** event!', #English 1
+            'successfully registered for the next **minin\'tboss** event!', #English 2
+            'you are already registered!', #English 3
+            'se registró exitosamente para el evento de **big arena**!', #Spanish 1
+            'se registró exitosamente para el evento de **minin\'tboss**!', #Spanish 2
+            'ya estás en registro!', #Spanish 3
+            'se inscreveu com sucesso no evento **minin\'tboss**!', #Portuguese 1
+            'se inscreveu com sucesso no evento **big arena**!', #Portuguese 2
+            'você já está em registro!', #Portuguese 3
+        ]
+        if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = None
             user = await functions.get_interaction_user(message)
             slash_command = True if user is not None else False
@@ -58,15 +69,21 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             if not user_settings.bot_enabled: return
             if slash_command:
                 interaction = await functions.get_interaction(message)
-                user_command = '/big arena' if interaction.name == 'big' else '/minint'
+                if interaction.name == 'big':
+                    user_command = '/big arena'
+                elif interaction.name == 'minintboss':
+                    user_command = '/minintboss'
+                else:
+                    return
                 user_command = f'{user_command} join: true'
             else:
                 message_history = await message.channel.history(limit=50).flatten()
                 user_command_message = None
                 for msg in message_history:
                     if msg.content is not None:
-                        if ((msg.content.lower().startswith('rpg ')
-                            and 'big arena join' in msg.content.lower() or 'minintboss join' in msg.content.lower())
+                        msg_content = msg.content.lower().replace(' ','')
+                        if ((msg_content.startswith('rpg')
+                            and 'bigarenajoin' in msg_content or 'minintbossjoin' in msg_content)
                             and msg.author == user):
                             user_command_message = msg
                             break
@@ -87,7 +104,13 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 if not user_settings.alert_big_arena.enabled: return
                 event = 'big-arena'
                 reminder_message = user_settings.alert_big_arena.message.replace('{event}', event.replace('-',' '))
-            timestring = re.search("next event is in \*\*(.+?)\*\*", message_content).group(1)
+            search_patterns = [
+                    'next event is in \*\*(.+?)\*\*', #English
+                    'siguiente evento es en \*\*(.+?)\*\*', #Spanish
+                    'próximo evento (?:será|é) em \*\*(.+?)\*\*', #Portuguese
+                ]
+            timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+            timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, event, time_left,

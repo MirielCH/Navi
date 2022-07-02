@@ -358,3 +358,20 @@ TRACKED_COMMANDS = (
     'adventure',
     'epic guard'
 ) # Sorted by cooldown length
+
+
+# Translations
+COOLDOWN_USERNAME_PATTERNS = [
+    "^(.+?) — cooldown", #All languages
+]
+
+COOLDOWN_TIMESTRING_PATTERNS = [
+    "wait at least \*\*(.+?)\*\*...", #English
+    "espera al menos \*\*(.+?)\*\*...", #Spanish
+    "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
+]
+
+EPIC_NPC_NAMES = [
+    'EPIC NPC', #English
+    'NPC ÉPICO', #Spanish, Portuguese
+]

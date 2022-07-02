@@ -20,7 +20,12 @@ class HorseRaceCog(commands.Cog):
         if message.author.id != settings.EPIC_RPG_ID: return
         if message.embeds: return
         message_content = message.content
-        if 'the next race is in' in message_content.lower():
+        search_strings = [
+            'the next race is in', #English
+            'la siguiente carrera es en', #Spanish
+            'próxima corrida é em', #Portuguese
+        ]
+        if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = None
             user = await functions.get_interaction_user(message)
             if user is None:
@@ -52,7 +57,13 @@ class HorseRaceCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.alert_horse_race.enabled: return
-            timestring = re.search("next race is in \*\*(.+?)\*\*", message_content).group(1)
+            search_patterns = [
+                'next race is in \*\*(.+?)\*\*', #English
+                'la siguiente carrera es en \*\*(.+?)\*\*', #Spanish
+                'próxima corrida é em \*\*(.+?)\*\*', #Portuguese
+            ]
+            timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+            timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')
             reminder: reminders.Reminder = (

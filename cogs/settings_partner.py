@@ -170,7 +170,7 @@ class SettingsPartnerCog(commands.Cog):
             return
         user: users.User = await users.get_user(ctx.author.id)
         if user.partner_channel_id is not None:
-            channel = await self.bot.fetch_channel(user.partner_channel_id)
+            channel = await functions.get_discord_channel(self.bot, user.partner_channel_id)
             await ctx.reply(
                 f'Your current partner alert channel is `{channel.name}` (ID `{channel.id}`).\n'
                 f'If you want to change this, use `{prefix}partner channel set` within your new alert channel.\n'
@@ -229,8 +229,7 @@ class SettingsPartnerCog(commands.Cog):
                 f'**{ctx.author.name}**, you don\'t have a partner alert channel set, there is no need to reset it.\n'
             )
             return
-        await self.bot.wait_until_ready()
-        channel = await self.bot.fetch_channel(user.partner_channel_id)
+        channel = await functions.get_discord_channel(self.bot, user.partner_channel_id)
         try:
             await ctx.reply(
                 f'**{ctx.author.name}**, do you want to remove `{channel.name}` as your partner alert channel? '

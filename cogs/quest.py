@@ -32,15 +32,30 @@ class QuestCog(commands.Cog):
             if embed.description: message_description = embed.description
 
             # Guild quest check
-            if 'do a guild raid' in field_value.lower() and 'are you looking for a quest' in message_description.lower():
+            search_strings_guild_raid = [
+                'do a guild raid', #English
+                'has un guild raid', #Spanish
+                'faça uma guild raid', #Portuguese
+            ]
+            search_strings_quest = [
+                'are you looking for a quest', #English
+                'estas buscando una misión', #Spanish
+                'está procurando uma missão', #Portuguese
+            ]
+            if (any(search_string in field_value.lower() for search_string in search_strings_guild_raid)
+                and any(search_string in message_description.lower() for search_string in search_strings_quest)):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?) — quest", #All languages
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s quest", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -94,7 +109,12 @@ class QuestCog(commands.Cog):
                 )
 
             # Quest cooldown
-            if 'you have already claimed a quest' in message_title.lower():
+            search_strings = [
+                'you have already claimed a quest', #English
+                'ya reclamaste una misión', #Spanish
+                'você já reivindicou uma missão', #Portuguese
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -102,8 +122,10 @@ class QuestCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -153,7 +175,9 @@ class QuestCog(commands.Cog):
                         )
                         return
                     user_command = user_command_message.content.lower()
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -163,15 +187,24 @@ class QuestCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Quest in void areas
-            if 'i don\'t think i can give you any quest here' in message_description.lower():
+            search_strings = [
+                'i don\'t think i can give you any quest here', #English
+                'misión aquí', #Spanish
+                'missão aqui', #Portuguese, UNCONFIRMED
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg quest' if user is None else '/quest start'
                 if user is None:
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?) — quest", #All languages
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s quest", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -207,7 +240,12 @@ class QuestCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Epic Quest
-            if '__wave #1__' in message_description.lower():
+            search_strings = [
+                '__wave #1__', #English
+                '__oleada #1__', #Spanish
+                '__onda #1__', #Portuguese
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg epic quest' if user is None else '/epic quest'
@@ -215,8 +253,12 @@ class QuestCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?) — epic quest", #All languages
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s epic quest", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -272,8 +314,15 @@ class QuestCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Quest
-            if ('you did not accept the quest' in message_content.lower()
-                or 'got a **new quest**!' in message_content.lower()):
+            search_strings = [
+                'got a **new quest**!', #English accepted
+                'you did not accept the quest', #English declined
+                'consiguió una **nueva misión**', #Spanish accepted
+                'no aceptaste la misión', #Spanish declined
+                'conseguiu uma **nova missão**', #Portuguese accepted
+                'você não aceitou a missão', #Portuguese declined
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = '/quest start' if user is not None else 'rpg quest'
@@ -345,7 +394,12 @@ class QuestCog(commands.Cog):
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
             # Aborted guild quest
-            if 'you don\'t have a quest anymore' in message_content.lower() and message.mentions:
+            search_strings = [
+                'you don\'t have a quest anymore', #English
+                'ya no tienes una misión', #Spanish
+                'você não tem mais uma missão', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings) and message.mentions:
                 user = message.mentions[0]
                 try:
                     user_settings: users.User = await users.get_user(user.id)

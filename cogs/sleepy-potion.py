@@ -22,10 +22,17 @@ class SleepyPotionCog(commands.Cog):
         if message.embeds: return
         message_content = message.content
         # Sleepy Potion
-        if 'has slept for a day' in message_content.lower():
+        search_strings = [
+            'has slept for a day', #English
+        ]
+        if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = user = None
+            search_patterns = [
+                '^\*\*(.+?)\*\* drinks', #English
+            ]
+            user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
             try:
-                user_name = re.search("^\*\*(.+?)\*\* drinks", message_content).group(1)
+                user_name = user_name_match.group(1)
                 user_name = await functions.encode_text(user_name)
             except Exception as error:
                 if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

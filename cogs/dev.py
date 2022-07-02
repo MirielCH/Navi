@@ -2,6 +2,7 @@
 """Internal dev commands"""
 
 import asyncio
+from datetime import datetime, timedelta
 import importlib
 import re
 import sys
@@ -286,12 +287,15 @@ class DevCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
-        string = (
-            f'This is a {{place holder}} and {{anotherone}}'
-        )
-        match = re.search('\{(.+?)\}', string)
-        matches = re.findall('\{(.+?)\}', string)
-        await ctx.reply(matches)
+        today = datetime.utcnow().replace(hour=18, minute=0, second=0, microsecond=0)
+        import calendar
+        next_monday = today + timedelta((calendar.MONDAY - 1 - today.weekday()) % 7 + 1)
+        next_wednesday = today + timedelta((calendar.WEDNESDAY - 1 - today.weekday()) % 7 + 1)
+        next_friday = today + timedelta((calendar.FRIDAY - 1 - today.weekday()) % 7 + 1)
+        how_many_none = 0
+        for user in self.bot.users:
+            if user is None: how_many_none += 1
+        await ctx.reply(f'Length of `bot.users`: {len(self.bot.users)} ({how_many_none} are None)')
 
 
 def setup(bot):

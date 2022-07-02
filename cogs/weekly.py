@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class WeeklyCog(commands.Cog):
@@ -27,8 +27,13 @@ class WeeklyCog(commands.Cog):
                 icon_url = embed.author.icon_url
             if embed.title: message_title = str(embed.title)
 
-            # Daily cooldown
-            if 'you have claimed your weekly rewards already' in message_title.lower():
+            # Weekly cooldown
+            search_strings = [
+                'you have claimed your weekly rewards already', #English
+                'ya reclamaste tu recompenza semanal', #Spanish
+                'você já reivindicou sua recompensa semanal', #Portuguese
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg weekly' if user is None else '/weekly'
@@ -36,8 +41,10 @@ class WeeklyCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -64,7 +71,9 @@ class WeeklyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_weekly.enabled: return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_weekly.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -73,8 +82,11 @@ class WeeklyCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            # Daily
-            if "'s weekly reward" in message_author.lower():
+            # Weekly
+            search_strings = [
+               " — weekly", #All languages
+            ]
+            if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg weekly' if user is None else '/weekly'
@@ -82,8 +94,12 @@ class WeeklyCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        search_patterns = [
+                            "^(.+?) — weekly", #All languages
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
                         try:
-                            user_name = re.search("^(.+?)'s weekly reward", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:

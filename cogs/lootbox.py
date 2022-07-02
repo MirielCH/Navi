@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class BuyCog(commands.Cog):
@@ -28,7 +28,12 @@ class BuyCog(commands.Cog):
             if embed.title: message_title = str(embed.title)
 
             # Lootbox cooldown
-            if 'you have already bought a lootbox' in message_title.lower():
+            search_strings = [
+                'you have already bought a lootbox', #English
+                'ya compraste una lootbox', #Spanish
+                'você já comprou uma lootbox', #Portuguese
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 user_command = 'rpg buy [lootbox]' if user is None else '/buy item: [lootbox]'
@@ -36,8 +41,10 @@ class BuyCog(commands.Cog):
                     try:
                         user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
                     except:
+                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
+                                                                                  message_author)
                         try:
-                            user_name = re.search("^(.+?)'s cooldown", message_author).group(1)
+                            user_name = user_name_match.group(1)
                             user_name = await functions.encode_text(user_name)
                         except Exception as error:
                             if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
@@ -64,7 +71,9 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
-                timestring = re.search("wait at least \*\*(.+?)\*\*...", message_title).group(1)
+                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                                                                           message_title)
+                timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -76,7 +85,11 @@ class BuyCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
             # Buy lootbox
-            if ("lootbox` successfully bought for" in message_content.lower()
+            search_strings = [
+                'lootbox` successfully bought', #English
+                'lootbox` comprado(s)', #Spanish, Portuguese
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings)
                 and not 'guild ring' in message_content.lower()
                 and not 'smol coin' in message_content.lower()):
                 user = await functions.get_interaction_user(message)
