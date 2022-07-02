@@ -325,24 +325,26 @@ class WorkCog(commands.Cog):
                     ]
                     if any(search_string in message_content.lower() for search_string in search_strings_chop_proc):
                         await message.add_reaction(emojis.WOAH_THERE)
-                    elif any(search_string in message_content.lower() for search_string in search_strings_mine_proc):
+                    if any(search_string in message_content.lower() for search_string in search_strings_mine_proc):
                         await message.add_reaction(emojis.SWEATY)
-                    elif any(search_string in message_content.lower() for search_string in search_strings_fish_proc):
+                    if any(search_string in message_content.lower() for search_string in search_strings_fish_proc):
                         await message.add_reaction(emojis.FISHPOGGERS)
-                    elif any(search_string in message_content.lower() for search_string in search_strings_pickup_proc):
+                    if any(search_string in message_content.lower() for search_string in search_strings_pickup_proc):
                         await message.add_reaction(emojis.WOW)
-                    elif 'mega log' in message_content.lower() or '**mega** log' in message_content.lower():
+                    if 'mega log' in message_content.lower() or '**mega** log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
                     elif 'hyper log' in message_content.lower() or '**hyper** log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
                     elif 'ultra log' in message_content.lower() or '**ultra** log' in message_content.lower():
                         await message.add_reaction(emojis.PEEPO_WOAH)
-                    elif 'watermelon' in message_content.lower():
+                    if 'watermelon' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_MELON)
-                    elif 'ultimate log' in message_content.lower() or '**ultimate** log' in message_content.lower():
-                        await message.add_reaction(emojis.PANDA_COOL)
-                    elif 'super fish' in message_content.lower() or '**super** log' in message_content.lower():
+                    if 'ultimate log' in message_content.lower() or '**ultimate** log' in message_content.lower():
+                        await message.add_reaction(emojis.WOAH)
+                    if 'super fish' in message_content.lower() or '**super** log' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_FISH)
+                    if '<:coolness' in message_content.lower():
+                        await message.add_reaction(emojis.PANDA_COOL)
 
             # Work event non-slash (always English)
             search_strings = [

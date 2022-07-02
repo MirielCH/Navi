@@ -251,6 +251,32 @@ class FunCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
                 await message.add_reaction(emojis.XMAS_YAY)
 
+            search_strings = [
+                '<:coolness', #All languages
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    search_patterns = [
+                        "\*\*(.+?)\*\* (also )?earned [0-9] <:coolness", #English
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match is None:
+                        await errors.log_error(
+                            'Couldn\'t find a user for the coolness reaction.',
+                            message
+                        )
+                        return
+                    user_name = user_name_match.group(1)
+                    user_name = await functions.encode_text(user_name)
+                    user = await functions.get_guild_member_by_name(message.guild, user_name)
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
+                await message.add_reaction(emojis.PANDA_COOL)
+
         if message.embeds and message.author.id == settings.EPIC_RPG_ID:
             embed: discord.Embed = message.embeds[0]
 

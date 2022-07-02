@@ -388,7 +388,7 @@ class RubyCounterCog(commands.Cog):
                     'llevaba dentro (.+?) <:ruby', #Spanish proc pickup commands
                     'deles tinha (.+?) <:ruby', #Portuguese proc pickup commands
                 ]
-                ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
+                ruby_count_match = await functions.get_match_from_patterns(search_patterns, message_content.lower()) #case
                 try:
                     ruby_count = ruby_count_match.group(1)
                     ruby_count = int(ruby_count.replace(',',''))

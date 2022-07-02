@@ -197,6 +197,36 @@ class PetsCog(commands.Cog):
                     return
                 await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
 
+            search_strings = [
+                'voidog', #All languages (probably)
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    message_history = await message.channel.history(limit=50).flatten()
+                    for msg in message_history:
+                        if msg.content is not None:
+                            if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' adv' in msg.content.lower()
+                                and not msg.author.bot):
+                                user = msg.author
+                                break
+                    if user is None:
+                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+                            await message.add_reaction(emojis.WARNING)
+                        await errors.log_error(
+                            'Couldn\'t find a user for the pet voidog time travel reaction.',
+                            message
+                        )
+                        return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if (not user_settings.bot_enabled or not user_settings.alert_pets.enabled
+                    or not user_settings.reactions_enabled):
+                    return
+                await message.add_reaction(emojis.VOIDOG)
+
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_description = icon_url = ''

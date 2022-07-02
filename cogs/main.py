@@ -2,6 +2,7 @@
 """Contains error handling and the help and about commands"""
 
 from datetime import datetime
+from typing import Union
 
 import discord
 from discord.ext import commands
@@ -19,12 +20,15 @@ class MainCog(commands.Cog):
     # Commands
     @commands.command(name='help', aliases=('h',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
-    async def main_help(self, ctx: commands.Context) -> None:
+    async def main_help(self, ctx: Union[commands.Context, discord.Message]) -> None:
         """Main help command"""
-        if ctx.prefix.lower() == 'rpg ':
-            return
-        embed = await embed_main_help(ctx)
-        await ctx.reply(embed=embed)
+        if isinstance(ctx, commands.Context):
+            if ctx.prefix.lower() == 'rpg ': return
+            message = ctx.message
+        else:
+            message = ctx
+        embed = await embed_main_help(message)
+        await message.reply(embed=embed)
 
     @commands.command(aliases=('inv',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
@@ -102,6 +106,16 @@ class MainCog(commands.Cog):
             await errors.log_error(error, ctx)
             if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
 
+    @commands.Cog.listener()
+    async def on_message(self, message: discord.Message) -> None:
+        """Runs when a message is sent in a channel."""
+        if message.author.bot: return
+        if (
+            self.bot.user.mentioned_in(message)
+            and (message.content.lower().replace('<@!','').replace('<@','').replace('>','')
+                 .replace(str(self.bot.user.id),'')) == ''
+        ):
+            await self.main_help(message)
 
     # Events
     @commands.Cog.listener()
@@ -135,9 +149,9 @@ def setup(bot):
 
 
 # --- Embeds ---
-async def embed_main_help(ctx: commands.Context) -> discord.Embed:
+async def embed_main_help(message: discord.Message) -> discord.Embed:
     """Main menu embed"""
-    guild = await guilds.get_guild(ctx.guild.id)
+    guild = await guilds.get_guild(message.guild.id)
     prefix = guild.prefix
 
     reminder_management = (
@@ -199,7 +213,7 @@ async def embed_main_help(ctx: commands.Context) -> discord.Embed:
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'NAVI',
-        description =   f'Hey! **{ctx.author.name}**! Hello!'
+        description =   f'Hey! **{message.author.name}**! Hello!'
     )
     embed.add_field(name='REMINDERS', value=reminder_management, inline=False)
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
