@@ -29,8 +29,8 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             'se registró exitosamente para el evento de **big arena**!', #Spanish 1
             'se registró exitosamente para el evento de **minin\'tboss**!', #Spanish 2
             'ya estás en registro!', #Spanish 3
-            'se inscreveu com sucesso no evento **minin\'tboss**!', #Portuguese 1
-            'se inscreveu com sucesso no evento **big arena**!', #Portuguese 2
+            'se inscreveu com sucesso no evento de **minin\'tboss**!', #Portuguese 1
+            'se inscreveu com sucesso no evento de**big arena**!', #Portuguese 2
             'você já está em registro!', #Portuguese 3
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):

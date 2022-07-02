@@ -24,7 +24,7 @@ class PetTournamentCog(commands.Cog):
             search_strings = [
                 'pet successfully sent to the pet tournament!', #English
                 'mascota exitosamente enviada al torneo de mascotas!', #Spanish
-                'pet enviado com sucesso para o torneio de mascotes!', #Portuguese
+                'pet enviado com sucesso para o torneio de pets!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
