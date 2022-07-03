@@ -39,8 +39,8 @@ class QuestCog(commands.Cog):
             ]
             search_strings_quest = [
                 'are you looking for a quest', #English
-                'estas buscando una misión', #Spanish
-                'está procurando uma missão', #Portuguese
+                'buscando una misión', #Spanish
+                'procurando uma missão', #Portuguese
             ]
             if (any(search_string in field_value.lower() for search_string in search_strings_guild_raid)
                 and any(search_string in message_description.lower() for search_string in search_strings_quest)):
