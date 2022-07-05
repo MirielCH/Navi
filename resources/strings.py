@@ -210,21 +210,21 @@ ACTIVITIES_WITH_COOLDOWN = (
 
 WORK_COMMANDS = (
     'chop',
-    'axe',
+    'pickaxe',
     'bowsaw',
     'chainsaw',
     'fish',
     'net',
-    'boat',
     'bigboat',
     'pickup',
     'ladder',
     'tractor',
     'greenhouse',
     'mine',
-    'pickaxe',
     'drill',
     'dynamite',
+    'axe',
+    'boat',
 )
 
 MONSTERS_ADVENTURE = (
