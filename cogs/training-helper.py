@@ -74,6 +74,7 @@ class TrainingHelperCog(commands.Cog):
                 and all(search_string not in message_content.lower() for search_string in search_strings_not_included)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     try:
                         user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
@@ -100,7 +101,7 @@ class TrainingHelperCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
-                answer = await functions.get_training_answer(message_content.lower())
+                answer = await functions.get_training_answer(message_content.lower(), slash_command)
                 if user_settings.dnd_mode_enabled:
                     await message.reply(answer)
                 else:

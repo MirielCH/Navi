@@ -418,7 +418,7 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
     return message
 
 
-async def get_training_answer(message_content: str) -> str:
+async def get_training_answer(message_content: str, slash_command: bool = False) -> str:
     """Returns the answer to a training question based on the message content."""
     answer = None
     search_strings_river = [
@@ -445,11 +445,11 @@ async def get_training_answer(message_content: str) -> str:
     ]
     if any(search_string in message_content for search_string in search_strings_river):
         if '<:epicfish' in message_content:
-            answer = '`3` / `EPIC fish`'
+            answer = '`3`' if not slash_command else '`EPIC fish`'
         elif '<:goldenfish' in message_content:
-            answer = '`2` / `golden fish`'
+            answer = '`2`' if not slash_command else '`golden fish`'
         elif '<:normiefish' in message_content:
-            answer = '`1` / `normie fish`'
+            answer = '`1`' if not slash_command else '`normie fish`'
     elif any(search_string in message_content for search_string in search_strings_field):
         search_strings_first = [
             '**first**', #English
