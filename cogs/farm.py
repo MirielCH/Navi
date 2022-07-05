@@ -111,9 +111,9 @@ class FarmCog(commands.Cog):
             message_content = message.content
             # Farm
             search_strings = [
-               'have grown from the seed', #English
-               'crecieron de la semilla', #Spanish
-               'partir da semente', #Portuguese
+               'seed in the ground...', #English
+               'en el suelo...', #Spanish
+               'no solo...', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
