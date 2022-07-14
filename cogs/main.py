@@ -206,8 +206,8 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
 
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
-        f'{emojis.BP} :flag_es: Spanish (EXPERIMENTAL)\n'
-        f'{emojis.BP} :flag_br: Portuguese (EXPERIMENTAL)\n'
+        f'{emojis.BP} :flag_es: Spanish\n'
+        f'{emojis.BP} :flag_br: Portuguese\n'
     )
 
     embed = discord.Embed(

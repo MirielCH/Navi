@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, functions, exceptions, logs, settings
+from resources import emojis, functions, exceptions, logs, settings, strings
 
 
 class HealWarningCog(commands.Cog):
@@ -33,33 +33,26 @@ class HealWarningCog(commands.Cog):
         ]
         if any(search_string in message_content.lower() for search_string in search_strings_hunt_together):
             user_name = None
+            interaction = await functions.get_interaction(message)
             search_patterns = [
-                    "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
-                    "\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
-                    "\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
+                    r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
+                    r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                    r"\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
                 ]
             user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-            try:
-                user_name = user_name_match.group(1)
-                partner_name = user_name_match.group(2)
+            if user_name_match:
+                user_name, partner_name = user_name_match.groups()
                 user_name_encoded = await functions.encode_text(user_name)
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'User or partner not found in hunt together message for heal warning: {message_content}'
-                )
+            else:
+                await functions.add_warning_reaction(message)
+                await errors.log_error('User or partner not found in hunt together message for heal warning.')
                 return
             user = await functions.get_interaction_user(message)
             if user is None:
                 user = await functions.get_guild_member_by_name(message.guild, user_name_encoded)
             if user is None:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'User not found in hunt together message for heal warning: {message_content}',
-                    message
-                )
+                await functions.add_warning_reaction(message)
+                await errors.log_error('User not found in hunt together message for heal warning.', message)
                 logs.logger.error(
                     f'User not found in hunt together message for heal warning: {message_content}\n'
                     f'Full guild.members list:\n{message.guild.members}'
@@ -73,15 +66,15 @@ class HealWarningCog(commands.Cog):
             if message_content.startswith('__'):
                 partner_start = message_content.rfind(partner_name)
                 message_content_user = message_content[:partner_start]
-                health_match = re.search('-(.+?) hp \(:heart: (.+?)/', message_content_user.lower())
+                health_match = re.search(r'-(.+?) hp \(:heart: (.+?)/', message_content_user.lower())
             else:
                 search_patterns = [
-                    f'\*\*{re.escape(user_name)}\*\* lost (.+?) hp, remaining hp is (.+?)/', #English
-                    f'\*\*{re.escape(user_name)}\*\* perdió (.+?) hp, la hp restante es (.+?)/', #Spanish
-                    f'\*\*{re.escape(user_name)}\*\* perdeu (.+?) hp, restam (.+?)/', #Portuguese
+                    fr'\*\*{re.escape(user_name)}\*\* lost (.+?) hp, remaining hp is (.+?)/', #English
+                    fr'\*\*{re.escape(user_name)}\*\* perdió (.+?) hp, la hp restante es (.+?)/', #Spanish
+                    fr'\*\*{re.escape(user_name)}\*\* perdeu (.+?) hp, restam (.+?)/', #Portuguese
                 ]
                 health_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
-            if health_match is None:
+            if not health_match:
                 search_strings = [
                     f'{user_name}** lost but', #English 1
                     'but lost fighting', #English 1
@@ -91,32 +84,18 @@ class HealWarningCog(commands.Cog):
                     'mas perdeu a luta', #Portuguese 2
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Health not found in hunt together message for heal warning: {message_content}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Health not found in hunt together message for heal warning.', message)
                     return
-            try:
-                if health_match is not None:
-                    health_lost = health_match.group(1).replace(',','')
-                    health_lost = int(health_lost)
-                    health_remaining = health_match.group(2).replace(',','')
-                    health_remaining = int(health_remaining)
-                else:
-                    health_lost = 100
-                    health_remaining = 0
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Health not found in hunt together message for heal warning: {error}',
-                    message
-                )
-                return
+            if health_match:
+                health_lost = int(health_match.group(1).replace(',',''))
+                health_remaining = int(health_match.group(2).replace(',',''))
+            else:
+                health_lost = 100
+                health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 9)):
-                warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'
+                action = strings.SLASH_COMMANDS['heal'] if interaction is not None else 'heal'
+                warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:
                         await message.channel.send(f'{warning} {user.mention}')
@@ -128,28 +107,20 @@ class HealWarningCog(commands.Cog):
         # Hunt solo and adventure
         elif any(search_string in message_content.lower() for search_string in search_strings_hunt_adv):
             user_name = None
-            try:
-                user_name_match = re.search("^\*\*(.+?)\*\* ", message_content)
-                user_name = user_name_match.group(1)
-                user_name_encoded = await functions.encode_text(user_name)
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'User not found in hunt/adventure message for heal warning: {message_content}',
-                    message
-                )
+            interaction = await functions.get_interaction(message)
+            user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+            if user_name_match:
+                user_name_encoded = await functions.encode_text(user_name_match.group(1))
+            else:
+                await functions.add_warning_reaction(message)
+                await errors.log_error('User not found in hunt/adventure message for heal warning.', message)
                 return
             user = await functions.get_interaction_user(message)
             if user is None:
                 user = await functions.get_guild_member_by_name(message.guild, user_name_encoded)
             if user is None:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'User not found in hunt/adventure message for heal warning: {message_content}',
-                    message
-                )
+                await functions.add_warning_reaction(message)
+                await errors.log_error('User not found in hunt/adventure message for heal warning.', message)
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
@@ -157,12 +128,12 @@ class HealWarningCog(commands.Cog):
                 return
             if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
             search_patterns = [
-                'lost (.+?) hp, remaining hp is (.+?)/', #English
-                '(?:perdió|perdiste) (.+?) hp, la hp restante es (.+?)/', #Spanish
-                'perdeu (.+?) hp, restam (.+?)/', #Spanish
+                r'lost (.+?) hp, remaining hp is (.+?)/', #English
+                r'(?:perdió|perdiste) (.+?) hp, la hp restante es (.+?)/', #Spanish
+                r'perdeu (.+?) hp, restam (.+?)/', #Spanish
             ]
             health_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
-            if health_match is None:
+            if not health_match:
                 search_strings = [
                     f'{user_name}** lost but', #English 1
                     'but lost fighting', #English 1
@@ -172,32 +143,18 @@ class HealWarningCog(commands.Cog):
                     'mas perdeu a luta', #Portuguese 2
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Health not found in hunt/adventure message for heal warning: {message_content}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Health not found in hunt/adventure message for heal warning.', message)
                     return
-            try:
-                if health_match is not None:
-                    health_lost = health_match.group(1).replace(',','')
-                    health_lost = int(health_lost)
-                    health_remaining = health_match.group(2).replace(',','')
-                    health_remaining = int(health_remaining)
-                else:
-                    health_lost = 100
-                    health_remaining = 0
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Health not found in hunt/adventure message for heal warning: {error}',
-                    message
-                )
-                return
+            if health_match:
+                health_lost = int(health_match.group(1).replace(',',''))
+                health_remaining = int(health_match.group(2).replace(',',''))
+            else:
+                health_lost = 100
+                health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 10)):
-                warning = f'Hey! Time to heal! {emojis.LIFE_POTION}'
+                action = strings.SLASH_COMMANDS['heal'] if interaction is not None else 'heal'
+                warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:
                         await message.channel.send(f'{warning} {user.mention}')

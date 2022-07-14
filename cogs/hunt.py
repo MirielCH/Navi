@@ -37,22 +37,17 @@ class HuntCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = None
                 interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is not None: user_command = '/hunt'
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
-                                                                              message_author)
-                    try:
-                        user_name = user_name_match.group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in hunt cooldown message: {message.embeds[0].fields}',
-                            message
-                        )
+                if interaction_user is not None: user_command = strings.SLASH_COMMANDS['hunt']
+                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                else:
+                    user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in hunt cooldown message.', message)
                         return
                 if user_id is not None:
                     try:
@@ -63,42 +58,38 @@ class HuntCog(commands.Cog):
                     embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if embed_user is not None: user_id = embed_user.id
                 if user_command is None:
-                    message_history = await message.channel.history(limit=50).flatten()
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if msg.content.lower().replace(' ','').startswith('rpghunt'):
-                                user_command_message = msg
-                                interaction_user = msg.author
-                                break
-                    if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the hunt cooldown message.',
-                            message
+                    user_command_message, user_command = (
+                        await functions.get_message_from_channel_history(
+                            message.channel,
+                            r"^rpg\s+hunt\b",
                         )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the hunt cooldown message.', message)
                         return
-                    user_command = user_command_message.content.lower()
-                    user_command = user_command[8:].strip()
-                    arguments = ''
-                    for argument in user_command.split():
-                        if argument in ('h', 'hardmode') and 'hardmode' not in arguments:
-                            arguments = f'{arguments} hardmode'
-                        if argument in ('t', 'together') and 'together' not in arguments:
-                            arguments = f'{arguments} together'
-                        if argument in ('a', 'alone') and 'alone' not in arguments:
-                            arguments = f'{arguments} alone'
-                        if argument in ('n', 'new') and 'new' not in arguments:
-                            arguments = f'{arguments} new'
-                    user_command = f'rpg hunt {arguments.strip()}'.strip()
+                    interaction_user = user_command_message.author
+                    for argument in user_command_message.content.lower().split():
+                        if argument in ('h', 'hardmode') and 'hardmode' not in user_command:
+                            user_command = f'{user_command} hardmode'
+                        if argument in ('t', 'together') and 'together' not in user_command:
+                            user_command = f'{user_command} together'
+                        if argument in ('a', 'alone') and 'alone' not in user_command:
+                            user_command = f'{user_command} alone'
+                        if argument in ('n', 'new') and 'new' not in user_command:
+                            user_command = f'{user_command} new'
+                    user_command = f'`{user_command.strip()}`'
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
-                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in hunt cooldown message.', message)
+                    return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -134,7 +125,7 @@ class HuntCog(commands.Cog):
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
-                user_name = None
+                user_name = partner_name = None
                 hardmode = together = alone = False
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -162,40 +153,34 @@ class HuntCog(commands.Cog):
                 new = True if '__**' in message_content.lower() else False
                 if together:
                     search_patterns = [
-                        "\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
-                        "\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
-                        "\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
+                        r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
+                        r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                        r"\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
                     ]
-                    name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                    user_name = name_match.group(1)
-                    user_name = await functions.encode_text(user_name)
-                    partner_name = name_match.group(2)
-                if user is None:
-                    if not together:
-                        search_patterns = [
-                            "\*\*(.+?)\*\* found a", #English
-                            "\*\*(.+?)\*\* encontr", #Spanish, Portuguese
-                        ]
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                        user_name = user_name_match.group(1)
-                        user_name = await functions.encode_text(user_name)
-                    if user_name != 'Both players':
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                        partner_name = user_name_match.group(2)
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        message_history = await message.channel.history(limit=50).flatten()
-                        for msg in message_history:
-                            if msg.content is not None:
-                                if msg.content.lower().replace(' ','').startswith('rpghunt'):
-                                    user = msg.author
-                                    break
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in hunt message: {message_content}',
-                        message
+                    search_patterns = [
+                        r"\*\*(.+?)\*\* found a", #English
+                        r"\*\*(.+?)\*\* encontr", #Spanish, Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                        if user_name != 'Both players': # Needs to be updated when an event hits that uses this
+                            user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if user is None:
+                    user_command_message, _ = (
+                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+hunt\b")
                     )
-                    return
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in hunt message.', message)
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -209,12 +194,13 @@ class HuntCog(commands.Cog):
                 if not slash_command:
                     user_command = 'rpg hunt'
                 else:
-                    user_command = '/hunt'
-                    if hardmode or alone or together: user_command = f'{user_command} mode:'
+                    user_command = strings.SLASH_COMMANDS['hunt']
+                    if hardmode or alone or together: user_command = f'{user_command} `mode:'
                 if hardmode: user_command = f'{user_command} hardmode'
                 if alone: user_command = f'{user_command} alone'
                 if together: user_command = f'{user_command} together'
                 if new: user_command = f'{user_command} new'
+                user_command = f'`{user_command}`' if not slash_command else f'{user_command}`'
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -272,12 +258,12 @@ class HuntCog(commands.Cog):
                         for lb_name, lb_emoji in lootboxes.items():
                             try:
                                 search_patterns = [
-                                    f"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
-                                    f"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
-                                    f"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
+                                    fr"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
+                                    fr"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
+                                    fr"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
                                 ]
                                 lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
-                                if lb_match is None: continue
+                                if not lb_match: continue
                                 lb_amount = lb_match.group(1)
                             except:
                                 await errors.log_error(
@@ -373,25 +359,17 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction_user(message)
                 if interaction is not None: return
                 user_name = user_command = None
-                try:
-                    user_name = re.search("\*\*(.+?)\*\*", message_content).group(1)
-                    user_name = await functions.encode_text(user_name)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await(
-                        f'User not found in hunt event non-slash message: {message_content}',
-                        message
-                    )
+                user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
+                if user_name_match:
+                    user_name = await functions.encode_text(user_name_match.group(1))
+                else:
+                    await functions.add_warning_reaction(message)
+                    await('User not found in hunt event non-slash message.', message)
                     return
                 user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in hunt event non-slash message: {message_content}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in hunt event non-slash message.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -402,32 +380,23 @@ class HuntCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                 if not user_settings.alert_hunt.enabled: return
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().startswith('rpg ') and 'hunt' in msg.content.lower()
-                            and msg.author == user):
-                            user_command_message = msg
-                            break
-                if user_command_message is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        'Couldn\'t find a command for the hunt event non-slash message.',
-                        message
+                user_command_message, user_command = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, r"^rpg\s+hunt\b", user
+                        )
                     )
+                if user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find a command for the hunt event non-slash message.', message)
                     return
-                user_command = user_command_message.content.lower()
-                user_command = user_command[8:].strip()
-                if 'h ' in user_command or user_command.endswith(' h'):
-                    user_command = user_command.replace('h','hardmode')
-                if 't ' in user_command or user_command.endswith(' t'):
-                    user_command = user_command.replace('t',' together')
-                if 'a ' in user_command or user_command.endswith(' a'):
-                    user_command = user_command.replace('a',' alone')
-                user_command = " ".join(user_command.split())
-                user_command = f'rpg hunt {user_command}'
+                for argument in user_command_message.content.lower().split():
+                    if argument in ('h', 'hardmode'):
+                        user_command = f'{user_command} hardmode'
+                    if argument in ('t', 'together'):
+                        user_command = f'{user_command} together'
+                    if argument in ('a', 'alone'):
+                        user_command = f'{user_command} alone'
+                user_command = f'`{user_command}`'
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -459,7 +428,7 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction(message)
                 if interaction is None: return
                 if interaction.name != 'hunt': return
-                user_command = '/hunt'
+                user_command = strings.SLASH_COMMANDS['hunt']
                 user = interaction.user
                 try:
                     user_settings: users.User = await users.get_user(user.id)

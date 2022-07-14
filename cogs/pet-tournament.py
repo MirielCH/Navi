@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class PetTournamentCog(commands.Cog):
@@ -29,21 +29,14 @@ class PetTournamentCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    message_history = await message.channel.history(limit=50).flatten()
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if (msg.content.lower().replace(' ','').startswith('rpgpet') and ' tournament ' in msg.content.lower()
-                                and not msg.author.bot):
-                                user_command_message = msg
-                                break
-                    if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the pet tournament message.',
-                            message
+                    user_command_message, _ = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, r"^rpg\s+pets?\s+tournament\s+[a-z]+\b"
                         )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the pet tournament message.', message)
                         return
                     user = user_command_message.author
                 try:
@@ -52,11 +45,15 @@ class PetTournamentCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pet_tournament.enabled: return
                 search_patterns = [
-                    'next pet tournament is in \*\*(.+?)\*\*', #English
-                    'el siguiente torneo es el \*\*(.+?)\*\*', #Spanish
-                    'o próximo torneio é o \*\*(.+?)\*\*', #Portuguese
+                    r'next pet tournament is in \*\*(.+?)\*\*', #English
+                    r'el siguiente torneo es el \*\*(.+?)\*\*', #Spanish
+                    r'o próximo torneio é o \*\*(.+?)\*\*', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in pet tournament message.', message)
+                    return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
@@ -83,44 +80,33 @@ class PetTournamentCog(commands.Cog):
             ]
             if any(search_string in embed_description.lower() for search_string in search_strings):
                 search_patterns = [
-                    'pet id "(.+?)" registered', #English
-                    'la mascota "(.+?)" está registrada', #Spanish
-                    'de pet "(.+?)" está registrado', #Portuguese
+                    r'pet id "(.+?)" registered', #English
+                    r'la mascota "(.+?)" está registrada', #Spanish
+                    r'de pet "(.+?)" está registrado', #Portuguese
                 ]
                 pet_tournament_match = await functions.get_match_from_patterns(search_patterns, embed_footer.lower())
-                if pet_tournament_match is None: return
+                if not pet_tournament_match: return
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    try:
-                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                    except:
-                        search_patterns = [
-                            "^(.+?) — pets", #All languages
-                        ]
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, embed_author)
-                        try:
-                            user_name = user_name_match.group(1)
-                            user_name = await functions.encode_text(user_name)
-                        except Exception as error:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                f'User not found in pet list message for pet tournament: {embed_author}',
-                                message
-                            )
+                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                    else:
+                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, embed_author)
+                        if user_name_match:
+                            user_name = await functions.encode_text(user_name_match.group(1))
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in pet list message for pet tournament.', message)
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in pet list message for pet tournament: {embed_author}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in pet list message for pet tournament.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

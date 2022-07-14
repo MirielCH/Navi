@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class FunCog(commands.Cog):
@@ -38,25 +38,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("^\*\*(.+?)\*\*", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in heal event message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in heal event message for the fun reaction.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the heal event reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the heal event reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -69,25 +61,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("car \*\*(.+?)\\n", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in epic guard message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(r"car \*\*(.+?)\n", message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in epic guard message for the fun reaction.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the jail reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the jail reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -100,25 +84,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\* tries to", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in enchant message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(r"\*\*(.+?)\*\* tries to", message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in enchant message for the fun reaction.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the failed enchant reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the failed enchant reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -131,25 +107,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\* HITS", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in farm event message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(r"\*\*(.+?)\*\* HITS", message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in farm event message for the fun reaction.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the failed farm event reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the failed farm event reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -162,25 +130,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\* fights", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in hunt event message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(r"\*\*(.+?)\*\* fights", message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in hunt event message for the fun reaction.',  message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the failed hunt event reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the failed hunt event reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -193,25 +153,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("\*\*(.+?)\*\* uses a", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in lootbox event message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(r"\*\*(.+?)\*\* uses a", message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in lootbox event message for the fun reaction.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the failed lootbox event reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the failed lootbox event reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -224,25 +176,17 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    try:
-                        user_name = re.search("^\*\*(.+?)\*\*", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in christmas slime message for the fun reaction: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for the christmas slime reaction.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a user for the christmas slime reaction.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for the christmas slime reaction.', message)
                         return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -258,17 +202,15 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     search_patterns = [
-                        "\*\*(.+?)\*\* (also )?earned [0-9] <:coolness", #English
+                        r"\*\*(.+?)\*\* (also )?earned [0-9] <:coolness", #English
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                    if user_name_match is None:
-                        await errors.log_error(
-                            'Couldn\'t find a user for the coolness reaction.',
-                            message
-                        )
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the coolness reaction.', message)
                         return
-                    user_name = user_name_match.group(1)
-                    user_name = await functions.encode_text(user_name)
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -292,20 +234,17 @@ class FunCog(commands.Cog):
                 if any(search_string in field.value.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
                     if user is None:
-                        message_history = await message.channel.history(limit=50).flatten()
-                        for msg in message_history:
-                            if msg.content is not None:
-                                if msg.content.lower().replace(' ','').startswith('rpgtr') and not msg.author.bot:
-                                    user = msg.author
-                                    break
-                        if user is None:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                'Couldn\'t find a user for the lost pet reaction.',
-                                message
-                            )
+                        user_command_message, _ = (
+                        await functions.get_message_from_channel_history(
+                            message.channel,
+                            r"^rpg\s+(?:tr\b|training\b)"
+                        )
+                    )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a user for the lost pet reaction.', message)
                             return
+                        user = user_command_message.author
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
@@ -329,20 +268,17 @@ class FunCog(commands.Cog):
                 if shitty_lootbox_found:
                     user = await functions.get_interaction_user(message)
                     if user is None:
-                        message_history = await message.channel.history(limit=50).flatten()
-                        for msg in message_history:
-                            if msg.content is not None:
-                                if msg.content.lower().replace(' ','').startswith('rpgopen') and not msg.author.bot:
-                                    user = msg.author
-                                    break
-                        if user is None:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                'Couldn\'t find a user for the shitty lootbox reaction.',
-                                message
-                            )
+                        user_command_message, _ = (
+                        await functions.get_message_from_channel_history(
+                            message.channel,
+                            r"^rpg\s+open\s+[a-z]+\s+(?:lb\b|lootbox\b)"
+                        )
+                    )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a user for the shitty lootbox reaction.', message)
                             return
+                        user = user_command_message.author
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:

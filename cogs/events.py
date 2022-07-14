@@ -44,18 +44,14 @@ class EventsCog(commands.Cog):
             message_content = message.content
             # Cel Multiply
             if 'you feel 5% more rich' in message_content.lower():
-                message_history = await message.channel.history(limit=50).flatten()
-                user_command_message = None
-                for msg in message_history:
-                    if msg.content is not None:
-                        if (msg.content.lower().replace(' ','').startswith('rpgcel')
-                            and msg.content.lower().endswith('multiply')
-                            and not msg.author.bot):
-                            user_command_message = msg
-                            break
+                user_command_message, _ = (
+                        await functions.get_message_from_channel_history(
+                            message.channel,
+                            r"^rpg\s+(?:cel\b|celebration\b)\s+multiply\b"
+                        )
+                    )
                 if user_command_message is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
+                    await functions.add_warning_reaction(message)
                     await errors.log_error(
                         'Couldn\'t find a command for the cel multiply message.',
                         message
@@ -85,7 +81,12 @@ class EventsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                timestring = re.search("another \*\*(.+?)\*\*", message_content).group(1)
+                timestring_match = re.search(r"another \*\*(.+?)\*\*", message_content)
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in cel multiply message', message)
+                    return
+                timestring = timestring_match.group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
                 reminder_message = 'Hey! It\'s time for `rpg cel multiply`!'
                 reminder: reminders.Reminder = (
@@ -102,7 +103,7 @@ class EventsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                timestring = re.search("in \*\*(.+?)\*\*", message_content).group(1)
+                timestring = re.search(r"in \*\*(.+?)\*\*", message_content).group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
                 reminder_message = 'Hey! It\'s time for `rpg cel dailyquest`!'
                 reminder: reminders.Reminder = (
@@ -129,21 +130,14 @@ class EventsCog(commands.Cog):
             ]
             if any(search_string in message_field_name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
+                slash_command = False if user is None else True
                 if user is None:
-                    message_history = await message.channel.history(limit=50).flatten()
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if msg.content.lower().replace(' ','').startswith('rpgevent') and not msg.author.bot:
-                                user_command_message = msg
-                                break
+                    user_command_message, _ = (
+                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+event\b")
+                    )
                     if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the events message.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the events message.', message)
                         return
                     user = user_command_message.author
                 try:
@@ -153,65 +147,49 @@ class EventsCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 cooldowns = []
                 if user_settings.alert_big_arena.enabled:
-                    try:
-                        big_arena_search = re.search("big arena\*\*: (.+?)\\n", message_field_value.lower())
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'Big arena cooldown not found in event message: {message.embeds[0].fields}',
-                            message
-                        )
-                        return
-                    if big_arena_search is not None:
-                        big_arena_timestring = big_arena_search.group(1)
+                    big_arena_match = re.search(r"big arena\*\*: (.+?)\n", message_field_value.lower())
+                    if big_arena_match:
+                        big_arena_timestring = big_arena_match.group(1)
                         big_arena_message = user_settings.alert_big_arena.message.replace('{event}', 'big arena')
                         cooldowns.append(['big-arena', big_arena_timestring.lower(), big_arena_message])
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Big arena cooldown not found in event message.', message)
+                        return
                 if user_settings.alert_lottery.enabled:
-                    try:
-                        lottery_search = re.search("lottery\*\*: (.+?)\\n", message_field_value.lower())
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'Lottery cooldown not found in event message: {message.embeds[0].fields}',
-                            message
-                        )
-                        return
-                    if lottery_search is not None:
-                        lottery_timestring = lottery_search.group(1)
-                        lottery_message = user_settings.alert_lottery.message.replace('{command}', 'rpg buy lottery ticket')
+                    lottery_match = re.search(r"lottery\*\*: (.+?)\n", message_field_value.lower())
+                    if lottery_match:
+                        lottery_timestring = lottery_match.group(1)
+                        if slash_command:
+                            user_command = f"{strings.SLASH_COMMANDS['lottery']} `amount: [1-10]`"
+                        else:
+                            user_command = f'`rpg buy lottery ticket`'
+                        lottery_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                         cooldowns.append(['lottery', lottery_timestring.lower(), lottery_message])
-                if user_settings.alert_pet_tournament.enabled:
-                    try:
-                        pet_search = re.search("tournament\*\*: (.+?)\\n", message_field_value.lower())
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'Pet tournament cooldown not found in event message: {message.embeds[0].fields}',
-                            message
-                        )
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Lottery cooldown not found in event message.', message)
                         return
-                    if pet_search is not None:
-                        pet_timestring = pet_search.group(1)
+                if user_settings.alert_pet_tournament.enabled:
+                    pet_match = re.search(r"tournament\*\*: (.+?)\n", message_field_value.lower())
+                    if pet_match:
+                        pet_timestring = pet_match.group(1)
                         pet_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
                         cooldowns.append(['pet-tournament', pet_timestring.lower(), pet_message])
-                if user_settings.alert_horse_race.enabled:
-                    try:
-                        horse_search = re.search("race\*\*: (.+?)\\n", message_field_value.lower())
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'Horse race cooldown not found in event message: {message.embeds[0].fields}',
-                            message
-                        )
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Pet tournament cooldown not found in event message.', message)
                         return
-                    if horse_search is not None:
-                        horse_timestring = horse_search.group(1)
+                if user_settings.alert_horse_race.enabled:
+                    horse_match = re.search(r"race\*\*: (.+?)\n", message_field_value.lower())
+                    if horse_match:
+                        horse_timestring = horse_match.group(1)
                         horse_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')
                         cooldowns.append(['horse-race', horse_timestring.lower(), horse_message])
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Horse race cooldown not found in event message.', message)
+                        return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 updated_reminder = False
                 for cooldown in cooldowns:

@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class PetHelperCog(commands.Cog):
@@ -78,66 +78,53 @@ class PetHelperCog(commands.Cog):
                 slash_command = True if user is not None else False
                 if user is None:
                     search_patterns = [
-                        "APPROACHING \*\*(.+?)\*\*", #English
-                        "ACERCANDO A \*\*(.+?)\*\*", #Spanish
-                        "APROXIMANDO DE \*\*(.+?)\*\*", #Portuguese
+                        r"APPROACHING \*\*(.+?)\*\*", #English
+                        r"ACERCANDO A \*\*(.+?)\*\*", #Spanish
+                        r"APROXIMANDO DE \*\*(.+?)\*\*", #Portuguese
                     ]
-                    try:
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
-                        if user_name_match is None:
-                            search_patterns = [
-                                "^(.+?) — bunny", #All languages UNCONFIRMED
-                            ]
-                            user_name_match = await functions.get_match_from_patterns(search_patterns, message_author)
-                        user_name = user_name_match.group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in pet catch message for pet helper: {message.embeds[0].fields}',
-                            message
-                        )
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
+                    if not user_name_match:
+                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in pet catch message for pet helper.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in pet catch message for pet helper: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in pet catch message for pet helper.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.pet_helper_enabled: return
-                try:
-                    search_patterns_happiness = [
-                        'happiness\**: (.+?)\\n', #English
-                        'felicidade?\**: (.+?)\\n', #Spanish, Portuguese
-                    ]
-                    search_patterns_hunger = [
-                        'hunger\**: (.+?)$', #English
-                        'hambre\**: (.+?)$', #Spanish
-                        'fome\**: (.+?)$', #Portuguese
-                    ]
-                    happiness_match = await functions.get_match_from_patterns(search_patterns_happiness,
-                                                                              message_field_value.lower())
-                    happiness = happiness_match.group(1)
-                    happiness = int(happiness)
-                    hunger_match = await functions.get_match_from_patterns(search_patterns_hunger,
-                                                                           message_field_value.lower())
-                    hunger = hunger_match.group(1)
-                    hunger = int(hunger)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Happiness or hunger not found in pet catch message for pet helper: {message.embeds[0].fields}',
-                        message
-                    )
+                search_patterns_happiness = [
+                    r'happiness\**: (.+?)\n', #English
+                    r'felicidade?\**: (.+?)\n', #Spanish, Portuguese
+                ]
+                search_patterns_hunger = [
+                    r'hunger\**: (.+?)$', #English
+                    r'hambre\**: (.+?)$', #Spanish
+                    r'fome\**: (.+?)$', #Portuguese
+                ]
+                happiness_match = await functions.get_match_from_patterns(search_patterns_happiness,
+                                                                            message_field_value.lower())
+                if happiness_match:
+                    happiness = int(happiness_match.group(1))
+                else:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Happiness not found in pet catch message for pet helper.', message)
+                    return
+                hunger_match = await functions.get_match_from_patterns(search_patterns_hunger,
+                                                                        message_field_value.lower())
+                if hunger_match:
+                    hunger = int(hunger_match.group(1))
+                else:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Hunger not found in pet catch message for pet helper.', message)
                     return
                 # Low risk
                 feeds, hunger_rest = divmod(hunger, 18)

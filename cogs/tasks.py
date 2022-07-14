@@ -62,7 +62,10 @@ class TasksCog(commands.Cog):
                     except exceptions.NoDataFoundError:
                         pet_reminders = ()
                     if not pet_reminders:
-                        messages[message_no] = f'{messages[message_no]}➜ There are no more pets on adventures.'
+                        messages[message_no] = (
+                            f'{messages[message_no]}'
+                            f"➜ {strings.SLASH_COMMANDS['pets claim']} - No more pets on adventures."
+                        )
                     else:
                         next_pet_reminder = pet_reminders[0]
                         next_pet_id = next_pet_reminder.activity.replace('pets-','')
@@ -73,7 +76,8 @@ class TasksCog(commands.Cog):
                         if pet_amount_left > 1: pets_left = f'{pets_left}s'
                         messages[message_no] = (
                             f'{messages[message_no]}'
-                            f'➜ {pets_left} left. Next pet (`{next_pet_id}`) will return in **{timestring}**.'
+                            f"➜ {strings.SLASH_COMMANDS['pets claim']} - {pets_left} left. Next pet (`{next_pet_id}`) "
+                            f'in **{timestring}**.'
                         )
                 time_left = get_time_left()
                 try:
@@ -195,7 +199,8 @@ class TasksCog(commands.Cog):
                 await reminder.delete()
             except Exception as error:
                 await errors.log_error(
-                    f'Error deleting old reminder.\nFunction: delete_old_reminders\nReminder: {reminder}\nError: {error}'
+                    f'Error deleting old reminder.\nFunction: delete_old_reminders\n'
+                    f'Reminder: {reminder}\nError: {error}'
             )
 
     @tasks.loop(minutes=1.0)

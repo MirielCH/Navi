@@ -41,33 +41,24 @@ class CooldownsCog(commands.Cog):
         user = await functions.get_interaction_user(message)
         slash_command = True if user is not None else False
         if user is None:
-            try:
-                user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-            except:
-                user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
-                                                                          message_author)
-                try:
-                    user_name = user_name_match.group(1)
-                    user_name = await functions.encode_text(user_name)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in cooldown message: {message.embeds[0].fields}',
-                        message
-                    )
+            user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+            if user_id_match:
+                user_id = int(user_id_match.group(1))
+            else:
+                user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                if user_name_match:
+                    user_name = await functions.encode_text(user_name_match.group(1))
+                else:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in cooldown message.', message)
                     return
             if user_id is not None:
                 user = await message.guild.fetch_member(user_id)
             else:
                 user = await functions.get_guild_member_by_name(message.guild, user_name)
         if user is None:
-            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                await message.add_reaction(emojis.WARNING)
-            await errors.log_error(
-                f'User not found in cooldowns message: {message.embeds[0].fields}',
-                message
-            )
+            await functions.add_warning_reaction(message)
+            await errors.log_error('User not found in cooldowns message.', message)
             return
         try:
             user_settings: users.User = await users.get_user(user.id)
@@ -76,223 +67,118 @@ class CooldownsCog(commands.Cog):
         if not user_settings.bot_enabled: return
         cooldowns = []
         if user_settings.alert_daily.enabled:
-            try:
-                daily_search = re.search("daily`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Daily cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if daily_search is not None:
-                daily_timestring = daily_search.group(1)
-                user_command = '/daily' if slash_command else 'rpg daily'
+            daily_match = re.search(r"daily`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if daily_match:
+                daily_timestring = daily_match.group(1)
+                user_command = strings.SLASH_COMMANDS['daily'] if slash_command else '`rpg daily`'
                 daily_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 cooldowns.append(['daily', daily_timestring.lower(), daily_message])
         if user_settings.alert_weekly.enabled:
-            try:
-                weekly_search = re.search("weekly`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Weekly cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if weekly_search is not None:
-                weekly_timestring = weekly_search.group(1)
-                user_command = '/weekly' if slash_command else 'rpg weekly'
+            weekly_match = re.search(r"weekly`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if weekly_match:
+                weekly_timestring = weekly_match.group(1)
+                user_command = strings.SLASH_COMMANDS['weekly'] if slash_command else '`rpg weekly`'
                 weekly_message = user_settings.alert_weekly.message.replace('{command}', user_command)
                 cooldowns.append(['weekly', weekly_timestring.lower(), weekly_message])
         if user_settings.alert_lootbox.enabled:
-            try:
-                lb_search = re.search("lootbox`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Lootbox cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if lb_search is not None:
-                lb_timestring = lb_search.group(1)
-                user_command = '/buy item: [lootbox]' if slash_command else 'rpg buy [lootbox]'
+            lb_match = re.search(r"lootbox`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if lb_match:
+                lb_timestring = lb_match.group(1)
+                if slash_command:
+                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: [lootbox]`"
+                else:
+                    user_command = '`rpg buy [lootbox]`'
                 lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
         if user_settings.alert_adventure.enabled:
             if 'adventure hardmode`**' in message_fields.lower():
                 adv_search_string = 'adventure hardmode`\*\* \(\*\*(.+?)\*\*'
-                adv_command = '/adventure mode: hardmode' if slash_command else 'rpg adventure hardmode'
+                if slash_command:
+                    adv_command = f"{strings.SLASH_COMMANDS['adventure']} `mode: hardmode`"
+                else:
+                    adv_command = '`rpg adventure hardmode`'
             else:
                 adv_search_string = 'adventure`\*\* \(\*\*(.+?)\*\*'
-                adv_command = '/adventure' if slash_command else 'rpg adventure'
-            try:
-                adv_search = re.search(adv_search_string, message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Adventure cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if adv_search is not None:
-                adv_timestring = adv_search.group(1)
+                adv_command = strings.SLASH_COMMANDS['adventure'] if slash_command else '`rpg adventure`'
+            adv_match = re.search(adv_search_string, message_fields.lower())
+            if adv_match:
+                adv_timestring = adv_match.group(1)
                 adv_message = user_settings.alert_adventure.message.replace('{command}', adv_command)
                 cooldowns.append(['adventure', adv_timestring.lower(), adv_message])
         if user_settings.alert_training.enabled:
             if 'ultraining`**' in message_fields.lower():
-                tr_command = '/ultraining' if slash_command else 'rpg ultraining'
+                tr_command = strings.SLASH_COMMANDS['ultraining'] if slash_command else '`rpg ultraining`'
             else:
-                tr_command = '/training' if slash_command else 'rpg training'
-            try:
-                tr_search = re.search("raining`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Training cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if tr_search is not None:
-                tr_timestring = tr_search.group(1)
+                tr_command = strings.SLASH_COMMANDS['training'] if slash_command else '`rpg training`'
+            tr_match = re.search(r"raining`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if tr_match:
+                tr_timestring = tr_match.group(1)
                 tr_message = user_settings.alert_training.message.replace('{command}', tr_command)
                 cooldowns.append(['training', tr_timestring.lower(), tr_message])
         if user_settings.alert_quest.enabled:
-            try:
-                quest_search = re.search("quest`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Quest cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if quest_search is not None:
-                quest_timestring = quest_search.group(1)
-                user_command = '/quest start' if slash_command else 'rpg quest'
+            quest_match = re.search(r"quest`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if quest_match:
+                quest_timestring = quest_match.group(1)
+                user_command = strings.SLASH_COMMANDS['quest'] if slash_command else '`rpg quest`'
                 quest_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 cooldowns.append(['quest', quest_timestring.lower(), quest_message])
         if user_settings.alert_duel.enabled:
-            try:
-                duel_search = re.search("duel`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Duel cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if duel_search is not None:
-                duel_timestring = duel_search.group(1)
-                user_command = '/duel' if slash_command else 'rpg duel'
+            duel_match = re.search(r"duel`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if duel_match:
+                duel_timestring = duel_match.group(1)
+                user_command = strings.SLASH_COMMANDS['duel'] if slash_command else '`rpg duel`'
                 duel_message = user_settings.alert_duel.message.replace('{command}', user_command)
                 cooldowns.append(['duel', duel_timestring.lower(), duel_message])
         if user_settings.alert_arena.enabled:
-            try:
-                arena_search = re.search("rena`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Arena cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if arena_search is not None:
-                arena_timestring = arena_search.group(1)
-                user_command = '/arena' if slash_command else 'rpg arena'
+            arena_match = re.search(r"rena`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if arena_match:
+                arena_timestring = arena_match.group(1)
+                user_command = strings.SLASH_COMMANDS['arena'] if slash_command else '`rpg arena`'
                 arena_message = user_settings.alert_arena.message.replace('{command}', user_command)
                 cooldowns.append(['arena', arena_timestring.lower(), arena_message])
         if user_settings.alert_dungeon_miniboss.enabled:
-            try:
-                dungmb_search = re.search("boss`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Miniboss cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if dungmb_search is not None:
-                dungmb_timestring = dungmb_search.group(1)
-                user_command = '/dungeon or /miniboss' if slash_command else 'rpg dungeon / miniboss'
+            dungmb_match = re.search(r"boss`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if dungmb_match:
+                dungmb_timestring = dungmb_match.group(1)
+                if slash_command:
+                    user_command = f"{strings.SLASH_COMMANDS['dungeon'] or strings.SLASH_COMMANDS['miniboss']}"
+                else:
+                    user_command = '`rpg dungeon` or `rpg miniboss`'
                 dungmb_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
                 cooldowns.append(['dungeon-miniboss', dungmb_timestring.lower(), dungmb_message])
         if user_settings.alert_horse_breed.enabled:
-            try:
-                horse_search = re.search("race`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Horse cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if horse_search is not None:
-                horse_timestring = horse_search.group(1)
-                user_command = '/horse breeding or /horse race' if slash_command else 'rpg horse breed / race'
+            horse_match = re.search(r"race`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if horse_match:
+                horse_timestring = horse_match.group(1)
+                if slash_command:
+                    user_command = f"{strings.SLASH_COMMANDS['horse breeding'] or strings.SLASH_COMMANDS['horse race']}"
+                else:
+                    user_command = '`rpg horse breed` or `rpg horse race`'
                 horse_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
                 cooldowns.append(['horse', horse_timestring.lower(), horse_message])
         if user_settings.alert_vote.enabled:
-            try:
-                vote_search = re.search("vote`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Vote cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if vote_search is not None:
-                vote_timestring = vote_search.group(1)
-                user_command = '/vote' if slash_command else 'rpg vote'
+            vote_match = re.search(r"vote`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if vote_match:
+                vote_timestring = vote_match.group(1)
+                user_command = strings.SLASH_COMMANDS['vote'] if slash_command else '`rpg vote`'
                 vote_message = user_settings.alert_vote.message.replace('{command}', user_command)
                 cooldowns.append(['vote', vote_timestring.lower(), vote_message])
         if user_settings.alert_farm.enabled:
-            try:
-                farm_search = re.search("farm`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Farm cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if farm_search is not None:
-                farm_timestring = farm_search.group(1)
-                user_command = '/farm' if slash_command else 'rpg farm'
+            farm_match = re.search(r"farm`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+            if farm_match:
+                farm_timestring = farm_match.group(1)
+                user_command = strings.SLASH_COMMANDS['farm'] if slash_command else '`rpg farm`'
                 farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 cooldowns.append(['farm', farm_timestring.lower(), farm_message])
         if user_settings.alert_work.enabled:
             search_patterns = [
-                'mine`\*\* \(\*\*(.+?)\*\*',
-                'pickaxe`\*\* \(\*\*(.+?)\*\*',
-                'drill`\*\* \(\*\*(.+?)\*\*',
-                'dynamite`\*\* \(\*\*(.+?)\*\*',
+                r'mine`\*\* \(\*\*(.+?)\*\*',
+                r'pickaxe`\*\* \(\*\*(.+?)\*\*',
+                r'drill`\*\* \(\*\*(.+?)\*\*',
+                r'dynamite`\*\* \(\*\*(.+?)\*\*',
             ]
-            try:
-                work_match = await functions.get_match_from_patterns(search_patterns, message_fields.lower())
-            except Exception as error:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'Work cooldown not found in cooldown message: {message.embeds[0].fields}',
-                    message
-                )
-                return
-            if work_match is not None:
+            work_match = await functions.get_match_from_patterns(search_patterns, message_fields.lower())
+            if work_match:
                 work_timestring = work_match.group(1)
                 work_message = user_settings.alert_work.message.replace('{command}', 'work command')
                 cooldowns.append(['work', work_timestring.lower(), work_message])

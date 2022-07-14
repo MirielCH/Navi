@@ -36,48 +36,34 @@ class DuelCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 interaction_user = await functions.get_interaction_user(message)
+                user_command = '`rpg duel`' if interaction_user is None else strings.SLASH_COMMANDS['duel']
                 if interaction_user is None:
-                    message_history = await message.channel.history(limit=50).flatten()
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if msg.content.lower().replace(' ','').startswith('rpgduel'):
-                                interaction_user = msg.author
-                                break
-                    if interaction_user is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find an interaction user for the duel cooldown message.',
-                            message
-                        )
+                    user_command_message, _ = (
+                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+duel\b")
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Interaction user not found for duel cooldown message.', message)
                         return
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
-                                                                              message_author)
-                    try:
-                        user_name = user_name_match.group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'Embed user not found in duel cooldown message: {message.embeds[0].fields}',
-                            message
-                        )
+                    interaction_user = user_command_message.author
+                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                else:
+                    user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Embed user not found in duel cooldown message.', message)
                         return
                 if user_id is not None:
                     embed_user = await message.guild.fetch_member(user_id)
                 else:
                     embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if embed_user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Embed user not found in duel cooldown message: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Embed user not found in duel cooldown message.', message)
                     return
                 if embed_user != interaction_user: return
                 try:
@@ -85,11 +71,15 @@ class DuelCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_duel: return
-                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in duel cooldown message.', message)
+                    return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                reminder_message = user_settings.alert_duel.message.replace('{command}', 'rpg duel')
+                reminder_message = user_settings.alert_duel.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(interaction_user.id, 'duel', time_left,
                                                          message.channel.id, reminder_message)

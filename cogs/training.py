@@ -41,33 +41,24 @@ class TrainingCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    try:
-                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                    except:
-                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
-                                                                                  message_author)
-                        try:
-                            user_name = user_name_match.group(1)
-                            user_name = await functions.encode_text(user_name)
-                        except Exception as error:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                f'User not found in training cooldown message: {message.embeds[0].fields}',
-                                message
-                            )
+                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                    else:
+                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = await functions.encode_text(user_name_match.group(1))
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in training cooldown message.', message)
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in training cooldown message: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in training cooldown message.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -76,30 +67,29 @@ class TrainingCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_training.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
-                    user_command = f'/{interaction.name}'
+                    if interaction.name.startswith('ultraining'):
+                        user_command = strings.SLASH_COMMANDS['ultraining']
+                    else:
+                        user_command = strings.SLASH_COMMANDS['training']
                 else:
-                    message_history = await message.channel.history(limit=50).flatten()
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if (msg.content.lower().startswith('rpg ')
-                                and (' tr' in msg.content.lower() or 'ultr' in msg.content.lower())
-                                and msg.author == user):
-                                user_command_message = msg
-                                break
-                    if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the training cooldown message.',
-                            message
+                    user_command_message, user_command = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, r"^rpg\s+(?:tr\b|training\b|ultr\b|ultraining\b)", user
                         )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the training cooldown message.', message)
                         return
-                    user_command = user_command_message.content.lower()
-                    if ' ultr' in user_command: user_command = 'rpg ultraining'
-                    if ' tr' in user_command: user_command = 'rpg training'
-                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                    user_command = re.sub(r'\bultr\b', 'ultraining', user_command)
+                    user_command = re.sub(r'\btr\b', 'training', user_command)
+                    user_command = f'`{user_command}`'
+                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in training cooldown message.', message)
+                    return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
@@ -118,27 +108,19 @@ class TrainingCog(commands.Cog):
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = '/ultraining' if user is not None else 'rpg ultraining'
+                user_command = strings.SLASH_COMMANDS['ultraining'] if user is not None else '`rpg ultraining`'
                 if user is None:
-                    try:
-                        user_name = re.search(", \*\*(.+?)\*\*!", message_description).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in ultraining message: {message.embeds[0].fields}',
-                            message
-                        )
+                    user_name_match = re.search(r", \*\*(.+?)\*\*!", message_description)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in ultraining message.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in ultraining message: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in ultraining message.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -176,27 +158,19 @@ class TrainingCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = '/training' if user is not None else 'rpg training'
+                user_command = strings.SLASH_COMMANDS['training'] if user is not None else '`rpg training`'
                 if user is None:
-                    try:
-                        user_name = re.search(", \*\*(.+?)\*\*", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in training message: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(r", \*\*(.+?)\*\*", message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in training message.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in training message: {message_content}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in training message.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

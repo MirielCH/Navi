@@ -283,19 +283,20 @@ class DevCog(commands.Cog):
 
     # Test command
     @dev.command()
-    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
-        today = datetime.utcnow().replace(hour=18, minute=0, second=0, microsecond=0)
-        import calendar
-        next_monday = today + timedelta((calendar.MONDAY - 1 - today.weekday()) % 7 + 1)
-        next_wednesday = today + timedelta((calendar.WEDNESDAY - 1 - today.weekday()) % 7 + 1)
-        next_friday = today + timedelta((calendar.FRIDAY - 1 - today.weekday()) % 7 + 1)
-        how_many_none = 0
-        for user in self.bot.users:
-            if user is None: how_many_none += 1
-        await ctx.reply(f'Length of `bot.users`: {len(self.bot.users)} ({how_many_none} are None)')
+        if ctx.author.id not in (619879176316649482, 764222910881464350): return
+        username = ctx.author.name
+        from resources import functions
+        username_encode = await functions.encode_text(ctx.author.name)
+        username_casefold = ctx.author.name.casefold()
+
+        await ctx.reply(
+            f'Username: {username}\n'
+            f'Username encoded: {username_encode}\n'
+            f'Username casefolded: {username_casefold}\n'
+        )
 
 
 def setup(bot):

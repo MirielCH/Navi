@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class VoteCog(commands.Cog):
@@ -31,28 +31,22 @@ class VoteCog(commands.Cog):
                 ]
                 if any(search_string in field.name.lower() for search_string in search_strings):
                     search_patterns = [
-                        'cooldown: \*\*(.+?)\*\*', #All languages
+                        r'cooldown: \*\*(.+?)\*\*', #All languages
                     ]
                     timestring_match = await functions.get_match_from_patterns(search_patterns, field.value.lower())
-                    if timestring_match is None: return
+                    if not timestring_match: return
                     timestring = timestring_match.group(1)
                     user = await functions.get_interaction_user(message)
-                    user_command = 'rpg vote' if user is None else '/vote'
+                    user_command = strings.SLASH_COMMANDS['vote'] if user is not None else '`rpg vote`'
                     if user is None:
-                        message_history = await message.channel.history(limit=50).flatten()
-                        for msg in message_history:
-                            if msg.content is not None:
-                                if msg.content.lower().replace(' ','').startswith('rpgvote') and not msg.author.bot:
-                                    user = msg.author
-                                    break
-                        if user is None:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                'Couldn\'t find a user for the vote embed.',
-                                message
-                            )
+                        user_command_message, _ = (
+                            await functions.get_message_from_channel_history(message.channel, r"^rpg\s+vote\b")
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a user for the vote embed.', message)
                             return
+                        user = user_command_message.author
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:

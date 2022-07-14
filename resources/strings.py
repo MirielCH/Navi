@@ -1,13 +1,18 @@
 # strings.py
 """Contains global strings"""
 
-# Internal error messages
+import re
+
+
+# --- Internal error messages ---
 INTERNAL_ERROR_NO_DATA_FOUND = 'No data found in database.\nTable: {table}\nFunction: {function}\nSQL: {sql}'
 INTERNAL_ERROR_SQLITE3 = 'Error executing SQL.\nError: {error}\nTable: {table}\nFunction: {function}\SQL: {sql}'
 INTERNAL_ERROR_LOOKUP = 'Error assigning values.\nError: {error}\nTable: {table}\nFunction: {function}\Records: {record}'
 INTERNAL_ERROR_NO_ARGUMENTS = 'You need to specify at least one keyword argument.\nTable: {table}\nFunction: {function}'
 INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: {function}\nRecord: {record}\n'
 
+
+# --- Default messages ---
 DEFAULT_MESSAGE = 'Hey! It\'s time for `{command}`!'
 DEFAULT_MESSAGE_EVENT = (
     'Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
@@ -39,6 +44,7 @@ DEFAULT_MESSAGES = {
     'work': DEFAULT_MESSAGE,
 }
 
+
 CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
     '<:amongus_sus:875996946903478292> There is one player among us that wants us to believe he is not an impostor.'
 )
@@ -64,6 +70,8 @@ DONOR_TIERS = (
     'ULTIMATE donator',
 )
 
+
+# --- Activities ---
 SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
@@ -208,25 +216,8 @@ ACTIVITIES_WITH_COOLDOWN = (
     'work',
 )
 
-WORK_COMMANDS = (
-    'chop',
-    'pickaxe',
-    'bowsaw',
-    'chainsaw',
-    'fish',
-    'net',
-    'bigboat',
-    'pickup',
-    'ladder',
-    'tractor',
-    'greenhouse',
-    'mine',
-    'drill',
-    'dynamite',
-    'axe',
-    'boat',
-)
 
+# --- Monsters ---
 MONSTERS_ADVENTURE = (
     '**Ancientest Dragon**',
     '**Yes, As You Expected, Another Hyper Giant Dragon But OP etc**',
@@ -350,6 +341,7 @@ MONSTERS_HUNT = (
     '**Snowman**',
 )
 
+
 TRACKED_COMMANDS = (
     'hunt',
     'work',
@@ -360,18 +352,135 @@ TRACKED_COMMANDS = (
 ) # Sorted by cooldown length
 
 
-# Translations
-COOLDOWN_USERNAME_PATTERNS = [
-    "^(.+?) — cooldown", #All languages
+EPIC_NPC_NAMES = [
+    'EPIC NPC', #English
+    'NPC ÉPICO', #Spanish, Portuguese
 ]
 
-COOLDOWN_TIMESTRING_PATTERNS = [
+
+# --- REGEX ---
+PATTERNS_COOLDOWN_TIMESTRING = [
     "wait at least \*\*(.+?)\*\*...", #English
     "espera al menos \*\*(.+?)\*\*...", #Spanish
     "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
 ]
 
-EPIC_NPC_NAMES = [
-    'EPIC NPC', #English
-    'NPC ÉPICO', #Spanish, Portuguese
-]
+REGEX_USER_ID_FROM_ICON_URL = re.compile(r"avatars\/(.+?)\/")
+REGEX_USERNAME_FROM_EMBED_AUTHOR = re.compile(r"^(.+?) — ")
+REGEX_NAME_FROM_MESSAGE = re.compile(r"\*\*(.+?)\*\*")
+REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*")
+
+
+# --- Commands ---
+WORK_COMMANDS = (
+    'chop',
+    'pickaxe',
+    'bowsaw',
+    'chainsaw',
+    'fish',
+    'net',
+    'bigboat',
+    'pickup',
+    'ladder',
+    'tractor',
+    'greenhouse',
+    'mine',
+    'drill',
+    'dynamite',
+    'axe',
+    'boat',
+)
+
+# Remove this dict once slash mentions are live, and rename SLASH_COMMANDS_MENTIONS to SLASH_COMMANDS
+SLASH_COMMANDS_MIGRATION = {
+    'adventure': '`/adventure`',
+    'arena': '`/arena`',
+    'axe': '`/axe`',
+    'big arena': '`/big arena`',
+    'bigboat': '`/bigboat`',
+    'boat': '`/boat`',
+    'bowsaw': '`/bowsaw`',
+    'buy': '`/buy`',
+    'chainsaw': '`/chainsaw`',
+    'chop': '`/chop`',
+    'daily': '`/daily`',
+    'drill': '`/drill`',
+    'duel': '`/duel`',
+    'dungeon': '`/dungeon`',
+    'dynamite': '`/dynamite`',
+    'epic quest': '`/epic quest`',
+    'farm': '`/farm`',
+    'fish': '`/fish`',
+    'greenhouse': '`/greenhouse`',
+    'guild list': '`/guild list`',
+    'guild raid': '`/guild raid`',
+    'guild stats': '`/guild stats`',
+    'guild upgrade': '`/guild upgrade`',
+    'heal': '`/heal`',
+    'horse breeding': '`/horse breeding`',
+    'horse race': '`/horse race`',
+    'hunt': '`/hunt`',
+    'ladder': '`/ladder`',
+    'lottery': '`/lottery`',
+    'mine': '`/mine`',
+    'miniboss': '`/miniboss`',
+    'minintboss': '`/minintboss`',
+    'net': '`/net`',
+    'pets list': '`/pets list`',
+    'pickaxe': '`/pickaxe`',
+    'pickup': '`/pickup`',
+    'quest': '`/quest`',
+    'tractor': '`/tractor`',
+    'training': '`/training`',
+    'ultraining': '`/ultraining start`',
+    'void areas': '`/void areas`',
+    'vote': '`/vote`',
+    'weekly': '`/weekly`',
+}
+
+SLASH_COMMANDS = {
+    'adventure': '</adventure:961046240420855808>',
+    'arena': '</arena:960740633302138920>',
+    'axe': '</axe:959162695909781504>',
+    'big arena': '</big arena:960362922029252719>',
+    'bigboat': '</bigboat:959163596754010162>',
+    'boat': '</boat:959163596087111780>',
+    'bowsaw': '</bowsaw:959162696371146883>',
+    'buy': '</buy:964351964651601961>',
+    'chainsaw': '</chainsaw:959162697398763590>',
+    'chop': '</chop:959162695070928896>',
+    'daily': '</daily:956658466099982386>',
+    'drill': '</drill:959164541206417479>',
+    'duel': '</duel:960362921198751784>',
+    'dungeon': '</dungeon:966956823032791090>',
+    'dynamite': '</dynamite:959164543920132126>',
+    'epic quest': '</epic quest:961046236469792810>',
+    'farm': '</farm:959915738716598272>',
+    'fish': '</fish:959163594665242684>',
+    'greenhouse': '</greenhouse:959164279884509194>',
+    'guild list': '</guild list:961046237753257994>',
+    'guild raid': '</guild raid:961046237753257994>',
+    'guild stats': '</guild stats:961046237753257994>',
+    'guild upgrade': '</guild upgrade:961046237753257994>',
+    'heal': '</heal:959915737777061928>',
+    'horse breeding': '</horse breeding:966961638378987540>',
+    'horse race': '</horse race:966961638378987540>',
+    'hunt': '</hunt:964351961774325770>',
+    'ladder': '</ladder:959164278072569936>',
+    'lottery': '</lottery:957815874063061072>',
+    'mine': '</mine:959164539922952263>',
+    'miniboss': '</miniboss:960740632400388146>',
+    'minintboss': '</minintboss:960362922813575209>',
+    'net': '</net:959163595428618290>',
+    'pets claim': '</pets claim:961046238613090385>',
+    'pets list': '</pets list:961046238613090385>',
+    'pickaxe': '</pickaxe:959164540589842492>',
+    'pickup': '</pickup:959164277321768990>',
+    'quest': '</quest start:960740627790848041>',
+    'tractor': '</tractor:959164278890463272>',
+    'training': '</training:960362923983765545>',
+    'ultraining': '</ultraining start:959942194649772112>',
+    'void areas': '</void areas:959942192623931442>',
+    'vote': '</vote:964351963720478760>',
+    'weekly': '</weekly:956658465185603645>',
+}

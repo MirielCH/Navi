@@ -907,9 +907,10 @@ class SettingsUserCog(commands.Cog):
             await ctx.reply(msg_syntax)
             return
         if 'discord.com/channels' in args[0]:
-            try:
-                message_id = re.search("\/[0-9]+\/[0-9]+\/(.+?)$", args[0]).group(1)
-            except:
+            message_id_match = re.search(r"\/[0-9]+\/[0-9]+\/(.+?)$", args[0])
+            if message_id_match:
+                message_id = message_id_match.group(1)
+            else:
                 await ctx.reply(f'No valid message ID or URL found.\n{syntax}')
                 return
         else:
@@ -921,7 +922,6 @@ class SettingsUserCog(commands.Cog):
             timestamp_decimal = int(timestamp_binary, 2)
             timestamp = (timestamp_decimal + 1_420_070_400_000) / 1000
             tt_time = datetime.utcfromtimestamp(timestamp).replace(microsecond=0)
-            tt_time_str = tt_time.isoformat(sep=' ')
         except:
             await ctx.reply(f'No valid message ID or URL found.\n{syntax}')
             return

@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from database import errors, users
 from database import settings as settings_db
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class TrainingHelperCog(commands.Cog):
@@ -39,21 +39,18 @@ class TrainingHelperCog(commands.Cog):
                         'aberto', #Portuguese, UNCONFIRMED
                     ]
                     if any(search_string in field.value.lower() for search_string in search_strings):
-                        try:
+                        seal_timestring_match = re.search(r"__: (.+?)$", field.value).group(1).replace(' ','')
+                        if seal_timestring_match:
                             area_no = int(field.name[-2:])
-                            seal_timestring = re.search("__: (.+?)$", field.value).group(1).replace(' ','')
+                            seal_timestring = seal_timestring_match.group(1).replace(' ','')
                             seal_time_left = await functions.parse_timestring_to_timedelta(seal_timestring.lower())
                             current_time = datetime.utcnow().replace(microsecond=0)
                             seal_time = current_time + seal_time_left
                             await settings_db.update_setting(f'a{area_no}_seal_time', seal_time)
                             updated_settings = True
-                        except Exception as error:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                f'Error when trying to read unseal time: {error}',
-                                message
-                            )
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Timestring not found for void areas message.', message)
                             return
                 if updated_settings: await message.add_reaction(emojis.NAVI)
 
@@ -76,25 +73,17 @@ class TrainingHelperCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    try:
-                        user_name = re.search("^\*\*(.+?)\*\* ", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in training helper message: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in training helper message.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in training helper message: {message_content}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in training helper message.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

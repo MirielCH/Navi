@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import re
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import discord
 
@@ -11,7 +11,7 @@ from database import settings as settings_db
 from resources import emojis, exceptions, settings, strings
 
 
-# --- Misc ---
+# --- Get discord data ---
 async def get_interaction(message: discord.Message) -> discord.User:
     """Returns the interaction object if the message was triggered by a slash command. Returns None if no user was found."""
     if message.reference is not None:
@@ -28,14 +28,32 @@ async def get_interaction_user(message: discord.Message) -> discord.User:
     return interaction.user if interaction is not None else None
 
 
-async def add_reminder_reaction(message: discord.Message, reminder: reminders.Reminder,  user_settings: users.User) -> None:
-    """Adds a Navi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
-    if reminder.record_exists:
-        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-    else:
-        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-            await message.add_reaction(emojis.WARNING)
-            await message.channel.send(strings.MSG_ERROR)
+async def get_message_from_channel_history(channel: discord.channel, regex: str,
+                                           user: discord.User = None) -> Tuple[discord.Message, str]:
+    """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns
+    both the message and the matched string. If user is defined, only messages from that user are returned.
+
+    Arguments
+    ---------
+    channel: Channel to look through
+    regex: String with the regex to match
+    user: User the message author has to match. If None, it will return the first message that matches and is not from
+    a bot.
+
+    Returns
+    -------
+    Tuple with the found message and the matched string. Returns (None, None) if no message was found.
+    Note: The returned string always combines multiple spaces into one.
+    """
+    message_history = await channel.history(limit=50).flatten()
+    for message in message_history:
+        if message.content is not None:
+            if user is None and message.author.bot: continue
+            if user is not None and message.author != user: continue
+            match = re.search(regex, message.content.lower())
+            match_string = ' '.join(match.group(0).split())
+            if match: return (message, match_string)
+    return (None, None)
 
 
 async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
@@ -62,6 +80,23 @@ async def get_discord_channel(bot: discord.Bot, channel_id: int) -> discord.User
     return channel
 
 
+# --- Reactions
+async def add_reminder_reaction(message: discord.Message, reminder: reminders.Reminder,  user_settings: users.User) -> None:
+    """Adds a Navi reaction if the reminder was created, otherwise add a warning and send the error if debug mode is on"""
+    if reminder.record_exists:
+        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+    else:
+        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+            await message.add_reaction(emojis.WARNING)
+            await message.channel.send(strings.MSG_ERROR)
+
+
+async def add_warning_reaction(message: discord.Message) -> None:
+    """Adds a warning reaction if debug mode is on or the guild is a dev guild"""
+    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+        await message.add_reaction(emojis.WARNING)
+
+
 # --- Regex ---
 async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
     """Searches a string for a regex patterns out of a list of patterns and returns the first match.
@@ -69,7 +104,7 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
     """
     for pattern in patterns:
         match = re.search(pattern, string, re.IGNORECASE)
-        if match is not None: break
+        if match: break
     return match
 
 
@@ -539,9 +574,9 @@ async def get_training_answer(message_content: str, slash_command: bool = False)
             answer = '`NO`'
     elif any(search_string in message_content for search_string in search_strings_forest):
         search_patterns = [
-            'many (.+?) do', #English
-            'cuantos (.+?) ves', #Spanish
-            'quantas (.+?) você', #Portuguese
+            r'many (.+?) do', #English
+            r'cuantos (.+?) ves', #Spanish
+            r'quantas (.+?) você', #Portuguese
         ]
         emoji_match = await get_match_from_patterns(search_patterns, message_content)
         try:
@@ -578,7 +613,8 @@ async def get_training_answer(message_content: str, slash_command: bool = False)
         if answer == '':
             answer = (
                 f'No idea, lol.\n'
-                f'Please use {emojis.EPIC_RPG_LOGO_SMALL}`/void areas` before your next training.'
+                f"Please use {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['void areas']} "
+                f'before your next training.'
             )
 
     return answer

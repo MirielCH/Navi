@@ -30,7 +30,8 @@ class SettingsClanCog(commands.Cog):
                 f'Guild reminders work differently than the other reminders. Guild reminders are sent to a guild channel '
                 f'and always ping **all** guild members.\n\n'
                 f'**Setting up guild reminders**\n'
-                f':one: Use `rpg guild list` or `/guild list` to add or update your guild.\n'
+                f":one: Use `rpg guild list` or {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['guild list']} "
+                f'to add or update your guild.\n'
                 f':two: __Guild owner__: Use `{ctx.prefix}guild channel set` to set the guild channel.\n'
                 f':three: __Guild owner__: Turn on reminders with `navi guild reminder on`.\n'
                 f':four: __Guild owner__: Use `{ctx.prefix}guild stealth` to change the stealth threshold '
@@ -44,9 +45,9 @@ class SettingsClanCog(commands.Cog):
                 f'multiple guilds.\n'
                 f'{emojis.BP} Reminders are always sent to the guild channel. You can, however, raid or upgrade wherever '
                 f'you want, **as long as Navi can see it**. If you raid or upgrade somewhere else, use `rpg guild` or '
-                f'`/guild stats` here to create the reminder.\n'
+                f"{emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['guild stats']} here to create the reminder.\n"
                 f'{emojis.BP} Navi pings all guild members and thus needs no role. If you add or remove a guild member, '
-                f'simply use `rpg guild list` or `/guild list` again.\n'
+                f"simply use `rpg guild list` or {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['guild list']} again.\n"
                 f'{emojis.BP} Navi will tell you to upgrade until the threshold is reached and to raid afterwards.\n'
                 f'{emojis.BP} If you accept a raid quest and guild quests are allowed, you will be pinged 5m before '
                 f'everyone else\n'
@@ -383,34 +384,26 @@ class SettingsClanCog(commands.Cog):
                 message_clan_members = str(message_after.embeds[0].fields[0].value)
                 message_clan_leader = str(message_after.embeds[0].footer.text)
                 search_patterns = [
-                    '^\*\*(.+?)\*\* members', #English
-                    '^Mi?embros de \*\*(.+?)\*\*', #Spanish, Portuguese
+                    r'^\*\*(.+?)\*\* members', #English
+                    r'^Mi?embros de \*\*(.+?)\*\*', #Spanish, Portuguese
                 ]
                 clan_name_match = await functions.get_match_from_patterns(search_patterns, message_clan_name)
-                try:
+                if clan_name_match:
                     clan_name = clan_name_match.group(1)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message_after.guild.id in settings.DEV_GUILDS:
-                        await message_after.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Clan name not found in guild list message: {message_clan_name}',
-                        message_after
-                    )
+                else:
+                    await functions.add_warning_reaction(message_after)
+                    await errors.log_error(f'Clan name not found in guild list message: {message_clan_name}', message_after)
                     return
                 search_patterns = [
-                    'Owner: (.+?)$', #English
-                    'Lider: (.+?)$', #Spanish, Portuguese
+                    r'Owner: (.+?)$', #English
+                    r'Lider: (.+?)$', #Spanish, Portuguese
                 ]
                 clan_leader_match = await functions.get_match_from_patterns(search_patterns, message_clan_leader)
-                try:
+                if clan_leader_match:
                     clan_leader = clan_leader_match.group(1)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message_after.guild.id in settings.DEV_GUILDS:
-                        await message_after.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Clan owner not found in guild list message: {message_clan_leader}',
-                        message_after
-                    )
+                else:
+                    await functions.add_warning_reaction(message_after)
+                    await errors.log_error('Clan owner not found in guild list message: {message_clan_leader}', message_after)
                     return
                 clan_members = message_clan_members.replace('ID: ','').replace('**','')
                 clan_members = clan_members.split('\n')

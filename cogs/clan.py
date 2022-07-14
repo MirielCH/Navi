@@ -46,35 +46,26 @@ class ClanCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                alert_message_prefix = '/' if user is not None else 'rpg '
+                slash_command = False if user is None else True
                 if user is None:
-                    try:
-                        user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                    except:
-                        user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
-                                                                                  message_author)
-                        try:
-                            user_name = user_name_match.group(1)
-                            user_name = await functions.encode_text(user_name)
-                        except Exception as error:
-                            if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                                await message.add_reaction(emojis.WARNING)
-                            await errors.log_error(
-                                f'User not found in clan cooldown message: {message.embeds[0].fields}',
-                                message
-                            )
+                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                    else:
+                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = await functions.encode_text(user_name_match.group(1))
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in clan cooldown message.', message)
                             return
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in clan cooldown message: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in clan cooldown message.', message)
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
@@ -85,14 +76,19 @@ class ClanCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     user_settings = None
-                timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in clan cooldown message.', message)
+                    return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                if clan.stealth_current >= clan.stealth_threshold:
-                    alert_message = f'{alert_message_prefix}guild raid'
+                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                if slash_command:
+                    alert_message = strings.SLASH_COMMANDS[action]
                 else:
-                    alert_message = f'{alert_message_prefix}guild upgrade'
+                    alert_message = f'rpg {action}'
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                          clan.channel_id, alert_message)
@@ -113,17 +109,13 @@ class ClanCog(commands.Cog):
             ]
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                alert_message_prefix = '/' if user is not None else 'rpg '
+                slash_command = False if user is None else True
                 if message.mentions: return # Yes that also disables it if you ping yourself but who does that
                 try:
-                    clan_name = re.search("^\*\*(.+?)\*\*", message_description).group(1)
+                    clan_name = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_description).group(1)
                 except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Clan name not found in clan message: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Clan name not found in clan message.', message)
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
@@ -137,30 +129,27 @@ class ClanCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         pass
                 search_patterns = [
-                    "STEALTH\*\*: (.+?)\\n", #English
-                    "SIGILO\*\*: (.+?)\\n", #Spanish
-                    "FURTIVIDADE\*\*: (.+?)\\n", #Portuguese
+                    r"STEALTH\*\*: (.+?)\n", #English
+                    r"SIGILO\*\*: (.+?)\n", #Spanish
+                    r"FURTIVIDADE\*\*: (.+?)\n", #Portuguese
                 ]
                 stealth_match = await functions.get_match_from_patterns(search_patterns, message_field1)
-                try:
+                if stealth_match:
                     stealth = stealth_match.group(1)
                     stealth = int(stealth)
                     await clan.update(stealth_current=stealth)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Stealth not found in clan message: {message.embeds[0].fields}',
-                        message
-                    )
-                    return
-                if clan.stealth_current >= clan.stealth_threshold:
-                    alert_message = f'{alert_message_prefix}guild raid'
                 else:
-                    alert_message = f'{alert_message_prefix}guild upgrade'
-                timestring_search = re.search(":clock4: \*\*(.+?)\*\*", message_field1)
-                if timestring_search is None: return
-                timestring = timestring_search.group(1)
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Stealth not found in clan message.', message)
+                    return
+                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                if slash_command:
+                    alert_message = strings.SLASH_COMMANDS[action]
+                else:
+                    alert_message = f'rpg {action}'
+                timestring_match = re.search(r":clock4: \*\*(.+?)\*\*", message_field1)
+                if not timestring_match: return
+                timestring = timestring_match.group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
@@ -182,22 +171,14 @@ class ClanCog(commands.Cog):
             ]
             if any(search_string == message_field0_name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                alert_message_prefix = '/' if user is not None else 'rpg '
+                slash_command = False if user is None else True
                 if user is None:
-                    message_history = await message.channel.history(limit=50).flatten()
-                    user_command_message = None
-                    for msg in message_history:
-                        if msg.content is not None:
-                            if msg.content.lower() == 'rpg guild upgrade' and not msg.author.bot:
-                                user_command_message = msg
-                                break
+                    user_command_message, _ = (
+                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+guild\s+upgrade\b")
+                    )
                     if user_command_message is None:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            'Couldn\'t find a command for the clan upgrade message.',
-                            message
-                        )
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the clan upgrade message.', message)
                         return
                     user = user_command_message.author
                 try:
@@ -210,16 +191,12 @@ class ClanCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     user_settings = None
                 clan_stealth_before = clan.stealth_current
-                try:
-                    stealth = re.search("--> \*\*(.+?)\*\*", message_field0_value).group(1)
-                    stealth = int(stealth)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Stealth not found in clan upgrade message: {message.embeds[0].fields}',
-                        message
-                    )
+                stealth_match = re.search(r"--> \*\*(.+?)\*\*", message_field0_value)
+                if stealth_match:
+                    stealth = int(stealth_match.group(1))
+                else:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Stealth not found in clan upgrade message.', message)
                     return
                 await clan.update(stealth_current=stealth)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
@@ -227,10 +204,11 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                if clan.stealth_current >= clan.stealth_threshold:
-                    alert_message = f'{alert_message_prefix}guild raid'
+                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                if slash_command:
+                    alert_message = strings.SLASH_COMMANDS[action]
                 else:
-                    alert_message = f'{alert_message_prefix}guild upgrade'
+                    alert_message = f'rpg {action}'
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                          clan.channel_id, alert_message)
@@ -250,46 +228,42 @@ class ClanCog(commands.Cog):
                             await message.add_reaction(emojis.ANGRY)
                         else:
                             if user_settings.reactions_enabled: await message.add_reaction(emojis.ANGRY)
+                    if clan.stealth_current == 69:
+                        if user_settings is None:
+                            await message.add_reaction(emojis.NICE)
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NICE)
                 else:
                     if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
 
             # Guild raid
             search_strings = [
                 '** RAIDED **', #English
-                '** ASALTÓ **', #Spanish
+                '** RAIDEÓ **', #Spanish
                 '** RAIDOU **', #Portuguese
             ]
             if (any(search_string in message_description for search_string in search_strings)
                 and ':crossed_swords:' in message_description.lower()):
                 user_name = None
                 user = await functions.get_interaction_user(message)
-                alert_message_prefix = '/' if user is not None else 'rpg '
+                slash_command = False if user is None else True
                 if user is None:
                     search_patterns = [
-                        "\*\*(.+?)\*\* throws", #English
-                        "\*\*(.+?)\*\* tiró", #Spanish
-                        "\*\*(.+?)\*\* jogou", #Portuguese
+                        r"\*\*(.+?)\*\* throws", #English
+                        r"\*\*(.+?)\*\* tiró", #Spanish
+                        r"\*\*(.+?)\*\* jogou", #Portuguese
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_field0_value)
-                    try:
-                        user_name = user_name_match.group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in clan raid message: {message.embeds[0].fields}',
-                            message
-                        )
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in clan raid message.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'User not found in clan raid message: {message.embeds[0].fields}',
-                        message
-                    )
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in clan raid message.', message)
                     return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
@@ -301,21 +275,16 @@ class ClanCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     user_settings = None
                 search_patterns = [
-                    "earned \*\*(.+?)\*\*", #English
-                    "ganó \*\*(.+?)\*\*", #Spanish
-                    "ganhou \*\*(.+?)\*\*", #Portuguese
+                    r"earned \*\*(.+?)\*\*", #English
+                    r"ganó \*\*(.+?)\*\*", #Spanish
+                    r"ganhou \*\*(.+?)\*\*", #Portuguese
                 ]
                 energy_match = await functions.get_match_from_patterns(search_patterns, message_field1)
-                try:
-                    energy = energy_match.group(1)
-                    energy = int(energy)
-                except Exception as error:
-                    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                        await message.add_reaction(emojis.WARNING)
-                    await errors.log_error(
-                        f'Energy not found in clan raid message: {message.embeds[0].fields}',
-                        message
-                    )
+                if energy_match:
+                    energy = int(energy_match.group(1))
+                else:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Energy not found in clan raid message.', message)
                     return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 clan_raid = await clans.insert_clan_raid(clan.clan_name, user.id, energy, current_time)
@@ -329,10 +298,11 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                if clan.stealth_current >= clan.stealth_threshold:
-                    alert_message = f'{alert_message_prefix}guild raid'
+                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                if slash_command:
+                    alert_message = strings.SLASH_COMMANDS[action]
                 else:
-                    alert_message = f'{alert_message_prefix}guild upgrade'
+                    alert_message = f'rpg {action}'
                 reminder: reminders.Reminder = (
                     await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                          clan.channel_id, alert_message)

@@ -119,26 +119,19 @@ class TrackingCog(commands.Cog):
                     user = await functions.get_interaction_user(message)
                     if user is None:
                         search_patterns = [
-                            '\*\*(.+?)\*\* has', #English
-                            '\*\*(.+?)\*\* viajó', #English
-                            '\*\*(.+?)\*\* tempo', #Portuguese
+                            r'\*\*(.+?)\*\* has', #English
+                            r'\*\*(.+?)\*\* viajó', #English
+                            r'\*\*(.+?)\*\* tempo', #Portuguese
                         ]
                         user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                        try:
-                            user_name = user_name_match.group(1)
-                            user_name = await functions.encode_text(user_name)
-                        except Exception as error:
-                            await errors.log_error(
-                                f'Error while reading user name from time travel message:\n{error}',
-                                message
-                            )
+                        if user_name_match:
+                            user_name = await functions.encode_text(user_name_match.group(1))
+                        else:
+                            await errors.log_error('User name not found in time travel message.', message)
                             return
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user is None:
-                        await errors.log_error(
-                            f'Couldn\'t find a user with user_name {user_name}.',
-                            message
-                        )
+                        await errors.log_error('User name not found in time travel message.', message)
                         return
                     try:
                         user_settings: users.User = await users.get_user(user.id)

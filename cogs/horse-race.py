@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class HorseRaceCog(commands.Cog):
@@ -32,25 +32,17 @@ class HorseRaceCog(commands.Cog):
                 if message.mentions:
                     user = message.mentions[0]
                 else:
-                    try:
-                        user_name = re.search("^\*\*(.+?)\*\*,", message_content).group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in horse race message: {message_content}',
-                            message
-                        )
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in horse race message.', message)
                         return
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
             if user is None:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'User not found in horse race message: {message_content}',
-                    message
-                )
+                await functions.add_warning_reaction(message)
+                await errors.log_error('User not found in horse race message.', message)
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
@@ -58,11 +50,15 @@ class HorseRaceCog(commands.Cog):
                 return
             if not user_settings.bot_enabled or not user_settings.alert_horse_race.enabled: return
             search_patterns = [
-                'next race is in \*\*(.+?)\*\*', #English
-                'la siguiente carrera es en \*\*(.+?)\*\*', #Spanish
-                'próxima corrida é em \*\*(.+?)\*\*', #Portuguese
+                r'next race is in \*\*(.+?)\*\*', #English
+                r'la siguiente carrera es en \*\*(.+?)\*\*', #Spanish
+                r'próxima corrida é em \*\*(.+?)\*\*', #Portuguese
             ]
             timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+            if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in horse race message.', message)
+                    return
             timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')

@@ -35,43 +35,38 @@ class ArenaCog(commands.Cog):
         if any(search_string in message_title.lower() for search_string in search_strings):
             user_id = user_name = None
             user = await functions.get_interaction_user(message)
-            user_command = '/arena' if user is not None else 'rpg arena'
+            user_command = strings.SLASH_COMMANDS['arena'] if user is not None else '`rpg arena`'
             if user is None:
-                try:
-                    user_id = int(re.search("avatars\/(.+?)\/", icon_url).group(1))
-                except:
-                    user_name_match = await functions.get_match_from_patterns(strings.COOLDOWN_USERNAME_PATTERNS,
-                                                                              message_author)
-                    try:
-                        user_name = user_name_match.group(1)
-                        user_name = await functions.encode_text(user_name)
-                    except Exception as error:
-                        if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                            await message.add_reaction(emojis.WARNING)
-                        await errors.log_error(
-                            f'User not found in arena cooldown message: {message.embeds[0].fields}',
-                            message
-                        )
+                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                else:
+                    user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = await functions.encode_text(user_name_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in arena cooldown message.', message)
                         return
                 if user_id is not None:
                     user = await message.guild.fetch_member(user_id)
                 else:
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
             if user is None:
-                if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
-                    await message.add_reaction(emojis.WARNING)
-                await errors.log_error(
-                    f'User not found in arena cooldown message: {message.embeds[0].fields}',
-                    message
-                )
+                await functions.add_warning_reaction(message)
+                await errors.log_error('User not found in arena cooldown message.', message)
                 return
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.alert_arena.enabled: return
-            timestring_match = await functions.get_match_from_patterns(strings.COOLDOWN_TIMESTRING_PATTERNS,
+            timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                        message_title)
+            if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in arena cooldown message.', message)
+                    return
             timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder_message = user_settings.alert_arena.message.replace('{command}', user_command)
