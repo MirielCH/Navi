@@ -69,8 +69,10 @@ class TrainingCog(commands.Cog):
                     interaction = await functions.get_interaction(message)
                     if interaction.name.startswith('ultraining'):
                         user_command = strings.SLASH_COMMANDS['ultraining']
+                        last_training_command = 'ultraining'
                     else:
                         user_command = strings.SLASH_COMMANDS['training']
+                        last_training_command = 'training'
                 else:
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
@@ -83,7 +85,12 @@ class TrainingCog(commands.Cog):
                         return
                     user_command = re.sub(r'\bultr\b', 'ultraining', user_command)
                     user_command = re.sub(r'\btr\b', 'training', user_command)
+                    for command in strings.WORK_COMMANDS:
+                        if command in user_command:
+                            last_training_command = command
+                            break
                     user_command = f'`{user_command}`'
+                await user_settings.update(last_training_command=last_training_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -131,6 +138,7 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
+                await user_settings.update(last_training_command='ultraining')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -181,6 +189,7 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
+                await user_settings.update(last_training_command='training')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

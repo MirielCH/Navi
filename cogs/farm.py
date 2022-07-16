@@ -58,6 +58,21 @@ class FarmCog(commands.Cog):
                         user = await message.guild.fetch_member(user_id)
                     else:
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    user_command_message, user_command = (
+                        await functions.get_message_from_channel_history(
+                            message.channel,
+                            r"^rpg\s+farm\b\s*(?:carrot\b|potato\b|bread\b)?",
+                            user
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error(
+                            'Couldn\'t find a command for the farm cooldown message.',
+                            message
+                        )
+                        return
+                    user_command = f'`{user_command.strip()}`'
                 if user is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in farm cooldown message.', message)
@@ -67,21 +82,15 @@ class FarmCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_farm.enabled: return
-                user_command_message, user_command = (
-                        await functions.get_message_from_channel_history(
-                            message.channel,
-                            r"^rpg\s+farm\b\s*(?:carrot\b|potato\b|bread\b)?",
-                            user
-                        )
-                    )
-                if user_command_message is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error(
-                        'Couldn\'t find a command for the farm cooldown message.',
-                        message
-                    )
-                    return
-                user_command = f'`{user_command.strip()}`'
+                if not slash_command:
+                    last_farm_seed = None
+                    if 'carrot' in user_command:
+                        last_farm_seed = 'carrot'
+                    elif 'bread' in user_command:
+                        last_farm_seed = 'bread'
+                    elif 'potato' in user_command:
+                        last_farm_seed = 'potato'
+                    await user_settings.update(last_farm_seed=last_farm_seed)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -106,7 +115,7 @@ class FarmCog(commands.Cog):
                'no solo...', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
-                user_name = None
+                user_name = last_farm_seed = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
@@ -141,12 +150,16 @@ class FarmCog(commands.Cog):
                 ]
                 if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
                     user_command = '`rpg farm bread`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: bread`"
+                    last_farm_seed = 'bread'
                 elif any(search_string.format('carrot seed') in message_content.lower() for search_string in search_strings):
                     user_command = '`rpg farm carrot`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: carrot`"
+                    last_farm_seed = 'carrot'
                 elif any(search_string.format('potato seed') in message_content.lower() for search_string in search_strings):
                     user_command = '`rpg farm potato`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: potato`"
+                    last_farm_seed = 'potato'
                 else:
                     user_command = 'rpg farm' if not slash_command else '/farm'
+                await user_settings.update(last_farm_seed=last_farm_seed)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

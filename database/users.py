@@ -45,7 +45,14 @@ class User():
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
+    last_adventure_mode: str
+    last_farm_seed: str
+    last_hunt_mode: str
+    last_lootbox: str
+    last_quest_command: str
+    last_training_command: str
     last_tt: datetime
+    last_work_command: str
     partner_channel_id: int
     partner_donor_tier: int
     partner_id: int
@@ -91,7 +98,14 @@ class User():
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
+        self.last_adventure_mode = new_settings.last_adventure_mode
+        self.last_farm_seed = new_settings.last_farm_seed
+        self.last_hunt_mode = new_settings.last_hunt_mode
+        self.last_lootbox = new_settings.last_lootbox
+        self.last_quest_command = new_settings.last_quest_command
+        self.last_training_command = new_settings.last_training_command
         self.last_tt = new_settings.last_tt
+        self.last_work_command = new_settings.last_work_command
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_id = new_settings.partner_id
@@ -162,7 +176,14 @@ class User():
             guild_quest_prompt_active: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
+            last_adventure_mode: str
+            last_farm_seed: str
+            last_hunt_mode: str
+            last_lootbox: str
+            last_quest_command: str
+            last_training_command: str
             last_tt: datetime UTC
+            last_workt_command: str
             partner_channel_id: int
             partner_donor_tier: int
             partner_id: int
@@ -248,7 +269,14 @@ async def _dict_to_user(record: dict) -> User:
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
+            last_adventure_mode = record['last_adventure_mode'],
+            last_farm_seed = record['last_farm_seed'],
+            last_hunt_mode = record['last_hunt_mode'],
+            last_lootbox = record['last_lootbox'],
+            last_quest_command = record['last_quest_command'],
+            last_training_command = record['last_training_command'],
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
+            last_work_command = record['last_work_command'],
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
             partner_id = record['partner_id'],
@@ -461,7 +489,14 @@ async def _update_user(user: User, **kwargs) -> None:
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
+        last_adventure_mode: str
+        last_farm_seed: str
+        last_hunt_mode: str
+        last_lootbox: str
+        last_quest_command: str
+        last_training_command: str
         last_tt: datetime UTC (iso format with separator ' ')
+        last_work_command: str
         partner_channel_id: int
         partner_donor_tier: int
         partner_id: int

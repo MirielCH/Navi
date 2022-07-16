@@ -51,8 +51,9 @@ async def get_message_from_channel_history(channel: discord.channel, regex: str,
             if user is None and message.author.bot: continue
             if user is not None and message.author != user: continue
             match = re.search(regex, message.content.lower())
-            match_string = ' '.join(match.group(0).split())
-            if match: return (message, match_string)
+            if match:
+                match_string = ' '.join(match.group(0).split())
+                return (message, match_string)
     return (None, None)
 
 

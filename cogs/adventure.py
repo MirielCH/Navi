@@ -76,6 +76,9 @@ class AdventureCog(commands.Cog):
                     user_command = re.sub(r'\badv\b', 'adventure', user_command)
                     user_command = re.sub(r'\bh\b', 'hardmode', user_command)
                     user_command = f'`{user_command}`'
+                    last_adventure_mode = None
+                    if 'hardmode' in user_command: last_adventure_mode = 'hardmode'
+                    await user_settings.update(last_adventure_mode=last_adventure_mode)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                        message_title)
                 if not timestring_match:
@@ -106,14 +109,17 @@ class AdventureCog(commands.Cog):
                     '(pero más fuerte)', #Spanish
                     '(só que mais forte)', #Portuguese
                 ]
+                last_adventure_mode = None
                 if user is not None:
                     user_command = strings.SLASH_COMMANDS['adventure']
                     if any(search_string in message_content.lower() for search_string in search_strings):
                         user_command = f'{user_command} `mode: hardmode`'
+                        last_adventure_mode = 'hardmode'
                 else:
                     user_command = 'rpg adventure'
                     if any(search_string in message_content.lower() for search_string in search_strings):
                         user_command = f'{user_command} hardmode'
+                        last_adventure_mode = 'hardmode'
                     user_command = f'`{user_command}`'
                     user_name = None
                     search_patterns = [
@@ -141,6 +147,7 @@ class AdventureCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)
                 if not user_settings.alert_adventure.enabled: return
+                await user_settings.update(last_adventure_mode=last_adventure_mode)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'adventure')
                 reminder_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

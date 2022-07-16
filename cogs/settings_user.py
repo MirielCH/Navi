@@ -43,22 +43,21 @@ class SettingsUserCog(commands.Cog):
                 user_id = ctx.author.id
         else:
             user_id = ctx.author.id
-        user = await functions.get_discord_user(self.bot, user_id)
-        if user is None:
+        user_discord = await functions.get_discord_user(self.bot, user_id)
+        if user_discord is None:
             await ctx.reply('This user doesn\'t exist.')
             return
-        if user.bot:
+        if user_discord.bot:
             await ctx.reply('Imagine trying to check the reminders of a bot.')
             return
         try:
-            user: users.User = await users.get_user(user_id)
+            user: users.User = await users.get_user(user_discord.id)
         except exceptions.FirstTimeUserError:
-            if user == ctx.author:
+            if user_discord == ctx.author:
                 raise
             else:
                 await ctx.reply('This user is not registered with this bot.')
             return
-        user_discord = await functions.get_discord_user(self.bot, user_id)
         current_time = datetime.utcnow().replace(microsecond=0)
         try:
             user_reminders = await reminders.get_active_user_reminders(user.user_id)
@@ -170,6 +169,126 @@ class SettingsUserCog(commands.Cog):
                 )
             embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
         await ctx.reply(embed=embed)
+
+    @commands.command(name='rd')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def ready(self, ctx: commands.Context, *args: str) -> None:
+        """Lists all commands that are ready to use"""
+        if ctx.prefix.lower() == 'rpg ': return
+        if ctx.message.mentions:
+            user_id = ctx.message.mentions[0].id
+        elif args:
+            arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
+            if arg.isnumeric():
+                try:
+                    user_id = int(arg)
+                except:
+                    user_id = ctx.author.id
+            else:
+                user_id = ctx.author.id
+        else:
+            user_id = ctx.author.id
+        user_discord = await functions.get_discord_user(self.bot, user_id)
+        if user_discord is None:
+            await ctx.reply('This user doesn\'t exist.')
+            return
+        if user_discord.bot:
+            await ctx.reply('Imagine trying to check the commands of a bot.')
+            return
+        try:
+            user: users.User = await users.get_user(user_discord.id)
+        except exceptions.FirstTimeUserError:
+            if user_discord == ctx.author:
+                raise
+            else:
+                await ctx.reply('This user is not registered with this bot.')
+            return
+        try:
+            user_reminders = await reminders.get_active_user_reminders(user.user_id)
+        except exceptions.NoDataFoundError:
+            user_reminders = []
+        clan_reminder = []
+        if user.clan_name is not None:
+            try:
+                clan_reminder = await reminders.get_active_clan_reminders(user.clan_name)
+            except exceptions.NoDataFoundError:
+                pass
+        ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
+        ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
+        for reminder in user_reminders:
+            if reminder.activity in ready_command_activities:
+                ready_command_activities.remove(reminder.activity)
+            elif reminder.activity in ready_event_activities:
+                ready_event_activities.remove(reminder.activity)
+
+        embed = discord.Embed(
+            color = settings.EMBED_COLOR,
+            title = f'{user_discord.name}\'S READY COMMANDS'.upper()
+        )
+        if not ready_command_activities and clan_reminder:
+            embed.description = f'{emojis.BP} You have no ready commands'
+        if ready_command_activities:
+            field_ready_commands = ''
+            ready_commands = []
+            for activity in ready_command_activities:
+                if activity == 'dungeon-miniboss':
+                    command = (
+                        f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"
+                    )
+                elif activity == 'quest':
+                    command = strings.SLASH_COMMANDS.get(user.last_quest_command,
+                                                               strings.SLASH_COMMANDS['quest'])
+                elif activity == 'training':
+                    command = strings.SLASH_COMMANDS.get(user.last_training_command,
+                                                                  strings.SLASH_COMMANDS['training'])
+                elif activity == 'work':
+                    command = strings.SLASH_COMMANDS.get(user.last_work_command, 'work command')
+                else:
+                    command = strings.SLASH_COMMANDS[strings.ACTIVITIES_SLASH_COMMANDS[activity]]
+                if activity == 'lootbox':
+                    lootbox_name = '[lootbox]' if user.last_lootbox is None else f'{user.last_lootbox} lootbox'
+                    command = f'{command} `item: {lootbox_name}`'
+                elif activity == 'adventure' and user.last_adventure_mode is not None:
+                    command = f'{command} `mode: {user.last_adventure_mode}`'
+                elif activity == 'hunt' and user.last_hunt_mode is not None:
+                    command = f'{command} `mode: {user.last_hunt_mode}`'
+                elif activity == 'farm' and user.last_farm_seed is not None:
+                    command = f'{command} `seed: {user.last_farm_seed}`'
+                ready_commands.append(command)
+            for command in sorted(ready_commands):
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.BP} {command}'
+                )
+            embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
+        if ready_event_activities:
+            field_ready_events = ''
+            ready_events = []
+            for activity in ready_event_activities:
+                if activity == 'big-arena' and not 'arena' in ready_command_activities:
+                    continue
+                elif activity == 'horse-race' and not 'horse' in ready_command_activities:
+                    continue
+                elif activity == "minintboss" and not 'dungeon-miniboss' in ready_command_activities:
+                    continue
+                else:
+                    ready_events.append(strings.SLASH_COMMANDS[strings.ACTIVITIES_SLASH_COMMANDS[activity]])
+            for event in sorted(ready_events):
+                field_ready_events = (
+                    f'{field_ready_events}\n'
+                    f'{emojis.BP} {event}'
+                )
+            embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
+        if not clan_reminder:
+            try:
+                clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
+                command = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                field_ready_clan = f"{emojis.BP} {strings.SLASH_COMMANDS[command]}"
+                embed.add_field(name='GUILD', value=field_ready_clan)
+            except exceptions.NoDataFoundError:
+                pass
+        await ctx.reply(embed=embed)
+
 
     @commands.command(aliases=('start',))
     @commands.bot_has_permissions(send_messages=True)

@@ -76,6 +76,7 @@ class QuestCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
                 if not clan.alert_enabled: return
+                await user_settings.update(last_quest_command='quest')
                 if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
                     await message.reply(
                         f'{emojis.ERROR} Guild quest spot not available.\n'
@@ -135,9 +136,11 @@ class QuestCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     if interaction.name.startswith('quest'):
-                        user_command = strings.SLASH_COMMANDS['quest start']
+                        user_command = strings.SLASH_COMMANDS['quest']
+                        last_quest_command = 'quest'
                     else:
                         user_command = strings.SLASH_COMMANDS['epic quest']
+                        last_quest_command = 'epic quest'
                 else:
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
@@ -148,6 +151,8 @@ class QuestCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a command for the quest cooldown message.', message)
                         return
+                    last_quest_command = 'quest' if 'epic' not in user_command else 'epic quest'
+                await user_settings.update(last_quest_command=last_quest_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -197,6 +202,7 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                await user_settings.update(last_quest_command='quest')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'quest')
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -244,6 +250,7 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                await user_settings.update(last_quest_command='epic quest')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -307,6 +314,7 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                await user_settings.update(last_quest_command='quest')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time

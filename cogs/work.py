@@ -66,6 +66,7 @@ class WorkCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     user_command = strings.SLASH_COMMANDS[interaction.name]
+                    last_work_command = interaction.name
                 else:
                     regex = r"^rpg\s+(?:"
                     for command in strings.WORK_COMMANDS:
@@ -74,11 +75,16 @@ class WorkCog(commands.Cog):
                     user_command_message, user_command = (
                             await functions.get_message_from_channel_history(message.channel, regex, user)
                         )
+                    for command in strings.WORK_COMMANDS:
+                        if command in user_command:
+                            last_work_command = command
+                            break
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a command for the work cooldown message.', message)
                         return
                     user_command = f'`{user_command}`'
+                await user_settings.update(last_work_command=last_work_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -167,6 +173,7 @@ class WorkCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     user_command = strings.SLASH_COMMANDS[interaction.name]
+                    last_work_command = interaction.name
                 else:
                     regex = r"^rpg\s+(?:"
                     for command in strings.WORK_COMMANDS:
@@ -269,6 +276,11 @@ class WorkCog(commands.Cog):
                         else: action = '[work command]'
                         user_command = f'rpg {action}'
                     user_command = f'`{user_command}`'
+                    for command in strings.WORK_COMMANDS:
+                        if command in user_command:
+                            last_work_command = command
+                            break
+                await user_settings.update(last_work_command=last_work_command)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                 reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -362,7 +374,12 @@ class WorkCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Couldn\'t find a command for the work event non-slash message.', message)
                     return
+                for command in strings.WORK_COMMANDS:
+                    if command in user_command:
+                        last_work_command = command
+                        break
                 user_command = f'`{user_command}`'
+                await user_settings.update(last_work_command=last_work_command)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                 reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -380,11 +397,13 @@ class WorkCog(commands.Cog):
                 if interaction is None: return
                 if interaction.name not in strings.WORK_COMMANDS: return
                 user_command = strings.SLASH_COMMANDS[interaction.name]
+                last_work_command = interaction.name
                 user = interaction.user
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
+                await user_settings.update(last_work_command=last_work_command)
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:

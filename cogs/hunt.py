@@ -35,9 +35,12 @@ class HuntCog(commands.Cog):
                 'você já olhou ao seu redor', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = embed_user = user_command = None
+                user_id = user_name = embed_user = user_command = last_hunt_mode = None
+                slash_command = False
                 interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is not None: user_command = strings.SLASH_COMMANDS['hunt']
+                if interaction_user is not None:
+                    user_command = strings.SLASH_COMMANDS['hunt']
+                    slash_command = True
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -72,18 +75,25 @@ class HuntCog(commands.Cog):
                     for argument in user_command_message.content.lower().split():
                         if argument in ('h', 'hardmode') and 'hardmode' not in user_command:
                             user_command = f'{user_command} hardmode'
+                            last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
                         if argument in ('t', 'together') and 'together' not in user_command:
                             user_command = f'{user_command} together'
+                            last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
                         if argument in ('a', 'alone') and 'alone' not in user_command:
                             user_command = f'{user_command} alone'
+                            last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
                         if argument in ('n', 'new') and 'new' not in user_command:
                             user_command = f'{user_command} new'
+                            last_hunt_mode = f'{last_hunt_mode} new' if last_hunt_mode is not None else 'new'
                     user_command = f'`{user_command.strip()}`'
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
+                if slash_command and user_settings.last_hunt_mode is not None:
+                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                if not slash_command: await user_settings.update(last_hunt_mode=last_hunt_mode)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -125,7 +135,7 @@ class HuntCog(commands.Cog):
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
-                user_name = partner_name = None
+                user_name = partner_name = last_hunt_mode = None
                 hardmode = together = alone = False
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -196,11 +206,20 @@ class HuntCog(commands.Cog):
                 else:
                     user_command = strings.SLASH_COMMANDS['hunt']
                     if hardmode or alone or together: user_command = f'{user_command} `mode:'
-                if hardmode: user_command = f'{user_command} hardmode'
-                if alone: user_command = f'{user_command} alone'
-                if together: user_command = f'{user_command} together'
-                if new: user_command = f'{user_command} new'
-                user_command = f'`{user_command}`' if not slash_command else f'{user_command}`'
+                if hardmode:
+                    user_command = f'{user_command} hardmode'
+                    last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
+                if together:
+                    user_command = f'{user_command} together'
+                    last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
+                if alone:
+                    user_command = f'{user_command} alone'
+                    last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
+                if new:
+                    user_command = f'{user_command} new'
+                    last_hunt_mode = f'{last_hunt_mode} new' if last_hunt_mode is not None else 'new'
+                if not slash_command: user_command = f'`{user_command}`'
+                await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -358,7 +377,7 @@ class HuntCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction_user(message)
                 if interaction is not None: return
-                user_name = user_command = None
+                user_name = user_command = last_hunt_mode = None
                 user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
                 if user_name_match:
                     user_name = await functions.encode_text(user_name_match.group(1))
@@ -392,11 +411,15 @@ class HuntCog(commands.Cog):
                 for argument in user_command_message.content.lower().split():
                     if argument in ('h', 'hardmode'):
                         user_command = f'{user_command} hardmode'
+                        last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
                     if argument in ('t', 'together'):
                         user_command = f'{user_command} together'
+                        last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
                     if argument in ('a', 'alone'):
                         user_command = f'{user_command} alone'
+                        last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
                 user_command = f'`{user_command}`'
+                await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time

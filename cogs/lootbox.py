@@ -36,10 +36,8 @@ class BuyCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: [lootbox]`"
-                else:
-                    user_command = '`rpg buy [lootbox]`'
+                lootbox_name = '[lootbox]'
+                slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
@@ -65,6 +63,11 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
+                lootbox_name = '[lootbox]' if user_settings.last_lootbox is None else f'{user_settings.last_lootbox} lootbox'
+                if slash_command:
+                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: {lootbox_name}`"
+                else:
+                    user_command = f'`rpg buy {lootbox_name}`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -91,10 +94,16 @@ class BuyCog(commands.Cog):
                 and not 'guild ring' in message_content.lower()
                 and not 'smol coin' in message_content.lower()):
                 user = await functions.get_interaction_user(message)
+                lootbox_type = None
+                lootbox_name = '[lootbox]'
+                lootbox_type_match = re.search(r'`(.+?) lootbox`', message_content.lower())
+                if lootbox_type_match:
+                    lootbox_type = lootbox_type_match.group(1)
+                    lootbox_name = f'{lootbox_type} lootbox'
                 if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: [lootbox]`"
+                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: {lootbox_name}`"
                 else:
-                    user_command = '`rpg buy [lootbox]`'
+                    user_command = f'`rpg buy {lootbox_name}`'
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
@@ -111,6 +120,7 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
+                await user_settings.update(last_lootbox=lootbox_type)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'lootbox')
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
