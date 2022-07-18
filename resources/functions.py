@@ -71,6 +71,7 @@ async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
 
 async def get_discord_channel(bot: discord.Bot, channel_id: int) -> discord.User:
     """Checks the channel cache for a channel and makes an additional API call if not found. Returns None if channel not found."""
+    if channel_id is None: return None
     await bot.wait_until_ready()
     channel = bot.get_channel(channel_id)
     if channel is None:

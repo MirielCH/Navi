@@ -205,19 +205,21 @@ class HuntCog(commands.Cog):
                     user_command = 'rpg hunt'
                 else:
                     user_command = strings.SLASH_COMMANDS['hunt']
-                    if hardmode or alone or together: user_command = f'{user_command} `mode:'
+                arguments = ''
                 if hardmode:
-                    user_command = f'{user_command} hardmode'
-                    last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
+                    arguments = f'{arguments} hardmode'
                 if together:
-                    user_command = f'{user_command} together'
-                    last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
+                    arguments = f'{arguments} together'
                 if alone:
-                    user_command = f'{user_command} alone'
-                    last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
+                    arguments = f'{arguments} alone'
                 if new:
-                    user_command = f'{user_command} new'
-                    last_hunt_mode = f'{last_hunt_mode} new' if last_hunt_mode is not None else 'new'
+                    arguments = f'{arguments} new'
+                if arguments != '':
+                    last_hunt_mode = arguments.strip()
+                    if slash_command:
+                        user_command = f'{user_command} `mode: {arguments.strip()}`'
+                    else:
+                        user_command = f'{user_command} {arguments.strip()}`'
                 if not slash_command: user_command = f'`{user_command}`'
                 await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')

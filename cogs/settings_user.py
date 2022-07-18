@@ -237,10 +237,10 @@ class SettingsUserCog(commands.Cog):
                     )
                 elif activity == 'quest':
                     command = strings.SLASH_COMMANDS.get(user.last_quest_command,
-                                                               strings.SLASH_COMMANDS['quest'])
+                                                         strings.SLASH_COMMANDS['quest'])
                 elif activity == 'training':
                     command = strings.SLASH_COMMANDS.get(user.last_training_command,
-                                                                  strings.SLASH_COMMANDS['training'])
+                                                         strings.SLASH_COMMANDS['training'])
                 elif activity == 'work':
                     command = strings.SLASH_COMMANDS.get(user.last_work_command, 'work command')
                 else:

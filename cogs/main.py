@@ -156,6 +156,7 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
 
     reminder_management = (
         f'{emojis.BP} `{prefix}list` : List all your active reminders\n'
+        f'{emojis.BP} `{prefix}ready` : List all commands off cooldown\n'
         f'{emojis.BP} `{prefix}rm` : Manage custom reminders'
     )
 

@@ -107,7 +107,7 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name = None
-                    user_name_match = re.search(r"\*\*(.+?)\*\* HITS", message_content)
+                    user_name_match = re.search(r'\*\*(.+?)\*\* (?:HITS|is about)', message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:
@@ -203,6 +203,7 @@ class FunCog(commands.Cog):
                 if user is None:
                     search_patterns = [
                         r"\*\*(.+?)\*\* (also )?earned [0-9] <:coolness", #English
+                        r"\*\*(.+?)\*\* found", #English 2
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
