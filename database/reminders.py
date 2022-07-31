@@ -1,11 +1,12 @@
 # reminders.py
 """Provides access to the tables "reminders_users" and "reminders_clans" in the database"""
 
+from argparse import ArgumentError
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Union
 
 from discord.ext import tasks
 
@@ -779,10 +780,20 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     return reminder
 
 
-async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
+async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, str]) -> None:
     """Reduces the end time of all user reminders affected by sleepy potions of one user by a certain amount.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
-    If the new end time is in the past, the reminder is deleted."""
+    If the new end time is in the past, the reminder is deleted.
+
+    Arguments
+    ---------
+    time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
+    for half of their remaining amount.
+
+    Raises
+    ------
+    ValueError if time_reduction is neither time_delta nor the string 'half'
+    """
     current_time = datetime.utcnow().replace(microsecond=0)
     try:
         reminders = await get_active_user_reminders(user_id)
@@ -790,14 +801,22 @@ async def reduce_reminder_time(user_id: int, time_reduction: timedelta) -> None:
         return
     current_time = datetime.utcnow()
     for reminder in reminders:
-        if reminder.activity in strings.SLEEPY_POTION_AFFECTED_ACTIVITIES:
-            new_end_time = reminder.end_time - time_reduction
-            time_left = new_end_time - current_time
-            if time_left.total_seconds() <= 0:
-                scheduled_for_deletion[reminder.task_name] = reminder
-                await reminder.delete()
-            elif 1 <= time_left.total_seconds() <= 15:
-                await reminder.update(end_time=new_end_time, triggered=True)
-                scheduled_for_tasks[reminder.task_name] = reminder
+        if reminder.activity not in strings.SLEEPY_POTION_AFFECTED_ACTIVITIES: continue
+        if isinstance(time_reduction, str):
+            if time_reduction == 'half':
+                remaining_time = reminder.end_time - current_time
+                reduced_time = remaining_time / 2
             else:
-                await reminder.update(end_time=new_end_time)
+                raise ValueError('Argument "time_reduction" is neither a timedelta nor the string \'half\'.')
+        else:
+            reduced_time = time_reduction
+        new_end_time = reminder.end_time - reduced_time
+        time_left = new_end_time - current_time
+        if time_left.total_seconds() <= 0:
+            scheduled_for_deletion[reminder.task_name] = reminder
+            await reminder.delete()
+        elif 1 <= time_left.total_seconds() <= 15:
+            await reminder.update(end_time=new_end_time, triggered=True)
+            scheduled_for_tasks[reminder.task_name] = reminder
+        else:
+            await reminder.update(end_time=new_end_time)

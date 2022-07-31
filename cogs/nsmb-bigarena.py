@@ -60,9 +60,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             if not user_settings.bot_enabled: return
             if slash_command:
                 interaction = await functions.get_interaction(message)
-                if interaction.name == 'big':
+                if interaction.name.startswith('big'):
                     user_command = '/big arena'
-                elif interaction.name == 'minintboss':
+                elif interaction.name.startswith('minintboss'):
                     user_command = '/minintboss'
                 else:
                     return

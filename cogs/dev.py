@@ -287,16 +287,9 @@ class DevCog(commands.Cog):
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        username = ctx.author.name
-        from resources import functions
-        username_encode = await functions.encode_text(ctx.author.name)
-        username_casefold = ctx.author.name.casefold()
-
-        await ctx.reply(
-            f'Username: {username}\n'
-            f'Username encoded: {username_encode}\n'
-            f'Username casefolded: {username_casefold}\n'
-        )
+        from database import reminders
+        await reminders.reduce_reminder_time(ctx.author.id, 'half')
+        await ctx.reply('Done')
 
 
 def setup(bot):

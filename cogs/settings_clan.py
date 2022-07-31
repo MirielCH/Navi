@@ -396,7 +396,7 @@ class SettingsClanCog(commands.Cog):
                     return
                 search_patterns = [
                     r'Owner: (.+?)$', #English
-                    r'Lider: (.+?)$', #Spanish, Portuguese
+                    r'Líder: (.+?)$', #Spanish, Portuguese
                 ]
                 clan_leader_match = await functions.get_match_from_patterns(search_patterns, message_clan_leader)
                 if clan_leader_match:
