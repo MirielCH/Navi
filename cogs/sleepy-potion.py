@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings
+from resources import emojis, exceptions, functions, settings, strings
 
 
 class SleepyPotionCog(commands.Cog):
@@ -52,11 +52,14 @@ class SleepyPotionCog(commands.Cog):
 
         search_strings = [
             'rides at the speed of light', #English
+            'viaja a la velocidad de la luz', #Spanish
+            'viaja na velocidade', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = user = None
             search_patterns = [
                 r'\*\*(.+?)\*\* rides', #English
+                r'\*\*(.+?)\*\* viaja', #Spanish, Portuguese
             ]
             user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
             if user_name_match:
@@ -76,6 +79,15 @@ class SleepyPotionCog(commands.Cog):
                 return
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user.id, 'half')
+            if user_settings.alert_horse_breed.enabled:
+                interaction = await functions.get_interaction(message)
+                if interaction is not None:
+                    user_command = strings.SLASH_COMMANDS['horse breeding']
+                else:
+                    user_command = '`rpg horse breed`'
+                reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
+                time_left_horse = timedelta(hours=5)
+                await reminders.insert_user_reminder(user.id, 'horse', time_left_horse, message.channel.id, reminder_message)
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 

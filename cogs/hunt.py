@@ -45,7 +45,7 @@ class HuntCog(commands.Cog):
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                 else:
-                    user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:
@@ -219,7 +219,7 @@ class HuntCog(commands.Cog):
                     if slash_command:
                         user_command = f'{user_command} `mode: {arguments.strip()}`'
                     else:
-                        user_command = f'{user_command} {arguments.strip()}`'
+                        user_command = f'{user_command} {arguments.strip()}'
                 if not slash_command: user_command = f'`{user_command}`'
                 await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')

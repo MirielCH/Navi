@@ -84,7 +84,7 @@ class PetHelperCog(commands.Cog):
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
                     if not user_name_match:
-                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:

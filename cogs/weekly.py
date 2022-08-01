@@ -38,11 +38,11 @@ class WeeklyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 user_command = strings.SLASH_COMMANDS['weekly'] if user is not None else '`rpg weekly`'
                 if user is None:
-                    user_id_match = await re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = await functions.encode_text(user_name_match.group(1))
                         else:
@@ -90,7 +90,7 @@ class WeeklyCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = await functions.encode_text(user_name_match.group(1))
                         else:

@@ -13,7 +13,7 @@ INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: 
 
 
 # --- Default messages ---
-DEFAULT_MESSAGE = 'Hey! It\'s time for `{command}`!'
+DEFAULT_MESSAGE = 'Hey! It\'s time for {command}!'
 DEFAULT_MESSAGE_EVENT = (
     'Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
     f'official EPIC RPG server.'
@@ -32,7 +32,7 @@ DEFAULT_MESSAGES = {
     'horse-race': DEFAULT_MESSAGE_EVENT,
     'hunt': DEFAULT_MESSAGE,
     'lootbox': DEFAULT_MESSAGE,
-    'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and `{command}` to enter the next draw!',
+    'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '**{user}** found {loot} for you!',
     'pets': 'Hey! Your pet `{id}` is back! {emoji}',

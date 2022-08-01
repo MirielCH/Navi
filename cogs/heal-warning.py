@@ -106,6 +106,7 @@ class HealWarningCog(commands.Cog):
 
         # Hunt solo and adventure
         elif any(search_string in message_content.lower() for search_string in search_strings_hunt_adv):
+            if 'horslime' in message_content.lower(): return
             user_name = None
             interaction = await functions.get_interaction(message)
             user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)

@@ -170,7 +170,7 @@ class SettingsUserCog(commands.Cog):
             embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
         await ctx.reply(embed=embed)
 
-    @commands.command(name='rd')
+    @commands.command(aliases=('rd',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def ready(self, ctx: commands.Context, *args: str) -> None:
         """Lists all commands that are ready to use"""

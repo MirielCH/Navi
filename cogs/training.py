@@ -45,7 +45,7 @@ class TrainingCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = await re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = await functions.encode_text(user_name_match.group(1))
                         else:
@@ -85,10 +85,10 @@ class TrainingCog(commands.Cog):
                         return
                     user_command = re.sub(r'\bultr\b', 'ultraining', user_command)
                     user_command = re.sub(r'\btr\b', 'training', user_command)
-                    for command in strings.WORK_COMMANDS:
-                        if command in user_command:
-                            last_training_command = command
-                            break
+                    if 'ultraining' in user_command:
+                        last_training_command = 'ultraining'
+                    else:
+                        last_training_command = 'training'
                     user_command = f'`{user_command}`'
                 await user_settings.update(last_training_command=last_training_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,

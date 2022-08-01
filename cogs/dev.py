@@ -287,8 +287,20 @@ class DevCog(commands.Cog):
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        from database import reminders
+        from database import reminders, users
+        from resources import functions
         await reminders.reduce_reminder_time(ctx.author.id, 'half')
+        message = ctx.message
+        user = ctx.author
+        user_settings = await users.get_user(user.id)
+        interaction = await functions.get_interaction(message)
+        if interaction is not None:
+            user_command = strings.SLASH_COMMANDS['horse breeding']
+        else:
+            user_command = '`rpg horse breed`'
+        reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
+        time_left_horse = timedelta(hours=5)
+        await reminders.insert_user_reminder(user.id, 'horse', time_left_horse, message.channel.id, reminder_message)
         await ctx.reply('Done')
 
 

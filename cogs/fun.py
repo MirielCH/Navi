@@ -272,7 +272,7 @@ class FunCog(commands.Cog):
                         user_command_message, _ = (
                         await functions.get_message_from_channel_history(
                             message.channel,
-                            r"^rpg\s+open\s+[a-z]+\s+(?:lb\b|lootbox\b)"
+                            r"^rpg\s+open\s+(?:c\b|ed\b|ep\b|u\b|o\b|omega\b|edgy\b|epic\b|common\b|uncommon\b|r\b|rare\b|g\b|godly\b)\s*(?:lb\b|lootbox\b)?"
                         )
                     )
                         if user_command_message is None:

@@ -75,7 +75,7 @@ class LotteryCog(commands.Cog):
             message_content = message.content
             # Buy lottery ticket
             search_strings = [
-                'lottery ticket successfully bought', #English
+                'lottery ticket` successfully bought', #English
                 'lottery ticket` comprado', #Spanish, Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):

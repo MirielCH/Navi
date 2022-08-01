@@ -79,7 +79,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     return
             if 'minint' in user_command:
                 if not user_settings.alert_not_so_mini_boss.enabled: return
-                event = 'minin\'tboss'
+                event = 'minintboss'
                 reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
             else:
                 if not user_settings.alert_big_arena.enabled: return
@@ -92,9 +92,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 ]
             timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
             if not timestring_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Timestring not found in big arena / minintboss message.', message)
-                    return
+                await functions.add_warning_reaction(message)
+                await errors.log_error('Timestring not found in big arena / minintboss message.', message)
+                return
             timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder: reminders.Reminder = (
