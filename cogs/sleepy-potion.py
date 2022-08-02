@@ -79,16 +79,9 @@ class SleepyPotionCog(commands.Cog):
                 return
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user.id, 'half')
-            if user_settings.alert_horse_breed.enabled:
-                interaction = await functions.get_interaction(message)
-                if interaction is not None:
-                    user_command = strings.SLASH_COMMANDS['horse breeding']
-                else:
-                    user_command = '`rpg horse breed`'
-                reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
-                time_left_horse = timedelta(hours=5)
-                await reminders.insert_user_reminder(user.id, 'horse', time_left_horse, message.channel.id, reminder_message)
-            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+            if user_settings.reactions_enabled:
+                await message.add_reaction(emojis.NAVI)
+                await message.add_reaction(emojis.KIRBY_RUN)
 
 
 # Initialization

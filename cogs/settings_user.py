@@ -260,7 +260,8 @@ class SettingsUserCog(commands.Cog):
                     f'{field_ready_commands}\n'
                     f'{emojis.BP} {command}'
                 )
-            embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
+            if field_ready_commands != '':
+                embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
         if ready_event_activities:
             field_ready_events = ''
             ready_events = []
@@ -278,7 +279,8 @@ class SettingsUserCog(commands.Cog):
                     f'{field_ready_events}\n'
                     f'{emojis.BP} {event}'
                 )
-            embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
+            if field_ready_events != '':
+                embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
         if not clan_reminder:
             try:
                 clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)

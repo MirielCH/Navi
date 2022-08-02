@@ -4,7 +4,7 @@ import re
 
 import discord
 from discord.ext import commands
-from datetime import datetime
+from datetime import timedelta
 
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, settings, strings
@@ -89,7 +89,7 @@ class CooldownsCog(commands.Cog):
                 if slash_command:
                     user_command = f"{strings.SLASH_COMMANDS['buy']} `item: {lootbox_name}`"
                 else:
-                    user_command = f'`rpg buy {lootbox_name}`'
+                    user_command = f'`rpg buy {lootbox_name}`'  
                 lb_timestring = lb_match.group(1)
                 lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
@@ -100,7 +100,7 @@ class CooldownsCog(commands.Cog):
                     if slash_command:
                         user_command = f"{strings.SLASH_COMMANDS['hunt']} `mode: {user_settings.last_hunt_mode}`"
                     else:
-                        user_command = f'`rpg adventure {user_settings.last_hunt_mode}`'
+                        user_command = f'`rpg hunt {user_settings.last_hunt_mode}`'
                 else:
                     if 'hardmode' in hunt_match.group(0):
                         if slash_command:
@@ -113,6 +113,16 @@ class CooldownsCog(commands.Cog):
                         else:
                             user_command = '`rpg hunt`'
                 hunt_timestring = hunt_match.group(1)
+                if user_settings.last_hunt_mode is not None:
+                    if ('together' in user_settings.last_hunt_mode
+                        and user_settings.partner_donor_tier < user_settings.user_donor_tier):
+                        time_left = await functions.calculate_time_left_from_timestring(message, hunt_timestring.lower())
+                        partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
+                        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                        time_difference = ((60 * settings.DONOR_COOLDOWNS[partner_donor_tier])
+                                           - (60 * settings.DONOR_COOLDOWNS[user_donor_tier]))
+                        time_left_seconds = time_left.total_seconds() + time_difference
+                        hunt_timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                 hunt_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 cooldowns.append(['hunt', hunt_timestring.lower(), hunt_message])
         if user_settings.alert_adventure.enabled:

@@ -378,6 +378,7 @@ MONSTERS_HUNT = (
     '**Elf**',
     '**Christmas Reindeer**',
     '**Snowman**',
+    '**Horslime**',
 )
 
 

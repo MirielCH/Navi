@@ -347,6 +347,7 @@ class HuntCog(commands.Cog):
                             else:
                                 hm_message = f'{user.mention} {hm_message}'
                         await message.channel.send(hm_message)
+                # Add reactions
                 if user_settings.reactions_enabled:
                     found_stuff = {
                         'OMEGA lootbox': emojis.SURPRISE,
@@ -355,7 +356,6 @@ class HuntCog(commands.Cog):
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
                             await message.add_reaction(stuff_emoji)
-                    # Add an F if the user died
                     search_strings = [
                         f'**{user.name}** lost but ', #English 1
                         'but lost fighting', #English 2
@@ -368,7 +368,9 @@ class HuntCog(commands.Cog):
                         'ambos perderam a luta', #Portuguese 3, UNCONFIRMED
                     ]
                     if any(search_string in message_content for search_string in search_strings):
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.RIP)
+                        await message.add_reaction(emojis.RIP)
+                    if 'horslime' in message_content.lower():
+                        await message.add_reaction(emojis.PANDA_EWW)
 
             # Hunt event non-slash (always English)
             search_strings = [

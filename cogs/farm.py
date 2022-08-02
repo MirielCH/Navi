@@ -158,7 +158,7 @@ class FarmCog(commands.Cog):
                     user_command = '`rpg farm potato`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: potato`"
                     last_farm_seed = 'potato'
                 else:
-                    user_command = 'rpg farm' if not slash_command else '/farm'
+                    user_command = '`rpg farm`' if not slash_command else strings.SLASH_COMMANDS['farm']
                 await user_settings.update(last_farm_seed=last_farm_seed)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
