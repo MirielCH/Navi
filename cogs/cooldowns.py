@@ -89,7 +89,7 @@ class CooldownsCog(commands.Cog):
                 if slash_command:
                     user_command = f"{strings.SLASH_COMMANDS['buy']} `item: {lootbox_name}`"
                 else:
-                    user_command = f'`rpg buy {lootbox_name}`'  
+                    user_command = f'`rpg buy {lootbox_name}`'
                 lb_timestring = lb_match.group(1)
                 lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
@@ -186,7 +186,7 @@ class CooldownsCog(commands.Cog):
             if dungmb_match:
                 dungmb_timestring = dungmb_match.group(1)
                 if slash_command:
-                    user_command = f"{strings.SLASH_COMMANDS['dungeon'] or strings.SLASH_COMMANDS['miniboss']}"
+                    user_command = f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"
                 else:
                     user_command = '`rpg dungeon` or `rpg miniboss`'
                 dungmb_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
@@ -196,7 +196,7 @@ class CooldownsCog(commands.Cog):
             if horse_match:
                 horse_timestring = horse_match.group(1)
                 if slash_command:
-                    user_command = f"{strings.SLASH_COMMANDS['horse breeding'] or strings.SLASH_COMMANDS['horse race']}"
+                    user_command = f"{strings.SLASH_COMMANDS['horse breeding']} or {strings.SLASH_COMMANDS['horse race']}"
                 else:
                     user_command = '`rpg horse breed` or `rpg horse race`'
                 horse_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)

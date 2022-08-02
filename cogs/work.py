@@ -116,6 +116,9 @@ class WorkCog(commands.Cog):
                 'new quest', #English, quest
                 'nueva misión', #Spanish, quest
                 'nova missão', #Portuguese, quest
+                'extra life points', #English, overheal
+                'puntos extras de vida', #Spanish, overheal
+                'pontos de vida extras', #Portuguese, overheal
                 ':crossed_sword:', #Ruby dragon event, all languages
             ]
             search_strings = [
@@ -125,7 +128,7 @@ class WorkCog(commands.Cog):
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in excluded_strings)):
-                user_name = user_command = None
+                user_name = user_command = last_work_command = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
@@ -172,6 +175,7 @@ class WorkCog(commands.Cog):
                 if not user_settings.alert_work.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
+                    if interaction.name not in strings.WORK_COMMANDS: return
                     user_command = strings.SLASH_COMMANDS[interaction.name]
                     last_work_command = interaction.name
                 else:
@@ -280,6 +284,10 @@ class WorkCog(commands.Cog):
                         if command in user_command:
                             last_work_command = command
                             break
+                if last_work_command is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find a command for work message.', message)
+                    return
                 await user_settings.update(last_work_command=last_work_command)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                 reminder_message = user_settings.alert_work.message.replace('{command}', user_command)

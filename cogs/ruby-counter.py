@@ -239,7 +239,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+sell\s+ruby\s*$"
+                            message.channel, r"^rpg\s+sell\s+ruby.*$"
                         )
                     )
                     if user_command_message is None:

@@ -39,7 +39,7 @@ class TrainingHelperCog(commands.Cog):
                         'aberto', #Portuguese, UNCONFIRMED
                     ]
                     if any(search_string in field.value.lower() for search_string in search_strings):
-                        seal_timestring_match = re.search(r"__: (.+?)$", field.value).group(1).replace(' ','')
+                        seal_timestring_match = re.search(r"__: (.+?)$", field.value)
                         if seal_timestring_match:
                             area_no = int(field.name[-2:])
                             seal_timestring = seal_timestring_match.group(1).replace(' ','')

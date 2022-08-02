@@ -136,7 +136,7 @@ class HuntCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
                 user_name = partner_name = last_hunt_mode = None
-                hardmode = together = alone = False
+                hardmode = together = alone = event_mob = False
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 search_strings_hardmode = [
@@ -161,6 +161,13 @@ class HuntCog(commands.Cog):
                 if any(search_string in message_content.lower() for search_string in search_strings_alone):
                     alone = True
                 new = True if '__**' in message_content.lower() else False
+                if 'horslime' in message_content.lower():
+                    search_strings_together = [
+                        'both players', #English
+                    ]
+                    if any(search_string in message_content.lower() for search_string in search_strings_together):
+                        together = True
+                    event_mob = True
                 if together:
                     search_patterns = [
                         r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
@@ -206,21 +213,51 @@ class HuntCog(commands.Cog):
                 else:
                     user_command = strings.SLASH_COMMANDS['hunt']
                 arguments = ''
-                if hardmode:
-                    arguments = f'{arguments} hardmode'
-                if together:
-                    arguments = f'{arguments} together'
-                if alone:
-                    arguments = f'{arguments} alone'
-                if new:
-                    arguments = f'{arguments} new'
-                if arguments != '':
-                    last_hunt_mode = arguments.strip()
+                if not event_mob:
+                    if hardmode:
+                        arguments = f'{arguments} hardmode'
+                    if together:
+                        arguments = f'{arguments} together'
+                    if alone:
+                        arguments = f'{arguments} alone'
+                    if new:
+                        arguments = f'{arguments} new'
+                    if arguments != '':
+                        last_hunt_mode = arguments.strip()
+                        if slash_command:
+                            user_command = f'{user_command} `mode: {arguments.strip()}`'
+                        else:
+                            user_command = f'{user_command} {arguments.strip()}'
+                    if not slash_command: user_command = f'`{user_command}`'
+                if event_mob:
                     if slash_command:
-                        user_command = f'{user_command} `mode: {arguments.strip()}`'
+                        user_command = strings.SLASH_COMMANDS['hunt']
+                        if user_settings.last_hunt_mode is not None:
+                          user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                        elif together:
+                            user_command = f'{user_command} `mode: together`'
                     else:
-                        user_command = f'{user_command} {arguments.strip()}'
-                if not slash_command: user_command = f'`{user_command}`'
+                        user_command_message, _ = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, r"^rpg\s+hunt\b", user
+                            )
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a command for the hunt event mob message.', message)
+                            return
+                        user_command = 'rpg hunt'
+                        for argument in user_command_message.content.lower().split():
+                            if argument in ('h', 'hardmode'):
+                                user_command = f'{user_command} hardmode'
+                                last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
+                            if argument in ('t', 'together'):
+                                user_command = f'{user_command} together'
+                                last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
+                            if argument in ('a', 'alone'):
+                                user_command = f'{user_command} alone'
+                                last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
+                        user_command = f'`{user_command}`'
                 await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -320,7 +357,7 @@ class HuntCog(commands.Cog):
                                     f'Had the following error while trying to send the partner alert:\n{error}',
                                     message
                                 )
-                    if together and partner.hardmode_mode_enabled:
+                    if together and partner.hardmode_mode_enabled and not event_mob:
                         hm_message = (
                             f'**{partner_discord.name}** is currently **hardmoding**.\n'
                             f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
@@ -333,7 +370,7 @@ class HuntCog(commands.Cog):
                             else:
                                 hm_message = f'{user.mention} {hm_message}'
                         await message.channel.send(hm_message)
-                    elif not together and not partner.hardmode_mode_enabled:
+                    elif not together and not partner.hardmode_mode_enabled and not event_mob:
                         partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
                         hm_message = (
                             f'**{partner_discord.name}** is not hardmoding, '

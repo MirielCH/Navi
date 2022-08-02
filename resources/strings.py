@@ -407,8 +407,8 @@ PATTERNS_COOLDOWN_TIMESTRING = [
 
 REGEX_USER_ID_FROM_ICON_URL = re.compile(r"avatars\/(.+?)\/")
 REGEX_USERNAME_FROM_EMBED_AUTHOR = re.compile(r"^(.+?) — ")
-REGEX_NAME_FROM_MESSAGE = re.compile(r"\*\*(.+?)\*\*")
-REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*")
+REGEX_NAME_FROM_MESSAGE = re.compile(r"\s\*\*(.+?)\*\*\s")
+REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
 
 
 # --- Commands ---
