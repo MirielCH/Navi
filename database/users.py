@@ -31,6 +31,7 @@ class User():
     alert_hunt: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
+    alert_megarace: UserAlert
     alert_not_so_mini_boss: UserAlert
     alert_partner: UserAlert
     alert_pet_tournament: UserAlert
@@ -84,6 +85,7 @@ class User():
         self.alert_hunt = new_settings.alert_hunt
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
+        self.alert_megarace = new_settings.alert_megarace
         self.alert_not_so_mini_boss = new_settings.alert_not_so_mini_boss
         self.alert_partner = new_settings.alert_partner
         self.alert_pet_tournament = new_settings.alert_pet_tournament
@@ -245,6 +247,8 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_lootbox_message']),
             alert_lottery = UserAlert(enabled=bool(record['alert_lottery_enabled']),
                                       message=record['alert_lottery_message']),
+            alert_megarace = UserAlert(enabled=bool(record['alert_megarace_enabled']),
+                                      message=record['alert_megarace_message']),
             alert_not_so_mini_boss = UserAlert(enabled=bool(record['alert_not_so_mini_boss_enabled']),
                                                message=record['alert_not_so_mini_boss_message']),
             alert_partner = UserAlert(enabled=bool(record['alert_partner_enabled']),
