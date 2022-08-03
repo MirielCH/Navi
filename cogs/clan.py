@@ -112,7 +112,7 @@ class ClanCog(commands.Cog):
                 slash_command = False if user is None else True
                 if message.mentions: return # Yes that also disables it if you ping yourself but who does that
                 try:
-                    clan_name = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_description).group(1)
+                    clan_name = re.search(r"^\*\*(.+?)\*\*", message_description).group(1)
                 except Exception as error:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Clan name not found in clan message.', message)

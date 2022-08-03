@@ -41,7 +41,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 if message.mentions:
                     user = message.mentions[0]
                 else:
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:

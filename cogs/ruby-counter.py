@@ -39,7 +39,7 @@ class RubyCounterCog(commands.Cog):
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_field)
+                    user_name_match = re.search(r"\*\*(.+?)\*\*:", message_field)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         if user_name in strings.EPIC_NPC_NAMES: user_name = user_name_match.group(2)
@@ -131,6 +131,7 @@ class RubyCounterCog(commands.Cog):
                 "— inventory", #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
+                if icon_url == embed.Empty: return
                 user_id = user_name = embed_user = None
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
