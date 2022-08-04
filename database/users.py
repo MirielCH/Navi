@@ -54,6 +54,7 @@ class User():
     last_training_command: str
     last_tt: datetime
     last_work_command: str
+    megarace_helper_enabled: bool
     partner_channel_id: int
     partner_donor_tier: int
     partner_id: int
@@ -108,6 +109,7 @@ class User():
         self.last_training_command = new_settings.last_training_command
         self.last_tt = new_settings.last_tt
         self.last_work_command = new_settings.last_work_command
+        self.megarace_helper_enabled = new_settings.megarace_helper_enabled
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_id = new_settings.partner_id
@@ -281,6 +283,7 @@ async def _dict_to_user(record: dict) -> User:
             last_training_command = record['last_training_command'],
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
             last_work_command = record['last_work_command'],
+            megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
             partner_id = record['partner_id'],

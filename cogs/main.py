@@ -171,10 +171,11 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
         f'{emojis.BP} `{prefix}enable` / `disable` : Enable/disable specific reminders\n'
         f'{emojis.BP} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
         f'{emojis.BP} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
+        f'{emojis.BP} `{prefix}last-tt` : Manually change your last TT time\n'
         f'{emojis.BP} `{prefix}message` : Change the reminder messages\n'
         f'{emojis.BP} `{prefix}ping-mode` : Change if Navi pings before or after the reminder\n'
         f'{emojis.BP} `{prefix}reactions on` / `off` : Turn reactions on/off\n'
-        f'{emojis.BP} `{prefix}last-tt` : Manually change your last TT time\n'
+        f'{emojis.BP} `{prefix}tracking on` / `off` : Turns command tracking on/off\n'
     )
 
     helper_settings = (

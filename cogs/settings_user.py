@@ -298,6 +298,7 @@ class SettingsUserCog(commands.Cog):
         """Enables reminders (main activation)"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        first_time_user = False
         try:
             user: users.User = await users.get_user(ctx.author.id)
             if user.bot_enabled:
@@ -305,16 +306,31 @@ class SettingsUserCog(commands.Cog):
                 return
         except exceptions.FirstTimeUserError:
             user = await users.insert_user(ctx.author.id)
+            first_time_user = True
         if not user.bot_enabled: await user.update(bot_enabled=True)
         if not user.bot_enabled:
             await ctx.reply(strings.MSG_ERROR)
             return
-        await ctx.reply(
-            f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on.\n'
-            f'Don\'t forget to set your donor tier with `{prefix}donor` and - if you are married - '
-            f'the donor tier of your partner with `{prefix}partner donor`.\n'
-            f'You can check all of your settings with `{prefix}settings`.'
+        if not first_time_user:
+            welcome_message = (
+            f'Hey! **{ctx.author.name}**! Welcome back!'
         )
+        else:
+            welcome_message = (
+                f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on!\n\n'
+                f'**Donor tier**\n'
+                f'You can set your EPIC RPG donor tier with `{prefix}donor` and - if you are married - '
+                f'the donor tier of your partner with `{prefix}partner donor`.\n\n'
+                f'**Settings**\n'
+                f'Use `{prefix}me` to see all of your settings.\n\n'
+                f'**Command tracking**\n'
+                f'Please note that I track the amount of some EPIC RPG commands you use. Check `{ctx.prefix}stats` to '
+                f'see what commands are tracked.\n'
+                f'__No personal data is processed or stored in any way.__\n'
+                f'If you want to opt-out of command tracking, please use `{ctx.prefix}tracking off`.'
+            )
+        await ctx.reply(welcome_message)
+
 
     @commands.command(aliases=('stop',))
     @commands.bot_has_permissions(send_messages=True)
@@ -559,6 +575,9 @@ class SettingsUserCog(commands.Cog):
             return
         if 'hardmode' in helper_check:
             await self.hardmode(ctx, helper_action)
+            return
+        if 'megarace' in helper_check and 'helper' in helper_check:
+            await self.megarace_helper(ctx, helper_action)
             return
         if args[0].lower() == 'all':
             if not enabled:
@@ -897,6 +916,49 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR)
 
+    @commands.command(aliases=('megaracehelper','megarace-helper'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def megarace_helper(self, ctx: commands.Context, *args: str) -> None:
+        """Enables/disables megarace helper"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
+        if not args:
+            await ctx.reply(
+                f'This command toggles the megarace helper. The megarace helper will tell you the best answer for '
+                f'megarace questions.\n'
+                f'{syntax}'
+            )
+            return
+        action = args[0].lower()
+        if action in ('on', 'enable', 'start'):
+            enabled = True
+            action = 'enabled'
+        elif action in ('off', 'disable', 'stop'):
+            enabled = False
+            action = 'disabled'
+        else:
+            await ctx.reply(syntax)
+            return
+        user: users.User = await users.get_user(ctx.author.id)
+        if user.megarace_helper_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, the megarace helper is already {action}.'
+            )
+            return
+        await user.update(megarace_helper_enabled=enabled)
+        if user.megarace_helper_enabled == enabled:
+            answer = f'**{ctx.author.name}**, the megarace helper is now **{action}**.'
+            if enabled:
+                answer = (
+                    f'{answer}\n'
+                    f'If your megarace reminder is turned on, I will automatically tell you the best answer for '
+                    f'megarace questions.'
+                )
+            await ctx.reply(answer)
+        else:
+            await ctx.reply(strings.MSG_ERROR)
+
     @commands.command(aliases=('pet-helper','pethelp','pet-help'))
     @commands.bot_has_permissions(send_messages=True)
     async def pethelper(self, ctx: commands.Context, *args: str) -> None:
@@ -1118,6 +1180,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     )
     field_helpers = (
         f'{emojis.BP} Heal warning: `{await bool_to_text(user_settings.heal_warning_enabled)}`\n'
+        f'{emojis.BP} Megarace helper: `{await bool_to_text(user_settings.megarace_helper_enabled)}`\n'
         f'{emojis.BP} Pet helper: `{await bool_to_text(user_settings.pet_helper_enabled)}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'

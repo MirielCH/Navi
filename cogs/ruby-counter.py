@@ -173,7 +173,7 @@ class RubyCounterCog(commands.Cog):
                 if  '<:ruby' not in message_field.lower():
                     ruby_count = 0
                 else:
-                    ruby_count_match = re.search(r"ruby\*\*: ([0-9]+)", message_field)
+                    ruby_count_match = re.search(r"ruby\*\*: ([0-9,]+)", message_field)
                     if ruby_count_match:
                         ruby_count = int(ruby_count_match.group(1).replace(',',''))
                     else:

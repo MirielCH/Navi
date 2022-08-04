@@ -105,10 +105,10 @@ class EventsCog(commands.Cog):
                 slash_command = False
                 user = await functions.get_interaction_user(message)
                 if user is not None:
-                    user_command = '`/hf megarace`'
+                    user_command = '`/hf megarace action: start`'
                     slash_command = True
                 else:
-                    user_command = '`rpg hf megarace`'
+                    user_command = '`rpg hf megarace start`'
                     if message.mentions:
                         user = message.mentions[0]
                     else:
@@ -163,7 +163,7 @@ class EventsCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_field0_name = message_field1_name = message_field0_value = message_field1_value = ''
+            message_field0_name = message_field1_name = message_field0_value = message_field1_value = message_author = ''
             message_description = ''
             if embed.description: message_description = str(embed.description)
             if embed.author:
@@ -281,10 +281,10 @@ class EventsCog(commands.Cog):
                 slash_command = False
                 user = await functions.get_interaction_user(message)
                 if user is not None:
-                    user_command = '`/hf megarace`'
+                    user_command = '`/hf megarace action: start`'
                     slash_command = True
                 else:
-                    user_command = '`rpg hf megarace`'
+                    user_command = '`rpg hf megarace start`'
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -339,10 +339,10 @@ class EventsCog(commands.Cog):
                 slash_command = False
                 user = await functions.get_interaction_user(message)
                 if user is not None:
-                    user_command = '`/hf megarace`'
+                    user_command = '`/hf megarace action: start`'
                     slash_command = True
                 else:
-                    user_command = '`rpg hf megarace`'
+                    user_command = '`rpg hf megarace start`'
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(message.channel, r"^rpg\s+(?:hf\b|horsefestival\b)\s+megarace\b")
                     )
@@ -378,15 +378,15 @@ class EventsCog(commands.Cog):
             search_strings = [
                 'passes through the boost', #English
             ]
-            if any(search_string in message_description.lower() for search_string in search_strings):
+            if any(search_string in message_field0_name.lower() for search_string in search_strings):
                 user_id = user_name = None
                 slash_command = False
                 user = await functions.get_interaction_user(message)
                 if user is not None:
-                    user_command = '`/hf megarace`'
+                    user_command = '`/hf megarace action: start`'
                     slash_command = True
                 else:
-                    user_command = '`rpg hf megarace`'
+                    user_command = '`rpg hf megarace start`'
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_field0_name)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
@@ -430,6 +430,44 @@ class EventsCog(commands.Cog):
                     new_end_time = reminder.end_time - time_left
                 await reminder.update(end_time=new_end_time)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            # Megarace helper
+            if '— megarace' in message_author.lower():
+                user_name = user_id = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
+                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                    else:
+                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = await functions.encode_text(user_name_match.group(1))
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in megarace message for megarace helper.', message)
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if user is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in megarace helper message.', message)
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.megarace_helper_enabled: return
+                answer = await functions.get_megarace_answer(message)
+                if answer is None: return
+                if user_settings.dnd_mode_enabled:
+                    await message.reply(answer)
+                else:
+                    answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
+                    await message.reply(answer)
 
 
 # Initialization

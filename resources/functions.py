@@ -620,3 +620,62 @@ async def get_training_answer(message_content: str, slash_command: bool = False)
             )
 
     return answer
+
+
+async def get_megarace_answer(message: discord.Message, slash_command: bool = False) -> str:
+    """Returns the answer to a megarace question based on the message content."""
+    embed = message.embeds[0]
+    field_name = answer = None
+    for field in embed.fields:
+        if '/3' in field.name:
+            field_name = field.name
+            break
+    if field_name is None: return None
+    event_answers = {
+        'ancient racer': ('C', 'C'),
+        'annoying racer': ('B', 'C'),
+        'asteroid': ('A', 'C'),
+        'black hole': ('C', 'A'),
+        'bottleneck': ('C', 'C'),
+        'cliff': ('B', 'B'),
+        'cooldown': ('A', 'A'),
+        'dinosaur': ('C', 'C'),
+        'epic dealer': ('C', 'A'),
+        'epic guards': ('A', 'B'),
+        'epic horse trainer': ('A', 'A'),
+        'epic npc': ('C', 'C'),
+        'giant life potion': ('C', 'C'),
+        'horseless racer': ('B', 'B'),
+        'hot air balloons': ('B', 'B'),
+        'injured racers': ('C', 'C'),
+        'racer ^ -1': ('A', 'C'),
+        'legendary boss': ('A', 'C'),
+        'many horses': ('B', 'B'),
+        'mountains': ('C', 'C'),
+        'mysterious racer': ('A', 'A'),
+        'nothing': ('A', 'A'),
+        'party': ('B', 'A'),
+        'plane': ('A', 'B'),
+        'quicksand': ('C', 'C'),
+        'rainy': ('A', 'A'),
+        'sandstorm': ('B', 'B'),
+        'snowy': ('C', 'C'),
+        'suspicious horse': ('B', 'B'),
+        'sus': ('B', 'A'),
+        'sleepy': ('A', 'B'),
+        'team': ('B', 'A'),
+        'waterfall': ('A', 'B'),
+        'world border': ('A', 'A'),
+        'zombie horde': ('B', 'B'),
+    }
+
+    for event, answers in event_answers.items():
+        if event in field_name.lower():
+            answer_safe, answer_lucky = answers
+            answer = f'`{answer_safe}`'
+            if answer_safe != answer_lucky:
+                answer = (
+                    f'{answer} (`{answer_lucky}` for gamblers with a {emojis.HORSE_ARMOR} horse armor)'
+                )
+    return answer
+
