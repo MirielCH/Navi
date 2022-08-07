@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, logs, settings, strings
 
 
 class EventsCog(commands.Cog):
@@ -334,7 +334,13 @@ class EventsCog(commands.Cog):
                 'puedes entrar a la megacarrera cada semana', #Spanish
                 'você pode entrar na mega corrida toda semana', #Portuguese
             ]
-            if any(search_string in message_description.lower() for search_string in search_strings):
+            search_strings_completed = [
+                'megarace completed', #English
+                'megacarrera completada', #Spanish
+                'megacorrida completa', #Portuguese
+            ]
+            if (any(search_string in message_description.lower() for search_string in search_strings)
+                and not any(search_string in message_field0_value.lower() for search_string in search_strings_completed)):
                 user_id = user_name = None
                 slash_command = False
                 user = await functions.get_interaction_user(message)
@@ -413,22 +419,29 @@ class EventsCog(commands.Cog):
                     await errors.log_error('Timestring not found in megarace boost message.', message)
                     return
                 timestring = timestring_match.group(1)
+                logs.logger.info(f'Megarace: Timestring {timestring} found.')
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                logs.logger.info(f'Megarace: Time left: {time_left}.')
                 try:
                     reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'megarace')
                 except exceptions.NoDataFoundError:
+                    logs.logger.info(f'Megarace: No active reminder found, exiting.')
                     return
                 search_strings_increased = [
-                    'increased', #English
+                    'stage time increased', #English
                 ]
                 search_strings_reduced = [
-                    'reduced', #English
+                    'stage time reduced', #English
                 ]
                 if any(search_string in message_field0_value.lower() for search_string in search_strings_increased):
                     new_end_time = reminder.end_time + time_left
+                    logs.logger.info(f'Megarace: Time increased, new end time: {new_end_time}.')
                 elif any(search_string in message_field0_value.lower() for search_string in search_strings_reduced):
                     new_end_time = reminder.end_time - time_left
+                    logs.logger.info(f'Megarace: Time reduced, new end time: {new_end_time}.')
+                logs.logger.info(f'Megarace: Reminder old end time: {reminder.end_time}.')
                 await reminder.update(end_time=new_end_time)
+                logs.logger.info(f'Megarace: Reminder updated, new end time: {reminder.end_time}.')
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Megarace helper
