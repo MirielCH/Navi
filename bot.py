@@ -60,6 +60,7 @@ EXTENSIONS = [
         'cogs.lootbox',
         'cogs.lottery',
         'cogs.main',
+        'cogs.horse-festival',
         'cogs.nsmb-bigarena',
         'cogs.pet-tournament',
         'cogs.pet-helper',

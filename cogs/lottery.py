@@ -76,6 +76,7 @@ class LotteryCog(commands.Cog):
             # Buy lottery ticket
             search_strings = [
                 'lottery ticket` successfully bought', #English
+                'lottery ticket successfully bought', #English
                 'lottery ticket` comprado', #Spanish, Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
@@ -85,7 +86,7 @@ class LotteryCog(commands.Cog):
                 else:
                     user_command = f'`rpg buy lottery ticket`'
                 if user is None:
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:
