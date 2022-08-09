@@ -16,6 +16,61 @@ class HorseFestivalCog(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        message = message_after
+        if message.embeds:
+            embed: discord.Embed = message.embeds[0]
+            message_author = ''
+            if embed.author:
+                message_author = str(embed.author.name)
+                icon_url = embed.author.icon_url
+
+            # Minirace embed
+            if '— minirace' in message_author.lower():
+                user_name = user_id = None
+                user = await functions.get_interaction_user(message)
+                if user is not None:
+                    user_command = '`/hf minirace`'
+                else:
+                    user_command = '`rpg hf minirace`'
+                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                    else:
+                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = await functions.encode_text(user_name_match.group(1))
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in minirace embed.', message)
+                            return
+                    if user_id is not None:
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if user is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found in minirace embed.', message)
+                    return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                end_time = midnight_today + timedelta(days=1, minutes=6)
+                time_left = end_time - current_time
+                reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'minirace', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
 
@@ -361,46 +416,6 @@ class HorseFestivalCog(commands.Cog):
                 else:
                     answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
                     await message.reply(answer)
-
-            # Minirace embed
-            if '— minirace' in message_author.lower():
-                user_name = user_id = None
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                    else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
-                        if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in minirace embed.', message)
-                            return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in minirace embed.', message)
-                    return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                end_time = midnight_today + timedelta(days=1, minutes=6)
-                time_left = end_time - current_time
-                reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'minirace', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
 # Initialization
