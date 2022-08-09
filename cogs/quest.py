@@ -151,6 +151,7 @@ class QuestCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a command for the quest cooldown message.', message)
                         return
+                    user_command = f'`{user_command}`'
                     last_quest_command = 'quest' if 'epic' not in user_command else 'epic quest'
                 await user_settings.update(last_quest_command=last_quest_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
