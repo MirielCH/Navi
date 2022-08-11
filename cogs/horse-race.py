@@ -28,7 +28,9 @@ class HorseRaceCog(commands.Cog):
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = None
             user = await functions.get_interaction_user(message)
+            slash_command = True
             if user is None:
+                slash_command = False
                 if message.mentions:
                     user = message.mentions[0]
                 else:
@@ -62,11 +64,26 @@ class HorseRaceCog(commands.Cog):
             timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
             reminder_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')
+            try:
+                existing_reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'horse-race')
+            except exceptions.NoDataFoundError:
+                existing_reminder = None
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'horse-race', time_left,
                                                     message.channel.id, reminder_message)
             )
             await functions.add_reminder_reaction(message, reminder, user_settings)
+            if reminder.record_exists and user_settings.alert_horse_breed.enabled and existing_reminder is None:
+                if slash_command:
+                    user_command = f"{strings.SLASH_COMMANDS['horse breeding'] or strings.SLASH_COMMANDS['horse race']}"
+                else:
+                    user_command = '`rpg horse breed` or `rpg horse race`'
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'horse')
+                reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'horse', time_left,
+                                                         message.channel.id, reminder_message)
+                )
 
 
 # Initialization

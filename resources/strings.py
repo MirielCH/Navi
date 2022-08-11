@@ -256,6 +256,7 @@ ACTIVITIES_WITH_COOLDOWN = (
     'daily',
     'farm',
     'guild',
+    'horse',
     'hunt',
     'lootbox',
     'dungeon-miniboss',

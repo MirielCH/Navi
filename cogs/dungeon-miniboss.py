@@ -37,7 +37,7 @@ class DungeonMinibossCog(commands.Cog):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['dungeon'] or strings.SLASH_COMMANDS['miniboss']}"
+                    user_command = f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"
                 else:
                     user_command = f'`rpg dungeon` or `rpg miniboss`'
                 if user is None:

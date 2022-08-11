@@ -208,8 +208,10 @@ class SettingsUserCog(commands.Cog):
         except exceptions.NoDataFoundError:
             user_reminders = []
         clan_reminder = []
+        clan = None
         if user.clan_name is not None:
             try:
+                clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
                 clan_reminder = await reminders.get_active_clan_reminders(user.clan_name)
             except exceptions.NoDataFoundError:
                 pass
@@ -220,13 +222,25 @@ class SettingsUserCog(commands.Cog):
                 ready_command_activities.remove(reminder.activity)
             elif reminder.activity in ready_event_activities:
                 ready_event_activities.remove(reminder.activity)
+        for activity in ready_command_activities.copy():
+            alert_settings = getattr(user, strings.ACTIVITIES_COLUMNS[activity])
+            if not alert_settings.enabled:
+                ready_command_activities.remove(activity)
+        for activity in ready_event_activities.copy():
+            alert_settings = getattr(user, strings.ACTIVITIES_COLUMNS[activity])
+            if not alert_settings.enabled:
+                ready_event_activities.remove(activity)
 
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
             title = f'{user_discord.name}\'S READY COMMANDS'.upper()
         )
-        if not ready_command_activities and clan_reminder:
-            embed.description = f'{emojis.BP} You have no ready commands'
+        if not ready_command_activities:
+            if clan is None:
+                embed.description = f'{emojis.BP} You have no ready commands'
+            else:
+                if not clan.alert_enabled:
+                    embed.description = f'{emojis.BP} You have no ready commands'
         if ready_command_activities:
             field_ready_commands = ''
             ready_commands = []
@@ -281,14 +295,14 @@ class SettingsUserCog(commands.Cog):
                 )
             if field_ready_events != '':
                 embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
-        if not clan_reminder:
-            try:
-                clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
-                command = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                field_ready_clan = f"{emojis.BP} {strings.SLASH_COMMANDS[command]}"
-                embed.add_field(name='GUILD', value=field_ready_clan)
-            except exceptions.NoDataFoundError:
-                pass
+        if not clan_reminder and clan is not None:
+            if clan.alert_enabled:
+                try:
+                    command = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                    field_ready_clan = f"{emojis.BP} {strings.SLASH_COMMANDS[command]}"
+                    embed.add_field(name='GUILD', value=field_ready_clan)
+                except exceptions.NoDataFoundError:
+                    pass
         await ctx.reply(embed=embed)
 
 

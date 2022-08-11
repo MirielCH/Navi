@@ -47,7 +47,7 @@ class PetTournamentCog(commands.Cog):
                 search_patterns = [
                     r'next pet tournament is in \*\*(.+?)\*\*', #English
                     r'el siguiente torneo es el \*\*(.+?)\*\*', #Spanish
-                    r'o próximo torneio é o \*\*(.+?)\*\*', #Portuguese
+                    r'o próximo torneio é em \*\*(.+?)\*\*', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
                 if not timestring_match:
