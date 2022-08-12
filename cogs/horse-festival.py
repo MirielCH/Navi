@@ -121,8 +121,8 @@ class HorseFestivalCog(commands.Cog):
 
             search_strings = [
                 'you are now in the list of pending players for a tournament', #English
-                'you are now in the list of pending players for a tournament', #Spanish, MISSING
-                'you are now in the list of pending players for a tournament', #Portuguese, MISSING
+                'ahora estás en la lista de jugadores pendientes de un torneo', #Spanish
+                'você está agora na lista de jogadores pendentes para um torneio', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -321,6 +321,8 @@ class HorseFestivalCog(commands.Cog):
 
             search_strings = [
                 'passes through the boost', #English
+                'pasa por el boost', #Spanish
+                'passa pelo boost', #Spanish, UNCONFIRMED
             ]
             if any(search_string in message_field0_name.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -348,6 +350,8 @@ class HorseFestivalCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_megarace.enabled: return
                 search_patterns = [
                     r'(?:increased|reduced)__: \*\*(.+?)\*\*', #English
+                    r'(?:incrementado|aumentado|reducido)__: \*\*(.+?)\*\*', #Spanish, increased one UNCONFIRMED
+                    r'(?:incrementado|aumentado|reducido)__: \*\*(.+?)\*\*', #Portuguese, MISSING
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
                 if not timestring_match:
