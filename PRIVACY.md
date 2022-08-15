@@ -27,7 +27,7 @@ This means:
 • Navi doesn’t store any messages sent by you.  
 • If the error happened in a private channel, I do not have access to that channel, as the stored message link will not work and simply give me an error.  
 
-# Limits of this policy
+## Limits of this policy
 Please be aware that I have no control over the code and policies of forks and other projects that use Navi’s source code and cannot accept responsibility or liability for their respective privacy practices.  
 
 This policy therefore only applies to:  
@@ -36,8 +36,8 @@ This policy therefore only applies to:
 
 The bot may also link to external sites that are not operated by me. The same limits apply to those sites.
 
-# Changes to this policy
+## Changes to this policy
 At my discretion, I may change my privacy policy to reflect updates. If I decide to change this privacy policy, I will post the changes here at the same link by which you are accessing this privacy policy.
 
-# Contact me
+## Contact me
 For any questions or concerns regarding this privacy, you may contact me (Miriel#0001) on Discord directly.
