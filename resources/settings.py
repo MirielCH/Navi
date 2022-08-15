@@ -34,6 +34,7 @@ DEFAULT_FOOTER = 'Hey! Listen!'
 TIMEOUT = 20
 TIMEOUT_LONGER = 30
 TIMEOUT_LONGEST = 40
+INTERACTION_TIMEOUT = 60
 
 class ClanReset(NamedTuple):
     """Clan Reset time. Week starts at monday, UTC"""

@@ -49,6 +49,7 @@ class SleepyPotionCog(commands.Cog):
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user.id, timedelta(days=1))
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+            if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
         search_strings = [
             'rides at the speed of light', #English
@@ -82,6 +83,7 @@ class SleepyPotionCog(commands.Cog):
             if user_settings.reactions_enabled:
                 await message.add_reaction(emojis.NAVI)
                 await message.add_reaction(emojis.KIRBY_RUN)
+            if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

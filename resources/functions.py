@@ -5,6 +5,8 @@ import re
 from typing import List, Tuple, Union
 
 import discord
+from discord.ext import commands
+from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
@@ -455,6 +457,7 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
     return message
 
 
+# Helper functions
 async def get_training_answer(message_content: str, slash_command: bool = False) -> str:
     """Returns the answer to a training question based on the message content."""
     answer = None
@@ -679,3 +682,9 @@ async def get_megarace_answer(message: discord.Message, slash_command: bool = Fa
                 )
     return answer
 
+
+# Miscellaneous
+async def call_ready_command(bot: commands.Bot, message: discord.Message, user: discord.User) -> None:
+    """Calls the ready command as a reply to the current message"""
+    command = bot.get_command(name='ready')
+    if command is not None: await command.callback(command.cog, message, user=user)

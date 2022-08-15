@@ -193,11 +193,11 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
     )
 
     guild_settings = (
-        f'{emojis.BP} `{prefix}guild` : See how to set up guild reminders\n'
+        f'{emojis.BP} `{prefix}guild` : See how to set up guild channel reminders\n'
         f'{emojis.BP} `rpg guild list` : Add/update your guild\n'
         f'{emojis.BP} `{prefix}guild channel` : Set the channel for guild reminders\n'
         f'{emojis.BP} `{prefix}guild leaderboard` : Check the weekly raid leaderboard\n'
-        f'{emojis.BP} `{prefix}guild reminders on` / `off` : Turn guild reminders on or off\n'
+        f'{emojis.BP} `{prefix}guild reminders on` / `off` : Turn guild channel reminders on or off\n'
         f'{emojis.BP} `{prefix}guild stealth` : Set your stealth threshold\n'
         f'{emojis.BP} `{prefix}guild upgrade-quests on` / `off` : Allow/deny quests below threshold\n'
     )
@@ -222,7 +222,7 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
     embed.add_field(name='USER SETTINGS', value=user_settings, inline=False)
     embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     embed.add_field(name='PARTNER SETTINGS', value=partner_settings, inline=False)
-    embed.add_field(name='GUILD SETTINGS', value=guild_settings, inline=False)
+    embed.add_field(name='GUILD CHANNEL SETTINGS', value=guild_settings, inline=False)
     embed.add_field(name='SERVER SETTINGS', value=server_settings, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
 

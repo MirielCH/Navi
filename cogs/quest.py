@@ -269,10 +269,8 @@ class QuestCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
         if not message.embeds:
             message_content = message.content
@@ -344,10 +342,8 @@ class QuestCog(commands.Cog):
                         except exceptions.NoDataFoundError:
                             pass
                     await user_settings.update(guild_quest_prompt_active=False)
-                if reminder.record_exists:
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
             # Aborted guild quest
             search_strings = [

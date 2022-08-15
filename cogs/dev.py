@@ -141,7 +141,7 @@ class DevCog(commands.Cog):
             all_cooldowns = await cooldowns.get_all_cooldowns()
             message = 'Current base cooldowns:'
             for cooldown in all_cooldowns:
-                message = f'{message}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown}s'
+                message = f'{message}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown:,}s'
             message = f'{message}\n\n{syntax}'
             await ctx.reply(message)
             return
@@ -173,8 +173,8 @@ class DevCog(commands.Cog):
         await cooldown.update(cooldown=new_cooldown)
         if cooldown.base_cooldown == new_cooldown:
             await ctx.reply(
-                f'Changed event reduction for activity `{cooldown.activity}` to '
-                f'**{cooldown.base_cooldown}s**.'
+                f'Changed base cooldown for activity `{cooldown.activity}` to '
+                f'**{cooldown.base_cooldown:,}s**.'
             )
         else:
             await ctx.reply(strings.MSG_ERROR)

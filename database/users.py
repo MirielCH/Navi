@@ -26,13 +26,13 @@ class User():
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
     alert_farm: UserAlert
+    alert_guild: UserAlert
     alert_horse_breed: UserAlert
     alert_horse_race: UserAlert
     alert_hunt: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
     alert_megarace: UserAlert
-    alert_minirace: UserAlert
     alert_not_so_mini_boss: UserAlert
     alert_partner: UserAlert
     alert_pet_tournament: UserAlert
@@ -42,6 +42,7 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
+    auto_ready_enabled: bool
     bot_enabled: bool
     clan_name: str
     dnd_mode_enabled: bool
@@ -82,13 +83,13 @@ class User():
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
         self.alert_farm = new_settings.alert_farm
+        self.alert_guild = new_settings.alert_guild
         self.alert_horse_breed = new_settings.alert_horse_breed
         self.alert_horse_race = new_settings.alert_horse_race
         self.alert_hunt = new_settings.alert_hunt
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
         self.alert_megarace = new_settings.alert_megarace
-        self.alert_minirace = new_settings.alert_minirace
         self.alert_not_so_mini_boss = new_settings.alert_not_so_mini_boss
         self.alert_partner = new_settings.alert_partner
         self.alert_pet_tournament = new_settings.alert_pet_tournament
@@ -98,6 +99,7 @@ class User():
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
         self.alert_work = new_settings.alert_work
+        self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
@@ -148,6 +150,8 @@ class User():
             alert_dungeon_miniboss_message: str
             alert_farm_enabled: bool
             alert_farm_message: str
+            alert_guild_enabled: bool
+            alert_guild_message: str
             alert_horse_breed_enabled: bool
             alert_horse_breed_message: str
             alert_horse_race_enabled: bool
@@ -176,6 +180,7 @@ class User():
             alert_weekly_message: str
             alert_work_enabled: bool
             alert_work_message: str
+            auto_ready_enabled: bool
             bot_enabled: bool
             clan_name: str
             dnd_mode_enabled: bool
@@ -241,6 +246,8 @@ async def _dict_to_user(record: dict) -> User:
                                                message=record['alert_dungeon_miniboss_message']),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
                                    message=record['alert_farm_message']),
+            alert_guild = UserAlert(enabled=bool(record['alert_guild_enabled']),
+                                   message=record['alert_guild_message']),
             alert_horse_breed = UserAlert(enabled=bool(record['alert_horse_breed_enabled']),
                                           message=record['alert_horse_breed_message']),
             alert_horse_race = UserAlert(enabled=bool(record['alert_horse_race_enabled']),
@@ -253,8 +260,6 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_lottery_message']),
             alert_megarace = UserAlert(enabled=bool(record['alert_megarace_enabled']),
                                       message=record['alert_megarace_message']),
-            alert_minirace = UserAlert(enabled=bool(record['alert_minirace_enabled']),
-                                      message=record['alert_minirace_message']),
             alert_not_so_mini_boss = UserAlert(enabled=bool(record['alert_not_so_mini_boss_enabled']),
                                                message=record['alert_not_so_mini_boss_message']),
             alert_partner = UserAlert(enabled=bool(record['alert_partner_enabled']),
@@ -273,6 +278,7 @@ async def _dict_to_user(record: dict) -> User:
                                     message=record['alert_weekly_message']),
             alert_work = UserAlert(enabled=bool(record['alert_work_enabled']),
                                    message=record['alert_work_message']),
+            auto_ready_enabled = bool(record['auto_ready_enabled']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
@@ -469,6 +475,8 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_dungeon_miniboss_message: str
         alert_farm_enabled: bool
         alert_farm_message: str
+        alert_guild_enabled: bool
+        alert_guild_message: str
         alert_horse_breed_enabled: bool
         alert_horse_breed_message: str
         alert_horse_race_enabled: bool
@@ -495,6 +503,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_weekly_message: str
         alert_work_enabled: bool
         alert_work_message: str
+        auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
         dnd_mode_enabled: bool

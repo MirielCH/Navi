@@ -62,6 +62,7 @@ class PetTournamentCog(commands.Cog):
                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -80,7 +81,7 @@ class PetTournamentCog(commands.Cog):
             ]
             if any(search_string in embed_description.lower() for search_string in search_strings):
                 search_patterns = [
-                    r'pet id "(.+?)" registered', #English
+                    r'pet id "(.+?)" is registered', #English
                     r'la mascota "(.+?)" está registrada', #Spanish
                     r'de pet "(.+?)" está registrado', #Portuguese
                 ]

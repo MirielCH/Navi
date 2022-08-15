@@ -4,12 +4,13 @@
 import asyncio
 from datetime import datetime, timedelta
 import re
+from typing import Optional, Union
 
 import discord
 from discord.ext import commands
 
-from database import clans, reminders, users
-from resources import emojis, functions, exceptions, settings, strings
+from database import clans, guilds, reminders, users
+from resources import emojis, functions, exceptions, settings, strings, views
 
 
 class SettingsUserCog(commands.Cog):
@@ -140,7 +141,7 @@ class SettingsUserCog(commands.Cog):
             timestring = await functions.parse_timedelta_to_timestring(time_left)
             field_value = f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)'
             if clan.quest_user_id == user_id: field_value = f'{field_value} (quest active)'
-            embed.add_field(name='GUILD', value=field_value)
+            embed.add_field(name='GUILD CHANNEL', value=field_value)
         if reminders_pets_list:
             field_no = 1
             pet_fields = {field_no: ''}
@@ -172,49 +173,66 @@ class SettingsUserCog(commands.Cog):
 
     @commands.command(aliases=('rd',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def ready(self, ctx: commands.Context, *args: str) -> None:
+    async def ready(
+        self, ctx: Union[commands.Context, discord.Message], *args: str, user: Optional[discord.User] = None
+    ) -> None:
         """Lists all commands that are ready to use"""
-        if ctx.prefix.lower() == 'rpg ': return
-        if ctx.message.mentions:
-            user_id = ctx.message.mentions[0].id
+        if isinstance(ctx, commands.Context):
+            if ctx.prefix.lower() == 'rpg ': return
+            message = ctx.message
+            auto_ready = False
+        else:
+            message = ctx
+            auto_ready = True
+        user = user if user is not None else message.author
+        if message.mentions:
+            user_id = message.mentions[0].id
         elif args:
             arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
             if arg.isnumeric():
                 try:
                     user_id = int(arg)
                 except:
-                    user_id = ctx.author.id
+                    user_id = user.id
             else:
-                user_id = ctx.author.id
+                user_id = user.id
         else:
-            user_id = ctx.author.id
+            user_id = user.id
         user_discord = await functions.get_discord_user(self.bot, user_id)
         if user_discord is None:
-            await ctx.reply('This user doesn\'t exist.')
+            await message.reply('This user doesn\'t exist.')
             return
         if user_discord.bot:
-            await ctx.reply('Imagine trying to check the commands of a bot.')
+            await message.reply('Imagine trying to check the commands of a bot.')
             return
         try:
-            user: users.User = await users.get_user(user_discord.id)
+            user_settings: users.User = await users.get_user(user_discord.id)
         except exceptions.FirstTimeUserError:
-            if user_discord == ctx.author:
+            if user_discord == message.author:
                 raise
             else:
-                await ctx.reply('This user is not registered with this bot.')
+                await message.reply('This user is not registered with this bot.')
             return
         try:
-            user_reminders = await reminders.get_active_user_reminders(user.user_id)
+            user_reminders = await reminders.get_active_user_reminders(user_settings.user_id)
         except exceptions.NoDataFoundError:
             user_reminders = []
         clan_reminder = []
         clan = None
-        if user.clan_name is not None:
+        if user_settings.clan_name is not None:
             try:
-                clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
-                clan_reminder = await reminders.get_active_clan_reminders(user.clan_name)
+                clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                clan_reminder = await reminders.get_active_clan_reminders(user_settings.clan_name)
             except exceptions.NoDataFoundError:
                 pass
+        clan_alert_enabled = getattr(clan, 'alert_enabled', False)
+        if clan_alert_enabled:
+            if clan.stealth_current >= clan.stealth_threshold:
+                clan_command = strings.SLASH_COMMANDS['guild raid']
+            else:
+                clan_command = strings.SLASH_COMMANDS['guild upgrade']
+        else:
+            clan_command = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
         ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
         ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
         for reminder in user_reminders:
@@ -223,24 +241,18 @@ class SettingsUserCog(commands.Cog):
             elif reminder.activity in ready_event_activities:
                 ready_event_activities.remove(reminder.activity)
         for activity in ready_command_activities.copy():
-            alert_settings = getattr(user, strings.ACTIVITIES_COLUMNS[activity])
+            alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
             if not alert_settings.enabled:
                 ready_command_activities.remove(activity)
         for activity in ready_event_activities.copy():
-            alert_settings = getattr(user, strings.ACTIVITIES_COLUMNS[activity])
+            alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
             if not alert_settings.enabled:
                 ready_event_activities.remove(activity)
 
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
-            title = f'{user_discord.name}\'S READY COMMANDS'.upper()
+            title = f'{user_discord.name}\'S READY'.upper()
         )
-        if not ready_command_activities:
-            if clan is None:
-                embed.description = f'{emojis.BP} You have no ready commands'
-            else:
-                if not clan.alert_enabled:
-                    embed.description = f'{emojis.BP} You have no ready commands'
         if ready_command_activities:
             field_ready_commands = ''
             ready_commands = []
@@ -249,25 +261,27 @@ class SettingsUserCog(commands.Cog):
                     command = (
                         f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"
                     )
+                elif activity == 'guild':
+                    command = clan_command
                 elif activity == 'quest':
-                    command = strings.SLASH_COMMANDS.get(user.last_quest_command,
+                    command = strings.SLASH_COMMANDS.get(user_settings.last_quest_command,
                                                          strings.SLASH_COMMANDS['quest'])
                 elif activity == 'training':
-                    command = strings.SLASH_COMMANDS.get(user.last_training_command,
+                    command = strings.SLASH_COMMANDS.get(user_settings.last_training_command,
                                                          strings.SLASH_COMMANDS['training'])
                 elif activity == 'work':
-                    command = strings.SLASH_COMMANDS.get(user.last_work_command, 'work command')
+                    command = strings.SLASH_COMMANDS.get(user_settings.last_work_command, 'work command')
                 else:
                     command = strings.SLASH_COMMANDS[strings.ACTIVITIES_SLASH_COMMANDS[activity]]
                 if activity == 'lootbox':
-                    lootbox_name = '[lootbox]' if user.last_lootbox is None else f'{user.last_lootbox} lootbox'
+                    lootbox_name = '[lootbox]' if user_settings.last_lootbox is None else f'{user_settings.last_lootbox} lootbox'
                     command = f'{command} `item: {lootbox_name}`'
-                elif activity == 'adventure' and user.last_adventure_mode is not None:
-                    command = f'{command} `mode: {user.last_adventure_mode}`'
-                elif activity == 'hunt' and user.last_hunt_mode is not None:
-                    command = f'{command} `mode: {user.last_hunt_mode}`'
-                elif activity == 'farm' and user.last_farm_seed is not None:
-                    command = f'{command} `seed: {user.last_farm_seed}`'
+                elif activity == 'adventure' and user_settings.last_adventure_mode is not None:
+                    command = f'{command} `mode: {user_settings.last_adventure_mode}`'
+                elif activity == 'hunt' and user_settings.last_hunt_mode is not None:
+                    command = f'{command} `mode: {user_settings.last_hunt_mode}`'
+                elif activity == 'farm' and user_settings.last_farm_seed is not None:
+                    command = f'{command} `seed: {user_settings.last_farm_seed}`'
                 ready_commands.append(command)
             for command in sorted(ready_commands):
                 field_ready_commands = (
@@ -295,15 +309,25 @@ class SettingsUserCog(commands.Cog):
                 )
             if field_ready_events != '':
                 embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
-        if not clan_reminder and clan is not None:
-            if clan.alert_enabled:
+        clan_alert_enabled = getattr(clan, 'alert_enabled', False)
+        if not clan_reminder and clan_alert_enabled:
+            field_ready_clan = f"{emojis.BP} {clan_command}"
+            embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
+        if not embed.fields: embed.description = f'{emojis.BP} All done!'
+        if auto_ready:
+            prefix = await guilds.get_prefix(message)
+            embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
+            await message.reply(embed=embed)
+        else:
+            view = views.AutoReadyView(user, user_settings)
+            interaction_message = await message.reply(embed=embed, view=view)
+            view.message = interaction_message
+            await view.wait()
+            if view.value == 'timeout':
                 try:
-                    command = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                    field_ready_clan = f"{emojis.BP} {strings.SLASH_COMMANDS[command]}"
-                    embed.add_field(name='GUILD', value=field_ready_clan)
-                except exceptions.NoDataFoundError:
+                    await interaction_message.edit(view=None)
+                except discord.errors.NotFound:
                     pass
-        await ctx.reply(embed=embed)
 
 
     @commands.command(aliases=('start',))
@@ -638,8 +662,6 @@ class SettingsUserCog(commands.Cog):
             answer = f'{answer}\n\nCouldn\'t find the following activites:'
             for activity in ignored_activites:
                 answer = f'{answer}\n{emojis.BP}`{activity}`'
-                if 'guild' in activity:
-                    answer = f'{answer} (check `{ctx.prefix}guild` on how to set up guild reminders)'
         await ctx.reply(answer)
 
     @commands.command()
@@ -1208,7 +1230,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     )
     field_clan = (
         f'{emojis.BP} Name: `{clan_name}`\n'
-        f'{emojis.BP} Reminders: `{clan_alert_status}`\n'
+        f'{emojis.BP} Channel reminder: `{clan_alert_status}`\n'
         f'{emojis.BP} Alert channel: `{clan_channel_name}`\n'
         f'{emojis.BP} Stealth threshold: `{stealth_threshold}`\n'
         f'{emojis.BP} Quests below threshold: `{clan_upgrade_quests}`\n'
@@ -1220,12 +1242,12 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Duel: `{await bool_to_text(user_settings.alert_duel.enabled)}`\n'
         f'{emojis.BP} Dungeon / Miniboss: `{await bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}`\n'
         f'{emojis.BP} Farm: `{await bool_to_text(user_settings.alert_farm.enabled)}`\n'
+        f'{emojis.BP} Guild: `{await bool_to_text(user_settings.alert_guild.enabled)}`\n'
         f'{emojis.BP} Horse: `{await bool_to_text(user_settings.alert_horse_breed.enabled)}`\n'
         f'{emojis.BP} Hunt: `{await bool_to_text(user_settings.alert_hunt.enabled)}`\n'
         f'{emojis.BP} Lootbox: `{await bool_to_text(user_settings.alert_lootbox.enabled)}`\n'
         f'{emojis.BP} Lottery: `{await bool_to_text(user_settings.alert_lottery.enabled)}`\n'
         f'{emojis.BP} Megarace: `{await bool_to_text(user_settings.alert_megarace.enabled)}`\n'
-        f'{emojis.BP} Minirace: `{await bool_to_text(user_settings.alert_minirace.enabled)}`\n'
         f'{emojis.BP} Partner alert: `{await bool_to_text(user_settings.alert_partner.enabled)}`\n'
         f'{emojis.BP} Pets: `{await bool_to_text(user_settings.alert_pets.enabled)}`\n'
         f'{emojis.BP} Quest: `{await bool_to_text(user_settings.alert_quest.enabled)}`\n'
@@ -1253,7 +1275,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     embed.add_field(name='USER', value=field_user, inline=True)
     embed.add_field(name='HELPERS', value=field_helpers, inline=True)
     embed.add_field(name='PARTNER', value=field_partner, inline=False)
-    embed.add_field(name='GUILD', value=field_clan, inline=False)
+    embed.add_field(name='GUILD CHANNEL', value=field_clan, inline=False)
     embed.add_field(name='COMMAND REMINDERS', value=field_reminders, inline=True)
     embed.add_field(name='EVENT REMINDERS', value=field_event_reminders, inline=True)
     embed.add_field(name='REMINDER MESSAGES', value=field_messages, inline=False)

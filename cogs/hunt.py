@@ -280,6 +280,7 @@ class HuntCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
                 partner_start = len(message_content)
                 if user_settings.partner_id is not None:
                     partner: users.User = await users.get_user(user_settings.partner_id)
@@ -525,6 +526,7 @@ class HuntCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

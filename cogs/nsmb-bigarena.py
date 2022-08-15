@@ -209,6 +209,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                             await reminders.insert_user_reminder(user.id, 'arena', time_left,
                                                                 message.channel.id, reminder_message)
                         )
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

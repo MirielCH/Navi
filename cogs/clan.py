@@ -67,15 +67,21 @@ class ClanCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in clan cooldown message.', message)
                     return
+                clan = user_settings = None
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
                 except exceptions.NoDataFoundError:
-                    return
-                if not clan.alert_enabled: return
+                    pass
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
-                    user_settings = None
+                    pass
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id')
+                clan_alert_enabled = getattr(clan, 'alert_enabled', False)
+                if clan_channel_id is None: clan_alert_enabled = False
+                if not user_alert_enabled and not clan_alert_enabled:
+                    return
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -84,22 +90,36 @@ class ClanCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                if slash_command:
-                    alert_message = strings.SLASH_COMMANDS[action]
-                else:
-                    alert_message = f'rpg {action}'
-                reminder: reminders.Reminder = (
-                    await reminders.insert_clan_reminder(clan.clan_name, time_left,
-                                                         clan.channel_id, alert_message)
-                )
-                if reminder.record_exists:
-                    if user_settings is None:
-                        await message.add_reaction(emojis.NAVI)
+                if clan_alert_enabled:
+                    action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                    if slash_command:
+                        alert_message = strings.SLASH_COMMANDS[action]
                     else:
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                        alert_message = f'`rpg {action}`'
                 else:
-                    if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                    if slash_command:
+                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
+                    else:
+                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
+                if clan_alert_enabled:
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
+                                                            clan.channel_id, alert_message)
+                    )
+                    if reminder.record_exists:
+                        if user_settings is None:
+                            await message.add_reaction(emojis.NAVI)
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    else:
+                        if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                if user_alert_enabled:
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'guild', time_left,
+                                                             message.channel.id, alert_message)
+                    )
+                    if not clan_alert_enabled:
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Clan overview
             search_strings = [
@@ -117,17 +137,22 @@ class ClanCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Clan name not found in clan message.', message)
                     return
+                clan = user_settings = None
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
                 except exceptions.NoDataFoundError:
-                    return
-                if not clan.alert_enabled or clan.channel_id is None: return
-                user_settings = None
+                    pass
                 if user is not None:
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
                         pass
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id')
+                clan_alert_enabled = getattr(clan, 'alert_enabled', False)
+                if clan_channel_id is None: clan_alert_enabled = False
+                if not user_alert_enabled and not clan_alert_enabled:
+                    return
                 search_patterns = [
                     r"STEALTH\*\*: (.+?)\n", #English
                     r"SIGILO\*\*: (.+?)\n", #Spanish
@@ -142,26 +167,40 @@ class ClanCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Stealth not found in clan message.', message)
                     return
-                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                if slash_command:
-                    alert_message = strings.SLASH_COMMANDS[action]
-                else:
-                    alert_message = f'rpg {action}'
                 timestring_match = re.search(r":clock4: \*\*(.+?)\*\*", message_field1)
                 if not timestring_match: return
                 timestring = timestring_match.group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_clan_reminder(clan.clan_name, time_left,
-                                                         clan.channel_id, alert_message)
-                )
-                if reminder.record_exists:
-                    if user_settings is None:
-                        await message.add_reaction(emojis.NAVI)
+                if clan_alert_enabled:
+                    action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                    if slash_command:
+                        alert_message = strings.SLASH_COMMANDS[action]
                     else:
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                        alert_message = f'`rpg {action}`'
                 else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                    if slash_command:
+                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
+                    else:
+                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
+                if clan_alert_enabled:
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
+                                                            clan.channel_id, alert_message)
+                    )
+                    if reminder.record_exists:
+                        if user_settings is None:
+                            await message.add_reaction(emojis.NAVI)
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    else:
+                        if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
+                if user_alert_enabled:
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'guild', time_left,
+                                                             message.channel.id, alert_message)
+                    )
+                    if not clan_alert_enabled:
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Guild upgrade
             search_strings = [
@@ -181,60 +220,70 @@ class ClanCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a command for the clan upgrade message.', message)
                         return
                     user = user_command_message.author
+                clan = user_settings = None
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
                 except exceptions.NoDataFoundError:
-                    return
-                if not clan.alert_enabled: return
+                    pass
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
-                    user_settings = None
-                clan_stealth_before = clan.stealth_current
-                stealth_match = re.search(r"--> \*\*(.+?)\*\*", message_field0_value)
-                if stealth_match:
-                    stealth = int(stealth_match.group(1))
-                else:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Stealth not found in clan upgrade message.', message)
+                    pass
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id')
+                clan_alert_enabled = getattr(clan, 'alert_enabled', False)
+                if clan_channel_id is None: clan_alert_enabled = False
+                if not user_alert_enabled and not clan_alert_enabled:
                     return
-                await clan.update(stealth_current=stealth)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                if slash_command:
-                    alert_message = strings.SLASH_COMMANDS[action]
-                else:
-                    alert_message = f'rpg {action}'
-                reminder: reminders.Reminder = (
-                    await reminders.insert_clan_reminder(clan.clan_name, time_left,
-                                                         clan.channel_id, alert_message)
-                )
-                if reminder.record_exists:
-                    if user_settings is None:
-                        await message.add_reaction(emojis.NAVI)
+                if clan_alert_enabled:
+                    action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                    if slash_command:
+                        alert_message = strings.SLASH_COMMANDS[action]
                     else:
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                    if clan.stealth_current >= clan.stealth_threshold:
-                        if user_settings is None:
-                            await message.add_reaction(emojis.YAY)
-                        else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.YAY)
-                    if clan.stealth_current == clan_stealth_before:
-                        if user_settings is None:
-                            await message.add_reaction(emojis.ANGRY)
-                        else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.ANGRY)
-                    if clan.stealth_current == 69:
-                        if user_settings is None:
-                            await message.add_reaction(emojis.NICE)
-                        else:
-                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NICE)
+                        alert_message = f'`rpg {action}`'
                 else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                    if slash_command:
+                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
+                    else:
+                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
+                if clan_alert_enabled:
+                    clan_stealth_before = clan.stealth_current
+                    stealth_match = re.search(r"--> \*\*(.+?)\*\*", message_field0_value)
+                    if stealth_match:
+                        stealth = int(stealth_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Stealth not found in clan upgrade message.', message)
+                        return
+                    await clan.update(stealth_current=stealth)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
+                                                             clan.channel_id, alert_message)
+                    )
+                    if reminder.record_exists:
+                        user_reactions_enabled = getattr(user_settings, 'reactions_enabled', True)
+                        if user_reactions_enabled:
+                            await message.add_reaction(emojis.NAVI)
+                            if clan.stealth_current >= clan.stealth_threshold:
+                                await message.add_reaction(emojis.YAY)
+                            if clan.stealth_current == clan_stealth_before:
+                                await message.add_reaction(emojis.ANGRY)
+                            if clan.stealth_current == 69:
+                                await message.add_reaction(emojis.NICE)
+                    else:
+                        if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                if user_alert_enabled:
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'guild', time_left,
+                                                             message.channel.id, alert_message)
+                    )
+                    if not clan_alert_enabled:
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Guild raid
             search_strings = [
@@ -265,55 +314,75 @@ class ClanCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in clan raid message.', message)
                     return
+                clan = user_settings = None
                 try:
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
                 except exceptions.NoDataFoundError:
-                    return
-                if not clan.alert_enabled: return
+                    pass
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
-                    user_settings = None
-                search_patterns = [
-                    r"earned \*\*(.+?)\*\*", #English
-                    r"ganó \*\*(.+?)\*\*", #Spanish
-                    r"ganhou \*\*(.+?)\*\*", #Portuguese
-                ]
-                energy_match = await functions.get_match_from_patterns(search_patterns, message_field1)
-                if energy_match:
-                    energy = int(energy_match.group(1))
-                else:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Energy not found in clan raid message.', message)
+                    pass
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id')
+                clan_alert_enabled = getattr(clan, 'alert_enabled', False)
+                if clan_channel_id is None: clan_alert_enabled = False
+                if not user_alert_enabled and not clan_alert_enabled:
                     return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                clan_raid = await clans.insert_clan_raid(clan.clan_name, user.id, energy, current_time)
-                if not clan_raid.raid_time == current_time:
-                    if settings.DEBUG_MODE:
-                        await message.channel.send(
-                            'There was an error adding the raid to the leaderboard. Please tell Miri he\'s an idiot.'
-                        )
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
-                action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                if slash_command:
-                    alert_message = strings.SLASH_COMMANDS[action]
-                else:
-                    alert_message = f'rpg {action}'
-                reminder: reminders.Reminder = (
-                    await reminders.insert_clan_reminder(clan.clan_name, time_left,
-                                                         clan.channel_id, alert_message)
-                )
-                if reminder.record_exists:
-                    if user_settings is None:
-                        await message.add_reaction(emojis.NAVI)
+                if clan_alert_enabled:
+                    action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                    if slash_command:
+                        alert_message = strings.SLASH_COMMANDS[action]
                     else:
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                        alert_message = f'`rpg {action}`'
                 else:
-                    if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                    if slash_command:
+                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
+                    else:
+                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
+                if clan_alert_enabled:
+                    search_patterns = [
+                        r"earned \*\*(.+?)\*\*", #English
+                        r"ganó \*\*(.+?)\*\*", #Spanish
+                        r"ganhou \*\*(.+?)\*\*", #Portuguese
+                    ]
+                    energy_match = await functions.get_match_from_patterns(search_patterns, message_field1)
+                    if energy_match:
+                        energy = int(energy_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Energy not found in clan raid message.', message)
+                        return
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    clan_raid = await clans.insert_clan_raid(clan.clan_name, user.id, energy, current_time)
+                    if not clan_raid.raid_time == current_time:
+                        if settings.DEBUG_MODE:
+                            await message.channel.send(
+                                'There was an error adding the raid to the leaderboard. Please tell Miri he\'s an idiot.'
+                            )
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_clan_reminder(clan.clan_name, time_left,
+                                                            clan.channel_id, alert_message)
+                    )
+                    if reminder.record_exists:
+                        if user_settings is None:
+                            await message.add_reaction(emojis.NAVI)
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    else:
+                        if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
+                if user_alert_enabled:
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'guild', time_left,
+                                                             message.channel.id, alert_message)
+                    )
+                    if not clan_alert_enabled:
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
 # Initialization

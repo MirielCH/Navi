@@ -4,6 +4,10 @@
 import re
 
 
+# --- Error messages ---
+MSG_INTERACTION_ERROR = 'You are not allowed to use this interaction.'
+
+
 # --- Internal error messages ---
 INTERNAL_ERROR_NO_DATA_FOUND = 'No data found in database.\nTable: {table}\nFunction: {function}\nSQL: {sql}'
 INTERNAL_ERROR_SQLITE3 = 'Error executing SQL.\nError: {error}\nTable: {table}\nFunction: {function}\SQL: {sql}'
@@ -28,13 +32,13 @@ DEFAULT_MESSAGES = {
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
     'farm': DEFAULT_MESSAGE,
+    'guild': DEFAULT_MESSAGE,
     'horse': DEFAULT_MESSAGE,
     'horse-race': DEFAULT_MESSAGE_EVENT,
     'hunt': DEFAULT_MESSAGE,
     'lootbox': DEFAULT_MESSAGE,
     'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and {command} to enter the next draw!',
     'megarace': DEFAULT_MESSAGE,
-    'minirace': DEFAULT_MESSAGE,
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '**{user}** found {loot} for you!',
     'pets': 'Hey! Your pet `{id}` is back! {emoji}',
@@ -53,9 +57,10 @@ CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
 
 MSG_ERROR = 'Whoops, something went wrong here.'
 MSG_NOT_CLAN_LEADER = (
-    '**{username}**, you are not registered as a guild owner. Only guild owners can do this.\n'
-    'If you are the guild owner, run `rpg guild list` to add or update your guild in my database.\n\n'
-    'Also check `{prefix}guild` to see how guild reminders work.'
+    '**{username}**, you are not registered as a guild owner. Only guild owners can change guild channel settings.\n'
+    'If you _are_ the guild owner, run `rpg guild list` to add or update your guild in my database.\n'
+    'If you don\'t know yet, check `{prefix}guild` to see how guild channel reminders work.\n\n'
+    'If you want to enable or disable the personal guild command reminder, use `{prefix}enable|disable guild` instead.'
 )
 MSG_INVALID_ARGUMENT = 'Invalid argument. Check `{prefix}help` for the correct commands.'
 MSG_SYNTAX = 'The command syntax is `{syntax}`.'
@@ -98,13 +103,13 @@ ACTIVITIES = (
     'duel',
     'dungeon-miniboss',
     'farm',
+    'guild',
     'horse',
     'horse-race',
     'hunt',
     'lootbox',
     'lottery',
     'megarace',
-    'minirace',
     'minintboss',
     'partner',
     'pets',
@@ -127,11 +132,11 @@ ACTIVITIES_COMMANDS = (
     'duel',
     'dungeon-miniboss',
     'farm',
+    'guild',
     'horse',
     'hunt',
     'lootbox',
     'megarace',
-    'minirace',
     'quest',
     'training',
     'vote',
@@ -155,13 +160,13 @@ ACTIVITIES_SLASH_COMMANDS = {
     'duel': 'duel',
     'dungeon-miniboss': 'dungeon',
     'farm': 'farm',
+    'guild': 'guild raid',
     'horse': 'horse breeding',
     'horse-race': 'horse race',
     'hunt': 'hunt',
     'lootbox': 'buy',
     'lottery': 'lottery',
     'megarace': 'megarace',
-    'minirace': 'minirace',
     'minintboss': 'minintboss',
     'pet-tournament': 'pets tournament',
     'quest': 'quest',
@@ -232,13 +237,13 @@ ACTIVITIES_COLUMNS = {
     'duel': 'alert_duel',
     'dungeon-miniboss': 'alert_dungeon_miniboss',
     'farm': 'alert_farm',
+    'guild': 'alert_guild',
     'horse': 'alert_horse_breed',
     'horse-race': 'alert_horse_race',
     'hunt': 'alert_hunt',
     'lootbox': 'alert_lootbox',
     'lottery': 'alert_lottery',
     'megarace': 'alert_megarace',
-    'minirace': 'alert_minirace',
     'minintboss': 'alert_not_so_mini_boss',
     'partner': 'alert_partner',
     'pets': 'alert_pets',
@@ -298,7 +303,7 @@ MONSTERS_ADVENTURE = (
     '**Mutant Book**',
     '**Mutant Backpack**',
     '**Mutant Dragon**',
-    "Mutant '**ESC' Key",
+    "**Mutant 'ESC' Key**",
     '**Mutantest Dragon**',
     '**Mutant Shoe**',
     '**Mutant Water Bottle**',

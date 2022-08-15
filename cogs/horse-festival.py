@@ -26,6 +26,7 @@ class HorseFestivalCog(commands.Cog):
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 
+            """
             # Minirace embed
             if '— minirace' in message_author.lower():
                 user_name = user_id = None
@@ -68,6 +69,7 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+            """
 
 
     @commands.Cog.listener()
@@ -119,6 +121,7 @@ class HorseFestivalCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+            """
             search_strings = [
                 'you are now in the list of pending players for a tournament', #English
                 'ahora estás en la lista de jugadores pendientes de un torneo', #Spanish
@@ -156,6 +159,8 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+
 
             search_strings = [
                 'started riding!', #English
@@ -196,6 +201,8 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+        """
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
