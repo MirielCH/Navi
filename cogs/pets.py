@@ -77,6 +77,11 @@ class PetsCog(commands.Cog):
                 if any(search_string in message_content.lower() for search_string in search_strings):
                     await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
+                if 'voidog' in message.content.lower():
+                    await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
+                    if user_settings.reactions_enabled:
+                        await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
+                        await message.add_reaction(emojis.VOIDOG)
                 if interaction is not None: return
                 search_strings = [
                     'pets have started an adventure!', #English
@@ -182,31 +187,6 @@ class PetsCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
-
-            search_strings = [
-                'voidog', #All languages (probably)
-            ]
-            if any(search_string in message_content.lower() for search_string in search_strings):
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_command_message, _ = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+pets?\s+(?:adv\b|adventure\b)\s+(?:find\b|learn\b|drill\b)"
-                        )
-                    )
-                    if user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the pet voidog time travel reaction.', message)
-                        return
-                    user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if (not user_settings.bot_enabled or not user_settings.alert_pets.enabled
-                    or not user_settings.reactions_enabled):
-                    return
-                await message.add_reaction(emojis.VOIDOG)
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]

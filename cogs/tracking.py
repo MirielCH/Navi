@@ -17,7 +17,7 @@ class TrackingCog(commands.Cog):
         self.bot = bot
 
     @commands.cooldown(1, 5, commands.BucketType.user)
-    @commands.command(aliases=('statistics','statistic','stat'))
+    @commands.command(aliases=('statistics','statistic','stat', 'st', 'sts'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def stats(self, ctx: commands.Context, *args: str) -> None:
         """Returns current command statistics"""

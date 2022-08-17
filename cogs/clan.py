@@ -76,8 +76,8 @@ class ClanCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     pass
-                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
-                clan_channel_id = getattr(clan, 'channel_id')
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild', None), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id', None)
                 clan_alert_enabled = getattr(clan, 'alert_enabled', False)
                 if clan_channel_id is None: clan_alert_enabled = False
                 if not user_alert_enabled and not clan_alert_enabled:
@@ -114,6 +114,7 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                 if user_alert_enabled:
+                    alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
                                                              message.channel.id, alert_message)
@@ -147,8 +148,8 @@ class ClanCog(commands.Cog):
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
                         pass
-                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
-                clan_channel_id = getattr(clan, 'channel_id')
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild', None), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id', None)
                 clan_alert_enabled = getattr(clan, 'alert_enabled', False)
                 if clan_channel_id is None: clan_alert_enabled = False
                 if not user_alert_enabled and not clan_alert_enabled:
@@ -195,6 +196,7 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                 if user_alert_enabled:
+                    alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
                                                              message.channel.id, alert_message)
@@ -229,8 +231,8 @@ class ClanCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     pass
-                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
-                clan_channel_id = getattr(clan, 'channel_id')
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild', None), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id', None)
                 clan_alert_enabled = getattr(clan, 'alert_enabled', False)
                 if clan_channel_id is None: clan_alert_enabled = False
                 if not user_alert_enabled and not clan_alert_enabled:
@@ -278,6 +280,7 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if user_alert_enabled:
+                    alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
                                                              message.channel.id, alert_message)
@@ -323,8 +326,8 @@ class ClanCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     pass
-                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild'), 'enabled', False)
-                clan_channel_id = getattr(clan, 'channel_id')
+                user_alert_enabled = getattr(getattr(user_settings, 'alert_guild', None), 'enabled', False)
+                clan_channel_id = getattr(clan, 'channel_id', None)
                 clan_alert_enabled = getattr(clan, 'alert_enabled', False)
                 if clan_channel_id is None: clan_alert_enabled = False
                 if not user_alert_enabled and not clan_alert_enabled:
@@ -377,6 +380,7 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if user_alert_enabled:
+                    alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
                                                              message.channel.id, alert_message)

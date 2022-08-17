@@ -239,11 +239,18 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         f'{emojis.BP} {round(api_latency.total_seconds() * 1000):,} ms API latency'
     )
     creator = f'{emojis.BP} Miriel#0001'
-    github = f'{emojis.BP} [https://github.com/Miriel-py/Navi](https://github.com/Miriel-py/Navi)'
-    embed = discord.Embed(color = settings.EMBED_COLOR, title = 'ABOUT NAVI')
+    links = (
+        f'{emojis.BP} [Github repository](https://github.com/Miriel-py/Navi)\n'
+        f'{emojis.BP} [Privacy policy](https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md)\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'ABOUT NAVI',
+        description = 'I am as free as a fairy.'
+    )
     embed.add_field(name='BOT STATS', value=general, inline=False)
     embed.add_field(name='CREATOR', value=creator, inline=False)
-    embed.add_field(name='GITHUB', value=github, inline=False)
+    embed.add_field(name='LINKS', value=links, inline=False)
     embed.add_field(name='SPECIAL THANKS TO', value=f'{emojis.BP} Swiss cheese', inline=False)
 
     return embed

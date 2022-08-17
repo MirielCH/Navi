@@ -100,6 +100,65 @@ class DevCog(commands.Cog):
                 f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.'
             )
 
+    @dev.group(name='post-message', aliases=('pm',), invoke_without_command=True)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    @commands.is_owner()
+    async def post_message(self, ctx: commands.Context, message_id: int, channel_id: int, *embed_title: str) -> None:
+        """Post an embed to a channel"""
+        def check(m: discord.Message) -> bool:
+            return m.author == ctx.author and m.channel == ctx.channel
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(
+            syntax=f'{ctx.prefix}{ctx.command.qualified_name} [embed title] [content message ID] [target channel ID]'
+        )
+        await self.bot.wait_until_ready()
+        try:
+            message = await ctx.channel.fetch_message(message_id)
+        except:
+            await ctx.reply(
+                f'No message with that ID found.\n'
+                f'Command syntax is `{syntax}`\n'
+                f'Note that the message needs to be in **this** channel.'
+            )
+            return
+        try:
+            channel = await self.bot.fetch_channel(channel_id)
+        except:
+            await ctx.reply(
+                f'No channel with that ID found.\n'
+                f'Command syntax is `{syntax}`'
+            )
+            return
+        embed_title_str = " ".join(embed_title)
+        if len(embed_title_str) > 256:
+            await ctx.reply(
+                f'Embed title can\'t be longer than 256 characters.\n'
+                f'Command syntax is `{syntax}`'
+            )
+            return
+
+
+        embed = discord.Embed(
+            title = embed_title_str,
+            description = message.content
+        )
+
+        await ctx.reply(
+            f'Sending the following embed to the channel `{channel.name}`. Proceed? [`yes/no`]',
+            embed = embed
+        )
+        try:
+            answer = await self.bot.wait_for('message', check=check, timeout=30)
+        except asyncio.TimeoutError:
+            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            return
+        if not answer.content.lower() in ['yes','y']:
+            await ctx.send('Aborted')
+            return
+        await channel.send(embed=embed)
+        await ctx.send('Message sent.')
+
     @dev_event_reduction.command(name='reset')
     @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)

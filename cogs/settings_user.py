@@ -26,7 +26,7 @@ class SettingsUserCog(commands.Cog):
         embed = await embed_user_settings(self.bot, ctx)
         await ctx.reply(embed=embed)
 
-    @commands.command(name='list')
+    @commands.command(name='list', aliases=('cd','cooldowns', 'cooldown'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def list_reminders(self, ctx: commands.Context, *args: str) -> None:
         """Lists all active reminders"""
@@ -317,7 +317,7 @@ class SettingsUserCog(commands.Cog):
         if auto_ready:
             prefix = await guilds.get_prefix(message)
             embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
-            await message.reply(embed=embed)
+            await message.channel.send(embed=embed)
         else:
             view = views.AutoReadyView(user, user_settings)
             interaction_message = await message.reply(embed=embed, view=view)
@@ -365,7 +365,9 @@ class SettingsUserCog(commands.Cog):
                 f'Please note that I track the amount of some EPIC RPG commands you use. Check `{ctx.prefix}stats` to '
                 f'see what commands are tracked.\n'
                 f'__No personal data is processed or stored in any way.__\n'
-                f'If you want to opt-out of command tracking, please use `{ctx.prefix}tracking off`.'
+                f'If you want to opt-out of command tracking, please use `{ctx.prefix}tracking off`.\n\n'
+                f'To read more about what data is processed and why, feel free to check the privacy policy found in '
+                f'`{ctx.prefix}info`.'
             )
         await ctx.reply(welcome_message)
 

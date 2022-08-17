@@ -379,6 +379,8 @@ class HorseFestivalCog(commands.Cog):
                 ]
                 search_strings_reduced = [
                     'stage time reduced', #English
+                    'tiempo de etapa reducido', #Spanish
+                    'tempo da etapa reduzido', #Portuguese
                 ]
                 if any(search_string in message_field0_value.lower() for search_string in search_strings_increased):
                     new_end_time = reminder.end_time + time_left

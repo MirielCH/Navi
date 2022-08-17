@@ -409,9 +409,9 @@ class RubyCounterCog(commands.Cog):
 
             # Rubies from crafting ultra-edgy armor
             search_strings = [
-                '`ultra-edgy armor` successfully crafted', #English
-                '`ultra-edgy armor` crafteado(s)', #Spanish
-                '`ultra-edgy armor` craftado(s)', #Portuguese
+                '`ultra-edgy armor` successfully forged', #English
+                '`ultra-edgy armor` exitosamente forjado', #Spanish
+                '`ultra-edgy armor` forjado com sucesso', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

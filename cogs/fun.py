@@ -19,9 +19,15 @@ class FunCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
     async def hey(self, ctx: commands.Context) -> None:
         """Hey! Listen!"""
-        if ctx.prefix.lower() == 'rpg ':
-            return
+        if ctx.prefix.lower() == 'rpg ': return
         await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431')
+
+    @commands.command(aliases=('hold','cuddle','kiss','love','thanks','smile'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
+    async def hug(self, ctx: commands.Context) -> None:
+        """Aww"""
+        if ctx.prefix.lower() == 'rpg ': return
+        await ctx.reply('https://www.youtube.com/watch?v=SB4sDPTZPYM')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
