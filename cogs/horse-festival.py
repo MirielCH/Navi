@@ -358,7 +358,7 @@ class HorseFestivalCog(commands.Cog):
                 search_patterns = [
                     r'(?:increased|reduced)__: \*\*(.+?)\*\*', #English
                     r'(?:incrementado|aumentado|reducido)__: \*\*(.+?)\*\*', #Spanish, increased one UNCONFIRMED
-                    r'(?:incrementado|aumentado|reducido)__: \*\*(.+?)\*\*', #Portuguese, MISSING
+                    r'(?:incrementado|aumentado|reduzido)__: \*\*(.+?)\*\*', #Portuguese, MISSING
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
                 if not timestring_match:

@@ -24,11 +24,14 @@ class SleepyPotionCog(commands.Cog):
         # Sleepy Potion
         search_strings = [
             'has slept for a day', #English
+            'ha dormido durante un día', #Spanish
+            'dormiu por um dia', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = user = None
             search_patterns = [
                 r'^\*\*(.+?)\*\* drinks', #English
+                r'^\*\*(.+?)\*\* bebe', #Spanish, Portuguese
             ]
             user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
             if user_name_match:

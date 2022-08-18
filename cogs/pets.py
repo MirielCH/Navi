@@ -205,6 +205,7 @@ class PetsCog(commands.Cog):
             if any(search_string in message_description.lower() for search_string in search_strings):
                 pet_names_emojis = {
                     'cat': emojis.PET_CAT,
+                    'voidog': emojis.VOIDOG,
                     'dog': emojis.PET_DOG,
                     'dragon': emojis.PET_DRAGON,
                     'golden bunny': emojis.PET_GOLDEN_BUNNY,
