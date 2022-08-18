@@ -2,9 +2,8 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import importlib
-import re
 import sys
 
 import discord
