@@ -26,6 +26,15 @@ class HorseRaceCog(commands.Cog):
             'próxima corrida é em', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
+            search_strings_registered = [
+                'you are registered already', #English
+                'ya estás en registro', #Spanish
+                'você já está em registro', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings_registered):
+                already_registered = True
+            else:
+                already_registered = False
             user_name = None
             user = await functions.get_interaction_user(message)
             slash_command = True
@@ -69,7 +78,7 @@ class HorseRaceCog(commands.Cog):
                                                     message.channel.id, reminder_message)
             )
             await functions.add_reminder_reaction(message, reminder, user_settings)
-            if reminder.record_exists and user_settings.alert_horse_breed.enabled:
+            if reminder.record_exists and user_settings.alert_horse_breed.enabled and not already_registered:
                 if slash_command:
                     user_command = f"{strings.SLASH_COMMANDS['horse breeding'] or strings.SLASH_COMMANDS['horse race']}"
                 else:
