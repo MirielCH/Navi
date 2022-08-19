@@ -340,7 +340,6 @@ class SettingsClanCog(commands.Cog):
         """Shows the clan leaderboard"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        user: users.User = await users.get_user(ctx.author.id)
         try:
             clan: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:

@@ -90,10 +90,6 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                try:
-                    existing_reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, event)
-                except exceptions.NoDataFoundError:
-                    existing_reminder = None
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, event, time_left,
                                                         message.channel.id, reminder_message)
@@ -177,16 +173,12 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                try:
-                    existing_reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, event)
-                except exceptions.NoDataFoundError:
-                    existing_reminder = None
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, event, time_left,
                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if reminder.record_exists and existing_reminder is None:
+                if reminder.record_exists:
                     if event == 'minintboss' and user_settings.alert_dungeon_miniboss.enabled:
                         if slash_command:
                             user_command = f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"

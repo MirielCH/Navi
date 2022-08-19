@@ -152,12 +152,12 @@ class PetsCog(commands.Cog):
                     activity = f'pets-{pet_id}'
                     try:
                         reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, activity)
-                    except:
+                    except exceptions.NoDataFoundError:
                         continue
                     await reminder.delete()
                     if reminder.record_exists:
                         logs.logger.error(
-                            f'{datetime.now()}: Had an error deleting the pet reminder with activity '
+                            f'{datetime.utcnow()}: Had an error deleting the pet reminder with activity '
                             f'{activity}.'
                         )
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
