@@ -228,11 +228,13 @@ class SettingsUserCog(commands.Cog):
         clan_alert_enabled = getattr(clan, 'alert_enabled', False)
         if clan_alert_enabled:
             if clan.stealth_current >= clan.stealth_threshold:
-                clan_command = strings.SLASH_COMMANDS['guild raid']
+                clan_command = await functions.get_slash_command(user_settings, 'guild raid')
             else:
-                clan_command = strings.SLASH_COMMANDS['guild upgrade']
+                clan_command = await functions.get_slash_command(user_settings, 'guild upgrade')
         else:
-            clan_command = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
+            command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
+            command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+            clan_command = f"{command_upgrade} or {command_raid}"
         ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
         ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
         for reminder in user_reminders:
@@ -258,21 +260,24 @@ class SettingsUserCog(commands.Cog):
             ready_commands = []
             for activity in ready_command_activities:
                 if activity == 'dungeon-miniboss':
+                    command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
+                    command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
                     command = (
-                        f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"
+                        f"{command_dungeon} or {command_miniboss}"
                     )
                 elif activity == 'guild':
                     command = clan_command
                 elif activity == 'quest':
-                    command = strings.SLASH_COMMANDS.get(user_settings.last_quest_command,
-                                                         strings.SLASH_COMMANDS['quest'])
+                    command = await functions.get_slash_command(user_settings, user_settings.last_quest_command)
+                    if command is None: command = await functions.get_slash_command(user_settings, 'quest')
                 elif activity == 'training':
-                    command = strings.SLASH_COMMANDS.get(user_settings.last_training_command,
-                                                         strings.SLASH_COMMANDS['training'])
+                    command = await functions.get_slash_command(user_settings, user_settings.last_training_command)
+                    if command is None: command = await functions.get_slash_command(user_settings, 'training')
                 elif activity == 'work':
-                    command = strings.SLASH_COMMANDS.get(user_settings.last_work_command, 'work command')
+                    command = await functions.get_slash_command(user_settings, user_settings.last_work_command)
+                    if command is None: command = 'work command'
                 else:
-                    command = strings.SLASH_COMMANDS[strings.ACTIVITIES_SLASH_COMMANDS[activity]]
+                    command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity])
                 if activity == 'lootbox':
                     lootbox_name = '[lootbox]' if user_settings.last_lootbox is None else f'{user_settings.last_lootbox} lootbox'
                     command = f'{command} `item: {lootbox_name}`'
@@ -301,7 +306,8 @@ class SettingsUserCog(commands.Cog):
                 elif activity == "minintboss" and not 'dungeon-miniboss' in ready_command_activities:
                     continue
                 else:
-                    ready_events.append(strings.SLASH_COMMANDS[strings.ACTIVITIES_SLASH_COMMANDS[activity]])
+                    command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity])
+                    ready_events.append(command)
             for event in sorted(ready_events):
                 field_ready_events = (
                     f'{field_ready_events}\n'
@@ -450,6 +456,48 @@ class SettingsUserCog(commands.Cog):
             if user.dnd_mode_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, DND mode is now **{action}**.'
+                )
+            else:
+                await ctx.reply(strings.MSG_ERROR)
+
+    @commands.command(name='slash-mentions', aliases=('slash-mention',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def slash_mentions(self, ctx: commands.Context, *args: str) -> None:
+        """Enables/disables slash mentions"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}slash-mentions [on|off]')
+
+        if not args:
+            await ctx.reply(
+                f'This command toggles slash mentions in reminders. If this is on, Navi will send clickable / tappable '
+                f'command links (example: </chainsaw:959162697398763590>).\n'
+                f'Make sure that you use the placeholder \u007bcommand\u007d in your messages to see them.\n\n'
+                f'Note that this feature is not officially released by Discord and does **not** work on mobile yet!\n\n'
+                f'{syntax}'
+            )
+            return
+        if args:
+            action = args[0].lower()
+            if action in ('on', 'enable', 'start'):
+                enabled = True
+                action = 'enabled'
+            elif action in ('off', 'disable', 'stop'):
+                enabled = False
+                action = 'disabled'
+            else:
+                await ctx.reply(syntax)
+                return
+            user: users.User = await users.get_user(ctx.author.id)
+            if user.slash_mentions_enabled == enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, slash mentions are already {action}.'
+                )
+                return
+            await user.update(slash_mentions_enabled=enabled)
+            if user.slash_mentions_enabled == enabled:
+                await ctx.reply(
+                    f'**{ctx.author.name}**, slash mentions are now **{action}**.'
                 )
             else:
                 await ctx.reply(strings.MSG_ERROR)

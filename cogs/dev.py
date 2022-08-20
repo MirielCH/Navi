@@ -353,7 +353,7 @@ class DevCog(commands.Cog):
         user_settings = await users.get_user(user.id)
         interaction = await functions.get_interaction(message)
         if interaction is not None:
-            user_command = strings.SLASH_COMMANDS['horse breeding']
+            user_command = await functions.get_slash_command(user_settings, 'horse breeding')
         else:
             user_command = '`rpg horse breed`'
         reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)

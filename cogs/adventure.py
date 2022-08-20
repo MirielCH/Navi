@@ -38,9 +38,9 @@ class AdventureCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = strings.SLASH_COMMANDS['adventure']
-                else:
+                slash_command = True
+                if user is None:
+                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -65,7 +65,9 @@ class AdventureCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
-                if user_command is None:
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'adventure')
+                else:
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
                             message.channel, r"^rpg\s+(?:adv\b|adventure\b)\s*(?:h\b|hardmode\b)?", user
@@ -111,12 +113,9 @@ class AdventureCog(commands.Cog):
                     '(só que mais forte)', #Portuguese
                 ]
                 last_adventure_mode = None
-                if user is not None:
-                    user_command = strings.SLASH_COMMANDS['adventure']
-                    if any(search_string in message_content.lower() for search_string in search_strings):
-                        user_command = f'{user_command} `mode: hardmode`'
-                        last_adventure_mode = 'hardmode'
-                else:
+                slash_command = True
+                if user is None:
+                    slash_command = False
                     user_command = 'rpg adventure'
                     if any(search_string in message_content.lower() for search_string in search_strings):
                         user_command = f'{user_command} hardmode'
@@ -144,6 +143,11 @@ class AdventureCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'adventure')
+                    if any(search_string in message_content.lower() for search_string in search_strings):
+                        user_command = f'{user_command} `mode: hardmode`'
+                        last_adventure_mode = 'hardmode'
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)

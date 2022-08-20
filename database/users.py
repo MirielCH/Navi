@@ -68,6 +68,7 @@ class User():
     reactions_enabled: bool
     rubies: int
     ruby_counter_enabled: bool
+    slash_mentions_enabled: bool
     tracking_enabled: bool
     training_helper_enabled: bool
     user_donor_tier: int
@@ -125,6 +126,7 @@ class User():
         self.reactions_enabled = new_settings.reactions_enabled
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
+        self.slash_mentions_enabled = new_settings.slash_mentions_enabled
         self.tracking_enabled = new_settings.tracking_enabled
         self.training_helper_enabled = new_settings.training_helper_enabled
         self.user_donor_tier = new_settings.user_donor_tier
@@ -205,6 +207,7 @@ class User():
             reactions_enabled: bool
             rubies: int
             ruby_counter_enabled: bool
+            slash_mentions_enabled: bool
             training_helper_enabled: bool
             user_donor_tier: int
         """
@@ -304,6 +307,7 @@ async def _dict_to_user(record: dict) -> User:
             reactions_enabled = bool(record['reactions_enabled']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
+            slash_mentions_enabled = bool(record['slash_mentions_enabled']),
             tracking_enabled = bool(record['tracking_enabled']),
             training_helper_enabled = bool(record['training_helper_enabled']),
             user_donor_tier = record['user_donor_tier'],
@@ -524,6 +528,7 @@ async def _update_user(user: User, **kwargs) -> None:
         pet_helper_enabled: bool
         rubies: int
         ruby_counter_enabled: bool
+        slash_mentions_enabled: bool
         training_helper_enabled: bool
         user_donor_tier: int
 

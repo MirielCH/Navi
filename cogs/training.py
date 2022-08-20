@@ -68,10 +68,10 @@ class TrainingCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     if interaction.name.startswith('ultraining'):
-                        user_command = strings.SLASH_COMMANDS['ultraining']
+                        user_command = await functions.get_slash_command(user_settings, 'ultraining')
                         last_training_command = 'ultraining'
                     else:
-                        user_command = strings.SLASH_COMMANDS['training']
+                        user_command = await functions.get_slash_command(user_settings, 'training')
                         last_training_command = 'training'
                 else:
                     user_command_message, user_command = (
@@ -115,8 +115,9 @@ class TrainingCog(commands.Cog):
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
                 user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = strings.SLASH_COMMANDS['ultraining'] if user is not None else '`rpg ultraining`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_name_match = re.search(r", \*\*(.+?)\*\*!", message_description)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
@@ -138,6 +139,10 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'ultraining')
+                else:
+                    user_command = '`rpg ultraining`'
                 await user_settings.update(last_training_command='ultraining')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
@@ -167,8 +172,9 @@ class TrainingCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = strings.SLASH_COMMANDS['training'] if user is not None else '`rpg training`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_name_match = re.search(r", \*\*(.+?)\*\*", message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
@@ -186,6 +192,10 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'training')
+                else:
+                    user_command = '`rpg training`'
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)

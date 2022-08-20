@@ -36,11 +36,9 @@ class HorseCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['horse breeding'] or strings.SLASH_COMMANDS['horse race']}"
-                else:
-                    user_command = '`rpg horse breed` or `rpg horse race`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -65,6 +63,12 @@ class HorseCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_horse_breed.enabled: return
+                if slash_command:
+                    command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
+                    command_race = await functions.get_slash_command(user_settings, 'horse race')
+                    user_command = f"{command_breed} or {command_race}"
+                else:
+                    user_command = '`rpg horse breed` or `rpg horse race`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                         message_title)
                 if not timestring_match:

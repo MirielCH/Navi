@@ -6,15 +6,15 @@ from typing import List, Tuple, Union
 
 import discord
 from discord.ext import commands
-from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
+import database
 from resources import emojis, exceptions, settings, strings
 
 
 # --- Get discord data ---
-async def get_interaction(message: discord.Message) -> discord.User:
+async def get_interaction(message: discord.Message) -> discord.Interaction:
     """Returns the interaction object if the message was triggered by a slash command. Returns None if no user was found."""
     if message.reference is not None:
         if message.reference.cached_message is not None:
@@ -458,8 +458,158 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
 
 
 # Helper functions
-async def get_training_answer(message_content: str, slash_command: bool = False) -> str:
+async def get_training_answer_slash(message: discord.Message) -> str:
+    """Returns the buttons for the TrainingAnswerView to a slash training question based on the message content."""
+    buttons = {}
+    message_content = message.content.lower()
+    search_strings_river = [
+        'river!', #English
+        'río!', #Spanish
+        'rio!', #Portuguese
+    ]
+    search_strings_field = [
+        'field!', #English
+        'campo!', #Spanish, Portuguese
+    ]
+    search_strings_casino = [
+        'casino?', #English & Spanish
+        'cassino?', #Portuguese
+    ]
+    search_strings_forest = [
+        'forest!', #English
+        'bosque!', #Spanish, Portuguese
+    ]
+    if any(search_string in message_content for search_string in search_strings_river):
+        if '<:normiefish' in message_content:
+            correct_button = 'training_1'
+        elif '<:goldenfish' in message_content:
+            correct_button = 'training_2'
+        elif '<:epicfish' in message_content:
+            correct_button = 'training_3'
+    elif any(search_string in message_content for search_string in search_strings_field):
+        search_strings_first = [
+            '**first**', #English
+            '**primera**', #Spanish
+            '**primeira**', #Portuguese
+        ]
+        search_strings_second = [
+            '**second**', #English
+            '**segunda**', #Spanish, Portuguese
+        ]
+        search_strings_third = [
+            '**third**', #English
+            '**tercera**', #Spanish
+            '**terceira**', #Portuguese
+        ]
+        search_strings_fourth = [
+            '**fourth**', #English
+            '**cuarta**', #Spanish
+            '**quarta**', #Portuguese
+        ]
+        search_strings_fifth = [
+            '**fifth**', #English
+            '**quinta**', #Spanish, Portuguese
+        ]
+        search_strings_sixth = [
+            '**sixth**', #English
+            '**sexta**', #Spanish, Portuguese
+        ]
+        banana = 'banana'
+        apple = 'apple'
+        if any(search_string in message_content for search_string in search_strings_first):
+            letter = 1
+        elif any(search_string in message_content for search_string in search_strings_second):
+            letter = 2
+        elif any(search_string in message_content for search_string in search_strings_third):
+            letter = 3
+        elif any(search_string in message_content for search_string in search_strings_fourth):
+            letter = 4
+        elif any(search_string in message_content for search_string in search_strings_fifth):
+            letter = 5
+        elif any(search_string in message_content for search_string in search_strings_sixth):
+            letter = 6
+        if '<:apple' in message_content:
+            correct_button = f'training_{apple[letter-1]}'
+        elif '<:banana' in message_content:
+            correct_button = f'training_{banana[letter-1]}'
+    elif any(search_string in message_content for search_string in search_strings_casino):
+        search_strings_diamond = [
+            '**diamond**',  #English
+            '**diamante**',  #Spanish, Portuguese
+        ]
+        search_strings_gift = [
+            '**gift**',  #English
+            '**regalo**',  #Spanish
+            '**presente**',  #Portuguese
+        ]
+        search_strings_dice = [
+            '**dice**',  #English
+            '**dado**',  #Spanish, Portuguese
+        ]
+        search_strings_coin = [
+            '**coin**',  #English
+            '**moneda**',  #Spanish, UNCONFIRMED
+            '**moeda**',  #Portuguese, UNCONFIRMED
+        ]
+        search_strings_clover = [
+            '**four leaf clover**',  #English
+            '**trébol de cuatro hojas**',  #Spanish
+            '**trevo de quatro folhas**',  #Portuguese
+        ]
+        if (':gem:' in message_content
+            and any(search_string in message_content for search_string in search_strings_diamond)):
+            correct_button = 'training_yes'
+        elif (':gift:' in message_content
+              and any(search_string in message_content for search_string in search_strings_gift)):
+            correct_button = 'training_yes'
+        elif (':game_die:' in message_content
+              and any(search_string in message_content for search_string in search_strings_dice)):
+            correct_button = 'training_yes'
+        elif (':coin:' in message_content
+              and any(search_string in message_content for search_string in search_strings_coin)):
+            correct_button = 'training_yes'
+        elif (':four_leaf_clover:' in message_content
+              and any(search_string in message_content for search_string in search_strings_clover)):
+            correct_button = 'training_yes'
+        else:
+            correct_button = 'training_no'
+    elif any(search_string in message_content for search_string in search_strings_forest):
+        search_patterns = [
+            r'many (.+?) do', #English
+            r'cuantos (.+?) ves', #Spanish
+            r'quantas (.+?) você', #Portuguese
+        ]
+        emoji_match = await get_match_from_patterns(search_patterns, message_content)
+        try:
+            emoji = emoji_match.group(1)
+        except:
+            await errors.log_error(f'Log emoji not found in training answer function: {message_content}')
+            return
+        search_strings = [
+            'how many ', #English
+            'cuantos ', #Spanish
+            'quantas ', #Portuguese
+        ]
+        for search_string in search_strings:
+            start_question = message_content.find(search_string)
+            if start_question != -1: break
+        message_content_list = message_content[0:start_question]
+        emoji_amount = message_content_list.count(emoji)
+        correct_button = f'training_{emoji_amount}'
+
+    for row, action_row in enumerate(message.components, start=1):
+        buttons[row] = {}
+        for button in action_row.children:
+            if button.custom_id == correct_button:
+                buttons[row][button.custom_id] = (button.label, button.emoji, True)
+            else:
+                buttons[row][button.custom_id] = (button.label, button.emoji, False)
+    return buttons
+
+
+async def get_training_answer(message: discord.Message) -> str:
     """Returns the answer to a training question based on the message content."""
+    message_content = message.content.lower()
     answer = None
     search_strings_river = [
         'river!', #English
@@ -485,11 +635,11 @@ async def get_training_answer(message_content: str, slash_command: bool = False)
     ]
     if any(search_string in message_content for search_string in search_strings_river):
         if '<:epicfish' in message_content:
-            answer = '`3`' if not slash_command else '`EPIC fish`'
+            answer = '`3`'
         elif '<:goldenfish' in message_content:
-            answer = '`2`' if not slash_command else '`golden fish`'
+            answer = '`2`'
         elif '<:normiefish' in message_content:
-            answer = '`1`' if not slash_command else '`normie fish`'
+            answer = '`1`'
     elif any(search_string in message_content for search_string in search_strings_field):
         search_strings_first = [
             '**first**', #English
@@ -599,28 +749,33 @@ async def get_training_answer(message_content: str, slash_command: bool = False)
             if start_question != -1: break
         message_content_list = message_content[0:start_question]
         answer = f'`{message_content_list.count(emoji)}`'
-    elif any(search_string in message_content for search_string in search_strings_void):
-        all_settings = await settings_db.get_settings()
-        answer = ''
-        a16_seal_time = all_settings.get('a16_seal_time', None)
-        a17_seal_time = all_settings.get('a17_seal_time', None)
-        a18_seal_time = all_settings.get('a18_seal_time', None)
-        a19_seal_time = all_settings.get('a19_seal_time', None)
-        a20_seal_time = all_settings.get('a20_seal_time', None)
-        seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-        current_time = datetime.utcnow().replace(microsecond=0)
-        for area_no, seal_time in enumerate(seal_times, 16):
-            if seal_time is not None:
-                seal_time = datetime.fromisoformat(seal_time, )
-                if seal_time > current_time:
-                    time_left = seal_time - current_time
-                    answer = f'{answer}\nArea {area_no} will close in {time_left.days} days.'.strip()
-        if answer == '':
-            answer = (
-                f'No idea, lol.\n'
-                f"Please use {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['void areas']} "
-                f'before your next training.'
-            )
+
+    return answer
+
+
+async def get_void_training_answer(user_settings: users.User) -> str:
+    """Returns the answer to a void training question."""
+    all_settings = await settings_db.get_settings()
+    answer = ''
+    a16_seal_time = all_settings.get('a16_seal_time', None)
+    a17_seal_time = all_settings.get('a17_seal_time', None)
+    a18_seal_time = all_settings.get('a18_seal_time', None)
+    a19_seal_time = all_settings.get('a19_seal_time', None)
+    a20_seal_time = all_settings.get('a20_seal_time', None)
+    seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+    current_time = datetime.utcnow().replace(microsecond=0)
+    for area_no, seal_time in enumerate(seal_times, 16):
+        if seal_time is not None:
+            seal_time = datetime.fromisoformat(seal_time, )
+            if seal_time > current_time:
+                time_left = seal_time - current_time
+                answer = f'{answer}\nArea {area_no} will close in {time_left.days} days.'.strip()
+    if answer == '':
+        command_void_areas = await get_slash_command(user_settings, 'void areas')
+        answer = (
+            f'No idea, lol.\n'
+            f'Please use {command_void_areas} before your next training.'
+        )
 
     return answer
 
@@ -688,3 +843,11 @@ async def call_ready_command(bot: commands.Bot, message: discord.Message, user: 
     """Calls the ready command as a reply to the current message"""
     command = bot.get_command(name='ready')
     if command is not None: await command.callback(command.cog, message, user=user)
+
+
+async def get_slash_command(user_settings: users.User, command_name: str) -> None:
+    """Gets a slash command string or mention depending on user setting"""
+    if user_settings.slash_mentions_enabled:
+        return strings.SLASH_COMMANDS_NEW.get(command_name, None)
+    else:
+        return strings.SLASH_COMMANDS.get(command_name, None)

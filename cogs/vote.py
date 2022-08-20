@@ -37,8 +37,9 @@ class VoteCog(commands.Cog):
                     if not timestring_match: return
                     timestring = timestring_match.group(1)
                     user = await functions.get_interaction_user(message)
-                    user_command = strings.SLASH_COMMANDS['vote'] if user is not None else '`rpg vote`'
+                    slash_command = True
                     if user is None:
+                        slash_command = False
                         user_command_message, _ = (
                             await functions.get_message_from_channel_history(message.channel, r"^rpg\s+vote\b")
                         )
@@ -52,6 +53,10 @@ class VoteCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled or not user_settings.alert_vote.enabled: return
+                    if slash_command:
+                        user_command = await functions.get_slash_command(user_settings, 'vote')
+                    else:
+                        user_command = '`rpg vote`'
                     time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                     reminder_message = user_settings.alert_vote.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

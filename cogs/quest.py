@@ -136,10 +136,10 @@ class QuestCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     if interaction.name.startswith('quest'):
-                        user_command = strings.SLASH_COMMANDS['quest']
+                        user_command = await functions.get_slash_command(user_settings, 'quest')
                         last_quest_command = 'quest'
                     else:
-                        user_command = strings.SLASH_COMMANDS['epic quest']
+                        user_command = await functions.get_slash_command(user_settings, 'epic quest')
                         last_quest_command = 'epic quest'
                 else:
                     user_command_message, user_command = (
@@ -177,8 +177,9 @@ class QuestCog(commands.Cog):
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                user_command = strings.SLASH_COMMANDS['quest'] if user is not None else '`rpg quest`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -203,6 +204,10 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'quest')
+                else:
+                    user_command = '`rpg quest`'
                 await user_settings.update(last_quest_command='quest')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'quest')
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
@@ -221,8 +226,9 @@ class QuestCog(commands.Cog):
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = strings.SLASH_COMMANDS['epic quest'] if user is not None else '`rpg epic quest`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -251,6 +257,10 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'epic quest')
+                else:
+                    user_command = '`rpg epic quest`'
                 await user_settings.update(last_quest_command='epic quest')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -286,8 +296,9 @@ class QuestCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = strings.SLASH_COMMANDS['quest'] if user is not None else '`rpg quest`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     if message.mentions:
                         user = message.mentions[0]
                     else:
@@ -313,6 +324,10 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'quest')
+                else:
+                    user_command = '`rpg quest`'
                 await user_settings.update(last_quest_command='quest')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)

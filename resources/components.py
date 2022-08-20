@@ -33,3 +33,9 @@ class AutoReadyButton(discord.ui.Button):
             await interaction.response.send_message(response, ephemeral=True)
         else:
             await interaction.followup.send(response, ephemeral=True)
+
+
+class DisabledButton(discord.ui.Button):
+    """Disabled button with no callback"""
+    def __init__(self, style: discord.ButtonStyle, label: str, row: int, emoji: Optional[discord.PartialEmoji] = None):
+        super().__init__(style=style, label=label, emoji=emoji, disabled=True, row=row)

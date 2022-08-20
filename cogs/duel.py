@@ -36,8 +36,9 @@ class DuelCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 interaction_user = await functions.get_interaction_user(message)
-                user_command = '`rpg duel`' if interaction_user is None else strings.SLASH_COMMANDS['duel']
+                slash_command = True
                 if interaction_user is None:
+                    slash_command = False
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(message.channel, r"^rpg\s+duel\b")
                     )
@@ -71,6 +72,10 @@ class DuelCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_duel: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'duel')
+                else:
+                    user_command = '`rpg duel`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:

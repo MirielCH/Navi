@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 class ArenaCog(commands.Cog):
@@ -35,8 +35,9 @@ class ArenaCog(commands.Cog):
         if any(search_string in message_title.lower() for search_string in search_strings):
             user_id = user_name = None
             user = await functions.get_interaction_user(message)
-            user_command = strings.SLASH_COMMANDS['arena'] if user is not None else '`rpg arena`'
+            slash_command = True
             if user is None:
+                slash_command = False
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -61,6 +62,10 @@ class ArenaCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.alert_arena.enabled: return
+            if slash_command:
+                user_command = await functions.get_slash_command(user_settings, 'arena')
+            else:
+                user_command = '`rpg arena`'
             timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                        message_title)
             if not timestring_match:

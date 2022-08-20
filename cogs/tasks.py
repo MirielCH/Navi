@@ -61,10 +61,11 @@ class TasksCog(commands.Cog):
                         )
                     except exceptions.NoDataFoundError:
                         pet_reminders = ()
+                    command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
                     if not pet_reminders:
                         messages[message_no] = (
                             f'{messages[message_no]}'
-                            f"➜ {strings.SLASH_COMMANDS['pets claim']} - No more pets on adventures."
+                            f"➜ {command_pets_claim} - No more pets on adventures."
                         )
                     else:
                         next_pet_reminder = pet_reminders[0]
@@ -76,7 +77,7 @@ class TasksCog(commands.Cog):
                         if pet_amount_left > 1: pets_left = f'{pets_left}s'
                         messages[message_no] = (
                             f'{messages[message_no]}'
-                            f"➜ {strings.SLASH_COMMANDS['pets claim']} - {pets_left} left. Next pet (`{next_pet_id}`) "
+                            f"➜ {command_pets_claim} - {pets_left} left. Next pet (`{next_pet_id}`) "
                             f'in **{timestring}**.'
                         )
                 time_left = get_time_left()

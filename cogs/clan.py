@@ -1,6 +1,7 @@
 # clan.py
 # Contains clan detection commands
 
+from importlib.machinery import all_suffixes
 import re
 
 import discord
@@ -96,12 +97,6 @@ class ClanCog(commands.Cog):
                         alert_message = strings.SLASH_COMMANDS[action]
                     else:
                         alert_message = f'`rpg {action}`'
-                else:
-                    if slash_command:
-                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
-                    else:
-                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
-                if clan_alert_enabled:
                     reminder: reminders.Reminder = (
                         await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                             clan.channel_id, alert_message)
@@ -114,6 +109,20 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                 if user_alert_enabled:
+                    if clan_alert_enabled:
+                        action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                        if slash_command:
+                            alert_message = await functions.get_slash_command(user_settings, action)
+                        else:
+                            alert_message = f'`rpg {action}`'
+                    else:
+                        if slash_command:
+                            command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
+                            command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                        else:
+                            command_upgrade = strings.SLASH_COMMANDS['guild upgrade']
+                            command_raid = strings.SLASH_COMMANDS['guild raid']
+                        alert_message = f"{command_upgrade} or {command_raid}"
                     alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
@@ -178,12 +187,6 @@ class ClanCog(commands.Cog):
                         alert_message = strings.SLASH_COMMANDS[action]
                     else:
                         alert_message = f'`rpg {action}`'
-                else:
-                    if slash_command:
-                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
-                    else:
-                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
-                if clan_alert_enabled:
                     reminder: reminders.Reminder = (
                         await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                             clan.channel_id, alert_message)
@@ -196,6 +199,20 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                 if user_alert_enabled:
+                    if clan_alert_enabled:
+                        action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                        if slash_command:
+                            alert_message = await functions.get_slash_command(user_settings, action)
+                        else:
+                            alert_message = f'`rpg {action}`'
+                    else:
+                        if slash_command:
+                            command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
+                            command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                        else:
+                            command_upgrade = strings.SLASH_COMMANDS['guild upgrade']
+                            command_raid = strings.SLASH_COMMANDS['guild raid']
+                        alert_message = f"{command_upgrade} or {command_raid}"
                     alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
@@ -248,12 +265,6 @@ class ClanCog(commands.Cog):
                         alert_message = strings.SLASH_COMMANDS[action]
                     else:
                         alert_message = f'`rpg {action}`'
-                else:
-                    if slash_command:
-                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
-                    else:
-                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
-                if clan_alert_enabled:
                     clan_stealth_before = clan.stealth_current
                     stealth_match = re.search(r"--> \*\*(.+?)\*\*", message_field0_value)
                     if stealth_match:
@@ -280,6 +291,20 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if user_alert_enabled:
+                    if clan_alert_enabled:
+                        action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                        if slash_command:
+                            alert_message = await functions.get_slash_command(user_settings, action)
+                        else:
+                            alert_message = f'`rpg {action}`'
+                    else:
+                        if slash_command:
+                            command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
+                            command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                        else:
+                            command_upgrade = strings.SLASH_COMMANDS['guild upgrade']
+                            command_raid = strings.SLASH_COMMANDS['guild raid']
+                        alert_message = f"{command_upgrade} or {command_raid}"
                     alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,
@@ -338,17 +363,6 @@ class ClanCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
                 if clan_alert_enabled:
-                    action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                    if slash_command:
-                        alert_message = strings.SLASH_COMMANDS[action]
-                    else:
-                        alert_message = f'`rpg {action}`'
-                else:
-                    if slash_command:
-                        alert_message = f"{strings.SLASH_COMMANDS['guild upgrade']} or {strings.SLASH_COMMANDS['guild raid']}"
-                    else:
-                        alert_message = f'`rpg guild upgrade` or `rpg guild raid`'
-                if clan_alert_enabled:
                     search_patterns = [
                         r"earned \*\*(.+?)\*\*", #English
                         r"ganó \*\*(.+?)\*\*", #Spanish
@@ -368,6 +382,11 @@ class ClanCog(commands.Cog):
                             await message.channel.send(
                                 'There was an error adding the raid to the leaderboard. Please tell Miri he\'s an idiot.'
                             )
+                    action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                    if slash_command:
+                        alert_message = strings.SLASH_COMMANDS[action]
+                    else:
+                        alert_message = f'`rpg {action}`'
                     reminder: reminders.Reminder = (
                         await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                             clan.channel_id, alert_message)
@@ -380,6 +399,20 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if user_alert_enabled:
+                    if clan_alert_enabled:
+                        action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
+                        if slash_command:
+                            alert_message = await functions.get_slash_command(user_settings, action)
+                        else:
+                            alert_message = f'`rpg {action}`'
+                    else:
+                        if slash_command:
+                            command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
+                            command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                        else:
+                            command_upgrade = strings.SLASH_COMMANDS['guild upgrade']
+                            command_raid = strings.SLASH_COMMANDS['guild raid']
+                        alert_message = f"{command_upgrade} or {command_raid}"
                     alert_message = user_settings.alert_guild.message.replace('{command}', alert_message)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'guild', time_left,

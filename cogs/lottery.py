@@ -34,11 +34,9 @@ class LotteryCog(commands.Cog):
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['lottery']} `amount: [1-10]`"
-                else:
-                    user_command = f'`rpg buy lottery ticket`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(message.channel, r"^rpg\s+(?:buy\s+)?lottery\b")
                     )
@@ -52,6 +50,11 @@ class LotteryCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'lottery')
+                    user_command = f"{user_command} `amount: [1-10]`"
+                else:
+                    user_command = f'`rpg buy lottery ticket`'
                 search_patterns = [
                     r'next draw\*\*: (.+?)$', #English
                     r'siguiente ronda\*\*: (.+?)$', #Spanish
@@ -81,11 +84,9 @@ class LotteryCog(commands.Cog):
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['lottery']} `amount: [1-10]`"
-                else:
-                    user_command = f'`rpg buy lottery ticket`'
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
@@ -103,6 +104,11 @@ class LotteryCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'lottery')
+                    user_command = f"{user_command} `amount: [1-10]`"
+                else:
+                    user_command = f'`rpg buy lottery ticket`'
                 search_patterns = [
                     r'the winner in \*\*(.+?)\*\*', #English
                     r'el ganador en \*\*(.+?)\*\*', #Spanish

@@ -25,16 +25,19 @@ class SettingsClanCog(commands.Cog):
             command = self.bot.get_command(name='clan_detection')
             if command is not None: await command.callback(command.cog, ctx, *args)
         else:
+            user_settings: users.User = await users.get_user(ctx.author.id)
+            command_guild_stats = await functions.get_slash_command(user_settings, 'guild stats')
+            command_guild_list = await functions.get_slash_command(user_settings, 'guild list')
             guide = (
                 f'**Guild command reminder**\n'
                 f'If you want a personal reminder for the guild command, use `{ctx.prefix}enable guild`.\n'
                 f'This reminder works like every other command reminder (e.g. `hunt`). It is created when you raid or '
-                f'upgrade or when you use `rpg guild` or {strings.SLASH_COMMANDS["guild stats"]}.\n\n'
+                f'upgrade or when you use `rpg guild` or {command_guild_stats}.\n\n'
                 f'**Channel reminder**\n'
                 f'The guild channel reminder works differently from the other reminders. Channel reminders are sent to '
                 f'a guild channel and always **ping all guild members**.\n\n'
                 f'**Setting up guild channel reminders**\n'
-                f":one: Use `rpg guild list` or {strings.SLASH_COMMANDS['guild list']} "
+                f":one: Use `rpg guild list` or {command_guild_list} "
                 f'to add or update your guild.\n'
                 f':two: __Guild owner__: Use `{ctx.prefix}guild channel set` to set the guild channel.\n'
                 f':three: __Guild owner__: Turn on reminders with `navi guild reminder on`.\n'
@@ -49,9 +52,9 @@ class SettingsClanCog(commands.Cog):
                 f'multiple guilds.\n'
                 f'{emojis.BP} Reminders are always sent to the guild channel. You can, however, raid or upgrade wherever '
                 f'you want, **as long as Navi can see it**. If you raid or upgrade somewhere else, use `rpg guild` or '
-                f"{strings.SLASH_COMMANDS['guild stats']} here to create the reminder.\n"
+                f"{command_guild_stats} here to create the reminder.\n"
                 f'{emojis.BP} Navi pings all guild members and thus needs no role. If you add or remove a guild member, '
-                f"simply use `rpg guild list` or {strings.SLASH_COMMANDS['guild list']} again.\n"
+                f"simply use `rpg guild list` or {command_guild_list} again.\n"
                 f'{emojis.BP} Navi will tell you to upgrade until the threshold is reached and to raid afterwards.\n'
                 f'{emojis.BP} If you accept a raid quest and guild quests are allowed, you will be pinged 5m before '
                 f'everyone else\n'

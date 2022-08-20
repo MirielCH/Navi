@@ -65,7 +65,7 @@ class WorkCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_work.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
-                    user_command = strings.SLASH_COMMANDS[interaction.name]
+                    user_command = await functions.get_slash_command(user_settings, interaction.name)
                     last_work_command = interaction.name
                 else:
                     regex = r"^rpg\s+(?:"
@@ -176,7 +176,7 @@ class WorkCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     if interaction.name not in strings.WORK_COMMANDS: return
-                    user_command = strings.SLASH_COMMANDS[interaction.name]
+                    user_command = await functions.get_slash_command(user_settings, interaction.name)
                     last_work_command = interaction.name
                 else:
                     regex = r"^rpg\s+(?:"
@@ -406,7 +406,6 @@ class WorkCog(commands.Cog):
                 interaction = await functions.get_interaction(message)
                 if interaction is None: return
                 if interaction.name not in strings.WORK_COMMANDS: return
-                user_command = strings.SLASH_COMMANDS[interaction.name]
                 last_work_command = interaction.name
                 user = interaction.user
                 try:
@@ -415,6 +414,7 @@ class WorkCog(commands.Cog):
                     return
                 await user_settings.update(last_work_command=last_work_command)
                 if not user_settings.bot_enabled: return
+                user_command = await functions.get_slash_command(user_settings, interaction.name)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)

@@ -37,12 +37,10 @@ class FarmCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = strings.SLASH_COMMANDS['farm']
-                    slash_command = True
-                else:
-                    user_command = 'rpg farm'
+                slash_command = True
+                if user is None:
                     slash_command = False
+                    user_command = 'rpg farm'
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -82,7 +80,9 @@ class FarmCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_farm.enabled: return
-                if not slash_command:
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'farm')
+                else:
                     last_farm_seed = None
                     if 'carrot' in user_command:
                         last_farm_seed = 'carrot'
@@ -149,16 +149,31 @@ class FarmCog(commands.Cog):
                     '{} no solo', #Portuguese
                 ]
                 if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
-                    user_command = '`rpg farm bread`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: bread`"
+                    if slash_command:
+                        user_command = await functions.get_slash_command(user_settings, 'farm')
+                        user_command = f'{user_command} `seed: bread`'
+                    else:
+                        user_command = '`rpg farm bread`'
                     last_farm_seed = 'bread'
                 elif any(search_string.format('carrot seed') in message_content.lower() for search_string in search_strings):
-                    user_command = '`rpg farm carrot`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: carrot`"
+                    if slash_command:
+                        user_command = await functions.get_slash_command(user_settings, 'farm')
+                        user_command = f'{user_command} `seed: carrot`'
+                    else:
+                        user_command = '`rpg farm carrot`'
                     last_farm_seed = 'carrot'
                 elif any(search_string.format('potato seed') in message_content.lower() for search_string in search_strings):
-                    user_command = '`rpg farm potato`' if not slash_command else f"{strings.SLASH_COMMANDS['farm']} `seed: potato`"
+                    if slash_command:
+                        user_command = await functions.get_slash_command(user_settings, 'farm')
+                        user_command = f'{user_command} `seed: potato`'
+                    else:
+                        user_command = '`rpg farm potato`'
                     last_farm_seed = 'potato'
                 else:
-                    user_command = '`rpg farm`' if not slash_command else strings.SLASH_COMMANDS['farm']
+                    if slash_command:
+                        user_command = await functions.get_slash_command(user_settings, 'farm')
+                    else:
+                        user_command = '`rpg farm`'
                 await user_settings.update(last_farm_seed=last_farm_seed)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
@@ -226,7 +241,7 @@ class FarmCog(commands.Cog):
                 interaction = await functions.get_interaction(message)
                 if interaction is None: return
                 if interaction.name != 'farm': return
-                user_command = strings.SLASH_COMMANDS['farm']
+                user_command = await functions.get_slash_command(user_settings, 'farm')
                 user = interaction.user
                 try:
                     user_settings: users.User = await users.get_user(user.id)

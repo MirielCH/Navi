@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from database import errors, users
 from database import settings as settings_db
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, settings, strings, views
 
 
 class TrainingHelperCog(commands.Cog):
@@ -90,13 +90,32 @@ class TrainingHelperCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
-                answer = await functions.get_training_answer(message_content.lower(), slash_command)
-                if user_settings.dnd_mode_enabled:
+                search_strings_void = [
+                    'void', #English
+                    'vacío', #Spanish, UNCONFIRMED
+                    'vazio', #Portuguese, UNCONFIRMED
+                ]
+                if any(search_string in message_content for search_string in search_strings_void):
+                    answer = await functions.get_void_training_answer(user_settings)
+                    answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
+                    if user_settings.dnd_mode_enabled:
+                        await message.reply(answer)
+                    else:
+                        answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
                     await message.reply(answer)
                 else:
-                    answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
-                    await message.reply(answer)
-
+                    if slash_command:
+                        answer = None if user_settings.dnd_mode_enabled else user.mention
+                        buttons = await functions.get_training_answer_slash(message)
+                        view = views.TrainingAnswerView(buttons)
+                        await message.reply(content=answer, view=view)
+                    else:
+                        answer = await functions.get_training_answer(message)
+                        if user_settings.dnd_mode_enabled:
+                            await message.reply(answer)
+                        else:
+                            answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
+                            await message.reply(answer)
 
 # Initialization
 def setup(bot):

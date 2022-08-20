@@ -36,11 +36,9 @@ class HuntCog(commands.Cog):
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = last_hunt_mode = None
-                slash_command = False
+                slash_command = True
                 interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is not None:
-                    user_command = strings.SLASH_COMMANDS['hunt']
-                    slash_command = True
+                if interaction_user is None: slash_command = False
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -60,7 +58,7 @@ class HuntCog(commands.Cog):
                 else:
                     embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if embed_user is not None: user_id = embed_user.id
-                if user_command is None:
+                if not slash_command:
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
                             message.channel,
@@ -91,7 +89,9 @@ class HuntCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
-                if slash_command and user_settings.last_hunt_mode is not None:
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'hunt')
+                    if user_settings.last_hunt_mode is not None:
                         user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
                 if not slash_command: await user_settings.update(last_hunt_mode=last_hunt_mode)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
@@ -211,7 +211,7 @@ class HuntCog(commands.Cog):
                 if not slash_command:
                     user_command = 'rpg hunt'
                 else:
-                    user_command = strings.SLASH_COMMANDS['hunt']
+                    user_command = await functions.get_slash_command(user_settings, 'hunt')
                 arguments = ''
                 if not event_mob:
                     if hardmode:
@@ -231,7 +231,7 @@ class HuntCog(commands.Cog):
                     if not slash_command: user_command = f'`{user_command}`'
                 if event_mob:
                     if slash_command:
-                        user_command = strings.SLASH_COMMANDS['hunt']
+                        user_command = await functions.get_slash_command(user_settings, 'hunt')
                         if user_settings.last_hunt_mode is not None:
                           user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
                         elif together:
@@ -493,13 +493,13 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction(message)
                 if interaction is None: return
                 if interaction.name != 'hunt': return
-                user_command = strings.SLASH_COMMANDS['hunt']
                 user = interaction.user
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'hunt')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)

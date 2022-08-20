@@ -65,7 +65,8 @@ class BuyCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
                 lootbox_name = '[lootbox]' if user_settings.last_lootbox is None else f'{user_settings.last_lootbox} lootbox'
                 if slash_command:
-                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: {lootbox_name}`"
+                    user_command = await functions.get_slash_command(user_settings, 'buy')
+                    user_command = f"{user_command} `item: {lootbox_name}`"
                 else:
                     user_command = f'`rpg buy {lootbox_name}`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
@@ -98,14 +99,12 @@ class BuyCog(commands.Cog):
                 lootbox_type = None
                 lootbox_name = '[lootbox]'
                 lootbox_type_match = re.search(r'`(.+?) lootbox`', message_content.lower())
+                slash_command = True
                 if lootbox_type_match:
                     lootbox_type = lootbox_type_match.group(1)
                     lootbox_name = f'{lootbox_type} lootbox'
-                if user is not None:
-                    user_command = f"{strings.SLASH_COMMANDS['buy']} `item: {lootbox_name}`"
-                else:
-                    user_command = f'`rpg buy {lootbox_name}`'
                 if user is None:
+                    slash_command = False
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
                             message.channel, r"^rpg\s+buy\s+[a-z]+\s+(?:lb\b|lootbox\b)"
@@ -121,6 +120,11 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'buy')
+                    user_command = f"{user_command} `item: {lootbox_name}`"
+                else:
+                    user_command = f'`rpg buy {lootbox_name}`'
                 await user_settings.update(last_lootbox=lootbox_type)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'lootbox')
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)

@@ -47,3 +47,22 @@ class AutoReadyView(discord.ui.View):
             child.disabled = True
         await self.message.edit(view=self)
         self.stop()
+
+
+class TrainingAnswerView(discord.ui.View):
+    """View with training answers."""
+    def __init__(self, buttons: dict):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.value = None
+        for row, row_buttons in buttons.items():
+            for custom_id, button_data in row_buttons.items():
+                label, emoji, correct_answer = button_data
+                if correct_answer:
+                    if custom_id == 'training_no':
+                        style = discord.ButtonStyle.red
+                    else:
+                        style = discord.ButtonStyle.green
+                else:
+                    style = discord.ButtonStyle.grey
+                self.add_item(components.DisabledButton(style=style, label=label, row=row, emoji=emoji))
+        self.stop()

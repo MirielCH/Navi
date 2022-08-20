@@ -94,7 +94,10 @@ class HealWarningCog(commands.Cog):
                 health_lost = 100
                 health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 9)):
-                action = strings.SLASH_COMMANDS['heal'] if interaction is not None else 'heal'
+                if interaction is not None:
+                    action = await functions.get_slash_command(user_settings, 'heal')
+                else:
+                    action = 'heal'
                 warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:
@@ -154,7 +157,10 @@ class HealWarningCog(commands.Cog):
                 health_lost = 100
                 health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 10)):
-                action = strings.SLASH_COMMANDS['heal'] if interaction is not None else 'heal'
+                if interaction is not None:
+                    action = await functions.get_slash_command(user_settings, 'heal')
+                else:
+                    action = 'heal'
                 warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:

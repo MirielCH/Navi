@@ -56,14 +56,15 @@ class PetsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 if not user_settings.pet_tip_read:
+                    command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     pet_message = (
-                        f"**{user.name}**, please use {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['pets list']} "
+                        f"**{user.name}**, please use {command_pets_list} "
                         f'or `rpg pets` to create pet reminders.'
                     )
                     pet_message = (
                         f'{pet_message}\n\n'
                         f'Tip: This is done fastest by sorting pets by their status:\n'
-                        f"{emojis.BP} {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['pets list']} `sort: status` "
+                        f"{emojis.BP} {command_pets_list} `sort: status` "
                         f'(click through all pages with active pets)\n'
                         f'{emojis.BP} `rpg pets status`'
                     ) # Message split up like this because I'm unsure if I want to always send the first part
@@ -74,11 +75,12 @@ class PetsCog(commands.Cog):
                     'las siguientes mascotas están de vuelta instantaneamente', #Spanish
                     'os seguintes pets voltaram instantaneamente', #Portuguese
                 ]
+                command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
                 if any(search_string in message_content.lower() for search_string in search_strings):
-                    await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
+                    await message.reply(f"➜ {command_pets_claim}")
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
                 if 'voidog' in message.content.lower():
-                    await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
+                    await message.reply(f"➜ {command_pets_claim}")
                     if user_settings.reactions_enabled:
                         await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
                         await message.add_reaction(emojis.VOIDOG)
@@ -120,8 +122,9 @@ class PetsCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is not None:
+                    command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     await message.reply(
-                        f"**{user.name}**, please use {emojis.EPIC_RPG_LOGO_SMALL}{strings.SLASH_COMMANDS['pets list']}"
+                        f"**{user.name}**, please use {command_pets_list}"
                         f' to update your pet reminders.'
                     )
                     return
@@ -185,7 +188,8 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
+                command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
+                await message.reply(f"➜ {command_pets_claim}")
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
 
         if message.embeds:

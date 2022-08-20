@@ -527,6 +527,7 @@ SLASH_COMMANDS_NEW = {
     'hunt': '</hunt:964351961774325770>',
     'ladder': '</ladder:959164278072569936>',
     'lottery': '</lottery:957815874063061072>',
+    'megarace': '</hf megarace:1003530661761663087>',
     'mine': '</mine:959164539922952263>',
     'miniboss': '</miniboss:960740632400388146>',
     "minintboss": '</minintboss:960362922813575209>',

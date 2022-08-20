@@ -168,7 +168,8 @@ class EventsCog(commands.Cog):
                     if lottery_match:
                         lottery_timestring = lottery_match.group(1)
                         if slash_command:
-                            user_command = f"{strings.SLASH_COMMANDS['lottery']} `amount: [1-10]`"
+                            user_command = await functions.get_slash_command(user_settings, 'lottery')
+                            user_command = f"{user_command} `amount: [1-10]`"
                         else:
                             user_command = f'`rpg buy lottery ticket`'
                         lottery_message = user_settings.alert_lottery.message.replace('{command}', user_command)

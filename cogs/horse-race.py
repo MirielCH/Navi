@@ -80,7 +80,9 @@ class HorseRaceCog(commands.Cog):
             await functions.add_reminder_reaction(message, reminder, user_settings)
             if reminder.record_exists and user_settings.alert_horse_breed.enabled and not already_registered:
                 if slash_command:
-                    user_command = f"{strings.SLASH_COMMANDS['horse breeding'] or strings.SLASH_COMMANDS['horse race']}"
+                    command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
+                    command_race = await functions.get_slash_command(user_settings, 'horse race')
+                    user_command = f"{command_breed} or {command_race}"
                 else:
                     user_command = '`rpg horse breed` or `rpg horse race`'
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'horse')

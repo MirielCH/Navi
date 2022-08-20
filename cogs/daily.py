@@ -36,8 +36,9 @@ class DailyCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = '`rpg daily`' if user is None else strings.SLASH_COMMANDS['daily']
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -62,6 +63,10 @@ class DailyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_daily.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'daily')
+                else:
+                    user_command = '`rpg daily`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -84,8 +89,9 @@ class DailyCog(commands.Cog):
             if any(search_string in message_author.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                user_command = '`rpg daily`' if user is None else strings.SLASH_COMMANDS['daily']
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -113,6 +119,10 @@ class DailyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_daily.enabled: return
+                if slash_command:
+                    user_command = await functions.get_slash_command(user_settings, 'daily')
+                else:
+                    user_command = '`rpg daily`'
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'daily')
                 reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

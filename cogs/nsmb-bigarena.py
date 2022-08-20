@@ -181,7 +181,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 if reminder.record_exists:
                     if event == 'minintboss' and user_settings.alert_dungeon_miniboss.enabled:
                         if slash_command:
-                            user_command = f"{strings.SLASH_COMMANDS['dungeon']} or {strings.SLASH_COMMANDS['miniboss']}"
+                            command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
+                            command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
+                            user_command = f"{command_dungeon} or {command_miniboss}"
                         else:
                             user_command = '`rpg dungeon` or `rpg miniboss`'
                         time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'dungeon-miniboss')
@@ -192,7 +194,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                         )
                     if event == 'big-arena' and user_settings.alert_arena.enabled:
                         if slash_command:
-                            user_command = strings.SLASH_COMMANDS['arena']
+                            user_command = await functions.get_slash_command(user_settings, 'arena')
                         else:
                             user_command = '`rpg arena`'
                         time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'arena')

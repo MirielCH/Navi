@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, settings, strings, views
 
 
 class RubyCounterCog(commands.Cog):
@@ -195,7 +195,9 @@ class RubyCounterCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True
                 if user is None:
+                    slash_command = False
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
@@ -225,10 +227,24 @@ class RubyCounterCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in ruby training message for ruby counter.', message)
                     return
-                answer = '`YES`' if user_settings.rubies > ruby_count else '`NO`'
+                answer = f'You have {user_settings.rubies:,} {emojis.RUBY}'
+                if slash_command:
+                    buttons = {}
+                    correct_button = 'training_yes' if user_settings.rubies > ruby_count else 'training_no'
+                    for row, action_row in enumerate(message.components, start=1):
+                        buttons[row] = {}
+                        for button in action_row.children:
+                            if button.custom_id == correct_button:
+                                buttons[row][button.custom_id] = (button.label, button.emoji, True)
+                            else:
+                                buttons[row][button.custom_id] = (button.label, button.emoji, False)
+                    view = views.TrainingAnswerView(buttons)
+                else:
+                    answer = f'`YES` ({answer})' if user_settings.rubies > ruby_count else f'`NO` ({answer})'
+                    view = None
                 if not user_settings.dnd_mode_enabled:
                     answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
-                await message.reply(f'{answer} (you have {user_settings.rubies:,} {emojis.RUBY})')
+                await message.reply(content=answer, view=view)
 
             # Rubies from selling
             search_strings = [
