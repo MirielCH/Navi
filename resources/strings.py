@@ -16,6 +16,11 @@ INTERNAL_ERROR_NO_ARGUMENTS = 'You need to specify at least one keyword argument
 INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: {function}\nRecord: {record}\n'
 
 
+
+# Links
+LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
+LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
+
 # --- Default messages ---
 DEFAULT_MESSAGE = 'Hey! It\'s time for {command}!'
 DEFAULT_MESSAGE_EVENT = (
@@ -544,4 +549,23 @@ SLASH_COMMANDS_NEW = {
     'void areas': '</void areas:959942192623931442>',
     'vote': '</vote:964351963720478760>',
     'weekly': '</weekly:956658465185603645>',
+}
+
+SLASH_COMMANDS_NAVI = {
+    'about': '`/about`',
+    'custom-reminder': '`/custom-reminder`',
+    'guild-leaderboard': '`/guild-leaderboard`',
+    'help': '`/help`',
+    'list': '`/list`',
+    'off': '`/off`',
+    'on': '`/on`',
+    'ready': '`/ready`',
+    'settings guild': '`/settings guild`',
+    'settings helpers': '`/settings helpers`',
+    'settings messages': '`/settings messages`',
+    'settings partner': '`/settings partner`',
+    'settings ready': '`/settings ready`',
+    'settings reminders': '`/settings reminders`',
+    'settings user': '`/settings user`',
+    'stats': '`/stats`',
 }

@@ -6,6 +6,7 @@ from typing import List, Tuple, Union
 
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
@@ -851,3 +852,24 @@ async def get_slash_command(user_settings: users.User, command_name: str) -> Non
         return strings.SLASH_COMMANDS_NEW.get(command_name, None)
     else:
         return strings.SLASH_COMMANDS.get(command_name, None)
+
+
+def await_coroutine(coro):
+    """Function to call a coroutine outside of an async function"""
+    while True:
+        try:
+            coro.send(None)
+        except StopIteration as error:
+            return error.value
+
+
+async def edit_interaction(interaction: Union[discord.Interaction, discord.WebhookMessage], **kwargs) -> None:
+    """Edits a reponse. The response can either be an interaction OR a WebhookMessage"""
+    content = kwargs.get('content', MISSING)
+    embed = kwargs.get('embed', MISSING)
+    view = kwargs.get('view', MISSING)
+    file = kwargs.get('file', MISSING)
+    if isinstance(interaction, discord.WebhookMessage):
+        await interaction.edit(content=content, embed=embed, view=view)
+    else:
+        await interaction.edit_original_message(content=content, file=file, embed=embed, view=view)

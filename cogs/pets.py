@@ -122,6 +122,10 @@ class PetsCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is not None:
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
                     command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     await message.reply(
                         f"**{user.name}**, please use {command_pets_list}"
