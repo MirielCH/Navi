@@ -86,6 +86,7 @@ EXTENSIONS = [
         'cogs.custom-reminders',
         'cogs.daily',
         'cogs.dev',
+        'cogs.dev_old',
         'cogs.duel',
         'cogs.dungeon-miniboss',
         'cogs.events',

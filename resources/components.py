@@ -35,6 +35,17 @@ class AutoReadyButton(discord.ui.Button):
             await interaction.followup.send(response, ephemeral=True)
 
 
+class CustomButton(discord.ui.Button):
+    """Custom Button. Writes its custom id to the view value and stops the view."""
+    def __init__(self, style: discord.ButtonStyle, custom_id: str, label: Optional[str],
+                 emoji: Optional[discord.PartialEmoji] = None):
+        super().__init__(style=style, custom_id=custom_id, label=label, emoji=emoji)
+
+    async def callback(self, interaction: discord.Interaction):
+        self.view.value = self.custom_id
+        self.view.stop()
+
+
 class DisabledButton(discord.ui.Button):
     """Disabled button with no callback"""
     def __init__(self, style: discord.ButtonStyle, label: str, row: int, emoji: Optional[discord.PartialEmoji] = None):

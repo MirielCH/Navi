@@ -127,8 +127,8 @@ ACTIVITIES = (
 )
 
 ACTIVITIES_ALL = list(ACTIVITIES[:])
-ACTIVITIES_ALL.append('all')
 ACTIVITIES_ALL.sort()
+ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
     'adventure',
@@ -275,7 +275,9 @@ ACTIVITIES_WITH_COOLDOWN = (
     'weekly',
     'work',
 )
-
+ACTIVITIES_WITH_COOLDOWN_ALL = list(ACTIVITIES[:])
+ACTIVITIES_WITH_COOLDOWN_ALL.append('all')
+ACTIVITIES_WITH_COOLDOWN_ALL.sort()
 
 # --- Monsters ---
 MONSTERS_ADVENTURE = (

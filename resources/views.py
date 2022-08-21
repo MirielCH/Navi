@@ -6,7 +6,7 @@ from typing import Optional
 import discord
 
 from database import users
-from resources import components, settings, strings
+from resources import components, functions, settings, strings
 
 
 class AutoReadyView(discord.ui.View):
@@ -46,6 +46,46 @@ class AutoReadyView(discord.ui.View):
         for child in self.children:
             child.disabled = True
         await self.message.edit(view=self)
+        self.stop()
+
+
+class ConfirmCancelView(discord.ui.View):
+    """View with confirm and cancel button.
+
+    Args: ctx, labels: Optional[list[str]]
+
+    Also needs the message with the view, so do view.message = await ctx.interaction.original_message().
+    Without this message, buttons will not be disabled when the interaction times out.
+
+    Returns 'confirm', 'cancel' or None (if timeout/error)
+    """
+    def __init__(self, ctx: discord.ApplicationContext, labels: Optional[list[str]] = ['Yes','No'],
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.label_confirm = labels[0]
+        self.label_cancel = labels[1]
+        self.add_item(components.CustomButton(style=discord.ButtonStyle.green,
+                                              custom_id='confirm',
+                                              label=self.label_confirm))
+        self.add_item(components.CustomButton(style=discord.ButtonStyle.red,
+                                              custom_id='cancel',
+                                              label=self.label_cancel))
+
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user != self.user:
+            return False
+        return True
+
+    async def on_timeout(self):
+        self.value = None
+        if self.interaction is not None:
+            try:
+                await functions.edit_interaction(self.interaction, view=None)
+            except discord.errors.NotFound:
+                pass
         self.stop()
 
 
