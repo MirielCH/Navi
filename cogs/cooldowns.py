@@ -95,7 +95,7 @@ class CooldownsCog(commands.Cog):
                 lb_match = re.search(r"lootbox`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if lb_match:
                     lootbox_name = '[lootbox]'
-                    if user_settings.last_lootbox is not None:
+                    if user_settings.last_lootbox != '':
                         lootbox_name = f'{user_settings.last_lootbox} lootbox'
                     if slash_command:
                         user_command = await functions.get_slash_command(user_settings, 'buy')
@@ -110,7 +110,7 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_hunt.enabled:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
-                    if user_settings.last_hunt_mode is not None:
+                    if user_settings.last_hunt_mode != '':
                         if slash_command:
                             user_command = await functions.get_slash_command(user_settings, 'hunt')
                             user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
@@ -129,16 +129,15 @@ class CooldownsCog(commands.Cog):
                             else:
                                 user_command = '`rpg hunt`'
                     hunt_timestring = hunt_match.group(1)
-                    if user_settings.last_hunt_mode is not None:
-                        if ('together' in user_settings.last_hunt_mode
-                            and user_settings.partner_donor_tier < user_settings.user_donor_tier):
-                            time_left = await functions.calculate_time_left_from_timestring(message, hunt_timestring.lower())
-                            partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
-                            user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                            time_difference = ((60 * settings.DONOR_COOLDOWNS[partner_donor_tier])
-                                            - (60 * settings.DONOR_COOLDOWNS[user_donor_tier]))
-                            time_left_seconds = time_left.total_seconds() + time_difference
-                            hunt_timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
+                    if ('together' in user_settings.last_hunt_mode
+                        and user_settings.partner_donor_tier < user_settings.user_donor_tier):
+                        time_left = await functions.calculate_time_left_from_timestring(message, hunt_timestring.lower())
+                        partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
+                        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                        time_difference = ((60 * settings.DONOR_COOLDOWNS[partner_donor_tier])
+                                        - (60 * settings.DONOR_COOLDOWNS[user_donor_tier]))
+                        time_left_seconds = time_left.total_seconds() + time_difference
+                        hunt_timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                     hunt_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     cooldowns.append(['hunt', hunt_timestring.lower(), hunt_message])
                 else:
@@ -146,7 +145,7 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_adventure.enabled:
                 adv_match = re.search(r'adventure(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if adv_match:
-                    if user_settings.last_adventure_mode is not None:
+                    if user_settings.last_adventure_mode != '':
                         if slash_command:
                             user_command = await functions.get_slash_command(user_settings, 'adventure')
                             user_command = f"{user_command} `mode: {user_settings.last_adventure_mode}`"
@@ -263,11 +262,11 @@ class CooldownsCog(commands.Cog):
                     farm_timestring = farm_match.group(1)
                     if slash_command:
                         user_command = await functions.get_slash_command(user_settings, 'farm')
-                        if user_settings.last_farm_seed is not None:
+                        if user_settings.last_farm_seed != '':
                             user_command = f'{user_command} `seed: {user_settings.last_farm_seed}`'
                     else:
                         user_command = 'rpg farm'
-                        if user_settings.last_farm_seed is not None:
+                        if user_settings.last_farm_seed != '':
                             user_command = f'{user_command} {user_settings.last_farm_seed}'
                         user_command = f'`{user_command}`'
                     farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
@@ -283,7 +282,7 @@ class CooldownsCog(commands.Cog):
                 ]
                 work_match = await functions.get_match_from_patterns(search_patterns, message_fields.lower())
                 if work_match:
-                    if user_settings.last_work_command is not None:
+                    if user_settings.last_work_command != '':
                         if slash_command:
                             user_command = await functions.get_slash_command(user_settings, user_settings.last_work_command)
                         else:

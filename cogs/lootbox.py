@@ -63,7 +63,7 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
-                lootbox_name = '[lootbox]' if user_settings.last_lootbox is None else f'{user_settings.last_lootbox} lootbox'
+                lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
                 if slash_command:
                     user_command = await functions.get_slash_command(user_settings, 'buy')
                     user_command = f"{user_command} `item: {lootbox_name}`"

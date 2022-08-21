@@ -169,21 +169,22 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
         f'{emojis.BP} `{prefix}settings` : Check your settings\n'
         f'{emojis.BP} `{prefix}donor` : Set your EPIC RPG donor tier\n'
         f'{emojis.BP} `{prefix}enable` / `disable` : Enable/disable specific reminders\n'
-        f'{emojis.BP} `{prefix}dnd on` / `off` : Turn DND mode on/off (disables pings)\n'
-        f'{emojis.BP} `{prefix}hardmode on` / `off` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
+        f'{emojis.BP} `{prefix}dnd` : Turn DND mode on/off (disables pings)\n'
+        f'{emojis.BP} `{prefix}hardmode` : Turn hardmode mode on/off (tells your partner to hunt solo)\n'
+        f'{emojis.BP} `{prefix}hunt-rotation` : Turn on `hunt` <-> `hunt together` rotation\n'
         f'{emojis.BP} `{prefix}last-tt` : Manually change your last TT time\n'
         f'{emojis.BP} `{prefix}message` : Change the reminder messages\n'
         f'{emojis.BP} `{prefix}ping-mode` : Change if Navi pings before or after the reminder\n'
-        f'{emojis.BP} `{prefix}reactions on` / `off` : Turn reactions on/off\n'
-        f'{emojis.BP} `{prefix}tracking on` / `off` : Turns command tracking on/off\n'
+        f'{emojis.BP} `{prefix}reactions` : Turn reactions on/off\n'
+        f'{emojis.BP} `{prefix}tracking` : Turns command tracking on/off\n'
     )
 
     helper_settings = (
-        f'{emojis.BP} `{prefix}heal on` / `off` : Turn heal warning on/off\n'
-        f'{emojis.BP} `{prefix}pet-helper on` / `off` : Turn the pet catch helper on/off\n'
+        f'{emojis.BP} `{prefix}heal` : Turn heal warning on/off\n'
+        f'{emojis.BP} `{prefix}pet-helper` : Turn the pet catch helper on/off\n'
         f'{emojis.BP} `{prefix}ruby` : Check your current ruby count\n'
         f'{emojis.BP} `{prefix}ruby on` / `off` : Turn the ruby counter on/off\n'
-        f'{emojis.BP} `{prefix}tr-helper on` / `off` : Turn the training helper on/off\n'
+        f'{emojis.BP} `{prefix}tr-helper` : Turn the training helper on/off\n'
     )
 
     partner_settings = (
@@ -197,9 +198,9 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
         f'{emojis.BP} `rpg guild list` : Add/update your guild\n'
         f'{emojis.BP} `{prefix}guild channel` : Set the channel for guild reminders\n'
         f'{emojis.BP} `{prefix}guild leaderboard` : Check the weekly raid leaderboard\n'
-        f'{emojis.BP} `{prefix}guild reminders on` / `off` : Turn guild channel reminders on or off\n'
+        f'{emojis.BP} `{prefix}guild reminders` : Turn guild channel reminders on or off\n'
         f'{emojis.BP} `{prefix}guild stealth` : Set your stealth threshold\n'
-        f'{emojis.BP} `{prefix}guild upgrade-quests on` / `off` : Allow/deny quests below threshold\n'
+        f'{emojis.BP} `{prefix}guild upgrade-quests` : Allow/deny quests below threshold\n'
     )
 
     server_settings = (

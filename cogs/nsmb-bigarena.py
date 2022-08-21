@@ -110,6 +110,15 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 'você já está em registro!', #Portuguese 3
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
+                search_strings_registered = [
+                   'you are already registered!', #English
+                    'ya estás en registro!', #Spanish
+                    'você já está em registro!', #Portuguese
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings_registered):
+                    already_registered = True
+                else:
+                    already_registered = False
                 user_name = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -178,7 +187,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if reminder.record_exists:
+                if reminder.record_exists and not already_registered:
                     if event == 'minintboss' and user_settings.alert_dungeon_miniboss.enabled:
                         if slash_command:
                             command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')

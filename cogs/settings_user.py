@@ -279,13 +279,13 @@ class SettingsUserCog(commands.Cog):
                 else:
                     command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity])
                 if activity == 'lootbox':
-                    lootbox_name = '[lootbox]' if user_settings.last_lootbox is None else f'{user_settings.last_lootbox} lootbox'
+                    lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
                     command = f'{command} `item: {lootbox_name}`'
-                elif activity == 'adventure' and user_settings.last_adventure_mode is not None:
+                elif activity == 'adventure' and user_settings.last_adventure_mode != '':
                     command = f'{command} `mode: {user_settings.last_adventure_mode}`'
-                elif activity == 'hunt' and user_settings.last_hunt_mode is not None:
+                elif activity == 'hunt' and user_settings.last_hunt_mode != '':
                     command = f'{command} `mode: {user_settings.last_hunt_mode}`'
-                elif activity == 'farm' and user_settings.last_farm_seed is not None:
+                elif activity == 'farm' and user_settings.last_farm_seed != '':
                     command = f'{command} `seed: {user_settings.last_farm_seed}`'
                 ready_commands.append(command)
             for command in sorted(ready_commands):
@@ -614,6 +614,51 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR)
 
+    @commands.command(name='hunt-rotation', aliases=('huntrotation','huntrotate','hunt-rotate','huntswitch','hunt-switch'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def hunt_rotation(self, ctx: commands.Context, *args: str) -> None:
+        """Sets hunt rotation"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        syntax = strings.MSG_SYNTAX.format(syntax=f'`{prefix}hunt-rotation [on | off]`')
+        user: users.User = await users.get_user(ctx.author.id)
+        if not args:
+            await ctx.reply(
+                f'This enables the following behaviour:\n'
+                f'{emojis.BP} Your hunt reminder rotates between `hunt together` and `hunt`.\n'
+                f'{emojis.BP} The hunt reminder ignores your partner\'s donor setting.\n\n'
+                f'This is meant for donors married to non-donors who want to optimize their hunt usage.\n'
+                f'Example: If you are a SUPER donor and your partner is a non-donor, this will give you a hunt '
+                f'reminder every 39s with every second one being `hunt together`. This means you will hunt every 39s, '
+                f'and your partner will be taken hunting every 1m18s.\n\n'
+                f'Note that hardmode mode does not work if you enable hunt rotation.\n\n'
+                f'{syntax}'
+            )
+            return
+        action = args[0].lower()
+        if action in ('on', 'enable', 'start'):
+            enabled = True
+            action = 'enabled'
+        elif action in ('off', 'disable', 'stop'):
+            enabled = False
+            action = 'disabled'
+        else:
+            await ctx.reply(syntax)
+            return
+        user: users.User = await users.get_user(ctx.author.id)
+        if user.hunt_rotation_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, hunt rotation is already {action}.'
+            )
+            return
+        await user.update(hunt_rotation_enabled=enabled)
+        if user.hunt_rotation_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, hunt rotation is now **{action}**.'
+            )
+        else:
+            await ctx.reply(strings.MSG_ERROR)
+
     @commands.command(aliases=('disable',))
     @commands.bot_has_permissions(send_messages=True)
     async def enable(self, ctx: commands.Context, *args: str) -> None:
@@ -848,6 +893,7 @@ class SettingsUserCog(commands.Cog):
                 f'whenever they use `hunt together` so you can hardmode in peace.\n'
                 f'Hardmode mode requires the partner to be set and your partner needs to have their partner alert '
                 f'channel set.\n\n'
+                f'Note that this setting does nothing if you have hunt rotation enabled.\n\n'
                 f'{syntax}'
             )
             return
@@ -1259,6 +1305,7 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'({strings.DONOR_TIERS[user_settings.user_donor_tier]})\n'
         f'{emojis.BP} DND mode: `{await bool_to_text(user_settings.dnd_mode_enabled)}`\n'
         f'{emojis.BP} Hardmode mode: `{await bool_to_text(user_settings.hardmode_mode_enabled)}`\n'
+        f'{emojis.BP} Hunt rotation: `{await bool_to_text(user_settings.hunt_rotation_enabled)}`\n'
         f'{emojis.BP} Ping mode: `{ping_mode_setting}` reminder message\n'
         f'{emojis.BP} Reactions: `{await bool_to_text(user_settings.reactions_enabled)}`\n'
         f'{emojis.BP} Last TT: <t:{tt_timestamp}:f> UTC\n'
@@ -1279,9 +1326,9 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Partner alert channel:\n{emojis.BLANK} `{partner_partner_channel_name}`\n'
     )
     field_clan = (
-        f'{emojis.BP} Name: `{clan_name}`\n'
-        f'{emojis.BP} Channel reminder: `{clan_alert_status}`\n'
-        f'{emojis.BP} Alert channel: `{clan_channel_name}`\n'
+        f'{emojis.BP} Guild name: `{clan_name}`\n'
+        f'{emojis.BP} Guild channel reminder: `{clan_alert_status}`\n'
+        f'{emojis.BP} Guild channel: `{clan_channel_name}`\n'
         f'{emojis.BP} Stealth threshold: `{stealth_threshold}`\n'
         f'{emojis.BP} Quests below threshold: `{clan_upgrade_quests}`\n'
     )

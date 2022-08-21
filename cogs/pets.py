@@ -1,6 +1,6 @@
 # pets.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 import discord
@@ -287,6 +287,7 @@ class PetsCog(commands.Cog):
                     pet_timestring = pet_action_timestring_match.group(2)
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
                     time_left = time_left - time_elapsed
+                    if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
                     reminder_created = True
                     reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
                     reminder: reminders.Reminder = (

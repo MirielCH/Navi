@@ -48,6 +48,7 @@ class User():
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
+    hunt_rotation_enabled: bool
     last_adventure_mode: str
     last_farm_seed: str
     last_hunt_mode: str
@@ -106,6 +107,7 @@ class User():
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
+        self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
         self.last_adventure_mode = new_settings.last_adventure_mode
         self.last_farm_seed = new_settings.last_farm_seed
         self.last_hunt_mode = new_settings.last_hunt_mode
@@ -189,6 +191,7 @@ class User():
             guild_quest_prompt_active: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
+            hunt_rotation_enabled: bool
             last_adventure_mode: str
             last_farm_seed: str
             last_hunt_mode: str
@@ -288,14 +291,15 @@ async def _dict_to_user(record: dict) -> User:
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
-            last_adventure_mode = record['last_adventure_mode'],
-            last_farm_seed = record['last_farm_seed'],
-            last_hunt_mode = record['last_hunt_mode'],
-            last_lootbox = record['last_lootbox'],
-            last_quest_command = record['last_quest_command'],
+            hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
+            last_adventure_mode = '' if record['last_adventure_mode'] is None else record['last_adventure_mode'],
+            last_farm_seed = '' if record['last_farm_seed'] is None else record['last_farm_seed'],
+            last_hunt_mode = '' if record['last_hunt_mode'] is None else record['last_hunt_mode'],
+            last_lootbox = '' if record['last_lootbox'] is None else record['last_lootbox'],
+            last_quest_command = '' if record['last_quest_command'] is None else record['last_quest_command'],
             last_training_command = record['last_training_command'],
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
-            last_work_command = record['last_work_command'],
+            last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
@@ -513,6 +517,7 @@ async def _update_user(user: User, **kwargs) -> None:
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
+        hunt_rotation_enabled: bool
         last_adventure_mode: str
         last_farm_seed: str
         last_hunt_mode: str
