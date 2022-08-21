@@ -63,6 +63,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a command for the big-arena or minin\'tboss embed.', message)
                         return
                     user = user_command_message.author
+                    event = 'big-arena' if 'arena' in user_command else 'minintboss'
                 if user is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found for the big-arena or minin\'tboss embed.', message)

@@ -426,8 +426,8 @@ class SettingsUserCog(commands.Cog):
         """Enables/disables dnd mode"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}dnd [on|off]')
-
         if not args:
             await ctx.reply(
                 f'This command toggles DND mode. If DND mode is on, I will not ping you on when I send a reminder.\n'
@@ -446,14 +446,13 @@ class SettingsUserCog(commands.Cog):
             else:
                 await ctx.reply(syntax)
                 return
-            user: users.User = await users.get_user(ctx.author.id)
-            if user.dnd_mode_enabled == enabled:
+            if user_settings.dnd_mode_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, DND mode is already {action}.'
                 )
                 return
-            await user.update(dnd_mode_enabled=enabled)
-            if user.dnd_mode_enabled == enabled:
+            await user_settings.update(dnd_mode_enabled=enabled)
+            if user_settings.dnd_mode_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, DND mode is now **{action}**.'
                 )
@@ -466,8 +465,8 @@ class SettingsUserCog(commands.Cog):
         """Enables/disables slash mentions"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}slash-mentions [on|off]')
-
         if not args:
             await ctx.reply(
                 f'This command toggles slash mentions in reminders. If this is on, Navi will send clickable / tappable '
@@ -488,14 +487,13 @@ class SettingsUserCog(commands.Cog):
             else:
                 await ctx.reply(syntax)
                 return
-            user: users.User = await users.get_user(ctx.author.id)
-            if user.slash_mentions_enabled == enabled:
+            if user_settings.slash_mentions_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, slash mentions are already {action}.'
                 )
                 return
-            await user.update(slash_mentions_enabled=enabled)
-            if user.slash_mentions_enabled == enabled:
+            await user_settings.update(slash_mentions_enabled=enabled)
+            if user_settings.slash_mentions_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, slash mentions are now **{action}**.'
                 )
@@ -508,8 +506,8 @@ class SettingsUserCog(commands.Cog):
         """Enables/disables Navi reactions"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}reactions [on|off]')
-
         if not args:
             await ctx.reply(
                 f'This command enables/disables all message reactions. Why would you ever turn them off tho?\n'
@@ -526,14 +524,14 @@ class SettingsUserCog(commands.Cog):
             else:
                 await ctx.reply(syntax)
                 return
-            user: users.User = await users.get_user(ctx.author.id)
-            if user.reactions_enabled == enabled:
+
+            if user_settings.reactions_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, reactions are already {action}.'
                 )
                 return
-            await user.update(reactions_enabled=enabled)
-            if user.reactions_enabled == enabled:
+            await user_settings.update(reactions_enabled=enabled)
+            if user_settings.reactions_enabled == enabled:
                 await ctx.reply(
                     f'**{ctx.author.name}**, reactions are now **{action}**.'
                 )
@@ -546,15 +544,15 @@ class SettingsUserCog(commands.Cog):
         """Sets user donor tier"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         msg_syntax = strings.MSG_SYNTAX.format(syntax=f'`{prefix}donor [tier]`')
-        user: users.User = await users.get_user(ctx.author.id)
         possible_tiers = f'Possible tiers:'
         for index, donor_tier in enumerate(strings.DONOR_TIERS):
             possible_tiers = f'{possible_tiers}\n{emojis.BP}`{index}` : {donor_tier}'
         if not args:
             await ctx.reply(
-                f'**{ctx.author.name}**, your current EPIC RPG donor tier is **{user.user_donor_tier}** '
-                f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n'
+                f'**{ctx.author.name}**, your current EPIC RPG donor tier is **{user_settings.user_donor_tier}** '
+                f'({strings.DONOR_TIERS[user_settings.user_donor_tier]}).\n'
                 f'If you want to change this, use `{prefix}{ctx.invoked_with} [tier]`.\n\n{possible_tiers}'
             )
             return
@@ -567,10 +565,10 @@ class SettingsUserCog(commands.Cog):
             if donor_tier > len(strings.DONOR_TIERS) - 1 or donor_tier < 0:
                 await ctx.reply(f'{msg_syntax}\n\n{possible_tiers}')
                 return
-            await user.update(user_donor_tier=donor_tier)
+            await user_settings.update(user_donor_tier=donor_tier)
             await ctx.reply(
-                f'**{ctx.author.name}**, your EPIC RPG donor tier is now set to **{user.user_donor_tier}** '
-                f'({strings.DONOR_TIERS[user.user_donor_tier]}).\n'
+                f'**{ctx.author.name}**, your EPIC RPG donor tier is now set to **{user_settings.user_donor_tier}** '
+                f'({strings.DONOR_TIERS[user_settings.user_donor_tier]}).\n'
                 f'Please note that the `hunt together` cooldown can only be accurately calculated if '
                 f'`{prefix}partner donor [tier]` is set correctly as well.'
             )
@@ -581,8 +579,8 @@ class SettingsUserCog(commands.Cog):
         """Sets user ping mode"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'`{prefix}ping-mode [before | after]`')
-        user: users.User = await users.get_user(ctx.author.id)
         if not args:
             await ctx.reply(
                 f'This command controls whether I will ping you before or after the reminder message.\n'
@@ -600,13 +598,13 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        if user.ping_after_message == enabled:
+        if user_settings.ping_after_message == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, I\'m already set to ping you **{setting}** the reminder message.'
             )
             return
-        await user.update(ping_after_message=enabled)
-        if user.ping_after_message == enabled:
+        await user_settings.update(ping_after_message=enabled)
+        if user_settings.ping_after_message == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, I\'m now set to ping you **{setting}** the reminder message.\n'
                 f'Note that this setting has no effect if DND mode is turned on.'
@@ -620,8 +618,8 @@ class SettingsUserCog(commands.Cog):
         """Sets hunt rotation"""
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'`{prefix}hunt-rotation [on | off]`')
-        user: users.User = await users.get_user(ctx.author.id)
         if not args:
             await ctx.reply(
                 f'This enables the following behaviour:\n'
@@ -645,14 +643,14 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.hunt_rotation_enabled == enabled:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+        if user_settings.hunt_rotation_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, hunt rotation is already {action}.'
             )
             return
-        await user.update(hunt_rotation_enabled=enabled)
-        if user.hunt_rotation_enabled == enabled:
+        await user_settings.update(hunt_rotation_enabled=enabled)
+        if user_settings.hunt_rotation_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, hunt rotation is now **{action}**.'
             )
@@ -668,10 +666,10 @@ class SettingsUserCog(commands.Cog):
 
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         action = ctx.invoked_with.lower()
         enabled = True if action == 'enable' else False
         helper_action = 'on' if enabled else 'off'
-        user: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{action} [activity]')
         possible_activities = 'Possible activities:'
         for activity in strings.ACTIVITIES_ALL:
@@ -752,7 +750,7 @@ class SettingsUserCog(commands.Cog):
                         await reminder.delete()
                     except exceptions.NoDataFoundError:
                         pass
-            await user.update(**kwargs)
+            await user_settings.update(**kwargs)
         if ignored_activites:
             answer = f'{answer}\n\nCouldn\'t find the following activites:'
             for activity in ignored_activites:
@@ -765,15 +763,14 @@ class SettingsUserCog(commands.Cog):
         """Change specific reminder messages"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
-
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         if ctx.message.mentions:
             for user in ctx.message.mentions:
                 if user != ctx.author:
-                    await ctx.reply(f'Please don\'t.')
+                    await ctx.reply('Please don\'t.')
                     return
-        user: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}message [activity] [message]')
         possible_activities = '**Possible activities**'
         for activity in strings.ACTIVITIES:
@@ -814,14 +811,14 @@ class SettingsUserCog(commands.Cog):
             for activity in strings.ACTIVITIES:
                 activity_column = strings.ACTIVITIES_COLUMNS[activity]
                 kwargs[f'{activity_column}_message'] = strings.DEFAULT_MESSAGES[activity]
-            await user.update(**kwargs)
+            await user_settings.update(**kwargs)
             await ctx.reply(
                 f'Changed all messages back to the default message.\n\n'
                 f'Note that running reminders do not update automatically.'
             )
             return
         if activity == 'list':
-            embed = await embed_message_settings(ctx, user)
+            embed = await embed_message_settings(ctx, user_settings)
             await ctx.reply(embed=embed)
             return
         if activity in strings.ACTIVITIES_ALIASES: activity = strings.ACTIVITIES_ALIASES[activity]
@@ -833,7 +830,7 @@ class SettingsUserCog(commands.Cog):
             )
             return
         activity_column = strings.ACTIVITIES_COLUMNS[activity]
-        alert = getattr(user, activity_column)
+        alert = getattr(user_settings, activity_column)
         if len(args) == 1:
             await ctx.reply(
                 f'Current message for activity `{activity}`:'
@@ -872,8 +869,8 @@ class SettingsUserCog(commands.Cog):
                     return
             kwargs = {}
             kwargs[f'{activity_column}_message'] = new_message
-            await user.update(**kwargs)
-            alert = getattr(user, activity_column)
+            await user_settings.update(**kwargs)
+            alert = getattr(user_settings, activity_column)
             await ctx.reply(
                 f'Changed message for activity `{activity}` to:\n{emojis.BP} {alert.message}\n\n'
                 f'Note that running reminders do not update automatically.'
@@ -883,6 +880,7 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def hardmode(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables hardmode mode"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
@@ -907,30 +905,29 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.partner_id is None:
+        if user_settings.partner_id is None:
             await ctx.reply(
                 f'**{ctx.author.name}**, you don\'t have a partner set.\n'
                 f'This mode tells your partner to hunt solo, so you need to do that first.\n'
                 f'To set a partner, use `{ctx.prefix}partner`.'
             )
             return
-        if user.hardmode_mode_enabled == enabled:
+        if user_settings.hardmode_mode_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, hardmode mode is already {action}.'
             )
             return
-        await user.update(hardmode_mode_enabled=enabled)
-        if user.hardmode_mode_enabled == enabled:
+        await user_settings.update(hardmode_mode_enabled=enabled)
+        if user_settings.hardmode_mode_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, hardmode mode is now **{action}**.\n'
                 f'Please note that your partner will only be properly notified if they have a partner alert channel set.'
             )
-            if user.partner_id is not None:
-                partner_discord = await functions.get_discord_user(self.bot, user.partner_id)
-                partner: users.User = await users.get_user(user.partner_id)
+            if user_settings.partner_id is not None:
+                partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
+                partner: users.User = await users.get_user(user_settings.partner_id)
                 if partner.partner_channel_id is not None:
-                    partner_message = partner_discord.mention if not user.dnd_mode_enabled else f'**{partner_discord.name}**,'
+                    partner_message = partner_discord.mention if not user_settings.dnd_mode_enabled else f'**{partner_discord.name}**,'
                     partner_message = f'{partner_message} **{ctx.author.name}** just {action} **hardmoding**.'
                     if action == 'enabled':
                         partner_message = (
@@ -953,14 +950,14 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def ruby(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables ruby counter and shows rubies"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
 
-        user: users.User = await users.get_user(ctx.author.id)
 
         if not args:
-            if not user.ruby_counter_enabled:
+            if not user_settings.ruby_counter_enabled:
                 await ctx.reply(
                     f'This command toggles the ruby counter. The ruby counter keeps track of your rubies to be able to '
                     f'answer the ruby training question.\n'
@@ -971,7 +968,7 @@ class SettingsUserCog(commands.Cog):
                 )
                 return
             await ctx.reply(
-                f'**{ctx.author.name}**, you have {user.rubies:,} {emojis.RUBY} rubies.'
+                f'**{ctx.author.name}**, you have {user_settings.rubies:,} {emojis.RUBY} rubies.'
             )
             return
         action = args[0].lower()
@@ -984,13 +981,13 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        if user.ruby_counter_enabled == enabled:
+        if user_settings.ruby_counter_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, the ruby counter is already {action}.'
             )
             return
-        await user.update(ruby_counter_enabled=enabled, rubies=0)
-        if user.ruby_counter_enabled == enabled:
+        await user_settings.update(ruby_counter_enabled=enabled, rubies=0)
+        if user_settings.ruby_counter_enabled == enabled:
             answer = f'**{ctx.author.name}**, the ruby counter is now **{action}**.'
             if enabled:
                 answer = (
@@ -1007,6 +1004,7 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def trhelper(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables training helper"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
@@ -1028,14 +1026,13 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.training_helper_enabled == enabled:
+        if user_settings.training_helper_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, the training helper is already {action}.'
             )
             return
-        await user.update(training_helper_enabled=enabled)
-        if user.training_helper_enabled == enabled:
+        await user_settings.update(training_helper_enabled=enabled)
+        if user_settings.training_helper_enabled == enabled:
             answer = f'**{ctx.author.name}**, the training helper is now **{action}**.'
             if enabled:
                 answer = (
@@ -1052,6 +1049,7 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def megarace_helper(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables megarace helper"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
@@ -1072,14 +1070,13 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.megarace_helper_enabled == enabled:
+        if user_settings.megarace_helper_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, the megarace helper is already {action}.'
             )
             return
-        await user.update(megarace_helper_enabled=enabled)
-        if user.megarace_helper_enabled == enabled:
+        await user_settings.update(megarace_helper_enabled=enabled)
+        if user_settings.megarace_helper_enabled == enabled:
             answer = f'**{ctx.author.name}**, the megarace helper is now **{action}**.'
             if enabled:
                 answer = (
@@ -1095,6 +1092,7 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def pethelper(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables pet catch helper"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
@@ -1115,14 +1113,13 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.pet_helper_enabled == enabled:
+        if user_settings.pet_helper_enabled == enabled:
             await ctx.reply(
                 f'**{ctx.author.name}**, the pet helper is already {action}.'
             )
             return
-        await user.update(pet_helper_enabled=enabled)
-        if user.pet_helper_enabled == enabled:
+        await user_settings.update(pet_helper_enabled=enabled)
+        if user_settings.pet_helper_enabled == enabled:
             await ctx.reply(f'**{ctx.author.name}**, the pet helper is now **{action}**.')
         else:
             await ctx.reply(strings.MSG_ERROR)
@@ -1131,10 +1128,10 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def tracking(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables command tracking"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
-
         if not args:
             await ctx.reply(
                 f'This command toggles the command tracking. If it\'s turned on, I will record how often you do certain '
@@ -1153,12 +1150,11 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.tracking_enabled == enabled:
+        if user_settings.tracking_enabled == enabled:
             await ctx.reply(f'**{ctx.author.name}**, command tracking is already {action}.')
             return
-        await user.update(tracking_enabled=enabled)
-        if user.tracking_enabled == enabled:
+        await user_settings.update(tracking_enabled=enabled)
+        if user_settings.tracking_enabled == enabled:
             await ctx.reply(f'**{ctx.author.name}**, command tracking is now **{action}**.')
         else:
             await ctx.reply(strings.MSG_ERROR)
@@ -1167,6 +1163,7 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def heal(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables heal warning"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
@@ -1189,12 +1186,11 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(syntax)
             return
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.heal_warning_enabled == enabled:
+        if user_settings.heal_warning_enabled == enabled:
             await ctx.reply(f'**{ctx.author.name}**, the heal warning is already {action}.')
             return
-        await user.update(heal_warning_enabled=enabled)
-        if user.heal_warning_enabled == enabled:
+        await user_settings.update(heal_warning_enabled=enabled)
+        if user_settings.heal_warning_enabled == enabled:
             answer = f'**{ctx.author.name}**, the heal warning is now **{action}**.'
             await ctx.reply(answer)
         else:
@@ -1204,6 +1200,7 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def last_tt(self, ctx: commands.Context, *args: str) -> None:
         """Updates the time of the last time travel"""
+        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [message ID / link]')
@@ -1215,9 +1212,6 @@ class SettingsUserCog(commands.Cog):
             f'to your last time travel as possible.\n'
             f'Note that it does not matter if I can actually read the message, I only need the ID or link.'
         )
-
-        user: users.User = await users.get_user(ctx.author.id)
-
         if not args:
             await ctx.reply(msg_syntax)
             return
@@ -1240,13 +1234,13 @@ class SettingsUserCog(commands.Cog):
         except:
             await ctx.reply(f'No valid message ID or URL found.\n{syntax}')
             return
-        await user.update(last_tt=tt_time.isoformat(sep=' '))
-        if user.last_tt != tt_time:
+        await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+        if user_settings.last_tt != tt_time:
             await ctx.reply(strings.MSG_ERROR)
             return
         await ctx.reply(
             f'**{ctx.author.name}**, your last time travel time was changed to '
-            f'<t:{int(user.last_tt.timestamp())}:f> UTC.'
+            f'<t:{int(user_settings.last_tt.timestamp())}:f> UTC.'
         )
 
 # Initialization

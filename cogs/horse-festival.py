@@ -366,13 +366,10 @@ class HorseFestivalCog(commands.Cog):
                     await errors.log_error('Timestring not found in megarace boost message.', message)
                     return
                 timestring = timestring_match.group(1)
-                logs.logger.info(f'Megarace: Timestring {timestring} found.')
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                logs.logger.info(f'Megarace: Time left: {time_left}.')
                 try:
                     reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'megarace')
                 except exceptions.NoDataFoundError:
-                    logs.logger.info(f'Megarace: No active reminder found, exiting.')
                     return
                 search_strings_increased = [
                     'stage time increased', #English
@@ -384,13 +381,9 @@ class HorseFestivalCog(commands.Cog):
                 ]
                 if any(search_string in message_field0_value.lower() for search_string in search_strings_increased):
                     new_end_time = reminder.end_time + time_left
-                    logs.logger.info(f'Megarace: Time increased, new end time: {new_end_time}.')
                 elif any(search_string in message_field0_value.lower() for search_string in search_strings_reduced):
                     new_end_time = reminder.end_time - time_left
-                    logs.logger.info(f'Megarace: Time reduced, new end time: {new_end_time}.')
-                logs.logger.info(f'Megarace: Reminder old end time: {reminder.end_time}.')
                 await reminder.update(end_time=new_end_time)
-                logs.logger.info(f'Megarace: Reminder updated, new end time: {reminder.end_time}.')
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Megarace helper

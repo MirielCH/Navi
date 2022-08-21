@@ -120,6 +120,7 @@ class WorkCog(commands.Cog):
                 'puntos extras de vida', #Spanish, overheal
                 'pontos de vida extras', #Portuguese, overheal
                 ':crossed_sword:', #Ruby dragon event, all languages
+                'guildring', #Stuff bought from guild shop, all languages
             ]
             search_strings = [
                 '** got ', #English
@@ -162,7 +163,7 @@ class WorkCog(commands.Cog):
                     user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found for user name {user_name} in work message.', message)
+                    await errors.log_error(f'User not found for user name {user_name} in work message.', message)
                     return
                 try:
                     user_settings: users.User = await users.get_user(user.id)

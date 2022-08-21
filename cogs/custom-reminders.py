@@ -44,7 +44,7 @@ class CustomRemindersCog(commands.Cog):
                 if user != ctx.author:
                     await ctx.reply(f'Please don\'t.')
                     return
-        user: users.User = await users.get_user(ctx.author.id) # Only to stop if user is not registered
+        user_settings: users.User = await users.get_user(ctx.author.id) # Only to stop if user is not registered
         timestring = args[0].lower()
         try:
             timestring = await functions.check_timestring(timestring)
@@ -65,7 +65,7 @@ class CustomRemindersCog(commands.Cog):
             return
         reminder: reminders.Reminder = (
             await reminders.insert_user_reminder(ctx.author.id, 'custom', time_left,
-                                                    ctx.channel.id, reminder_text.strip())
+                                                 ctx.channel.id, reminder_text.strip())
         )
         if reminder.record_exists:
             await ctx.message.add_reaction(emojis.NAVI)
