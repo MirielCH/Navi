@@ -19,16 +19,16 @@ class CooldownsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id != settings.EPIC_RPG_ID: return
-        for row in message.components:
-            for component in row.children:
-                if component.disabled:
-                    return
         if not message.embeds: return
         embed: discord.Embed = message.embeds[0]
         message_author = message_footer = message_fields = icon_url = ''
