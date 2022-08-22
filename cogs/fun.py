@@ -15,6 +15,11 @@ class FunCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
+
     @commands.command(aliases=('listen',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
     async def hey(self, ctx: commands.Context) -> None:

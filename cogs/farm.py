@@ -18,6 +18,10 @@ class FarmCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -104,6 +108,7 @@ class FarmCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
@@ -181,6 +186,7 @@ class FarmCog(commands.Cog):
                         user_command = '`rpg farm`'
                 await user_settings.update(last_farm_seed=last_farm_seed)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
@@ -230,6 +236,7 @@ class FarmCog(commands.Cog):
                 if not user_settings.alert_farm.enabled: return
                 user_command = '`rpg farm`'
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
@@ -258,6 +265,7 @@ class FarmCog(commands.Cog):
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 if not user_settings.alert_farm.enabled: return
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,

@@ -1,5 +1,6 @@
 # lootbox.py
 
+from datetime import timedelta
 import re
 
 import discord
@@ -17,6 +18,10 @@ class BuyCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -82,6 +87,7 @@ class BuyCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lootbox', time_left,
@@ -132,6 +138,7 @@ class BuyCog(commands.Cog):
                     user_command = f'`rpg buy {lootbox_name}`'
                 await user_settings.update(last_lootbox=lootbox_type)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'lootbox')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lootbox', time_left,

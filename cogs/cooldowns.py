@@ -1,5 +1,6 @@
 # cooldowns.py
 
+from datetime import timedelta
 import re
 
 import discord
@@ -18,13 +19,16 @@ class CooldownsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id != settings.EPIC_RPG_ID: return
-
         if not message.embeds: return
         embed: discord.Embed = message.embeds[0]
         message_author = message_footer = message_fields = icon_url = ''
@@ -304,6 +308,7 @@ class CooldownsCog(commands.Cog):
                 cd_timestring = cooldown[1]
                 cd_message = cooldown[2]
                 time_left = await functions.calculate_time_left_from_timestring(message, cd_timestring)
+                if time_left < timedelta(0): continue
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, cd_activity, time_left,
