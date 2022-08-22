@@ -102,6 +102,11 @@ class MainOldCog(commands.Cog):
                 f'Please try that again.'
             )
             await errors.log_error(error, ctx)
+        elif isinstance(error, commands.CheckFailure):
+            await ctx.respond(
+                await ctx.respond('As you might have guessed, you are not allowed to use this command.',
+                ephemeral=True)
+            )
         else:
             await errors.log_error(error, ctx)
             if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()

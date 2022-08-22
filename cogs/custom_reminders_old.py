@@ -6,7 +6,7 @@ from database import reminders, users
 from resources import emojis, exceptions, functions, strings
 
 
-class CustomRemindersCog(commands.Cog):
+class CustomRemindersOldCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     """Cog that contains custom reminder commands"""
@@ -112,4 +112,4 @@ class CustomRemindersCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(CustomRemindersCog(bot))
+    bot.add_cog(CustomRemindersOldCog(bot))

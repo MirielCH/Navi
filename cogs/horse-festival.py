@@ -18,6 +18,11 @@ class HorseFestivalCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
         message = message_after
         if message.embeds:
             embed: discord.Embed = message.embeds[0]

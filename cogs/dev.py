@@ -21,20 +21,25 @@ class DevCog(commands.Cog):
         "dev",
         "Development commands",
         guild_ids=settings.DEV_GUILDS,
+        default_member_permissions=discord.Permissions(administrator=True)
+    )
+
+    test = SlashCommandGroup(
+        "test",
+        "Test commands",
+        guild_ids=settings.DEV_GUILDS,
+        default_member_permissions=discord.Permissions(administrator=True)
     )
 
     # Commands
     @dev.command()
-    @discord.default_permissions(administrator=True)
+    @commands.is_owner()
     async def reload(
         self,
         ctx: discord.ApplicationContext,
         modules: Option(str, 'Cogs or modules to reload'),
     ) -> None:
         """Reloads cogs or modules"""
-        if ctx.author.id != settings.OWNER_ID:
-            await ctx.respond('As you might have guessed, you are not allowed to use this command.', ephemeral=True)
-            return
         modules = modules.split(' ')
         actions = []
         for module in modules:
@@ -64,7 +69,7 @@ class DevCog(commands.Cog):
         await ctx.respond(f'```diff\n{message}\n```')
 
     @dev.command(name='event-reduction')
-    @discord.default_permissions(administrator=True)
+    @commands.is_owner()
     async def event_reduction(
         self,
         ctx: discord.ApplicationContext,
@@ -72,9 +77,6 @@ class DevCog(commands.Cog):
         event_reduction: Option(float, 'Event reduction in percent', min_value=0, max_value=99, default=None),
     ) -> None:
         """Changes the event reduction for activities"""
-        if ctx.author.id != settings.OWNER_ID:
-            await ctx.respond('As you might have guessed, you are not allowed to use this command.', ephemeral=True)
-            return
         if activity is None and event_reduction is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
             answer = 'Current event reductions:'
@@ -107,7 +109,7 @@ class DevCog(commands.Cog):
         await ctx.respond(answer)
 
     @dev.command(name='base-cooldown')
-    @discord.default_permissions(administrator=True)
+    @commands.is_owner()
     async def base_cooldown(
         self,
         ctx: discord.ApplicationContext,
@@ -115,9 +117,6 @@ class DevCog(commands.Cog):
         base_cooldown: Option(int, 'Base cooldown in seconds', min_value=1, max_value=604_200, default=None),
     ) -> None:
         """Changes the base cooldown for activities"""
-        if ctx.author.id != settings.OWNER_ID:
-            await ctx.respond('As you might have guessed, you are not allowed to use this command.', ephemeral=True)
-            return
         if activity is None and base_cooldown is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
             answer = 'Current base cooldowns:'
@@ -138,7 +137,7 @@ class DevCog(commands.Cog):
         await ctx.respond(answer)
 
     @dev.command(name='post-message')
-    @discord.default_permissions(administrator=True)
+    @commands.is_owner()
     async def post_message(
         self,
         ctx: discord.ApplicationContext,
@@ -147,9 +146,6 @@ class DevCog(commands.Cog):
         embed_title: Option(str, 'Title of the embed', max_length=256),
     ) -> None:
         """Sends the content of a message to a channel in an embed"""
-        if ctx.author.id != settings.OWNER_ID:
-            await ctx.respond('As you might have guessed, you are not allowed to use this command.', ephemeral=True)
-            return
         await self.bot.wait_until_ready()
         try:
             message_id = int(message_id)
@@ -199,12 +195,9 @@ class DevCog(commands.Cog):
 
 
     @dev.command()
-    @discord.default_permissions(administrator=True)
+    @commands.is_owner()
     async def shutdown(self, ctx: discord.ApplicationContext):
         """Shuts down the bot"""
-        if ctx.author.id != settings.OWNER_ID:
-            await ctx.respond('As you might have guessed, you are not allowed to use this command.', ephemeral=True)
-            return
         view = views.ConfirmCancelView(ctx)
         interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
         view.interaction = interaction
