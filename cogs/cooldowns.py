@@ -25,7 +25,10 @@ class CooldownsCog(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id != settings.EPIC_RPG_ID: return
-
+        for row in message.components:
+            for component in row.children:
+                if component.disabled:
+                    return
         if not message.embeds: return
         embed: discord.Embed = message.embeds[0]
         message_author = message_footer = message_fields = icon_url = ''
