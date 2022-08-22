@@ -46,7 +46,7 @@ class HuntCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = last_hunt_mode = None
                 slash_command = True
-                hardmode = together = alone = new = False
+                hardmode = together = alone = old = False
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None: slash_command = False
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
@@ -100,8 +100,8 @@ class HuntCog(commands.Cog):
                                 together = False
                         if argument in ('a', 'alone') and 'alone' not in user_command:
                             alone = True
-                        if argument in ('n', 'new') and 'new' not in user_command:
-                            new = True
+                        if argument in ('o', 'old') and 'old' not in user_command:
+                            old = True
                     if hardmode:
                         user_command = f'{user_command} hardmode'
                         last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
@@ -111,9 +111,9 @@ class HuntCog(commands.Cog):
                     if alone:
                         user_command = f'{user_command} alone'
                         last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
-                    if new:
-                        user_command = f'{user_command} new'
-                        last_hunt_mode = f'{last_hunt_mode} new' if last_hunt_mode is not None else 'new'
+                    if old:
+                        user_command = f'{user_command} old'
+                        last_hunt_mode = f'{last_hunt_mode} old' if last_hunt_mode is not None else 'old'
                     user_command = f'`{user_command.strip()}`'
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
                 if slash_command:
@@ -194,7 +194,7 @@ class HuntCog(commands.Cog):
                     together = found_together = True
                 if any(search_string in message_content.lower() for search_string in search_strings_alone):
                     alone = True
-                new = True if '__**' in message_content.lower() else False
+                old = True if '__**' not in message_content.lower() else False
                 if 'horslime' in message_content.lower():
                     search_strings_together = [
                         'both players', #English
@@ -255,8 +255,8 @@ class HuntCog(commands.Cog):
                         arguments = f'{arguments} together'
                     if alone:
                         arguments = f'{arguments} alone'
-                    if new and together:
-                        arguments = f'{arguments} new'
+                    if old and together:
+                        arguments = f'{arguments} old'
                     if arguments != '':
                         last_hunt_mode = arguments.strip()
                         if slash_command:
@@ -465,7 +465,7 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction_user(message)
                 if interaction is not None: return
                 user_name = user_command = last_hunt_mode = None
-                hardmode = together = found_together = alone = new = False
+                hardmode = together = found_together = alone = False
                 user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
                 if user_name_match:
                     user_name = await functions.encode_text(user_name_match.group(1))

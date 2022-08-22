@@ -95,7 +95,7 @@ class TasksCog(commands.Cog):
                     quest_user_id = clan.quest_user_id
                     await clan.update(quest_user_id=None)
                     time_left_all_members = timedelta(minutes=5)
-                    alert_message_prefix = '/' if '/guild' in first_reminder.alert_message else 'rpg '
+                    alert_message_prefix = '/' if '/guild' in first_reminder.message else 'rpg '
                     if clan.stealth_current >= clan.stealth_threshold:
                         alert_message = f'{alert_message_prefix}guild raid'
                     else:
