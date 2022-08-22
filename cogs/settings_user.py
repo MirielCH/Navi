@@ -1001,9 +1001,9 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def trhelper(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables training helper"""
-        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
             await ctx.reply(
@@ -1046,9 +1046,9 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def pethelper(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables pet catch helper"""
-        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
             await ctx.reply(
@@ -1082,9 +1082,9 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def tracking(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables command tracking"""
-        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
             await ctx.reply(
@@ -1117,9 +1117,9 @@ class SettingsUserCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def heal(self, ctx: commands.Context, *args: str) -> None:
         """Enables/disables heal warning"""
-        user_settings: users.User = await users.get_user(ctx.author.id)
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
         syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
         if not args:
             await ctx.reply(

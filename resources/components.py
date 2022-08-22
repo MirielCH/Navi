@@ -50,3 +50,31 @@ class DisabledButton(discord.ui.Button):
     """Disabled button with no callback"""
     def __init__(self, style: discord.ButtonStyle, label: str, row: int, emoji: Optional[discord.PartialEmoji] = None):
         super().__init__(style=style, label=label, emoji=emoji, disabled=True, row=row)
+
+
+class ToggleSelect(discord.ui.Select):
+    """Toggle select that shows and toggles the status of booleans. Also adds "Enable all" and "Disable all" on top."""
+    def __init__(self, topics: dict, active_topic: str, placeholder: str, row: Optional[int] = None):
+        self.topics = topics
+        options = []
+        for topic in topics.keys():
+            label = topic
+            emoji = '🔹' if topic == active_topic else None
+            options.append(discord.SelectOption(label=label, value=label, emoji=emoji))
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id='select_topic')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        self.view.active_topic = select_value
+        for child in self.view.children:
+            if child.custom_id == 'select_topic':
+                options = []
+                for topic in self.topics.keys():
+                    label = topic
+                    emoji = '🔹' if topic == self.view.active_topic else None
+                    options.append(discord.SelectOption(label=label, value=label, emoji=emoji))
+                child.options = options
+                break
+        embed = await self.view.topics[select_value]()
+        await interaction.response.edit_message(embed=embed, view=self.view)
