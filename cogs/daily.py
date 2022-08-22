@@ -1,5 +1,6 @@
 # daily.py
 
+from datetime import timedelta
 import re
 
 import discord
@@ -13,6 +14,11 @@ class DailyCog(commands.Cog):
     """Cog that contains the daily detection commands"""
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -75,6 +81,7 @@ class DailyCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'daily', time_left,
@@ -124,6 +131,7 @@ class DailyCog(commands.Cog):
                 else:
                     user_command = '`rpg daily`'
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'daily')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'daily', time_left,

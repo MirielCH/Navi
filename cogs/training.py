@@ -1,6 +1,6 @@
 # training.py
 
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
 
 import discord
@@ -14,6 +14,11 @@ class TrainingCog(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -99,6 +104,7 @@ class TrainingCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
@@ -145,6 +151,7 @@ class TrainingCog(commands.Cog):
                     user_command = '`rpg ultraining`'
                 await user_settings.update(last_training_command='ultraining')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
@@ -202,6 +209,7 @@ class TrainingCog(commands.Cog):
                 if not user_settings.alert_training.enabled: return
                 await user_settings.update(last_training_command='training')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'training', time_left,

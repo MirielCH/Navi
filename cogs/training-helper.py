@@ -17,6 +17,24 @@ class TrainingHelperCog(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        message = message_after
+        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.embeds:
+            embed: discord.Embed = message.embeds[0]
+            message_description = ''
+            if embed.description: message_description = embed.description
+            # Void area unseal times
+            search_strings = [
+                'help us unseal the next areas!', #English
+                'ayudanos a abrir las siguientes áreas!', #Spanish
+                'ajude-nos a abrir as seguintes áreas!', #Portuguese
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
+                await check_void_areas(message)
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id != settings.EPIC_RPG_ID: return
@@ -31,28 +49,7 @@ class TrainingHelperCog(commands.Cog):
                 'ajude-nos a abrir as seguintes áreas!', #Portuguese
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
-                updated_settings = False
-                for field in embed.fields:
-                    search_strings = [
-                        'unsealed', #English
-                        'abierto', #Spanish
-                        'aberto', #Portuguese, UNCONFIRMED
-                    ]
-                    if any(search_string in field.value.lower() for search_string in search_strings):
-                        seal_timestring_match = re.search(r"__: (.+?)$", field.value)
-                        if seal_timestring_match:
-                            area_no = int(field.name[-2:])
-                            seal_timestring = seal_timestring_match.group(1).replace(' ','')
-                            seal_time_left = await functions.parse_timestring_to_timedelta(seal_timestring.lower())
-                            current_time = datetime.utcnow().replace(microsecond=0)
-                            seal_time = current_time + seal_time_left
-                            await settings_db.update_setting(f'a{area_no}_seal_time', seal_time)
-                            updated_settings = True
-                        else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('Timestring not found for void areas message.', message)
-                            return
-                if updated_settings: await message.add_reaction(emojis.NAVI)
+                await check_void_areas(message)
 
         if not message.embeds:
             message_content = message.content
@@ -120,3 +117,42 @@ class TrainingHelperCog(commands.Cog):
 # Initialization
 def setup(bot):
     bot.add_cog(TrainingHelperCog(bot))
+
+
+# Functions
+async def check_void_areas(message: discord.Message) -> None:
+    """Checks for void area message"""
+    if message.author.id != settings.EPIC_RPG_ID: return
+    if message.embeds:
+        embed: discord.Embed = message.embeds[0]
+        message_description = ''
+        if embed.description: message_description = embed.description
+        # Void area unseal times
+        search_strings = [
+            'help us unseal the next areas!', #English
+            'ayudanos a abrir las siguientes áreas!', #Spanish
+            'ajude-nos a abrir as seguintes áreas!', #Portuguese
+        ]
+        if any(search_string in message_description.lower() for search_string in search_strings):
+            updated_settings = False
+            for field in embed.fields:
+                search_strings = [
+                    'unsealed', #English
+                    'abierto', #Spanish
+                    'aberto', #Portuguese, UNCONFIRMED
+                ]
+                if any(search_string in field.value.lower() for search_string in search_strings):
+                    seal_timestring_match = re.search(r"__: (.+?)$", field.value)
+                    if seal_timestring_match:
+                        area_no = int(field.name[-2:])
+                        seal_timestring = seal_timestring_match.group(1).replace(' ','')
+                        seal_time_left = await functions.parse_timestring_to_timedelta(seal_timestring.lower())
+                        current_time = datetime.utcnow().replace(microsecond=0)
+                        seal_time = current_time + seal_time_left
+                        await settings_db.update_setting(f'a{area_no}_seal_time', seal_time)
+                        updated_settings = True
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Timestring not found for void areas message.', message)
+                        return
+            if updated_settings: await message.add_reaction(emojis.NAVI)

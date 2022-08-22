@@ -16,6 +16,11 @@ class HuntCog(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id != settings.EPIC_RPG_ID: return
@@ -121,6 +126,7 @@ class HuntCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if time_left < timedelta(0): return
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
@@ -306,6 +312,7 @@ class HuntCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'hunt', time_left,
@@ -523,6 +530,7 @@ class HuntCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'hunt', time_left,
@@ -568,6 +576,7 @@ class HuntCog(commands.Cog):
                 else:
                     time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'hunt', time_left,

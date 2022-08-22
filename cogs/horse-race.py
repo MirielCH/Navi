@@ -1,5 +1,6 @@
 # horse-race.py
 
+from datetime import timedelta
 import re
 
 import discord
@@ -13,6 +14,11 @@ class HorseRaceCog(commands.Cog):
     """Cog that contains the horse race detection"""
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -72,6 +78,7 @@ class HorseRaceCog(commands.Cog):
                     return
             timestring = timestring_match.group(1)
             time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+            if time_left < timedelta(0): return
             reminder_message = user_settings.alert_horse_race.message.replace('{event}', 'horse race')
             reminder: reminders.Reminder = (
                 await reminders.insert_user_reminder(user.id, 'horse-race', time_left,

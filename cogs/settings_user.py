@@ -707,9 +707,6 @@ class SettingsUserCog(commands.Cog):
         if 'hardmode' in helper_check:
             await self.hardmode(ctx, helper_action)
             return
-        if 'megarace' in helper_check and 'helper' in helper_check:
-            await self.megarace_helper(ctx, helper_action)
-            return
         if args[0].lower() == 'all':
             if not enabled:
                 try:
@@ -1045,49 +1042,6 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR)
 
-    @commands.command(aliases=('megaracehelper','megarace-helper'))
-    @commands.bot_has_permissions(send_messages=True)
-    async def megarace_helper(self, ctx: commands.Context, *args: str) -> None:
-        """Enables/disables megarace helper"""
-        user_settings: users.User = await users.get_user(ctx.author.id)
-        prefix = ctx.prefix
-        if prefix.lower() == 'rpg ': return
-        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
-        if not args:
-            await ctx.reply(
-                f'This command toggles the megarace helper. The megarace helper will tell you the best answer for '
-                f'megarace questions.\n'
-                f'{syntax}'
-            )
-            return
-        action = args[0].lower()
-        if action in ('on', 'enable', 'start'):
-            enabled = True
-            action = 'enabled'
-        elif action in ('off', 'disable', 'stop'):
-            enabled = False
-            action = 'disabled'
-        else:
-            await ctx.reply(syntax)
-            return
-        if user_settings.megarace_helper_enabled == enabled:
-            await ctx.reply(
-                f'**{ctx.author.name}**, the megarace helper is already {action}.'
-            )
-            return
-        await user_settings.update(megarace_helper_enabled=enabled)
-        if user_settings.megarace_helper_enabled == enabled:
-            answer = f'**{ctx.author.name}**, the megarace helper is now **{action}**.'
-            if enabled:
-                answer = (
-                    f'{answer}\n'
-                    f'If your megarace reminder is turned on, I will automatically tell you the best answer for '
-                    f'megarace questions.'
-                )
-            await ctx.reply(answer)
-        else:
-            await ctx.reply(strings.MSG_ERROR)
-
     @commands.command(aliases=('pet-helper','pethelp','pet-help'))
     @commands.bot_has_permissions(send_messages=True)
     async def pethelper(self, ctx: commands.Context, *args: str) -> None:
@@ -1307,7 +1261,6 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
     )
     field_helpers = (
         f'{emojis.BP} Heal warning: `{await bool_to_text(user_settings.heal_warning_enabled)}`\n'
-        f'{emojis.BP} Megarace helper: `{await bool_to_text(user_settings.megarace_helper_enabled)}`\n'
         f'{emojis.BP} Pet helper: `{await bool_to_text(user_settings.pet_helper_enabled)}`\n'
         f'{emojis.BP} Ruby counter: `{await bool_to_text(user_settings.ruby_counter_enabled)}`\n'
         f'{emojis.BP} Training helper: `{await bool_to_text(user_settings.training_helper_enabled)}`\n'
@@ -1338,7 +1291,6 @@ async def embed_user_settings(bot: commands.Bot, ctx: commands.Context) -> disco
         f'{emojis.BP} Hunt: `{await bool_to_text(user_settings.alert_hunt.enabled)}`\n'
         f'{emojis.BP} Lootbox: `{await bool_to_text(user_settings.alert_lootbox.enabled)}`\n'
         f'{emojis.BP} Lottery: `{await bool_to_text(user_settings.alert_lottery.enabled)}`\n'
-        f'{emojis.BP} Megarace: `{await bool_to_text(user_settings.alert_megarace.enabled)}`\n'
         f'{emojis.BP} Partner alert: `{await bool_to_text(user_settings.alert_partner.enabled)}`\n'
         f'{emojis.BP} Pets: `{await bool_to_text(user_settings.alert_pets.enabled)}`\n'
         f'{emojis.BP} Quest: `{await bool_to_text(user_settings.alert_quest.enabled)}`\n'

@@ -1,7 +1,7 @@
 # clan.py
 # Contains clan detection commands
 
-from importlib.machinery import all_suffixes
+from datetime import timedelta
 import re
 
 import discord
@@ -16,6 +16,11 @@ class ClanCog(commands.Cog):
     """Cog that contains the clan detection commands"""
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -91,6 +96,7 @@ class ClanCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                     if slash_command:
@@ -181,6 +187,7 @@ class ClanCog(commands.Cog):
                 if not timestring_match: return
                 timestring = timestring_match.group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
+                if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                     if slash_command:
@@ -259,6 +266,7 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
+                if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                     if slash_command:
@@ -362,6 +370,7 @@ class ClanCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
+                if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     search_patterns = [
                         r"earned \*\*(.+?)\*\*", #English

@@ -1,5 +1,6 @@
 # cooldowns.py
 
+from datetime import timedelta
 import re
 
 import discord
@@ -14,6 +15,11 @@ class CooldownsCog(commands.Cog):
     """Cog that contains the cooldowns detection commands"""
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
@@ -299,6 +305,7 @@ class CooldownsCog(commands.Cog):
                 cd_timestring = cooldown[1]
                 cd_message = cooldown[2]
                 time_left = await functions.calculate_time_left_from_timestring(message, cd_timestring)
+                if time_left < timedelta(0): continue
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, cd_activity, time_left,

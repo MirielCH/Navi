@@ -16,6 +16,11 @@ class EventsCog(commands.Cog):
         self.bot = bot
 
     @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        await self.on_message(message_after)
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
 
@@ -67,6 +72,7 @@ class EventsCog(commands.Cog):
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(hours=12) - time_elapsed
+                if time_left < timedelta(0): return
                 reminder_message = 'Hey! It\'s time for `rpg cel multiply`!'
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'cel-multiply', time_left,
@@ -88,6 +94,7 @@ class EventsCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
+                if time_left < timedelta(0): return
                 reminder_message = 'Hey! It\'s time for `rpg cel multiply`!'
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'cel-multiply', time_left,
@@ -214,6 +221,7 @@ class EventsCog(commands.Cog):
                     bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                     time_elapsed = current_time - bot_answer_time
                     time_left = time_left - time_elapsed
+                    if time_left < timedelta(0): continue
                     if time_left.total_seconds() > 0:
                         reminder: reminders.Reminder = (
                             await reminders.insert_user_reminder(user.id, cd_activity, time_left,
