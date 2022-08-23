@@ -40,13 +40,13 @@ class SettingsGuildView(discord.ui.View):
 
     @discord.ui.button(custom_id="set_stealth", style=discord.ButtonStyle.grey, label='Set stealth threshold', row=2)
     async def button_abort(self, button: discord.ui.Button, interaction: discord.Interaction):
-        """Abort button"""
+        """Set stealth threshold button"""
         self.value = button.custom_id
         self.stop()
 
     @discord.ui.button(custom_id="set_channel", style=discord.ButtonStyle.grey, label='Set guild channel', row=3)
     async def button_abort(self, button: discord.ui.Button, interaction: discord.Interaction):
-        """Abort button"""
+        """Set guild channel button"""
         self.value = button.custom_id
         self.stop()
 

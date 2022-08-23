@@ -68,7 +68,7 @@ class FarmCog(commands.Cog):
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
                             message.channel,
-                            r"^rpg\s+farm\b\s*(?:carrot\b|potato\b|bread\b)?",
+                            r"^(rpg\b|<@!?[0-9]+>)\s+farm\b\s*(?:carrot\b|potato\b|bread\b)?",
                             user
                         )
                     )

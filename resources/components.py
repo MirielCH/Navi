@@ -5,6 +5,8 @@ from typing import Optional
 
 import discord
 
+from resources import emojis
+
 
 class AutoReadyButton(discord.ui.Button):
     """Recalculation button for the crafting calculator"""
@@ -52,28 +54,33 @@ class DisabledButton(discord.ui.Button):
         super().__init__(style=style, label=label, emoji=emoji, disabled=True, row=row)
 
 
-class ToggleSelect(discord.ui.Select):
-    """Toggle select that shows and toggles the status of booleans. Also adds "Enable all" and "Disable all" on top."""
-    def __init__(self, topics: dict, active_topic: str, placeholder: str, row: Optional[int] = None):
-        self.topics = topics
+class ToggleUserSettingSelect(discord.ui.Select):
+    """Toggle select that shows and toggles the status of user settings (except alerts)."""
+    def __init__(self, toggled_settings: dict, row: Optional[int] = None):
+        self.settings = toggled_settings
         options = []
-        for topic in topics.keys():
-            label = topic
-            emoji = '🔹' if topic == active_topic else None
-            options.append(discord.SelectOption(label=label, value=label, emoji=emoji))
-        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
-                         custom_id='select_topic')
+        options.append(discord.SelectOption(label='Enable all', value='enable_all', emoji=None))
+        options.append(discord.SelectOption(label='Disable all', value='disable_all', emoji=None))
+        for setting, label in toggled_settings.items():
+            setting_state = getattr(self.view.user_settings, setting)
+            emoji = emojis.GREENTICK if setting_state else emojis.REDTICK
+            options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
+        super().__init__(placeholder='Toggle ', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='toggle_user_settings')
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        self.view.active_topic = select_value
+        setting_state = getattr(self.view.user_settings, select_value)
+        await self.view.user_settings.update(select_value, not setting_state)
         for child in self.view.children:
-            if child.custom_id == 'select_topic':
+            if child.custom_id == 'toggle_user_settings':
                 options = []
-                for topic in self.topics.keys():
-                    label = topic
-                    emoji = '🔹' if topic == self.view.active_topic else None
-                    options.append(discord.SelectOption(label=label, value=label, emoji=emoji))
+                options.append(discord.SelectOption(label='Enable all', value='enable_all', emoji=None))
+                options.append(discord.SelectOption(label='Disable all', value='disable_all', emoji=None))
+                for setting, label in self.settings.items():
+                    setting_state = getattr(self.view.user_settings, setting)
+                    emoji = emojis.GREENTICK if setting_state else emojis.REDTICK
+                    options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
                 child.options = options
                 break
         embed = await self.view.topics[select_value]()

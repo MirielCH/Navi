@@ -249,7 +249,7 @@ class FunCog(commands.Cog):
                         user_command_message, _ = (
                         await functions.get_message_from_channel_history(
                             message.channel,
-                            r"^rpg\s+(?:tr\b|training\b)"
+                            r"^(rpg\b|<@!?[0-9]+>)\s+(?:tr\b|training\b)"
                         )
                     )
                         if user_command_message is None:
@@ -283,7 +283,7 @@ class FunCog(commands.Cog):
                         user_command_message, _ = (
                         await functions.get_message_from_channel_history(
                             message.channel,
-                            r"^rpg\s+open\s+(?:co?\b|ed\b|ep\b|u\b|o\b|omega\b|edgy\b|epic\b|common\b|uncommon\b|r\b|rare\b|g\b|godly\b)\s*(?:lb\b|lootbox\b)?"
+                            r"^(rpg\b|<@!?[0-9]+>)\s+open\s+(?:co?\b|ed\b|ep\b|u\b|o\b|omega\b|edgy\b|epic\b|common\b|uncommon\b|r\b|rare\b|g\b|godly\b)\s*(?:lb\b|lootbox\b)?"
                         )
                     )
                         if user_command_message is None:

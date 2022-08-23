@@ -77,7 +77,7 @@ class HuntCog(commands.Cog):
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
                             message.channel,
-                            r"^rpg\s+hunt\b",
+                            r'^(rpg\b|<@!?[0-9]+>)\s+hunt\b'
                         )
                     )
                     if user_command_message is None:
@@ -225,7 +225,7 @@ class HuntCog(commands.Cog):
                             user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
                     user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+hunt\b")
+                        await functions.get_message_from_channel_history(message.channel, r'^(rpg\b|<@!?[0-9]+>)\s+hunt\b')
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -274,7 +274,7 @@ class HuntCog(commands.Cog):
                     else:
                         user_command_message, _ = (
                             await functions.get_message_from_channel_history(
-                                message.channel, r"^rpg\s+hunt\b", user
+                                message.channel, r'^(rpg\b|<@!?[0-9]+>)\s+hunt\b', user
                             )
                         )
                         if user_command_message is None:
@@ -489,7 +489,7 @@ class HuntCog(commands.Cog):
                 if not user_settings.alert_hunt.enabled: return
                 user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+hunt\b", user
+                            message.channel, r'^(rpg\b|<@!?[0-9]+>)\s+hunt\b', user
                         )
                     )
                 if user_command_message is None:

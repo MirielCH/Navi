@@ -146,7 +146,7 @@ class RubyCounterCog(commands.Cog):
                 if interaction_user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+(?:i\b|inv\b|inventory\b)"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+(?:i\b|inv\b|inventory\b)"
                         )
                     )
                     if user_command_message is None:
@@ -265,7 +265,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+sell\s+ruby.*$"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+sell\s+ruby.*$"
                         )
                     )
                     if user_command_message is None:
@@ -353,7 +353,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+craft\s+ruby\s+sword\s*$"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+craft\s+ruby\s+sword\s*$"
                         )
                     )
                     if user_command_message is None:
@@ -383,7 +383,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+craft\s+ruby\s+armor\s*$"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+craft\s+ruby\s+armor\s*$"
                         )
                     )
                     if user_command_message is None:
@@ -413,7 +413,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+craft\s+coin\s+sword\s*$"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+craft\s+coin\s+sword\s*$"
                         )
                     )
                     if user_command_message is None:
@@ -443,7 +443,7 @@ class RubyCounterCog(commands.Cog):
                 if user is None:
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+forge\s+ultra-edgy\s+armor\s*$"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+forge\s+ultra-edgy\s+armor\s*$"
                         )
                     )
                     if user_command_message is None:

@@ -50,7 +50,7 @@ class DuelCog(commands.Cog):
                 if interaction_user is None:
                     slash_command = False
                     user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+duel\b")
+                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+duel\b")
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

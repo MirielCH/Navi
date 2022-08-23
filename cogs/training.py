@@ -85,7 +85,7 @@ class TrainingCog(commands.Cog):
                 else:
                     user_command_message, user_command = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+(?:tr\b|training\b|ultr\b|ultraining\b)", user
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+(?:tr\b|training\b|ultr\b|ultraining\b)", user
                         )
                     )
                     if user_command_message is None:

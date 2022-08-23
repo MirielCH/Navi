@@ -300,7 +300,7 @@ class HorseFestivalCog(commands.Cog):
                 else:
                     user_command = '`rpg hf megarace start`'
                     user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+(?:hf\b|horsefestival\b)\s+megarace\b")
+                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+(?:hf\b|horsefestival\b)\s+megarace\b")
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

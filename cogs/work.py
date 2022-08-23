@@ -77,7 +77,7 @@ class WorkCog(commands.Cog):
                     user_command = await functions.get_slash_command(user_settings, interaction.name)
                     last_work_command = interaction.name
                 else:
-                    regex = r"^rpg\s+(?:"
+                    regex = r"^(rpg\b|<@!?[0-9]+>)\s+(?:"
                     for command in strings.WORK_COMMANDS:
                         regex = fr'{regex}{command}\b|'
                     regex = fr'{regex.strip("|")})'
@@ -190,7 +190,7 @@ class WorkCog(commands.Cog):
                     user_command = await functions.get_slash_command(user_settings, interaction.name)
                     last_work_command = interaction.name
                 else:
-                    regex = r"^rpg\s+(?:"
+                    regex = r"^(rpg\b|<@!?[0-9]+>)\s+(?:"
                     for command in strings.WORK_COMMANDS:
                         regex = fr'{regex}{command}\b|'
                     regex = fr'{regex.strip("|")})'
@@ -384,7 +384,7 @@ class WorkCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
                 if not user_settings.alert_work.enabled: return
-                regex = r"^rpg\s+(?:"
+                regex = r"^(rpg\b|<@!?[0-9]+>)\s+(?:"
                 for command in strings.WORK_COMMANDS:
                     regex = fr'{regex}{command}\b|'
                 regex = fr'{regex.strip("|")})'

@@ -118,7 +118,7 @@ class BuyCog(commands.Cog):
                     slash_command = False
                     user_command_message, _ = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+buy\s+[a-z]+\s+(?:lb\b|lootbox\b)"
+                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+buy\s+[a-z]+\s+(?:lb\b|lootbox\b)"
                         )
                     )
                     if user_command_message is None:

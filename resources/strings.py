@@ -42,7 +42,7 @@ DEFAULT_MESSAGES = {
     'horse-race': DEFAULT_MESSAGE_EVENT,
     'hunt': DEFAULT_MESSAGE,
     'lootbox': DEFAULT_MESSAGE,
-    'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and {command} to enter the next draw!',
+    'lottery': 'Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '**{user}** found {loot} for you!',
     'pets': 'Hey! Your pet `{id}` is back! {emoji}',

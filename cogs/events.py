@@ -56,7 +56,7 @@ class EventsCog(commands.Cog):
                 user_command_message, _ = (
                         await functions.get_message_from_channel_history(
                             message.channel,
-                            r"^rpg\s+(?:cel\b|celebration\b)\s+multiply\b"
+                            r"^(rpg\b|<@!?[0-9]+>)\s+(?:cel\b|celebration\b)\s+multiply\b"
                         )
                     )
                 if user_command_message is None:
@@ -151,7 +151,7 @@ class EventsCog(commands.Cog):
                 slash_command = False if user is None else True
                 if user is None:
                     user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+events?\b")
+                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+events?\b")
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
