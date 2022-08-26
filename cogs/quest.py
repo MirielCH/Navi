@@ -53,28 +53,28 @@ class QuestCog(commands.Cog):
             ]
             if (any(search_string in field_value.lower() for search_string in search_strings_guild_raid)
                 and any(search_string in message_description.lower() for search_string in search_strings_quest)):
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_QUEST,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in guild quest message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in guild quest message.', message)
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -114,29 +114,33 @@ class QuestCog(commands.Cog):
                 'você já reivindicou uma missão', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = user_command = None
+                user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
+                            user_name = user_name_match.group(1)
                         else:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in quest cooldown message.', message)
+                            await errors.log_error('User name not found in quest cooldown message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in quest cooldown message.', message)
-                    return
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_QUEST_EPIC_QUEST,
+                            user=user, user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for quest cooldown message.', message)
+                        return
+                    if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -144,24 +148,10 @@ class QuestCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
-                    if interaction.name.startswith('quest'):
-                        user_command = await functions.get_slash_command(user_settings, 'quest')
-                        last_quest_command = 'quest'
-                    else:
-                        user_command = await functions.get_slash_command(user_settings, 'epic quest')
-                        last_quest_command = 'epic quest'
+                    last_quest_command = 'epic quest' if interaction.name.startswith('epic') else 'quest'
                 else:
-                    user_command_message, user_command = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+(?:epic\b\s+)?quest\b", user
-                        )
-                    )
-                    if user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the quest cooldown message.', message)
-                        return
-                    user_command = f'`{user_command}`'
-                    last_quest_command = 'quest' if 'epic' not in user_command else 'epic quest'
+                    last_quest_command = 'epic quest' if 'epic quest' in user_command_message.content.lower() else 'quest'
+                user_command = await functions.get_slash_command(user_settings, last_quest_command)
                 await user_settings.update(last_quest_command=last_quest_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -187,28 +177,27 @@ class QuestCog(commands.Cog):
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                slash_command = True
+                user_command_message = None
                 if user is None:
-                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_QUEST_EPIC_QUEST,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in void quest message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in void quest message.', message)
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -235,43 +224,34 @@ class QuestCog(commands.Cog):
                 '__onda #1__', #Portuguese
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
                 if user is None:
-                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_EPIC_QUEST,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in epic quest message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        for member in message.guild.members:
-                            member_name = await functions.encode_text(member.name)
-                            if member_name == user_name:
-                                user = member
-                                break
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in epic quest message.', message)
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'epic quest')
-                else:
-                    user_command = '`rpg epic quest`'
+                user_command = await functions.get_slash_command(user_settings, 'epic quest')
                 await user_settings.update(last_quest_command='epic quest')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -306,40 +286,33 @@ class QuestCog(commands.Cog):
                 'você não aceitou a missão', #Portuguese declined
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
                 if user is None:
-                    slash_command = False
                     if message.mentions:
                         user = message.mentions[0]
                     else:
                         user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_QUEST,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in quest message.', message)
+                            await errors.log_error('User not found for quest message.', message)
                             return
-                        for member in message.guild.members:
-                            member_name = await functions.encode_text(member.name)
-                            if member_name == user_name:
-                                user = member
-                                break
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in quest message.', message)
-                    return
+                        user = user_command_message.author
                 quest_declined = True if message.mentions else False
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'quest')
-                else:
-                    user_command = '`rpg quest`'
+                user_command = await functions.get_slash_command(user_settings, 'quest')
                 await user_settings.update(last_quest_command='quest')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)

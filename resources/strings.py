@@ -3,6 +3,7 @@
 
 import re
 
+from resources import settings
 
 # --- Error messages ---
 MSG_INTERACTION_ERROR = 'You are not allowed to use this interaction.'
@@ -409,19 +410,6 @@ EPIC_NPC_NAMES = [
 ]
 
 
-# --- REGEX ---
-PATTERNS_COOLDOWN_TIMESTRING = [
-    "wait at least \*\*(.+?)\*\*...", #English
-    "espera al menos \*\*(.+?)\*\*...", #Spanish
-    "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
-]
-
-REGEX_USER_ID_FROM_ICON_URL = re.compile(r"avatars\/(.+?)\/")
-REGEX_USERNAME_FROM_EMBED_AUTHOR = re.compile(r"^(.+?) — ")
-REGEX_NAME_FROM_MESSAGE = re.compile(r"\s\*\*(.+?)\*\*\s")
-REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
-
-
 # --- Commands ---
 WORK_COMMANDS = (
     'chop',
@@ -540,3 +528,66 @@ SLASH_COMMANDS_NEW = {
     'vote': '</vote:964351963720478760>',
     'weekly': '</weekly:956658465185603645>',
 }
+
+
+# --- Regex ---
+PATTERNS_COOLDOWN_TIMESTRING = [
+    "wait at least \*\*(.+?)\*\*...", #English
+    "espera al menos \*\*(.+?)\*\*...", #Spanish
+    "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
+]
+
+REGEX_USER_ID_FROM_ICON_URL = re.compile(r"avatars\/(.+?)\/")
+REGEX_USERNAME_FROM_EMBED_AUTHOR = re.compile(r"^(.+?) — ")
+REGEX_NAME_FROM_MESSAGE = re.compile(r"\s\*\*(.+?)\*\*\s")
+REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
+
+REGEX_PREFIX = rf'^(rpg\b\s+|<@!?{settings.EPIC_RPG_ID}>\s+)?'
+REGEX_COMMAND_ADVENTURE = re.compile(rf"{REGEX_PREFIX}(?:adv\b|adventure\b)")
+REGEX_COMMAND_ARENA = re.compile(rf"{REGEX_PREFIX}arena\b")
+REGEX_COMMAND_CLAN_RAID = re.compile(rf"{REGEX_PREFIX}guild\b\s+raid\b")
+REGEX_COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"{REGEX_PREFIX}guild\b\s+(?:raid\b|upgrade\b)")
+REGEX_COMMAND_CLAN_UPGRADE = re.compile(rf"{REGEX_PREFIX}guild\b\s+upgrade\b")
+REGEX_COMMAND_CRAFT_COIN_SWORD = re.compile(rf"{REGEX_PREFIX}craft\b\s+coin\b\s+sword\b")
+REGEX_COMMAND_CRAFT_RUBY_ARMOR = re.compile(rf"{REGEX_PREFIX}craft\b\s+ruby\b\s+armor\b")
+REGEX_COMMAND_CRAFT_RUBY_SWORD = re.compile(rf"{REGEX_PREFIX}craft\b\s+ruby\b\s+sword\b")
+REGEX_COMMAND_COOLDOWNS = re.compile(rf"{REGEX_PREFIX}(?:cd\b|cooldowns\b)")
+REGEX_COMMAND_DAILY = re.compile(rf"{REGEX_PREFIX}daily\b")
+REGEX_COMMAND_DUEL = re.compile(rf"{REGEX_PREFIX}duel\b")
+REGEX_COMMAND_DUNGEON_MINIBOSS = re.compile(rf"{REGEX_PREFIX}(?:dung\b|dungeon\b|miniboss\b)")
+REGEX_COMMAND_ENCHANT = re.compile(rf"{REGEX_PREFIX}(?:enchant\b|refine\b|transmute\b|transcend\b)")
+REGEX_COMMAND_EPIC_QUEST = re.compile(rf"{REGEX_PREFIX}epic\b\s+quest\b")
+REGEX_COMMAND_EVENTS = re.compile(rf"{REGEX_PREFIX}events?\b")
+REGEX_COMMAND_FARM = re.compile(rf"{REGEX_PREFIX}farm\b")
+REGEX_COMMAND_FORGE_ULTRAEDGY_ARMOR = re.compile(rf"{REGEX_PREFIX}forge\b\s+ultra-edgy\b\s+armor\b")
+REGEX_COMMAND_HEAL = re.compile(rf"{REGEX_PREFIX}heal\b")
+REGEX_COMMAND_HF_LIGHTSPEED = re.compile(rf"{REGEX_PREFIX}hf\b\s+lightspeed\b")
+REGEX_COMMAND_HORSE = re.compile(rf"{REGEX_PREFIX}horse\b\s+(?:breed\b|breeding\b|race\b)")
+REGEX_COMMAND_HORSE_RACE = re.compile(rf"{REGEX_PREFIX}horse\b\s+race\b")
+REGEX_COMMAND_HUNT = re.compile(rf'{REGEX_PREFIX}hunt\b')
+REGEX_COMMAND_HUNT_ADVENTURE = re.compile(rf"{REGEX_PREFIX}(?:hunt\b|adv\b|adventure\b)")
+REGEX_COMMAND_INVENTORY = re.compile(rf"{REGEX_PREFIX}(?:i\b|inv\b|inventory\b)")
+REGEX_COMMAND_LOOTBOX = re.compile(rf"{REGEX_PREFIX}buy\s+[a-z]+\s+(?:lb\b|lootbox\b)")
+REGEX_COMMAND_LOTTERY = re.compile(rf'{REGEX_PREFIX}(?:lottery\b|buy\b\s+lottery\b\s+ticket\b)')
+REGEX_COMMAND_NSMB_BIGARENA = re.compile(rf"{REGEX_PREFIX}(?:big\b\s+arena\b|minintboss\b)")
+REGEX_COMMAND_PETS_ADVENTURE_START = re.compile(rf"{REGEX_PREFIX}pets?\s+(?:adv\b|adventure\b)\s+(?:find\b|learn\b|drill\b)")
+REGEX_COMMAND_PETS_ADVENTURE_CANCEL = re.compile(rf"{REGEX_PREFIX}pets?\s+(?:adv\b|adventure\b)\s+cancel\b")
+REGEX_COMMAND_OMEGA_HORSE_TOKEN = re.compile(rf"{REGEX_PREFIX}use\b\s+omega\b\s+horse\b\s+token\b")
+REGEX_COMMAND_OPEN = re.compile(rf"{REGEX_PREFIX}open\b")
+REGEX_COMMAND_QUEST = re.compile(rf'{REGEX_PREFIX}quest\b')
+REGEX_COMMAND_QUEST_EPIC_QUEST = re.compile(rf"{REGEX_PREFIX}(?:epic\b\s+quest\b|quest\b)")
+REGEX_COMMAND_PETS_TOURNAMENT = re.compile(rf"{REGEX_PREFIX}pets?\b\s+tournament\s+[a-z]+\b")
+REGEX_COMMAND_PETS = re.compile(rf"{REGEX_PREFIX}pets?\b")
+REGEX_COMMAND_SELL_RUBY = re.compile(rf"{REGEX_PREFIX}sell\b\s+ruby\b")
+REGEX_COMMAND_SLEEPY_POTION = re.compile(rf"{REGEX_PREFIX}[a-z]+\s+use\b\s+sleepy\b\s+potion\b")
+REGEX_COMMAND_TIME_TRAVEL = re.compile(rf"{REGEX_PREFIX}(?:super\b\s+)?time\b\s+travel\b")
+REGEX_COMMAND_TRADE_RUBY = re.compile(rf"{REGEX_PREFIX}trade\b\s+[e-f]\b")
+REGEX_COMMAND_TRAINING = re.compile(rf"{REGEX_PREFIX}(?:tr\b|training)")
+REGEX_COMMAND_TRAINING_ULTRAINING = re.compile(rf"{REGEX_PREFIX}(?:ul)?(?:tr\b|training)")
+REGEX_COMMAND_ULTRAINING = re.compile(rf"{REGEX_PREFIX}(?:ultr\b|ultraining)")
+REGEX_COMMAND_VOTE = re.compile(rf"{REGEX_PREFIX}vote\b")
+REGEX_COMMAND_WEEKLY = re.compile(rf"{REGEX_PREFIX}weekly\b")
+REGEX_COMMAND_WORK = rf"{REGEX_PREFIX}(?:"
+for command in WORK_COMMANDS:
+    REGEX_COMMAND_WORK = fr'{REGEX_COMMAND_WORK}{command}\b|'
+REGEX_COMMAND_WORK = re.compile(fr'{REGEX_COMMAND_WORK.strip("|")})')

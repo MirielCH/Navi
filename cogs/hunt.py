@@ -44,84 +44,67 @@ class HuntCog(commands.Cog):
                 'você já olhou ao seu redor', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = embed_user = user_command = last_hunt_mode = None
+                user_id = user_name = embed_user = user_command = last_hunt_mode = user_command_message = None
                 slash_command = True
                 hardmode = together = alone = old = False
                 interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is None: slash_command = False
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
-                if user_id_match:
-                    user_id = int(user_id_match.group(1))
-                else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
-                    if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in hunt cooldown message.', message)
-                        return
-                if user_id is not None:
-                    try:
-                        embed_user = await message.guild.fetch_member(user_id)
-                    except:
-                        pass
-                else:
-                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if embed_user is not None: user_id = embed_user.id
-                if slash_command:
-                    try:
-                        user_settings: users.User = await users.get_user(interaction_user.id)
-                    except exceptions.FirstTimeUserError:
-                        return
-                if not slash_command:
-                    user_command_message, user_command = (
-                        await functions.get_message_from_channel_history(
-                            message.channel,
-                            r"^rpg\s+hunt\b",
-                        )
+                if interaction_user is None:
+                    slash_command = False
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_HUNT)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the hunt cooldown message.', message)
+                        await errors.log_error('Interaction user not found for hunt cooldown message.', message)
                         return
                     interaction_user = user_command_message.author
-                    try:
-                        user_settings: users.User = await users.get_user(interaction_user.id)
-                    except exceptions.FirstTimeUserError:
+                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    embed_user = await message.guild.fetch_member(user_id)
+                else:
+                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if user_name_match is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Embed user not found in hunt cooldown message.', message)
                         return
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not slash_command:
+                    user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
+                    user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
+                    user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
+                    user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
                     if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
                         together = True
-                    for argument in user_command_message.content.lower().split():
-                        if argument in ('h', 'hardmode') and 'hardmode' not in user_command:
-                            hardmode = True
-                        if argument in ('t', 'together') and 'together' not in user_command:
-                            together = True
-                            if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
-                                together = False
-                        if argument in ('a', 'alone') and 'alone' not in user_command:
-                            alone = True
-                        if argument in ('o', 'old') and 'old' not in user_command:
-                            old = True
-                    if hardmode:
-                        user_command = f'{user_command} hardmode'
-                        last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
-                    if together:
-                        user_command = f'{user_command} together'
-                        last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
-                    if alone:
-                        user_command = f'{user_command} alone'
-                        last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
-                    if old:
-                        user_command = f'{user_command} old'
-                        last_hunt_mode = f'{last_hunt_mode} old' if last_hunt_mode is not None else 'old'
-                    user_command = f'`{user_command.strip()}`'
+                    if 'hardmode'in user_command_message_content.lower():
+                        hardmode = True
+                    if 'together'in user_command_message_content.lower():
+                        together = True
+                        if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
+                            together = False
+                    if 'alone'in user_command_message_content.lower():
+                        alone = True
+                    if 'old'in user_command_message_content.lower():
+                        old = True
+                    last_hunt_mode = ''
+                    if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
+                    if together: last_hunt_mode = f'{last_hunt_mode} together'
+                    if alone: last_hunt_mode = f'{last_hunt_mode} alone'
+                    if old: last_hunt_mode = f'{last_hunt_mode} old'
+                    last_hunt_mode = last_hunt_mode.strip()
+                    if not user_settings.hunt_rotation_enabled:
+                        if last_hunt_mode == '': last_hunt_mode = None
+                        await user_settings.update(last_hunt_mode=last_hunt_mode)
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'hunt')
-                    if user_settings.last_hunt_mode != '':
-                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
-                if not slash_command and not user_settings.hunt_rotation_enabled:
-                    await user_settings.update(last_hunt_mode=last_hunt_mode)
+                user_command = await functions.get_slash_command(user_settings, 'hunt')
+                if user_settings.last_hunt_mode != '':
+                    user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -169,10 +152,10 @@ class HuntCog(commands.Cog):
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
-                user_name = partner_name = last_hunt_mode = None
+                user_name = partner_name = last_hunt_mode = user_command_message = None
                 hardmode = together = alone = event_mob = found_together = False
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
+                slash_command = False if user is None else True
                 search_strings_hardmode = [
                     '(but stronger)', #English
                     '(pero más fuerte)', #Spanish
@@ -210,26 +193,36 @@ class HuntCog(commands.Cog):
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
+                        user_name = user_name_match.group(1)
                         partner_name = user_name_match.group(2)
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User names not found in hunt together message.', message)
+                        return
+                else:
                     search_patterns = [
                         r"\*\*(.+?)\*\* found a", #English
                         r"\*\*(.+?)\*\* encontr", #Spanish, Portuguese
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                        if user_name != 'Both players': # Needs to be updated when an event hits that uses this
-                            user = await functions.get_guild_member_by_name(message.guild, user_name)
+                        user_name = user_name_match.group(1)
+                        if user_name == 'Both players': # Needs to be updated when an event hits that uses this
+                            user_name = None
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User names not found in hunt together message.', message)
+                        return
                 if user is None:
-                    user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+hunt\b")
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_HUNT,
+                            user_name=user_name
+                        )
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in hunt message.', message)
+                        await errors.log_error('User not found for hunt message.', message)
                         return
                     user = user_command_message.author
                 try:
@@ -242,63 +235,45 @@ class HuntCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                 if not user_settings.alert_hunt.enabled: return
-                if not slash_command:
-                    user_command = 'rpg hunt'
-                else:
-                    user_command = await functions.get_slash_command(user_settings, 'hunt')
-                arguments = ''
+                user_command = await functions.get_slash_command(user_settings, 'hunt')
+                last_hunt_mode = ''
                 if user_settings.hunt_rotation_enabled: together = not found_together
                 if not event_mob:
                     if hardmode:
-                        arguments = f'{arguments} hardmode'
+                        last_hunt_mode = f'{last_hunt_mode} hardmode'
                     if together:
-                        arguments = f'{arguments} together'
+                        last_hunt_mode = f'{last_hunt_mode} together'
                     if alone:
-                        arguments = f'{arguments} alone'
-                    if old and together:
-                        arguments = f'{arguments} old'
-                    if arguments != '':
-                        last_hunt_mode = arguments.strip()
-                        if slash_command:
-                            user_command = f'{user_command} `mode: {arguments.strip()}`'
-                        else:
-                            user_command = f'{user_command} {arguments.strip()}'
-                    if not slash_command: user_command = f'`{user_command}`'
+                        last_hunt_mode = f'{last_hunt_mode} alone'
+                    if old and together and slash_command:
+                        last_hunt_mode = f'{last_hunt_mode} old'
+                    if last_hunt_mode != '':
+                        user_command = f'{user_command} `mode: {last_hunt_mode.strip()}`'
                 if event_mob:
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'hunt')
-                        if user_settings.last_hunt_mode is not None:
-                          user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
-                        elif together:
-                            user_command = f'{user_command} `mode: together`'
+                    if user_settings.last_hunt_mode is not None:
+                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
                     else:
-                        user_command_message, _ = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, r"^rpg\s+hunt\b", user
-                            )
-                        )
-                        if user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('Couldn\'t find a command for the hunt event mob message.', message)
-                            return
-                        user_command = 'rpg hunt'
-                        for argument in user_command_message.content.lower().split():
-                            if argument in ('h', 'hardmode'):
-                                hardmode = True
-                            if argument in ('t', 'together'):
-                                together = False if user_settings.hunt_rotation_enabled else True
-                            if argument in ('a', 'alone'):
-                                alone = True
-                        if hardmode:
-                            user_command = f'{user_command} hardmode'
-                            last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
-                        if together:
-                            user_command = f'{user_command} together'
-                            last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
-                        if alone:
-                            user_command = f'{user_command} alone'
-                            last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
-                        user_command = f'`{user_command.strip()}`'
+                        user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
+                        user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
+                        user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
+                        user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
+                        if 'hardmode'in user_command_message_content.lower():
+                            hardmode = True
+                        if 'together'in user_command_message_content.lower():
+                            together = True
+                            if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
+                                together = False
+                        if 'alone'in user_command_message_content.lower():
+                            alone = True
+                        if 'old'in user_command_message_content.lower():
+                            old = True
+                        last_hunt_mode = ''
+                        if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
+                        if together: last_hunt_mode = f'{last_hunt_mode} together'
+                        if alone: last_hunt_mode = f'{last_hunt_mode} alone'
+                        if old: last_hunt_mode = f'{last_hunt_mode} old'
+                        last_hunt_mode = last_hunt_mode.strip()
+                        if last_hunt_mode == '': last_hunt_mode = None
                 await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
@@ -463,131 +438,138 @@ class HuntCog(commands.Cog):
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction_user(message)
-                if interaction is not None: return
-                user_name = user_command = last_hunt_mode = None
-                hardmode = together = found_together = alone = False
-                user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
-                if user_name_match:
-                    user_name = await functions.encode_text(user_name_match.group(1))
-                else:
-                    await functions.add_warning_reaction(message)
-                    await('User not found in hunt event non-slash message.', message)
-                    return
-                user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in hunt event non-slash message.', message)
-                    return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
-                if not user_settings.alert_hunt.enabled: return
-                user_command_message, user_command = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+hunt\b", user
+                if interaction is None:
+                    user_name = user_command = last_hunt_mode = user_command_message = None
+                    hardmode = together = found_together = alone = False
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_HUNT,
+                                user_name=user_name
+                            )
                         )
-                    )
-                if user_command_message is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Couldn\'t find a command for the hunt event non-slash message.', message)
-                    return
-                if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
-                    together = True
-                for argument in user_command_message.content.lower().split():
-                    if argument in ('h', 'hardmode'):
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await('User not found in hunt event non-slash message.', message)
+                        return
+                    user = user_command_message.author
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled: return
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    if user_settings.tracking_enabled:
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                    if not user_settings.alert_hunt.enabled: return
+                    if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
+                        together = True
+                    user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
+                    user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
+                    user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
+                    user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
+                    if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
+                        together = True
+                    if 'hardmode'in user_command_message_content.lower():
                         hardmode = True
-                    if argument in ('t', 'together'):
-                        found_together = True
-                        together = False if user_settings.hunt_rotation_enabled else True
-                    if argument in ('a', 'alone'):
+                    if 'together'in user_command_message_content.lower():
+                        together = True
+                        if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
+                            together = False
+                    if 'alone'in user_command_message_content.lower():
                         alone = True
-                if hardmode:
-                    user_command = f'{user_command} hardmode'
-                    last_hunt_mode = f'{last_hunt_mode} hardmode' if last_hunt_mode is not None else 'hardmode'
-                if together:
-                    user_command = f'{user_command} together'
-                    last_hunt_mode = f'{last_hunt_mode} together' if last_hunt_mode is not None else 'together'
-                if alone:
-                    user_command = f'{user_command} alone'
-                    last_hunt_mode = f'{last_hunt_mode} alone' if last_hunt_mode is not None else 'alone'
-                user_command = f'`{user_command}`'
-                await user_settings.update(last_hunt_mode=last_hunt_mode)
-                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                time_elapsed = current_time - bot_answer_time
-                together = True if user_settings.partner_id is not None else False
-                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                    and not user_settings.hunt_rotation_enabled):
-                    donor_tier = user_settings.partner_donor_tier
-                else:
-                    donor_tier = user_settings.user_donor_tier
-                donor_tier = 3 if donor_tier > 3 else donor_tier
-                if cooldown.donor_affected:
-                    time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[donor_tier]
-                                        - time_elapsed.total_seconds())
-                else:
-                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
-                time_left = timedelta(seconds=time_left_seconds)
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
+                    if 'old'in user_command_message_content.lower():
+                        old = True
+                    last_hunt_mode = ''
+                    if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
+                    if together: last_hunt_mode = f'{last_hunt_mode} together'
+                    if alone: last_hunt_mode = f'{last_hunt_mode} alone'
+                    if old: last_hunt_mode = f'{last_hunt_mode} old'
+                    last_hunt_mode = last_hunt_mode.strip()
+                    if last_hunt_mode == '': last_hunt_mode = None
+                    await user_settings.update(last_hunt_mode=last_hunt_mode)
+                    user_command = await functions.get_slash_command(user_settings, 'hunt')
+                    if user_settings.last_hunt_mode != '':
+                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    time_elapsed = current_time - bot_answer_time
+                    together = True if user_settings.partner_id is not None else False
+                    if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
+                        and not user_settings.hunt_rotation_enabled):
+                        donor_tier = user_settings.partner_donor_tier
+                    else:
+                        donor_tier = user_settings.user_donor_tier
+                    donor_tier = 3 if donor_tier > 3 else donor_tier
+                    if cooldown.donor_affected:
+                        time_left_seconds = (cooldown.actual_cooldown()
+                                            * settings.DONOR_COOLDOWNS[donor_tier]
+                                            - time_elapsed.total_seconds())
+                    else:
+                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                    time_left = timedelta(seconds=time_left_seconds)
+                    if time_left < timedelta(0): return
+                    reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Hunt event slash (all languages)
-            if  (('<:zombie' in message_content.lower() and '#2' in message_content.lower())
-                 or ':crossed_swords:' in message_content.lower()
-                 or ':sweat_drops:' in message_content.lower()):
+            if  ((':zombie' in message_content.lower() and '#2' in message_content.lower())
+                    or ':crossed_swords:' in message_content.lower()
+                    or ':sweat_drops:' in message_content.lower()):
                 user_name = user_command = None
                 interaction = await functions.get_interaction(message)
-                if interaction is None: return
-                if interaction.name != 'hunt': return
-                user = interaction.user
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled: return
-                user_command = await functions.get_slash_command(user_settings, 'hunt')
-                current_time = datetime.utcnow().replace(microsecond=0)
-                if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
-                if not user_settings.alert_hunt.enabled: return
-                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                time_elapsed = current_time - bot_answer_time
-                together = found_together = True if user_settings.partner_id is not None else False
-                if user_settings.hunt_rotation_enabled:
-                    together = False if 'together' in user_settings.last_hunt_mode else True
-                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                    and not user_settings.hunt_rotation_enabled):
-                    donor_tier = user_settings.partner_donor_tier
-                else:
-                    donor_tier = user_settings.user_donor_tier
-                donor_tier = 3 if donor_tier > 3 else donor_tier
-                if cooldown.donor_affected:
-                    time_left_seconds = (cooldown.actual_cooldown()
-                                        * settings.DONOR_COOLDOWNS[donor_tier]
-                                        - time_elapsed.total_seconds())
-                else:
-                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
-                time_left = timedelta(seconds=time_left_seconds)
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if interaction is not None:
+                    if interaction.name != 'hunt': return
+                    user = interaction.user
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled: return
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    if user_settings.tracking_enabled:
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                    if not user_settings.alert_hunt.enabled: return
+                    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    time_elapsed = current_time - bot_answer_time
+                    found_together = True if user_settings.partner_id is not None else False
+                    user_command = await functions.get_slash_command(user_settings, 'hunt')
+                    if user_settings.hunt_rotation_enabled:
+                        if 'together' in user_settings.last_hunt_mode:
+                            last_hunt_mode = user_settings.last_hunt_mode.replace('together','',' ','')
+                        else:
+                            last_hunt_mode = f'{user_settings.last_hunt_mode} together'.strip()
+                        await user_settings.update(last_hunt_mode=last_hunt_mode)
+                    if user_settings.last_hunt_mode != '':
+                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                    if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
+                        and not user_settings.hunt_rotation_enabled):
+                        donor_tier = user_settings.partner_donor_tier
+                    else:
+                        donor_tier = user_settings.user_donor_tier
+                    donor_tier = 3 if donor_tier > 3 else donor_tier
+                    if cooldown.donor_affected:
+                        time_left_seconds = (cooldown.actual_cooldown()
+                                            * settings.DONOR_COOLDOWNS[donor_tier]
+                                            - time_elapsed.total_seconds())
+                    else:
+                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                    time_left = timedelta(seconds=time_left_seconds)
+                    if time_left < timedelta(0): return
+                    reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                                message.channel.id, reminder_message)
+                    )
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                    if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

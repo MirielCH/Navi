@@ -132,11 +132,11 @@ class MainCog(commands.Cog):
         try:
             guild_settings: guilds.Guild = guilds.get_guild(guild.id)
             welcome_message = (
-                f'Hey! **{guild.name}**! I\'m here to remind you to do your Epic RPG commands!\n\n'
-                f'Note that reminders are off by default. If you want to get reminded, please use '
+                f'Hey! **{guild.name}**! I\'m here to help you enjoy EPIC RPG!\n\n'
+                f'Note that I am off by default. If you want to use me, please use '
                 f'`{guild_settings.prefix}on` to activate me.\n'
-                f'If you don\'t like this prefix, use `{guild_settings.prefix}setprefix` to change it.\n\n'
-                f'Tip: If you ever forget the prefix, simply ping me with a command.'
+                f'If you don\'t like this prefix, use `{guild_settings.prefix}prefix` to change it.\n\n'
+                f'Tip: If you ever forget the prefix, simply ping me.'
             )
             await guild.system_channel.send(welcome_message)
         except:

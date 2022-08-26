@@ -1,14 +1,13 @@
 # nsmb-bigarena.py
 
-import calendar
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 class NotSoMiniBossBigArenaCog(commands.Cog):
@@ -52,8 +51,8 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
             if (any(search_string in message_title.lower() for search_string in search_strings)
                 and all(search_string not in message_field1_value.lower() for search_string in search_strings_excluded)):
                 user = await functions.get_interaction_user(message)
-                slash_command = False if user is None else True
-                if slash_command:
+                user_command_message = None
+                if user:
                     interaction = await functions.get_interaction(message)
                     if interaction.name.startswith('big'):
                         event = 'big-arena'
@@ -62,9 +61,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     else:
                         return
                 else:
-                    user_command_message, user_command = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+(?:big\b\s+arena\b|minintboss\b)", user
+                            message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA, user
                         )
                     )
                     if user_command_message is None:
@@ -72,11 +71,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a command for the big-arena or minin\'tboss embed.', message)
                         return
                     user = user_command_message.author
-                    event = 'big-arena' if 'arena' in user_command else 'minintboss'
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found for the big-arena or minin\'tboss embed.', message)
-                    return
+                    event = 'big-arena' if 'arena' in user_command_message.content.lower() else 'minintboss'
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -130,57 +125,54 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     already_registered = True
                 else:
                     already_registered = False
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
                 if user is None:
                     if message.mentions:
                         user = message.mentions[0]
                     else:
                         user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in big-arena or minin\'tboss message.', message)
                             return
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in big-arena or minin\'tboss message.', message)
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                if slash_command:
-                    interaction = await functions.get_interaction(message)
+                interaction = await functions.get_interaction(message)
+                if interaction is not None:
                     if interaction.name.startswith('big'):
-                        user_command = '/big arena'
+                        event = 'big-arena'
                     elif interaction.name.startswith('minintboss'):
-                        user_command = '/minintboss'
+                        event = 'minintboss'
+                else:
+                    if 'arena' in user_command_message.content.lower():
+                        event = 'big-arena'
+                    elif 'minintboss' in user_command_message.content.lower():
+                        event = 'minintboss'
                     else:
-                        return
-                    user_command = f'{user_command} join: true'
-                else:
-                    user_command_message, user_command = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, r"^rpg\s+(?:big\s+arena|minintboss)\s+join\b", user
-                            )
-                        )
-                    if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the big-arena or minin\'tboss message.', message)
+                        await errors.log_error('Event type not found in big-arena or minin\'tboss message.', message)
                         return
-                if 'minint' in user_command:
-                    if not user_settings.alert_not_so_mini_boss.enabled: return
-                    event = 'minintboss'
-                    reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
-                else:
+                if event == 'big-arena':
                     if not user_settings.alert_big_arena.enabled: return
-                    event = 'big-arena'
+                    user_command = await functions.get_slash_command(user_settings, 'big arena')
                     reminder_message = user_settings.alert_big_arena.message.replace('{event}', event.replace('-',' '))
+                elif event == 'minintboss':
+                    if not user_settings.alert_not_so_mini_boss.enabled: return
+                    user_command = await functions.get_slash_command(user_settings, event)
+                    reminder_message = user_settings.alert_not_so_mini_boss.message.replace('{event}', event.replace('-',' '))
                 search_patterns = [
                         r'next event is in \*\*(.+?)\*\*', #English
                         r'siguiente evento es en \*\*(.+?)\*\*', #Spanish
@@ -201,12 +193,9 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 if reminder.record_exists and not already_registered:
                     if event == 'minintboss' and user_settings.alert_dungeon_miniboss.enabled:
-                        if slash_command:
-                            command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
-                            command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
-                            user_command = f"{command_dungeon} or {command_miniboss}"
-                        else:
-                            user_command = '`rpg dungeon` or `rpg miniboss`'
+                        command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
+                        command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
+                        user_command = f"{command_dungeon} or {command_miniboss}"
                         time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'dungeon-miniboss')
                         reminder_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
                         reminder: reminders.Reminder = (
@@ -214,10 +203,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                                                                 message.channel.id, reminder_message)
                         )
                     if event == 'big-arena' and user_settings.alert_arena.enabled:
-                        if slash_command:
-                            user_command = await functions.get_slash_command(user_settings, 'arena')
-                        else:
-                            user_command = '`rpg arena`'
+                        user_command = await functions.get_slash_command(user_settings, 'arena')
                         time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'arena')
                         reminder_message = user_settings.alert_arena.message.replace('{command}', user_command)
                         reminder: reminders.Reminder = (

@@ -46,31 +46,35 @@ class CooldownsCog(commands.Cog):
             'verifique a versão curta deste comando', #Portuguese
         ]
         if any(search_string in message_footer.lower() for search_string in search_strings):
-            user_id = user_name = None
-            user = await functions.get_interaction_user(message)
-            slash_command = True if user is not None else False
-            if user is None:
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
-                if user_id_match:
-                    user_id = int(user_id_match.group(1))
-                else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
-                    if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in cooldown message.', message)
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
-                else:
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in cooldowns message.', message)
-                return
+            user_id = user_name = user_command_message = embed_user = None
+            interaction_user = await functions.get_interaction_user(message)
+            if interaction_user is None:
+                user_command_message = (
+                    await functions.get_message_from_channel_history(
+                        message.channel, strings.REGEX_COMMAND_COOLDOWNS
+                    )
+                )
+                if user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find an interaction user for the cooldowns message.', message)
+                    return
+                interaction_user = user_command_message.author
+            user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+            if user_id_match:
+                user_id = int(user_id_match.group(1))
+                embed_user = await message.guild.fetch_member(user_id)
+            else:
+                user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                if user_name_match:
+                    user_name = user_name_match.group(1)
+                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if not user_name_match or embed_user is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found for cooldown message.', message)
+                    return
+            if embed_user != interaction_user: return
             try:
-                user_settings: users.User = await users.get_user(user.id)
+                user_settings: users.User = await users.get_user(interaction_user.id)
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
@@ -80,10 +84,7 @@ class CooldownsCog(commands.Cog):
                 daily_match = re.search(r"daily`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if daily_match:
                     daily_timestring = daily_match.group(1)
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'daily')
-                    else:
-                        user_command = '`rpg daily`'
+                    user_command = await functions.get_slash_command(user_settings, 'daily')
                     daily_message = user_settings.alert_daily.message.replace('{command}', user_command)
                     cooldowns.append(['daily', daily_timestring.lower(), daily_message])
                 else:
@@ -92,10 +93,7 @@ class CooldownsCog(commands.Cog):
                 weekly_match = re.search(r"weekly`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if weekly_match:
                     weekly_timestring = weekly_match.group(1)
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'weekly')
-                    else:
-                        user_command = '`rpg daily`'
+                    user_command = await functions.get_slash_command(user_settings, 'weekly')
                     weekly_message = user_settings.alert_weekly.message.replace('{command}', user_command)
                     cooldowns.append(['weekly', weekly_timestring.lower(), weekly_message])
                 else:
@@ -106,11 +104,8 @@ class CooldownsCog(commands.Cog):
                     lootbox_name = '[lootbox]'
                     if user_settings.last_lootbox != '':
                         lootbox_name = f'{user_settings.last_lootbox} lootbox'
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'buy')
-                        user_command = f"{user_command} `item: {lootbox_name}`"
-                    else:
-                        user_command = f'`rpg buy {lootbox_name}`'
+                    user_command = await functions.get_slash_command(user_settings, 'buy')
+                    user_command = f"{user_command} `item: {lootbox_name}`"
                     lb_timestring = lb_match.group(1)
                     lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                     cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
@@ -120,23 +115,14 @@ class CooldownsCog(commands.Cog):
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
                     if user_settings.last_hunt_mode != '':
-                        if slash_command:
-                            user_command = await functions.get_slash_command(user_settings, 'hunt')
-                            user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
-                        else:
-                            user_command = f'`rpg hunt {user_settings.last_hunt_mode}`'
+                        user_command = await functions.get_slash_command(user_settings, 'hunt')
+                        user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
                     else:
                         if 'hardmode' in hunt_match.group(0):
-                            if slash_command:
-                                user_command = await functions.get_slash_command(user_settings, 'hunt')
-                                user_command = f"{user_command} `mode: hardmode`"
-                            else:
-                                user_command = '`rpg hunt hardmode`'
+                            user_command = await functions.get_slash_command(user_settings, 'hunt')
+                            user_command = f"{user_command} `mode: hardmode`"
                         else:
-                            if slash_command:
-                                user_command = await functions.get_slash_command(user_settings, 'hunt')
-                            else:
-                                user_command = '`rpg hunt`'
+                            user_command = await functions.get_slash_command(user_settings, 'hunt')
                     hunt_timestring = hunt_match.group(1)
                     if ('together' in user_settings.last_hunt_mode
                         and user_settings.partner_donor_tier < user_settings.user_donor_tier):
@@ -155,23 +141,14 @@ class CooldownsCog(commands.Cog):
                 adv_match = re.search(r'adventure(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if adv_match:
                     if user_settings.last_adventure_mode != '':
-                        if slash_command:
-                            user_command = await functions.get_slash_command(user_settings, 'adventure')
-                            user_command = f"{user_command} `mode: {user_settings.last_adventure_mode}`"
-                        else:
-                            user_command = f'`rpg adventure {user_settings.last_adventure_mode}`'
+                        user_command = await functions.get_slash_command(user_settings, 'adventure')
+                        user_command = f"{user_command} `mode: {user_settings.last_adventure_mode}`"
                     else:
                         if 'hardmode' in adv_match.group(0):
-                            if slash_command:
-                                user_command = await functions.get_slash_command(user_settings, 'adventure')
-                                user_command = f"{user_command} `mode: hardmode`"
-                            else:
-                                user_command = '`rpg adventure hardmode`'
+                            user_command = await functions.get_slash_command(user_settings, 'adventure')
+                            user_command = f"{user_command} `mode: hardmode`"
                         else:
-                            if slash_command:
-                                user_command = await functions.get_slash_command(user_settings, 'adventure')
-                            else:
-                                user_command = '`rpg adventure`'
+                            user_command = await functions.get_slash_command(user_settings, 'adventure')
                     adv_timestring = adv_match.group(1)
                     adv_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                     cooldowns.append(['adventure', adv_timestring.lower(), adv_message])
@@ -180,10 +157,7 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_training.enabled:
                 tr_match = re.search(r"raining`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if tr_match:
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, user_settings.last_training_command)
-                    else:
-                        user_command = f'`rpg {user_settings.last_training_command}`'
+                    user_command = await functions.get_slash_command(user_settings, user_settings.last_training_command)
                     tr_timestring = tr_match.group(1)
                     tr_message = user_settings.alert_training.message.replace('{command}', user_command)
                     cooldowns.append(['training', tr_timestring.lower(), tr_message])
@@ -192,10 +166,7 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_quest.enabled:
                 quest_match = re.search(r"quest`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if quest_match:
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, user_settings.last_quest_command)
-                    else:
-                        user_command = f'`rpg {user_settings.last_quest_command}`'
+                    user_command = await functions.get_slash_command(user_settings, user_settings.last_quest_command)
                     quest_timestring = quest_match.group(1)
                     quest_message = user_settings.alert_quest.message.replace('{command}', user_command)
                     cooldowns.append(['quest', quest_timestring.lower(), quest_message])
@@ -205,10 +176,7 @@ class CooldownsCog(commands.Cog):
                 duel_match = re.search(r"duel`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if duel_match:
                     duel_timestring = duel_match.group(1)
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'duel')
-                    else:
-                        user_command = '`rpg duel`'
+                    user_command = await functions.get_slash_command(user_settings, 'duel')
                     duel_message = user_settings.alert_duel.message.replace('{command}', user_command)
                     cooldowns.append(['duel', duel_timestring.lower(), duel_message])
                 else:
@@ -217,10 +185,7 @@ class CooldownsCog(commands.Cog):
                 arena_match = re.search(r"rena`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if arena_match:
                     arena_timestring = arena_match.group(1)
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'arena')
-                    else:
-                        user_command = '`rpg arena`'
+                    user_command = await functions.get_slash_command(user_settings, 'arena')
                     arena_message = user_settings.alert_arena.message.replace('{command}', user_command)
                     cooldowns.append(['arena', arena_timestring.lower(), arena_message])
                 else:
@@ -229,12 +194,9 @@ class CooldownsCog(commands.Cog):
                 dungmb_match = re.search(r"boss`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if dungmb_match:
                     dungmb_timestring = dungmb_match.group(1)
-                    if slash_command:
-                        command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
-                        command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
-                        user_command = f"{command_dungeon} or {command_miniboss}"
-                    else:
-                        user_command = '`rpg dungeon` or `rpg miniboss`'
+                    command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
+                    command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
+                    user_command = f"{command_dungeon} or {command_miniboss}"
                     dungmb_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
                     cooldowns.append(['dungeon-miniboss', dungmb_timestring.lower(), dungmb_message])
                 else:
@@ -243,12 +205,9 @@ class CooldownsCog(commands.Cog):
                 horse_match = re.search(r"race`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if horse_match:
                     horse_timestring = horse_match.group(1)
-                    if slash_command:
-                        command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
-                        command_race = await functions.get_slash_command(user_settings, 'horse race')
-                        user_command = f"{command_breed} or {command_race}"
-                    else:
-                        user_command = '`rpg horse breed` or `rpg horse race`'
+                    command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
+                    command_race = await functions.get_slash_command(user_settings, 'horse race')
+                    user_command = f"{command_breed} or {command_race}"
                     horse_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
                     cooldowns.append(['horse', horse_timestring.lower(), horse_message])
                 else:
@@ -257,10 +216,7 @@ class CooldownsCog(commands.Cog):
                 vote_match = re.search(r"vote`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if vote_match:
                     vote_timestring = vote_match.group(1)
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'vote')
-                    else:
-                        user_command = '`rpg vote`'
+                    user_command = await functions.get_slash_command(user_settings, 'vote')
                     vote_message = user_settings.alert_vote.message.replace('{command}', user_command)
                     cooldowns.append(['vote', vote_timestring.lower(), vote_message])
                 else:
@@ -269,15 +225,9 @@ class CooldownsCog(commands.Cog):
                 farm_match = re.search(r"farm`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if farm_match:
                     farm_timestring = farm_match.group(1)
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'farm')
-                        if user_settings.last_farm_seed != '':
-                            user_command = f'{user_command} `seed: {user_settings.last_farm_seed}`'
-                    else:
-                        user_command = 'rpg farm'
-                        if user_settings.last_farm_seed != '':
-                            user_command = f'{user_command} {user_settings.last_farm_seed}'
-                        user_command = f'`{user_command}`'
+                    user_command = await functions.get_slash_command(user_settings, 'farm')
+                    if user_settings.last_farm_seed != '':
+                        user_command = f'{user_command} `seed: {user_settings.last_farm_seed}`'
                     farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
                     cooldowns.append(['farm', farm_timestring.lower(), farm_message])
                 else:
@@ -292,10 +242,7 @@ class CooldownsCog(commands.Cog):
                 work_match = await functions.get_match_from_patterns(search_patterns, message_fields.lower())
                 if work_match:
                     if user_settings.last_work_command != '':
-                        if slash_command:
-                            user_command = await functions.get_slash_command(user_settings, user_settings.last_work_command)
-                        else:
-                            user_command = f'`rpg {user_settings.last_work_command}`'
+                        user_command = await functions.get_slash_command(user_settings, user_settings.last_work_command)
                     else:
                         user_command = 'work command'
                     work_timestring = work_match.group(1)
@@ -311,7 +258,7 @@ class CooldownsCog(commands.Cog):
                 if time_left < timedelta(0): continue
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, cd_activity, time_left,
+                        await reminders.insert_user_reminder(interaction_user.id, cd_activity, time_left,
                                                             message.channel.id, cd_message, overwrite_message=False)
                     )
                     if not reminder.record_exists:
@@ -319,7 +266,7 @@ class CooldownsCog(commands.Cog):
                         return
             for activity in ready_commands:
                 try:
-                    reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, activity)
+                    reminder: reminders.Reminder = await reminders.get_user_reminder(interaction_user.id, activity)
                 except exceptions.NoDataFoundError:
                     continue
                 await reminder.delete()
@@ -335,29 +282,28 @@ class CooldownsCog(commands.Cog):
             'verifique a versão longa deste comando', #Portuguese
         ]
         if any(search_string in message_footer.lower() for search_string in search_strings):
-            user_id = user_name = None
+            user_id = user_name = user_command_message = None
             user = await functions.get_interaction_user(message)
-            slash_command = True if user is not None else False
             if user is None:
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
+                    user = await message.guild.fetch_member(user_id)
                 else:
                     user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_COOLDOWNS,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in ready message.', message)
                         return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
-                else:
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in ready message.', message)
-                return
+                    user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:

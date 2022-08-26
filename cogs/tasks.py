@@ -109,7 +109,7 @@ class TasksCog(commands.Cog):
                         )
                         reminder: reminders.Reminder = (
                             await reminders.insert_clan_reminder(clan.clan_name, time_left_all_members,
-                                                                clan.channel_id, alert_message)
+                                                                 clan.channel_id, alert_message)
                         )
                         return
                     except asyncio.CancelledError:

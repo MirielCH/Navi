@@ -41,12 +41,12 @@ class PetsCog(commands.Cog):
                 'seus pets começaram uma aventura!', #Portuguese multiple pets
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
-                interaction = await functions.get_interaction(message)
                 user = await functions.get_interaction_user(message)
+                user_command_message = None
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+pets?\s+(?:adv\b|adventure\b)\s+(?:find\b|learn\b|drill\b)"
+                            message.channel, strings.REGEX_COMMAND_PETS_ADVENTURE_START
                         )
                     )
                     if user_command_message is None:
@@ -68,9 +68,8 @@ class PetsCog(commands.Cog):
                     pet_message = (
                         f'{pet_message}\n\n'
                         f'Tip: This is done fastest by sorting pets by their status:\n'
-                        f"{emojis.BP} {command_pets_list} `sort: status` "
+                        f"➜ {command_pets_list} `sort: status` "
                         f'(click through all pages with active pets)\n'
-                        f'{emojis.BP} `rpg pets status`'
                     ) # Message split up like this because I'm unsure if I want to always send the first part
                     await user_settings.update(pet_tip_read=True)
                     await message.reply(pet_message)
@@ -88,35 +87,6 @@ class PetsCog(commands.Cog):
                     if user_settings.reactions_enabled:
                         await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
                         await message.add_reaction(emojis.VOIDOG)
-                if interaction is not None: return
-                search_strings = [
-                    'pets have started an adventure!', #English
-                    'tus mascotas han comenzado una aventura!', #Spanish
-                    'seus pets começaram uma aventura!', #Portuguese
-                ]
-                if any(search_string in message_content.lower() for search_string in search_strings): return
-                arguments = user_command_message.content.split()
-                pet_id = arguments[-1].upper()
-                if pet_id == 'EPIC': return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                search_patterns = [
-                    r'will be back in \*\*(.+?)\*\*', #English
-                    r'volverá en \*\*(.+?)\*\*', #Spanish
-                    r'voltará em \*\*(.+?)\*\*', #Portuguese
-                ]
-                timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
-                if not timestring_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Timestring not found in pet adventure message.', message)
-                    return
-                timestring = timestring_match.group(1)
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}','')
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             search_strings = [
                 'pet adventure(s) cancelled', #English
@@ -125,6 +95,7 @@ class PetsCog(commands.Cog):
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
+                user_command_message = None
                 if user is not None:
                     command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     await message.reply(
@@ -132,11 +103,11 @@ class PetsCog(commands.Cog):
                         f' to update your pet reminders.'
                     )
                     return
-                user_command_message, _ = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+pets?\s+(?:adv\b|adventure\b)\s+cancel\b"
-                        )
+                user_command_message = (
+                    await functions.get_message_from_channel_history(
+                        message.channel, strings.REGEX_COMMAND_PETS_ADVENTURE_CANCEL
                     )
+                )
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Couldn\'t find a command for pet cancel message.', message)
@@ -177,9 +148,9 @@ class PetsCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+pets?\s+(?:adv\b|adventure\b)\s+(?:find\b|learn\b|drill\b)"
+                            message.channel, strings.REGEX_COMMAND_PETS_ADVENTURE_START
                         )
                     )
                     if user_command_message is None:
@@ -224,31 +195,28 @@ class PetsCog(commands.Cog):
                     'pony': emojis.PET_PONY,
                     'panda': emojis.PET_PANDA,
                 }
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_PETS,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in pet list message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error(
-                        f'User not found in pet list message.',
-                        message
-                    )
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

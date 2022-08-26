@@ -45,23 +45,24 @@ class RubyCounterCog(commands.Cog):
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and '<:ruby' in message_field.lower()):
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name_match = re.search(r"\*\*(.+?)\*\*:", message_field)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         if user_name in strings.EPIC_NPC_NAMES: user_name = user_name_match.group(2)
-                        user_name = await functions.encode_text(user_name)
-                    else:
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_TRADE_RUBY,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in trade message for ruby counter.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in trade message for ruby counter.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -93,28 +94,28 @@ class RubyCounterCog(commands.Cog):
             ]
             if (any(search_string in message_author.lower() for search_string in search_strings)
                 and '<:ruby' in message_field.lower()):
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_LOOTBOX,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in lootbox message for ruby counter.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in lootbox message for ruby counter.', message)
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -141,12 +142,12 @@ class RubyCounterCog(commands.Cog):
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 if icon_url == embed.Empty: return
-                user_id = user_name = embed_user = None
+                user_id = user_name = embed_user = user_command_message = None
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+(?:i\b|inv\b|inventory\b)"
+                            message.channel, strings.REGEX_COMMAND_INVENTORY
                         )
                     )
                     if user_command_message is None:
@@ -157,22 +158,16 @@ class RubyCounterCog(commands.Cog):
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
+                    embed_user = await message.guild.fetch_member(user_id)
                 else:
                     user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or embed_user is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in inventory message for ruby counter.', message)
+                        await errors.log_error('Embed user not found in inventory message for ruby counter.', message)
                         return
-                if user_id is not None:
-                    embed_user = await message.guild.fetch_member(user_id)
-                else:
-                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if embed_user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in inventory message for ruby counter.', message)
-                    return
                 if embed_user != interaction_user: return
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
@@ -202,23 +197,25 @@ class RubyCounterCog(commands.Cog):
                 '** está treinando na mina!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True
                 if user is None:
                     slash_command = False
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_TRAINING,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in ruby training message for ruby counter.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in ruby training message for ruby counter.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -261,11 +258,12 @@ class RubyCounterCog(commands.Cog):
                 '`ruby` vendido(s)', #Spanish, Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
+                user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+sell\s+ruby.*$"
+                            message.channel, strings.REGEX_COMMAND_SELL_RUBY
                         )
                     )
                     if user_command_message is None:
@@ -300,7 +298,7 @@ class RubyCounterCog(commands.Cog):
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and '<:ruby' in message_content.lower()):
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     search_patterns = [
@@ -309,16 +307,18 @@ class RubyCounterCog(commands.Cog):
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content) #case
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_WORK,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in work message for ruby counter.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in work message for ruby counter.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -351,9 +351,9 @@ class RubyCounterCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+craft\s+ruby\s+sword\s*$"
+                            message.channel, strings.REGEX_COMMAND_CRAFT_RUBY_SWORD
                         )
                     )
                     if user_command_message is None:
@@ -381,9 +381,9 @@ class RubyCounterCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+craft\s+ruby\s+armor\s*$"
+                            message.channel, strings.REGEX_COMMAND_CRAFT_RUBY_ARMOR
                         )
                     )
                     if user_command_message is None:
@@ -411,9 +411,9 @@ class RubyCounterCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+craft\s+coin\s+sword\s*$"
+                            message.channel, strings.REGEX_COMMAND_CRAFT_COIN_SWORD
                         )
                     )
                     if user_command_message is None:
@@ -441,9 +441,9 @@ class RubyCounterCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+forge\s+ultra-edgy\s+armor\s*$"
+                            message.channel, strings.REGEX_COMMAND_FORGE_ULTRAEDGY_ARMOR
                         )
                     )
                     if user_command_message is None:

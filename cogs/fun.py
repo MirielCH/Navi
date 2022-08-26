@@ -18,6 +18,10 @@ class FunCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
         await self.on_message(message_after)
 
     @commands.command(aliases=('listen',))
@@ -46,21 +50,23 @@ class FunCog(commands.Cog):
         if not message.embeds and message.author.id == settings.EPIC_RPG_ID:
             message_content = message.content
             if 'died fighting the **mysterious man**' in message_content.lower():
+                user_command_message = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_name = None
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_HEAL,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in heal event message for the fun reaction.', message)
+                        await errors.log_error('User not found for heal event message for the fun reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the heal event reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -74,16 +80,17 @@ class FunCog(commands.Cog):
                     user_name = None
                     user_name_match = re.search(r"car \*\*(.+?)\n", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in epic guard message for the fun reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the jail reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -93,20 +100,22 @@ class FunCog(commands.Cog):
 
             if 'again, it **exploded**' in message_content.lower():
                 user = await functions.get_interaction_user(message)
+                user_name = user_command_message = None
                 if user is None:
-                    user_name = None
                     user_name_match = re.search(r"\*\*(.+?)\*\* tries to", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_ENCHANT,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in enchant message for the fun reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the failed enchant reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -116,20 +125,22 @@ class FunCog(commands.Cog):
 
             if 'took the seed from the ground and decided to try planting it again later' in message_content.lower():
                 user = await functions.get_interaction_user(message)
+                user_name = user_command_message = None
                 if user is None:
-                    user_name = None
                     user_name_match = re.search(r'\*\*(.+?)\*\* (?:HITS|is about)', message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_FARM,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in farm event message for the fun reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the failed farm event reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -139,20 +150,22 @@ class FunCog(commands.Cog):
 
             if 'fighting them wasn\'t very clever' in message_content.lower():
                 user = await functions.get_interaction_user(message)
+                user_name = user_command_message = None
                 if user is None:
-                    user_name = None
                     user_name_match = re.search(r"\*\*(.+?)\*\* fights", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_HUNT,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in hunt event message for the fun reaction.',  message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the failed hunt event reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -162,20 +175,22 @@ class FunCog(commands.Cog):
 
             if 'you just lost your lootbox' in message_content.lower():
                 user = await functions.get_interaction_user(message)
+                user_name = user_command_message = None
                 if user is None:
-                    user_name = None
                     user_name_match = re.search(r"\*\*(.+?)\*\* uses a", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_OPEN,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in lootbox event message for the fun reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the failed lootbox event reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -185,20 +200,22 @@ class FunCog(commands.Cog):
 
             if 'christmas slime' in message_content.lower() and 'got 100' in message_content.lower():
                 user = await functions.get_interaction_user(message)
+                user_name = user_command_message = None
                 if user is None:
-                    user_name = None
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_HUNT,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found for the christmas slime reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if user is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found for the christmas slime reaction.', message)
-                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -218,12 +235,17 @@ class FunCog(commands.Cog):
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a user for the coolness reaction.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -246,12 +268,12 @@ class FunCog(commands.Cog):
                 if any(search_string in field.value.lower() for search_string in search_strings):
                     user = await functions.get_interaction_user(message)
                     if user is None:
-                        user_command_message, _ = (
-                        await functions.get_message_from_channel_history(
-                            message.channel,
-                            r"^rpg\s+(?:tr\b|training\b)"
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_TRAINING,
+                                limit=100
+                            )
                         )
-                    )
                         if user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('Couldn\'t find a user for the lost pet reaction.', message)
@@ -280,12 +302,11 @@ class FunCog(commands.Cog):
                 if shitty_lootbox_found:
                     user = await functions.get_interaction_user(message)
                     if user is None:
-                        user_command_message, _ = (
-                        await functions.get_message_from_channel_history(
-                            message.channel,
-                            r"^rpg\s+open\s+(?:co?\b|ed\b|ep\b|u\b|o\b|omega\b|edgy\b|epic\b|common\b|uncommon\b|r\b|rare\b|g\b|godly\b)\s*(?:lb\b|lootbox\b)?"
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_OPEN
+                            )
                         )
-                    )
                         if user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('Couldn\'t find a user for the shitty lootbox reaction.', message)

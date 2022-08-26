@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 import re
-from typing import Optional
 
 import discord
 from discord.ext import commands
@@ -45,7 +44,7 @@ class AdventureCog(commands.Cog):
                 'você já esteve em uma aventura', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = user_command = None
+                user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True
                 if user is None:
@@ -53,52 +52,46 @@ class AdventureCog(commands.Cog):
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
+                            user_name = user_name_match.group(1)
                         else:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('Couldn\'t find a command for the adventure cooldown message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in adventure cooldown message.', message)
-                    return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'adventure')
-                else:
-                    user_command_message, user_command = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+(?:adv\b|adventure\b)\s*(?:h\b|hardmode\b)?", user
+                            message.channel, strings.REGEX_COMMAND_ADVENTURE,
+                            user=user, user_name=user_name
                         )
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a command for the adventure cooldown message.', message)
-                    user_command = re.sub(r'\badv\b', 'adventure', user_command)
-                    user_command = re.sub(r'\bh\b', 'hardmode', user_command)
-                    user_command = f'`{user_command}`'
+                        return
+                    if user is None: user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
+                if not slash_command:
                     last_adventure_mode = None
-                    if 'hardmode' in user_command: last_adventure_mode = 'hardmode'
+                    user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
+                    if 'hardmode' in user_command_message_content: last_adventure_mode = 'hardmode'
                     await user_settings.update(last_adventure_mode=last_adventure_mode)
+                user_command = await functions.get_slash_command(user_settings, 'adventure')
+                if user_settings.last_adventure_mode != '':
+                    user_command = f'{user_command} `mode: {user_settings.last_adventure_mode}`'
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
-                                                                       message_title)
+                                                                           message_title)
                 if not timestring_match:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Timestring not found in adventure cooldown message.', message)
                     return
-                timestring = timestring_match.group(1)
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -117,47 +110,40 @@ class AdventureCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
                 user = await functions.get_interaction_user(message)
-                search_strings = [
+                search_strings_hardmode = [
                     '(but stronger)', #English
                     '(pero más fuerte)', #Spanish
                     '(só que mais forte)', #Portuguese
                 ]
-                last_adventure_mode = None
-                slash_command = True
+                last_adventure_mode = user_command_message = None
                 if user is None:
-                    slash_command = False
-                    user_command = 'rpg adventure'
-                    if any(search_string in message_content.lower() for search_string in search_strings):
-                        user_command = f'{user_command} hardmode'
-                        last_adventure_mode = 'hardmode'
-                    user_command = f'`{user_command}`'
-                    user_name = None
                     search_patterns = [
                         r"^\*\*(.+?)\*\* found a", #English
                         r"^\*\*(.+?)\*\* encontr", #Spanish, Portuguese
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_ADVENTURE,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in adventure message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in adventure message.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'adventure')
-                    if any(search_string in message_content.lower() for search_string in search_strings):
-                        user_command = f'{user_command} `mode: hardmode`'
-                        last_adventure_mode = 'hardmode'
+                user_command = await functions.get_slash_command(user_settings, 'adventure')
+                if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
+                    user_command = f'{user_command} `mode: hardmode`'
+                    last_adventure_mode = 'hardmode'
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)

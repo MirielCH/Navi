@@ -38,46 +38,46 @@ class HorseCog(commands.Cog):
 
             # Horse cooldown
             search_strings = [
-                    'you have used this command recently', #English
-                    'usaste este comando recientemente', #Spanish
-                    'você usou este comando recentementesh', #Portuguese
-                ]
+                'you have used this command recently', #English
+                'usaste este comando recientemente', #Spanish
+                'você usou este comando recentementesh', #Portuguese
+            ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = None
-                user = await functions.get_interaction_user(message)
-                slash_command = True
-                if user is None:
-                    slash_command = False
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                    else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
-                        if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in horse cooldown message.', message)
-                            return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in horse cooldown message.', message)
-                    return
+                user_id = user_name = user_command_message = None
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_HORSE
+                        )
+                    )
+                    interaction_user = user_command_message.author
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Interaction user not found in horse cooldown message.', message)
+                        return
+                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    embed_user = await message.guild.fetch_member(user_id)
+                else:
+                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or embed_user is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Embed user not found in horse cooldown message.', message)
+                        return
+                if embed_user != interaction_user: return
                 try:
-                    user_settings: users.User = await users.get_user(user.id)
+                    user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_horse_breed.enabled: return
-                if slash_command:
-                    command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
-                    command_race = await functions.get_slash_command(user_settings, 'horse race')
-                    user_command = f"{command_breed} or {command_race}"
-                else:
-                    user_command = '`rpg horse breed` or `rpg horse race`'
+                command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
+                command_race = await functions.get_slash_command(user_settings, 'horse race')
+                user_command = f"{command_breed} or {command_race}"
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                         message_title)
                 if not timestring_match:
@@ -89,8 +89,8 @@ class HorseCog(commands.Cog):
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'horse', time_left,
-                                                        message.channel.id, reminder_message)
+                    await reminders.insert_user_reminder(interaction_user.id, 'horse', time_left,
+                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -108,16 +108,18 @@ class HorseCog(commands.Cog):
                 if user is None:
                     user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_OMEGA_HORSE_TOKEN,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User name not found in omega horse token message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in omega horse token message.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

@@ -43,39 +43,34 @@ class ArenaCog(commands.Cog):
             'você recentemente iniciou uma arena', #Portuguese
         ]
         if any(search_string in message_title.lower() for search_string in search_strings):
-            user_id = user_name = None
+            user_id = user_name = user_command_message = None
             user = await functions.get_interaction_user(message)
-            slash_command = True
             if user is None:
-                slash_command = False
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
+                    user = await message.guild.fetch_member(user_id)
                 else:
                     user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_ARENA,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in arena cooldown message.', message)
                         return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
-                else:
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in arena cooldown message.', message)
-                return
+                    user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.alert_arena.enabled: return
-            if slash_command:
-                user_command = await functions.get_slash_command(user_settings, 'arena')
-            else:
-                user_command = '`rpg arena`'
+            user_command = await functions.get_slash_command(user_settings, 'arena')
             timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                        message_title)
             if not timestring_match:

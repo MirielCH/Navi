@@ -1,4 +1,5 @@
-# events.py
+# horse-festival.py
+# This is outdated, needs to be reworked next year
 
 from datetime import datetime, timedelta
 import re
@@ -7,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import exceptions, functions, logs, strings
+from resources import emojis, exceptions, functions, logs, strings
 
 
 class HorseFestivalCog(commands.Cog):
@@ -78,6 +79,47 @@ class HorseFestivalCog(commands.Cog):
 
         if not message.embeds:
             message_content = message.content
+
+            # Lightspeed
+            search_strings = [
+                'rides at the speed of light', #English
+                'viaja a la velocidad de la luz', #Spanish
+                'viaja na velocidade', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user_name = user = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    search_patterns = [
+                        r'\*\*(.+?)\*\* rides', #English
+                        r'\*\*(.+?)\*\* viaja', #Spanish, Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_HF_LIGHTSPEED,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in horse lightspeed message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                await reminders.reduce_reminder_time(user.id, 'half')
+                if user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
+                    await message.add_reaction(emojis.KIRBY_RUN)
+                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+
+            # Megarace
             search_strings = [
                 'you have not reached the end of this stage', #English
                 'aún no has llegado al final de esta etapa', #Spanish
@@ -295,7 +337,7 @@ class HorseFestivalCog(commands.Cog):
                 else:
                     user_command = '`rpg hf megarace start`'
                     user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+(?:hf\b|horsefestival\b)\s+megarace\b")
+                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+(?:hf\b|horsefestival\b)\s+megarace\b")
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
