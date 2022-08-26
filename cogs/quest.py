@@ -340,8 +340,31 @@ class QuestCog(commands.Cog):
                         try:
                             clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
                             await clan.update(quest_user_id=user.id)
+                            if clan.alert_enabled:
+                                try:
+                                    clan_reminder: reminders.Reminder = (
+                                        await reminders.get_clan_reminder(clan.clan_name)
+                                    )
+                                except exceptions.NoDataFoundError:
+                                    clan_reminder = None
+                            if clan_reminder is not None:
+                                for member_id in clan.member_ids:
+                                    try:
+                                        user_clan_reminder: reminders.Reminder = (
+                                            await reminders.get_user_reminder(member_id, 'guild')
+                                        )
+                                        user_reminder_time_left = user_clan_reminder.end_time - current_time
+                                        clan_reminder_time_left = clan_reminder.end_time - current_time
+                                        range_upper = clan_reminder_time_left + timedelta(seconds=2)
+                                        range_lower = clan_reminder_time_left - timedelta(seconds=2)
+                                        if not range_lower <= user_reminder_time_left <= range_upper:
+                                            new_end_time = current_time + (clan_reminder_time_left + timedelta(minutes=5))
+                                            await user_clan_reminder.update(end_time=new_end_time)
+                                    except exceptions.NoDataFoundError:
+                                        continue
                         except exceptions.NoDataFoundError:
                             pass
+
                     await user_settings.update(guild_quest_prompt_active=False)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)

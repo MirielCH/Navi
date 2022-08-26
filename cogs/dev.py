@@ -2,7 +2,7 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import importlib
 import sys
 
@@ -345,21 +345,37 @@ class DevCog(commands.Cog):
     async def test(self, ctx: commands.Context) -> None:
         if ctx.prefix.lower() == 'rpg ': return
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        from database import reminders, users
-        from resources import functions
-        await reminders.reduce_reminder_time(ctx.author.id, 'half')
-        message = ctx.message
+        from database import clans, reminders, users
+        from resources import exceptions
         user = ctx.author
         user_settings = await users.get_user(user.id)
-        interaction = await functions.get_interaction(message)
-        if interaction is not None:
-            user_command = await functions.get_slash_command(user_settings, 'horse breeding')
-        else:
-            user_command = '`rpg horse breed`'
-        reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
-        time_left_horse = timedelta(hours=5)
-        await reminders.insert_user_reminder(user.id, 'horse', time_left_horse, message.channel.id, reminder_message)
-        await ctx.reply('Done')
+        try:
+            current_time = datetime.utcnow().replace(microsecond=0)
+            clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+            if clan.alert_enabled:
+                try:
+                    clan_reminder: reminders.Reminder = (
+                        await reminders.get_clan_reminder(clan.clan_name)
+                    )
+                except exceptions.NoDataFoundError:
+                    clan_reminder = None
+            if clan_reminder is not None:
+                for member_id in clan.member_ids:
+                    try:
+                        user_clan_reminder: reminders.Reminder = (
+                            await reminders.get_user_reminder(member_id, 'guild')
+                        )
+                        user_reminder_time_left = user_clan_reminder.end_time - current_time
+                        clan_reminder_time_left = clan_reminder.end_time - current_time
+                        range_upper = clan_reminder_time_left + timedelta(seconds=2)
+                        range_lower = clan_reminder_time_left - timedelta(seconds=2)
+                        if range_lower <= user_reminder_time_left <= range_upper:
+                            new_end_time = current_time + (clan_reminder_time_left + timedelta(minutes=5))
+                            await user_clan_reminder.update(end_time=new_end_time)
+                    except exceptions.NoDataFoundError:
+                        continue
+        except exceptions.NoDataFoundError:
+            pass
 
 
 def setup(bot):
