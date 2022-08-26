@@ -38,6 +38,7 @@ class SleepyPotionCog(commands.Cog):
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = user = user_command_message = None
             user = await functions.get_interaction_user(message)
+            slash_command = True if user is not None else False
             if user is None:
                 search_patterns = [
                     r'^\*\*(.+?)\*\* drinks', #English
@@ -64,7 +65,8 @@ class SleepyPotionCog(commands.Cog):
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user.id, timedelta(days=1))
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-            if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+            if user_settings.auto_ready_enabled and slash_command:
+                await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

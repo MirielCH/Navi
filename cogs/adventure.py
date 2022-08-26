@@ -46,9 +46,8 @@ class AdventureCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
+                slash_command = True if user is not None else False
                 if user is None:
-                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -116,6 +115,7 @@ class AdventureCog(commands.Cog):
                     '(só que mais forte)', #Portuguese
                 ]
                 last_adventure_mode = user_command_message = None
+                slash_command = True if user is not None else False
                 if user is None:
                     search_patterns = [
                         r"^\*\*(.+?)\*\* found a", #English
@@ -165,7 +165,8 @@ class AdventureCog(commands.Cog):
                         if stuff_name in message_content:
                             await message.add_reaction(stuff_emoji)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 # Add an F if the user died
                 search_strings = [
                     'but lost fighting', #English

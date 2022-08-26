@@ -209,7 +209,8 @@ class WorkCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 if user_settings.reactions_enabled:
                     search_strings_chop_proc = [
                         'quite a large leaf', #English
@@ -262,6 +263,7 @@ class WorkCog(commands.Cog):
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction(message)
+                slash_command = True if interaction is not None else False
                 if interaction is None:
                     user_name = user_command = user_command_message = None
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
@@ -304,7 +306,8 @@ class WorkCog(commands.Cog):
                                                             message.channel.id, reminder_message)
                     )
                     await functions.add_reminder_reaction(message, reminder, user_settings)
-                    if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                    if user_settings.auto_ready_enabled and slash_command:
+                        await functions.call_ready_command(self.bot, message, user)
 
             # Work event slash (all languages)
             if  (':x:' in message_content.lower()

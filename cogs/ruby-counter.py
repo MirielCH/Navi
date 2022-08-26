@@ -199,9 +199,8 @@ class RubyCounterCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
+                slash_command = True if user is not None else False
                 if user is None:
-                    slash_command = False
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)

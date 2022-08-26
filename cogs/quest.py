@@ -226,6 +226,7 @@ class QuestCog(commands.Cog):
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
@@ -272,7 +273,8 @@ class QuestCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
         if not message.embeds:
             message_content = message.content
@@ -288,6 +290,7 @@ class QuestCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     if message.mentions:
                         user = message.mentions[0]
@@ -367,7 +370,8 @@ class QuestCog(commands.Cog):
 
                     await user_settings.update(guild_quest_prompt_active=False)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
             # Aborted guild quest
             search_strings = [

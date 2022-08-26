@@ -46,9 +46,8 @@ class FarmCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
+                slash_command = True if user is not None else False
                 if user is None:
-                    slash_command = False
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
@@ -116,6 +115,7 @@ class FarmCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = last_farm_seed = user_command_message = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     search_patterns = [
                         r"^\*\*(.+?)\*\* plant", #English, Spanish, Portuguese
@@ -166,7 +166,8 @@ class FarmCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 search_strings = [
                     'also got', #English
                     'también consiguió', #Spanish
@@ -184,50 +185,49 @@ class FarmCog(commands.Cog):
             if ('hits the floor with the' in message_content.lower()
                 or 'is about to plant another seed' in message_content.lower()):
                 interaction = await functions.get_interaction(message)
-                if interaction is not None: return
-                user_name = user_command = user_command_message = None
-                user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
-                if user_name_match:
-                    user_name = user_name_match.group(1)
-                    user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_FARM,
-                            user_name=user_name
+                if interaction is None:
+                    user_name = user_command = user_command_message = None
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_FARM,
+                                user_name=user_name
+                            )
                         )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in farm event non-slash message.', message)
+                        return
+                    user = user_command_message.author
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled: return
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    if user_settings.tracking_enabled:
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                    if not user_settings.alert_farm.enabled: return
+                    user_command = await functions.get_slash_command(user_settings, 'farm')
+                    seed = None
+                    if 'bread' in user_command_message.content.lower():
+                        seed = 'bread'
+                    elif 'carrot' in user_command_message.content.lower():
+                        seed = 'carrot'
+                    elif 'potato' in user_command_message.content.lower():
+                        seed = 'potato'
+                    if seed is not None:
+                        user_command = f'{user_command} `seed: {seed}`'
+                    time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
+                    if time_left < timedelta(0): return
+                    reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'farm', time_left,
+                                                            message.channel.id, reminder_message)
                     )
-                if not user_name_match or user_command_message is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in farm event non-slash message.', message)
-                    return
-                user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
-                if not user_settings.alert_farm.enabled: return
-                user_command = await functions.get_slash_command(user_settings, 'farm')
-                seed = None
-                if 'bread' in user_command_message.content.lower():
-                    seed = 'bread'
-                elif 'carrot' in user_command_message.content.lower():
-                    seed = 'carrot'
-                elif 'potato' in user_command_message.content.lower():
-                    seed = 'potato'
-                if seed is not None:
-                    user_command = f'{user_command} `seed: {seed}`'
-                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'farm', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Farm event slash (all languages)
             if  (('<:seed' in message_content.lower() and '!!' in message_content.lower())
@@ -235,28 +235,28 @@ class FarmCog(commands.Cog):
                  or ':sweat_drops:' in message_content.lower()):
                 user_name = user_command = None
                 interaction = await functions.get_interaction(message)
-                if interaction is None: return
-                if interaction.name != 'farm': return
-                user_command = await functions.get_slash_command(user_settings, 'farm')
-                user = interaction.user
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
-                if not user_settings.alert_farm.enabled: return
-                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'farm', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if interaction is not None:
+                    if interaction.name != 'farm': return
+                    user_command = await functions.get_slash_command(user_settings, 'farm')
+                    user = interaction.user
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled: return
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    if user_settings.tracking_enabled:
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                    if not user_settings.alert_farm.enabled: return
+                    time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
+                    if time_left < timedelta(0): return
+                    reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'farm', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                    if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

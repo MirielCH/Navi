@@ -45,11 +45,10 @@ class HuntCog(commands.Cog):
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = last_hunt_mode = user_command_message = None
-                slash_command = True
+                slash_command = True if user is not None else False
                 hardmode = together = alone = old = False
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
-                    slash_command = False
                     user_command_message = (
                         await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_HUNT)
                     )
@@ -298,7 +297,8 @@ class HuntCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 partner_start = len(message_content)
                 if user_settings.partner_id is not None:
                     partner: users.User = await users.get_user(user_settings.partner_id)

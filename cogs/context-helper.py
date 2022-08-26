@@ -152,8 +152,33 @@ class ContextHelperCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
+                search_strings_gambling = [
+                    'gambling quest', #English
+                    'misión de apuestas', #Spanish
+                    'missão de aposta', #Portuguese
+                ]
+                search_strings_guild = [
+                    'guild quest', #English
+                    'misión de guild', #Spanish
+                    'missão de guild', #Portuguese
+                ]
+                search_strings_crafting = [
+                    'crafting quest', #English
+                    'misión de crafteo', #Spanish
+                    'missão de craft', #Portuguese
+                ]
+                search_strings_cooking = [
+                    'cooking quest', #English
+                    'misión de cocina', #Spanish
+                    'missão de cozinha', #Portuguese
+                ]
+                search_strings_trading = [
+                    'trading quest', #English
+                    'misión de intercambio', #Spanish
+                    'missão de troca', #Portuguese
+                ]
                 quest_field = quest_message.embeds[0].fields[0].value.lower()
-                if 'gambling quest' in quest_field:
+                if any(search_string in quest_field for search_string in search_strings_gambling):
                     command_big_dice = await functions.get_slash_command(user_settings, 'big dice')
                     command_blackjack = await functions.get_slash_command(user_settings, 'blackjack')
                     command_coinflip = await functions.get_slash_command(user_settings, 'coinflip')
@@ -172,26 +197,26 @@ class ContextHelperCog(commands.Cog):
                         f"➜ {command_slots}\n"
                         f"➜ {command_wheel}\n"
                     )
-                elif 'guild quest' in quest_field:
+                elif any(search_string in quest_field for search_string in search_strings_guild):
                     command_raid = await functions.get_slash_command(user_settings, 'guild raid')
                     command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
                     answer = (
                         f"➜ {command_raid}\n"
                         f"➜ {command_upgrade}\n"
                     )
-                elif 'crafting quest' in quest_field:
+                elif any(search_string in quest_field for search_string in search_strings_crafting):
                     command_craft = await functions.get_slash_command(user_settings, 'craft')
                     command_dismantle = await functions.get_slash_command(user_settings, 'dismantle')
                     answer = (
                         f"➜ {command_craft}\n"
                         f"➜ {command_dismantle}\n"
                     )
-                elif 'cooking quest' in quest_field:
+                elif any(search_string in quest_field for search_string in search_strings_cooking):
                     command_cook = await functions.get_slash_command(user_settings, 'cook')
                     answer = (
                         f"➜ {command_cook}\n"
                     )
-                elif 'trading quest' in quest_field:
+                elif any(search_string in quest_field for search_string in search_strings_trading):
                     command_trade = await functions.get_slash_command(user_settings, 'trade items')
                     answer = (
                         f"➜ {command_trade}\n"
@@ -199,8 +224,6 @@ class ContextHelperCog(commands.Cog):
                 else:
                     return
                 await message.reply(answer)
-
-
 
 
 # Initialization

@@ -112,6 +112,7 @@ class TrainingCog(commands.Cog):
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     user_name_match = re.search(r", \*\*(.+?)\*\*!", message_description)
                     if user_name_match:
@@ -146,7 +147,8 @@ class TrainingCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 search_strings = [
                     'better luck next time', #English
                     'próxima vez', #Spanish, Portuguese
@@ -167,6 +169,7 @@ class TrainingCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     user_name_match = re.search(r", \*\*(.+?)\*\*", message_content)
                     if user_name_match:
@@ -201,7 +204,8 @@ class TrainingCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

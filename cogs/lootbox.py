@@ -109,6 +109,7 @@ class BuyCog(commands.Cog):
                 if lootbox_type_match:
                     lootbox_type = lootbox_type_match.group(1)
                     lootbox_name = f'{lootbox_type} lootbox'
+                slash_command = True if user is not None else False
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
@@ -136,7 +137,8 @@ class BuyCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

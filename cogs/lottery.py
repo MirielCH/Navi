@@ -92,6 +92,7 @@ class LotteryCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
+                slash_command = True if user is not None else False
                 if user is None:
                     user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                     if user_name_match:
@@ -133,7 +134,8 @@ class LotteryCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization
