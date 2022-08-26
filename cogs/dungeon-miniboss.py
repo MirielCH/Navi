@@ -68,7 +68,7 @@ class DungeonMinibossCog(commands.Cog):
                         embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
                     if not user_name_match or embed_user is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found for dungeon cooldown message.', message)
+                        await errors.log_error('Embed user not found for dungeon cooldown message.', message)
                         return
                 if embed_user != interaction_user: return
                 try:
