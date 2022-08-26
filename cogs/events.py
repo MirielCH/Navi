@@ -51,6 +51,7 @@ class EventsCog(commands.Cog):
         if message.author.id != settings.EPIC_RPG_ID: return
         if not message.embeds:
             message_content = message.content
+            """
             # Cel Multiply
             if 'you feel 5% more rich' in message_content.lower():
                 user_command_message, _ = (
@@ -105,7 +106,7 @@ class EventsCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-            """
+
             if 'you already completed the quest of today!' in message_content.lower() and message.mentions:
                 user = message.mentions[0]
                 try:
@@ -148,10 +149,10 @@ class EventsCog(commands.Cog):
             ]
             if any(search_string in message_field1_name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                slash_command = False if user is None else True
+                user_command_message = None
                 if user is None:
                     user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+events?\b")
+                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+events?\b")
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -178,11 +179,8 @@ class EventsCog(commands.Cog):
                     lottery_match = re.search(r"lottery\*\*: (.+?)\n", message_field1_value.lower())
                     if lottery_match:
                         lottery_timestring = lottery_match.group(1)
-                        if slash_command:
-                            user_command = await functions.get_slash_command(user_settings, 'lottery')
-                            user_command = f"{user_command} `amount: [1-10]`"
-                        else:
-                            user_command = f'`rpg buy lottery ticket`'
+                        user_command = await functions.get_slash_command(user_settings, 'lottery')
+                        user_command = f"{user_command} `amount: [1-10]`"
                         lottery_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                         cooldowns.append(['lottery', lottery_timestring.lower(), lottery_message])
                     else:

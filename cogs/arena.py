@@ -43,39 +43,37 @@ class ArenaCog(commands.Cog):
             'você recentemente iniciou uma arena', #Portuguese
         ]
         if any(search_string in message_title.lower() for search_string in search_strings):
-            user_id = user_name = None
-            user = await functions.get_interaction_user(message)
-            slash_command = True
-            if user is None:
-                slash_command = False
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
-                if user_id_match:
-                    user_id = int(user_id_match.group(1))
-                else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
-                    if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in arena cooldown message.', message)
-                        return
-                if user_id is not None:
-                    user = await message.guild.fetch_member(user_id)
-                else:
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in arena cooldown message.', message)
-                return
+            user_id = user_name = user_command_message = None
+            interaction_user = await functions.get_interaction_user(message)
+            if interaction_user is None:
+                user_command_message = (
+                    await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_ARENA)
+                )
+                if user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Interaction user not found for arena cooldown message.', message)
+                    return
+                interaction_user = user_command_message.author
+            user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+            if user_id_match:
+                user_id = int(user_id_match.group(1))
+                embed_user = await message.guild.fetch_member(user_id)
+            else:
+                user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                if user_name_match:
+                    user_name = user_name_match.group(1)
+                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                if not user_name_match or embed_user is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Embed user not found for arena cooldown message.', message)
+                    return
+            if embed_user != interaction_user: return
             try:
-                user_settings: users.User = await users.get_user(user.id)
+                user_settings: users.User = await users.get_user(interaction_user.id)
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.alert_arena.enabled: return
-            if slash_command:
-                user_command = await functions.get_slash_command(user_settings, 'arena')
-            else:
-                user_command = '`rpg arena`'
+            user_command = await functions.get_slash_command(user_settings, 'arena')
             timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                        message_title)
             if not timestring_match:
@@ -87,7 +85,7 @@ class ArenaCog(commands.Cog):
             if time_left < timedelta(0): return
             reminder_message = user_settings.alert_arena.message.replace('{command}', user_command)
             reminder: reminders.Reminder = (
-                await reminders.insert_user_reminder(user.id, 'arena', time_left,
+                await reminders.insert_user_reminder(interaction_user.id, 'arena', time_left,
                                                      message.channel.id, reminder_message)
             )
             await functions.add_reminder_reaction(message, reminder, user_settings)

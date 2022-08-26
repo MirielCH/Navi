@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 class HorseRaceCog(commands.Cog):
@@ -45,26 +45,27 @@ class HorseRaceCog(commands.Cog):
                 already_registered = True
             else:
                 already_registered = False
-            user_name = None
+            user_name = user_command_message = None
             user = await functions.get_interaction_user(message)
-            slash_command = True
+            slash_command = True if user is not None else False
             if user is None:
-                slash_command = False
                 if message.mentions:
                     user = message.mentions[0]
                 else:
                     user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_HORSE_RACE,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in horse race message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in horse race message.', message)
-                return
+                    user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
@@ -90,19 +91,17 @@ class HorseRaceCog(commands.Cog):
             )
             await functions.add_reminder_reaction(message, reminder, user_settings)
             if reminder.record_exists and user_settings.alert_horse_breed.enabled and not already_registered:
-                if slash_command:
-                    command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
-                    command_race = await functions.get_slash_command(user_settings, 'horse race')
-                    user_command = f"{command_breed} or {command_race}"
-                else:
-                    user_command = '`rpg horse breed` or `rpg horse race`'
+                command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
+                command_race = await functions.get_slash_command(user_settings, 'horse race')
+                user_command = f"{command_breed} or {command_race}"
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'horse')
                 reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'horse', time_left,
                                                          message.channel.id, reminder_message)
                 )
-            if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+            if user_settings.auto_ready_enabled and slash_command:
+                await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

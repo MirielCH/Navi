@@ -6,7 +6,7 @@ import re
 import discord
 from discord.ext import commands
 
-from database import cooldowns, errors, reminders, tracking, users
+from database import errors, reminders, tracking, users
 from resources import emojis, exceptions, functions, settings, strings
 
 
@@ -44,29 +44,33 @@ class WorkCog(commands.Cog):
                 'você já tem alguns recursos', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = user_command = None
+                user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
+                            user_name = user_name_match.group(1)
                         else:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in work cooldown message.', message)
+                            await errors.log_error('User name not found in work cooldown message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in work cooldown message.', message)
-                    return
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_WORK,
+                            user=user, user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for work cooldown message.', message)
+                        return
+                    if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -74,25 +78,18 @@ class WorkCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_work.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
-                    user_command = await functions.get_slash_command(user_settings, interaction.name)
                     last_work_command = interaction.name
                 else:
-                    regex = r"^(rpg\b|<@!?[0-9]+>)\s+(?:"
+                    regex = r"^rpg\s+(?:"
                     for command in strings.WORK_COMMANDS:
-                        regex = fr'{regex}{command}\b|'
-                    regex = fr'{regex.strip("|")})'
-                    user_command_message, user_command = (
-                            await functions.get_message_from_channel_history(message.channel, regex, user)
-                        )
-                    for command in strings.WORK_COMMANDS:
-                        if command in user_command:
+                        if command in user_command_message.content.lower():
                             last_work_command = command
                             break
-                    if user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the work cooldown message.', message)
-                        return
-                    user_command = f'`{user_command}`'
+                if last_work_command is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find a command for work cooldown message.', message)
+                    return
+                user_command = await functions.get_slash_command(user_settings, last_work_command)
                 await user_settings.update(last_work_command=last_work_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -139,7 +136,7 @@ class WorkCog(commands.Cog):
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in excluded_strings)):
-                user_name = user_command = last_work_command = None
+                user_name = user_command = last_work_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
@@ -165,16 +162,22 @@ class WorkCog(commands.Cog):
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
+                        user_name = user_name_match.group(1)
                     else:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in work message.', message)
+                        await errors.log_error('User name not found in work message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error(f'User not found for user name {user_name} in work message.', message)
-                    return
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_WORK,
+                            user=user, user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for work message.', message)
+                        return
+                    if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -187,118 +190,18 @@ class WorkCog(commands.Cog):
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     if interaction.name not in strings.WORK_COMMANDS: return
-                    user_command = await functions.get_slash_command(user_settings, interaction.name)
                     last_work_command = interaction.name
                 else:
-                    regex = r"^(rpg\b|<@!?[0-9]+>)\s+(?:"
+                    regex = r"^rpg\s+(?:"
                     for command in strings.WORK_COMMANDS:
-                        regex = fr'{regex}{command}\b|'
-                    regex = fr'{regex.strip("|")})'
-                    user_command_message, user_command = (
-                            await functions.get_message_from_channel_history(message.channel, regex, user)
-                        )
-                    if user_command_message is None:
-                        search_strings_chainsaw = [
-                            'three chainsaw', #English
-                            'tres motosierras', #Spanish
-                            'três serras', #Portuguese
-                            'ultra log', #All languages
-                            'ultimate log', #All languages
-                        ]
-                        search_strings_bowsaw = [
-                            'two bow saw', #English
-                            'dos arcos de sierra', #Spanish
-                            'dois serra de arcos', #Portuguese
-                        ]
-                        search_strings_axe = [
-                            'axe', #English
-                            'hacha', #Spanish
-                            'machado', #Portuguese
-                        ]
-                        search_strings_bigboat = [
-                            'three nets', #English
-                            'tres redes', #Spanish
-                            'três redes', #Portuguese
-                        ]
-                        search_strings_boat = [
-                            'two nets', #English
-                            'dos redes', #Spanish
-                            'duas redes', #Portuguese
-                        ]
-                        search_strings_net = [
-                            'a **net**', #English
-                            'una **red**', #Spanish
-                            'uma **rede**', #Portuguese
-                        ]
-                        search_strings_greenhouse = [
-                            'two tractors', #English
-                            'dos tractores', #Spanish
-                            'dois tratores', #Portuguese
-                        ]
-                        search_strings_tractor = [
-                            'tractor', #English & Spanish
-                            'trator', #Portuguese
-                        ]
-                        search_strings_ladder = [
-                            'both hands', #English
-                            'ambas manos', #Spanish
-                            'ambas as mãos', #Portuguese
-                        ]
-                        search_strings_dynamite = [
-                            'four drills', #English
-                            'cuatro taladros', #Spanish
-                            'quatro brocas', #Portuguese
-                        ]
-                        search_strings_drill = [
-                            'two drills', #English
-                            'dos taladros', #Spanish
-                            'duas brocas', #Portuguese
-                        ]
-                        search_strings_pickaxe = [
-                            'pickaxe', #English
-                            'un pico', #Spanish
-                            'uma picareta', #Portuguese
-                        ]
-                        if any(search_string in message_content.lower() for search_string in search_strings_chainsaw):
-                            action = 'chainsaw'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_bowsaw):
-                            action = 'bowsaw'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_axe):
-                            action = 'axe'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_bigboat):
-                            action = 'bigboat'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_boat):
-                            action = 'boat'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_net):
-                            action = 'net'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_greenhouse):
-                            action = 'greenhouse'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_tractor):
-                            action = 'tractor'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_ladder):
-                            action = 'ladder'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_dynamite):
-                            action = 'dynamite'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_drill):
-                            action = 'drill'
-                        elif any(search_string in message_content.lower() for search_string in search_strings_pickaxe):
-                            action = 'pickaxe'
-                        elif 'coins' in message_content.lower() or 'ruby' in message_content.lower(): action = 'mine'
-                        elif 'log' in message_content.lower(): action = 'chop'
-                        elif 'fish' in message_content.lower(): action = 'fish'
-                        elif 'apple' in message_content.lower() or 'banana' in message_content.lower():
-                            action = 'pickup'
-                        else: action = '[work command]'
-                        user_command = f'rpg {action}'
-                    user_command = f'`{user_command}`'
-                    for command in strings.WORK_COMMANDS:
-                        if command in user_command:
+                        if command in user_command_message.content.lower():
                             last_work_command = command
                             break
                 if last_work_command is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Couldn\'t find a command for work message.', message)
                     return
+                user_command = await functions.get_slash_command(user_settings, last_work_command)
                 await user_settings.update(last_work_command=last_work_command)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                 if time_left < timedelta(0): return
@@ -308,7 +211,8 @@ class WorkCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 if user_settings.reactions_enabled:
                     search_strings_chop_proc = [
                         'quite a large leaf', #English
@@ -361,55 +265,51 @@ class WorkCog(commands.Cog):
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction(message)
-                if interaction is not None: return
-                user_name = user_command = None
-                user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
-                if user_name_match:
-                    user_name = await functions.encode_text(user_name_match.group(1))
-                else:
-                    await functions.add_warning_reaction(message)
-                    await('User not found in work event non-slash message.', message)
-                    return
-                user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in work event non-slash message.', message)
-                    return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
-                if not user_settings.alert_work.enabled: return
-                regex = r"^(rpg\b|<@!?[0-9]+>)\s+(?:"
-                for command in strings.WORK_COMMANDS:
-                    regex = fr'{regex}{command}\b|'
-                regex = fr'{regex.strip("|")})'
-                user_command_message, user_command = (
-                    await functions.get_message_from_channel_history(message.channel, regex, user)
-                )
-                if user_command_message is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Couldn\'t find a command for the work event non-slash message.', message)
-                    return
-                for command in strings.WORK_COMMANDS:
-                    if command in user_command:
-                        last_work_command = command
-                        break
-                user_command = f'`{user_command}`'
-                await user_settings.update(last_work_command=last_work_command)
-                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                slash_command = True if interaction is not None else False
+                if interaction is None:
+                    user_name = user_command = user_command_message = None
+                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
+                    if user_name_match:
+                        user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_WORK,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await('User not found for work event non-slash message.', message)
+                        return
+                    user = user_command_message.author
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled: return
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    if user_settings.tracking_enabled:
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                    if not user_settings.alert_work.enabled: return
+                    for command in strings.WORK_COMMANDS:
+                        if command in user_command_message.content.lower():
+                            last_work_command = command
+                            break
+                    if last_work_command is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for work event non-slash message.', message)
+                        return
+                    await user_settings.update(last_work_command=last_work_command)
+                    time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
+                    if time_left < timedelta(0): return
+                    reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                    if user_settings.auto_ready_enabled and slash_command:
+                        await functions.call_ready_command(self.bot, message, user)
 
             # Work event slash (all languages)
             if  (':x:' in message_content.lower()
@@ -417,31 +317,30 @@ class WorkCog(commands.Cog):
                  or ':zzz:' in message_content.lower()):
                 user_name = user_command = None
                 interaction = await functions.get_interaction(message)
-                if interaction is None: return
-                if interaction.name not in strings.WORK_COMMANDS: return
-                last_work_command = interaction.name
-                user = interaction.user
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                await user_settings.update(last_work_command=last_work_command)
-                if not user_settings.bot_enabled: return
-                user_command = await functions.get_slash_command(user_settings, interaction.name)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
-                if not user_settings.alert_work.enabled: return
-                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'work', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
-
+                if interaction is not None:
+                    if interaction.name not in strings.WORK_COMMANDS: return
+                    last_work_command = interaction.name
+                    user = interaction.user
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    await user_settings.update(last_work_command=last_work_command)
+                    if not user_settings.bot_enabled: return
+                    user_command = await functions.get_slash_command(user_settings, interaction.name)
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    if user_settings.tracking_enabled:
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                    if not user_settings.alert_work.enabled: return
+                    time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
+                    if time_left < timedelta(0): return
+                    reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'work', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                    if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

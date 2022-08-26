@@ -80,15 +80,10 @@ class MainCog(commands.Cog):
                 f'As you might have guessed, you are not allowed to use this command.',
                 ephemeral=True
             )
+            await errors.log_error(error, ctx)
         else:
             await errors.log_error(error, ctx)
-            if settings.DEBUG_MODE or ctx.author.id in settings.DEV_IDS:
-                await send_error()
-            else:
-                await ctx.respond(
-                    'Well shit, something went wrong here. Sorry about that.',
-                    ephemeral=True
-                )
+            if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:

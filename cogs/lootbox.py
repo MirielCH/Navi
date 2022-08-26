@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 class BuyCog(commands.Cog):
@@ -44,41 +44,37 @@ class BuyCog(commands.Cog):
                 'você já comprou uma lootbox', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 lootbox_name = '[lootbox]'
-                slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_LOOTBOX,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in lootbox cooldown message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await('User not found in lootbox cooldown message.', message)
-                    return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
                 lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'buy')
-                    user_command = f"{user_command} `item: {lootbox_name}`"
-                else:
-                    user_command = f'`rpg buy {lootbox_name}`'
+                user_command = await functions.get_slash_command(user_settings, 'buy')
+                user_command = f"{user_command} `item: {lootbox_name}`"
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -107,18 +103,17 @@ class BuyCog(commands.Cog):
                 and not 'smol coin' in message_content.lower()
                 and not 'horseshoe' in message_content.lower()):
                 user = await functions.get_interaction_user(message)
-                lootbox_type = None
+                lootbox_type = user_command_message = None
                 lootbox_name = '[lootbox]'
                 lootbox_type_match = re.search(r'`(.+?) lootbox`', message_content.lower())
-                slash_command = True
                 if lootbox_type_match:
                     lootbox_type = lootbox_type_match.group(1)
                     lootbox_name = f'{lootbox_type} lootbox'
+                slash_command = True if user is not None else False
                 if user is None:
-                    slash_command = False
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+buy\s+[a-z]+\s+(?:lb\b|lootbox\b)"
+                            message.channel, strings.REGEX_COMMAND_LOOTBOX
                         )
                     )
                     if user_command_message is None:
@@ -131,11 +126,8 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'buy')
-                    user_command = f"{user_command} `item: {lootbox_name}`"
-                else:
-                    user_command = f'`rpg buy {lootbox_name}`'
+                user_command = await functions.get_slash_command(user_settings, 'buy')
+                user_command = f"{user_command} `item: {lootbox_name}`"
                 await user_settings.update(last_lootbox=lootbox_type)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'lootbox')
                 if time_left < timedelta(0): return
@@ -145,7 +137,8 @@ class BuyCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

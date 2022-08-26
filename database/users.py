@@ -44,6 +44,7 @@ class User():
     auto_ready_enabled: bool
     bot_enabled: bool
     clan_name: str
+    context_helper_enabled: bool
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
@@ -101,6 +102,7 @@ class User():
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
+        self.context_helper_enabled = new_settings.context_helper_enabled
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
@@ -183,6 +185,7 @@ class User():
             auto_ready_enabled: bool
             bot_enabled: bool
             clan_name: str
+            context_helper_enabled: bool
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
             hardmode_mode_enabled: bool
@@ -281,6 +284,7 @@ async def _dict_to_user(record: dict) -> User:
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
+            context_helper_enabled = bool(record['context_helper_enabled']),
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
@@ -507,6 +511,7 @@ async def _update_user(user: User, **kwargs) -> None:
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
+        context_helper_enabled: bool
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool

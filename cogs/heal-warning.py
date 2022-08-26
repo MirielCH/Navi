@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, functions, exceptions, logs, settings, strings
+from resources import emojis, functions, exceptions, settings, strings
 
 
 class HealWarningCog(commands.Cog):
@@ -41,32 +41,29 @@ class HealWarningCog(commands.Cog):
             '** encontr', #Spanish, Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings_hunt_together):
-            user_name = None
+            user_name = user_command_message = None
             interaction = await functions.get_interaction(message)
+            user = await functions.get_interaction_user(message)
             search_patterns = [
-                    r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
-                    r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
-                    r"\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
-                ]
+                r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
+                r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                r"\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
+            ]
             user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
             if user_name_match:
                 user_name, partner_name = user_name_match.groups()
-                user_name_encoded = await functions.encode_text(user_name)
-            else:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User or partner not found in hunt together message for heal warning.')
-                return
-            user = await functions.get_interaction_user(message)
             if user is None:
-                user = await functions.get_guild_member_by_name(message.guild, user_name_encoded)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in hunt together message for heal warning.', message)
-                logs.logger.error(
-                    f'User not found in hunt together message for heal warning: {message_content}\n'
-                    f'Full guild.members list:\n{message.guild.members}'
+                user_command_message = (
+                    await functions.get_message_from_channel_history(
+                        message.channel, strings.REGEX_COMMAND_HUNT,
+                        user_name=user_name
+                    )
                 )
-                return
+                if user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found for hunt together heal warning message.', message)
+                    return
+                user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
@@ -119,22 +116,24 @@ class HealWarningCog(commands.Cog):
         # Hunt solo and adventure
         elif any(search_string in message_content.lower() for search_string in search_strings_hunt_adv):
             if 'horslime' in message_content.lower(): return
-            user_name = None
+            user_name = user_command_message = None
             interaction = await functions.get_interaction(message)
-            user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
-            if user_name_match:
-                user_name_encoded = await functions.encode_text(user_name_match.group(1))
-            else:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in hunt/adventure message for heal warning.', message)
-                return
             user = await functions.get_interaction_user(message)
             if user is None:
-                user = await functions.get_guild_member_by_name(message.guild, user_name_encoded)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in hunt/adventure message for heal warning.', message)
-                return
+                user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                if user_name_match:
+                    user_name = user_name_match.group(1)
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_HUNT_ADVENTURE,
+                            user_name=user_name
+                        )
+                    )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in hunt/adventure message for heal warning.', message)
+                        return
+                    user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:

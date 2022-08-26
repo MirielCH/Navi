@@ -83,6 +83,7 @@ EXTENSIONS = [
         'cogs.arena',
         'cogs.cooldowns',
         'cogs.clan',
+        'cogs.context-helper',
         'cogs.custom_reminders',
         'cogs.custom_reminders_old',
         'cogs.daily',

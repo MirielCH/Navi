@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 class DuelCog(commands.Cog):
@@ -44,13 +44,11 @@ class DuelCog(commands.Cog):
                 'você estava em um duelo recentemente', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 interaction_user = await functions.get_interaction_user(message)
-                slash_command = True
                 if interaction_user is None:
-                    slash_command = False
-                    user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+duel\b")
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_DUEL)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -60,32 +58,23 @@ class DuelCog(commands.Cog):
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
+                    embed_user = await message.guild.fetch_member(user_id)
                 else:
                     user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or embed_user is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found in duel cooldown message.', message)
                         return
-                if user_id is not None:
-                    embed_user = await message.guild.fetch_member(user_id)
-                else:
-                    embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if embed_user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Embed user not found in duel cooldown message.', message)
-                    return
                 if embed_user != interaction_user: return
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_duel: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'duel')
-                else:
-                    user_command = '`rpg duel`'
+                user_command = await functions.get_slash_command(user_settings, 'duel')
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:

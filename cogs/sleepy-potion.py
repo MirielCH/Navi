@@ -1,7 +1,6 @@
 # sleepy-potion.py
 
 from datetime import timedelta
-import re
 
 import discord
 from discord.ext import commands
@@ -37,23 +36,28 @@ class SleepyPotionCog(commands.Cog):
             'dormiu por um dia', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
-            user_name = user = None
-            search_patterns = [
-                r'^\*\*(.+?)\*\* drinks', #English
-                r'^\*\*(.+?)\*\* bebe', #Spanish, Portuguese
-            ]
-            user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-            if user_name_match:
-                user_name = await functions.encode_text(user_name_match.group(1))
-            else:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in sleepy potion message.', message)
-                return
-            user = await functions.get_guild_member_by_name(message.guild, user_name)
+            user_name = user = user_command_message = None
+            user = await functions.get_interaction_user(message)
+            slash_command = True if user is not None else False
             if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in sleepy potion message.', message)
-                return
+                search_patterns = [
+                    r'^\*\*(.+?)\*\* drinks', #English
+                    r'^\*\*(.+?)\*\* bebe', #Spanish, Portuguese
+                ]
+                user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if user_name_match:
+                    user_name = user_name_match.group(1)
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_SLEEPY_POTION,
+                            user_name=user_name
+                        )
+                    )
+                if not user_name_match or user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('User not found for sleepy potion message.', message)
+                    return
+                user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
@@ -61,41 +65,8 @@ class SleepyPotionCog(commands.Cog):
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user.id, timedelta(days=1))
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-            if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
-
-        search_strings = [
-            'rides at the speed of light', #English
-            'viaja a la velocidad de la luz', #Spanish
-            'viaja na velocidade', #Portuguese
-        ]
-        if any(search_string in message_content.lower() for search_string in search_strings):
-            user_name = user = None
-            search_patterns = [
-                r'\*\*(.+?)\*\* rides', #English
-                r'\*\*(.+?)\*\* viaja', #Spanish, Portuguese
-            ]
-            user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-            if user_name_match:
-                user_name = await functions.encode_text(user_name_match.group(1))
-            else:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in horse lightspeed message.', message)
-                return
-            user = await functions.get_guild_member_by_name(message.guild, user_name)
-            if user is None:
-                await functions.add_warning_reaction(message)
-                await errors.log_error('User not found in horse lightspeed message.', message)
-                return
-            try:
-                user_settings: users.User = await users.get_user(user.id)
-            except exceptions.FirstTimeUserError:
-                return
-            if not user_settings.bot_enabled: return
-            await reminders.reduce_reminder_time(user.id, 'half')
-            if user_settings.reactions_enabled:
-                await message.add_reaction(emojis.NAVI)
-                await message.add_reaction(emojis.KIRBY_RUN)
-            if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+            if user_settings.auto_ready_enabled and slash_command:
+                await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 class PetTournamentCog(commands.Cog):
@@ -37,10 +37,12 @@ class PetTournamentCog(commands.Cog):
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
+                user_command_message = None
+                slash_command = True if user is not None else False
                 if user is None:
-                    user_command_message, _ = (
+                    user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+pets?\s+tournament\s+[a-z]+\b"
+                            message.channel, strings.REGEX_COMMAND_PETS_TOURNAMENT
                         )
                     )
                     if user_command_message is None:
@@ -72,7 +74,8 @@ class PetTournamentCog(commands.Cog):
                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -97,24 +100,28 @@ class PetTournamentCog(commands.Cog):
                 ]
                 pet_tournament_match = await functions.get_match_from_patterns(search_patterns, embed_footer.lower())
                 if not pet_tournament_match: return
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, embed_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, strings.REGEX_COMMAND_PETS,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in pet list message for pet tournament.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
+                        user = user_command_message.author
                 if user is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in pet list message for pet tournament.', message)

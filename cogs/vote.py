@@ -1,13 +1,12 @@
 # vote.py
 
-from datetime import timedelta
-import re
+from datetime import datetime, timedelta
 
 import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, logs, settings, strings
 
 
 class VoteCog(commands.Cog):
@@ -43,15 +42,10 @@ class VoteCog(commands.Cog):
                     search_patterns = [
                         r'cooldown: \*\*(.+?)\*\*', #All languages
                     ]
-                    timestring_match = await functions.get_match_from_patterns(search_patterns, field.value.lower())
-                    if not timestring_match: return
-                    timestring = timestring_match.group(1)
                     user = await functions.get_interaction_user(message)
-                    slash_command = True
                     if user is None:
-                        slash_command = False
-                        user_command_message, _ = (
-                            await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+vote\b")
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_VOTE)
                         )
                         if user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -63,18 +57,28 @@ class VoteCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled or not user_settings.alert_vote.enabled: return
-                    if slash_command:
-                        user_command = await functions.get_slash_command(user_settings, 'vote')
+                    timestring_match = await functions.get_match_from_patterns(search_patterns, field.value.lower())
+                    if not timestring_match:
+                        try:
+                            reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'vote')
+                        except exceptions.NoDataFoundError:
+                            return
+                        await reminder.delete()
+                        if reminder.record_exists:
+                            logs.logger.error(f'{datetime.utcnow()}: Had an error deleting the horse reminder.')
+                        else:
+                            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                     else:
-                        user_command = '`rpg vote`'
-                    time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                    if time_left < timedelta(0): return
-                    reminder_message = user_settings.alert_vote.message.replace('{command}', user_command)
-                    reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, 'vote', time_left,
-                                                            message.channel.id, reminder_message)
-                    )
-                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                        timestring = timestring_match.group(1)
+                        user_command = await functions.get_slash_command(user_settings, 'vote')
+                        time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                        if time_left < timedelta(0): return
+                        reminder_message = user_settings.alert_vote.message.replace('{command}', user_command)
+                        reminder: reminders.Reminder = (
+                            await reminders.insert_user_reminder(user.id, 'vote', time_left,
+                                                                message.channel.id, reminder_message)
+                        )
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
 # Initialization

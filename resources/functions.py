@@ -1,8 +1,9 @@
 # functions.py
 
+from argparse import ArgumentError
 from datetime import datetime, timedelta
 import re
-from typing import List, Tuple, Union
+from typing import List, Union
 
 import discord
 from discord.ext import commands
@@ -10,7 +11,6 @@ from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
-import database
 from resources import emojis, exceptions, settings, strings
 
 
@@ -31,33 +31,47 @@ async def get_interaction_user(message: discord.Message) -> discord.User:
     return interaction.user if interaction is not None else None
 
 
-async def get_message_from_channel_history(channel: discord.channel, regex: str,
-                                           user: discord.User = None) -> Tuple[discord.Message, str]:
+async def get_message_from_channel_history(channel: discord.channel, regex: Union[str, re.Pattern] = None, limit: int  = 50,
+                                           user: discord.User = None, user_name: str = None) -> discord.Message:
     """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns
     both the message and the matched string. If user is defined, only messages from that user are returned.
 
     Arguments
     ---------
-    channel: Channel to look through
-    regex: String with the regex to match
-    user: User the message author has to match. If None, it will return the first message that matches and is not from
-    a bot.
+    channel: Channel to look through.
+    regex: String with the regex the content has to match. If no regex is defined, the first message with the given user
+    or user name is returned.
+    limit: Amount of messages to check in the history. Defaults to 50.
+    user: User object the message author has to match.
+    user_name: User name the message author has to match. If user is also defined, this is ignored.
+    If both user and user_name are None, this function returns the first message that matches the regex is not from a bot.
 
     Returns
     -------
     Tuple with the found message and the matched string. Returns (None, None) if no message was found.
     Note: The returned string always combines multiple spaces into one.
+
+    Raises
+    ------
+    ArgumentError if regex, user AND user_name are None.
     """
-    message_history = await channel.history(limit=50).flatten()
+    if regex is None and user is None and user_name is None:
+        raise ArgumentError('At least one of these arguments has to be defined: regex, user, user_name.')
+    message_history = await channel.history(limit=limit).flatten()
     for message in message_history:
         if message.content is not None:
-            if user is None and message.author.bot: continue
+            if message.author.bot: continue
+            if not message.content.lower().startswith('rpg'):
+                if not message.mentions: continue
+                if message.mentions[0].id != settings.EPIC_RPG_ID: return
             if user is not None and message.author != user: continue
-            match = re.search(regex, message.content.lower())
-            if match:
-                match_string = ' '.join(match.group(0).split())
-                return (message, match_string)
-    return (None, None)
+            if user_name is not None and await encode_text(user_name) != await encode_text(message.author.name): continue
+            if regex is None:
+                return message
+            else:
+                match = re.search(regex, message.content.lower())
+                if match: return message
+    return None
 
 
 async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
@@ -117,8 +131,7 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
 async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Union[discord.Member, None]:
     """Returns the first guild member found by the given name"""
     for member in guild.members:
-        member_name = await encode_text(member.name)
-        if member_name == user_name: return member
+        if await encode_text(member.name) == await encode_text(user_name): return member
     return None
 
 

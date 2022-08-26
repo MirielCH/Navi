@@ -46,29 +46,33 @@ class TrainingCog(commands.Cog):
                 'você já treinou', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = None
+                user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
                     else:
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
+                            user_name = user_name_match.group(1)
                         else:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in training cooldown message.', message)
+                            await errors.log_error('User name not found in training cooldown message.', message)
                             return
-                    if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in training cooldown message.', message)
-                    return
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_TRAINING_ULTRAINING,
+                            user=user, user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for training cooldown message.', message)
+                        return
+                    if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -76,29 +80,12 @@ class TrainingCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_training.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
-                    if interaction.name.startswith('ultraining'):
-                        user_command = await functions.get_slash_command(user_settings, 'ultraining')
-                        last_training_command = 'ultraining'
-                    else:
-                        user_command = await functions.get_slash_command(user_settings, 'training')
-                        last_training_command = 'training'
+                    last_training_command = 'ultraining' if interaction.name.startswith('ultraining') else 'training'
                 else:
-                    user_command_message, user_command = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+(?:tr\b|training\b|ultr\b|ultraining\b)", user
-                        )
-                    )
-                    if user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the training cooldown message.', message)
-                        return
-                    user_command = re.sub(r'\bultr\b', 'ultraining', user_command)
-                    user_command = re.sub(r'\btr\b', 'training', user_command)
-                    if 'ultraining' in user_command:
-                        last_training_command = 'ultraining'
-                    else:
-                        last_training_command = 'training'
-                    user_command = f'`{user_command}`'
+                    user_command_message_content = re.sub(r'\btr\b', 'training', user_command_message.content.lower())
+                    user_command_message_content = re.sub(r'\bultr\b', 'ultraining', user_command_message_content)
+                    last_training_command = 'ultraining' if 'ultraining' in user_command_message_content else 'training'
+                user_command = await functions.get_slash_command(user_settings, last_training_command)
                 await user_settings.update(last_training_command=last_training_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -123,23 +110,24 @@ class TrainingCog(commands.Cog):
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
+                slash_command = True if user is not None else False
                 if user is None:
-                    slash_command = False
                     user_name_match = re.search(r", \*\*(.+?)\*\*!", message_description)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_ULTRAINING,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in ultraining message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in ultraining message.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -149,10 +137,7 @@ class TrainingCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
                 if not user_settings.alert_training.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'ultraining')
-                else:
-                    user_command = '`rpg ultraining`'
+                user_command = await functions.get_slash_command(user_settings, 'ultraining')
                 await user_settings.update(last_training_command='ultraining')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
                 if time_left < timedelta(0): return
@@ -162,7 +147,8 @@ class TrainingCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
                 search_strings = [
                     'better luck next time', #English
                     'próxima vez', #Spanish, Portuguese
@@ -181,32 +167,30 @@ class TrainingCog(commands.Cog):
                 'muito bem, **', #Portuguese success
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
-                user_name = None
+                user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True
+                slash_command = True if user is not None else False
                 if user is None:
-                    slash_command = False
                     user_name_match = re.search(r", \*\*(.+?)\*\*", message_content)
                     if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, strings.REGEX_COMMAND_TRAINING,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in training message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in training message.', message)
-                    return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'training')
-                else:
-                    user_command = '`rpg training`'
+                user_command = await functions.get_slash_command(user_settings, 'training')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
@@ -220,7 +204,8 @@ class TrainingCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization
