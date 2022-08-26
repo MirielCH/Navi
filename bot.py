@@ -45,6 +45,7 @@ EXTENSIONS = [
         'cogs.arena',
         'cogs.cooldowns',
         'cogs.clan',
+        'cogs.context-helper',
         'cogs.custom-reminders',
         'cogs.daily',
         'cogs.dev',

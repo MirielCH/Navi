@@ -997,6 +997,46 @@ class SettingsUserCog(commands.Cog):
         else:
             await ctx.reply(strings.MSG_ERROR)
 
+    @commands.command(aliases=('context-helper','context-help','contexthelp'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def contexthelper(self, ctx: commands.Context, *args: str) -> None:
+        """Enables/disables context helper"""
+        prefix = ctx.prefix
+        if prefix.lower() == 'rpg ': return
+        user_settings: users.User = await users.get_user(ctx.author.id)
+        syntax = strings.MSG_SYNTAX.format(syntax=f'{prefix}{ctx.invoked_with} [on|off]')
+        if not args:
+            await ctx.reply(
+                f'This command toggles the context helper. The context helper will pop up with helpful command links '
+                f'in certain situations. For example it will show you the trade command after accepting a trading '
+                f'quest or provide a link to claim pets when a pet triggers its time travel skill.\n\n'
+                f'Note:\n'
+                f'{emojis.BP} This helper is far more useful if slash mentions are also enabled.\n'
+                f'{emojis.BP} Some command popups only work if you use slash commands.\n\n'
+                f'{syntax}'
+            )
+            return
+        action = args[0].lower()
+        if action in ('on', 'enable', 'start'):
+            enabled = True
+            action = 'enabled'
+        elif action in ('off', 'disable', 'stop'):
+            enabled = False
+            action = 'disabled'
+        else:
+            await ctx.reply(syntax)
+            return
+        if user_settings.context_helper_enabled == enabled:
+            await ctx.reply(
+                f'**{ctx.author.name}**, the context helper is already {action}.'
+            )
+            return
+        await user_settings.update(context_helper_enabled=enabled)
+        if user_settings.context_helper_enabled == enabled:
+            await ctx.reply(f'**{ctx.author.name}**, the context helper is now **{action}**.')
+        else:
+            await ctx.reply(strings.MSG_ERROR)
+
     @commands.command(aliases=('tr-helper','traininghelper','training-helper'))
     @commands.bot_has_permissions(send_messages=True)
     async def trhelper(self, ctx: commands.Context, *args: str) -> None:

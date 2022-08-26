@@ -78,12 +78,9 @@ class PetsCog(commands.Cog):
                     'las siguientes mascotas están de vuelta instantaneamente', #Spanish
                     'os seguintes pets voltaram instantaneamente', #Portuguese
                 ]
-                command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
                 if any(search_string in message_content.lower() for search_string in search_strings):
-                    await message.reply(f"➜ {command_pets_claim}")
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
                 if 'voidog' in message.content.lower():
-                    await message.reply(f"➜ {command_pets_claim}")
                     if user_settings.reactions_enabled:
                         await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
                         await message.add_reaction(emojis.VOIDOG)
