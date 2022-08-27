@@ -150,7 +150,8 @@ class QuestCog(commands.Cog):
                     interaction = await functions.get_interaction(message)
                     last_quest_command = 'epic quest' if interaction.name.startswith('epic') else 'quest'
                 else:
-                    last_quest_command = 'epic quest' if 'epic quest' in user_command_message.content.lower() else 'quest'
+                    user_command_message_content = re.sub(rf'\b<@!?{settings.EPIC_RPG_ID}>\b', '', message_content.lower())
+                    last_quest_command = 'epic quest' if 'epic quest' in user_command_message_content else 'quest'
                 user_command = await functions.get_slash_command(user_settings, last_quest_command)
                 await user_settings.update(last_quest_command=last_quest_command)
                 timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,

@@ -80,7 +80,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
             except exceptions.FirstTimeUserError:
                 pass
     else:
-        date_time = datetime.utcnow(tzinfo=None)
+        date_time = datetime.utcnow()
         message_content = 'N/A'
         jump_url = 'N/A'
         user_settings = 'N/A'

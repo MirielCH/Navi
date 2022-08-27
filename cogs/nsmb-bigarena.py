@@ -63,7 +63,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 else:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA, user
+                            message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA
                         )
                     )
                     if user_command_message is None:
