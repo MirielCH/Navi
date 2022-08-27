@@ -141,12 +141,12 @@ class ContextHelperCog(commands.Cog):
                 'conseguiu uma **nova missão**', #Portuguese accepted
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None: return
                 if message.reference.cached_message is not None:
                     quest_message = message.reference.cached_message
                 else:
                     quest_message = await message.channel.fetch_message(message.reference.message_id)
-                user = quest_message.interaction.user
-                if user is None: return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

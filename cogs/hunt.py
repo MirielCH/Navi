@@ -60,7 +60,10 @@ class HuntCog(commands.Cog):
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
-                    embed_user = await message.guild.fetch_member(user_id)
+                    try:
+                        embed_user = await message.guild.fetch_member(user_id)
+                    except discord.NotFound:
+                        embed_user = None
                 else:
                     user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:

@@ -56,7 +56,7 @@ class FarmCog(commands.Cog):
                         user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                        if not user_name_match is None:
+                        if user_name_match is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in farm cooldown message.', message)
                             return
