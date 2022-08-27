@@ -45,9 +45,9 @@ class HuntCog(commands.Cog):
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = last_hunt_mode = user_command_message = None
-                slash_command = True if user is not None else False
                 hardmode = together = alone = old = False
                 interaction_user = await functions.get_interaction_user(message)
+                slash_command = True if interaction_user is not None else False
                 if interaction_user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_HUNT)
@@ -246,8 +246,9 @@ class HuntCog(commands.Cog):
                         last_hunt_mode = f'{last_hunt_mode} alone'
                     if old and together and slash_command:
                         last_hunt_mode = f'{last_hunt_mode} old'
+                    last_hunt_mode = last_hunt_mode.strip()
                     if last_hunt_mode != '':
-                        user_command = f'{user_command} `mode: {last_hunt_mode.strip()}`'
+                        user_command = f'{user_command} `mode: {last_hunt_mode}`'
                 if event_mob:
                     if user_settings.last_hunt_mode is not None:
                         user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'

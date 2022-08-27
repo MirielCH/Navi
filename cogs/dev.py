@@ -14,7 +14,7 @@ from resources import emojis, functions, settings, strings, views
 
 class DevCog(commands.Cog):
     """Cog class containing internal dev commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
     dev = SlashCommandGroup(
@@ -192,6 +192,14 @@ class DevCog(commands.Cog):
         else:
             await functions.edit_interaction(interaction, view=None)
             await ctx.followup.send('Sending aborted.')
+
+
+    @dev.command()
+    @commands.is_owner()
+    async def test(self, ctx: discord.ApplicationContext):
+        """Test test"""
+        cmd_settings_user = self.bot.get_application_command('settings', type=discord.commands.SlashCommandGroup)
+        pass
 
 
     @dev.command()

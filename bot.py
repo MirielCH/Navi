@@ -109,7 +109,7 @@ EXTENSIONS = [
         'cogs.pets',
         'cogs.quest',
         'cogs.ruby-counter',
-        'cogs.settings_clan',
+        'cogs.settings',
         'cogs.settings_guild',
         'cogs.settings_partner',
         'cogs.settings_user',

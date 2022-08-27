@@ -3,7 +3,7 @@
 from argparse import ArgumentError
 from datetime import datetime, timedelta
 import re
-from typing import List, Union
+from typing import List, Tuple, Union
 
 import discord
 from discord.ext import commands
@@ -63,7 +63,12 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
             if message.author.bot: continue
             if not message.content.lower().startswith('rpg'):
                 if not message.mentions: continue
-                if message.mentions[0].id != settings.EPIC_RPG_ID: return
+                correct_mention = False
+                for mentioned_user in message.mentions:
+                    if mentioned_user.id == settings.EPIC_RPG_ID:
+                        correct_mention = True
+                        break
+                if not correct_mention: return
             if user is not None and message.author != user: continue
             if user_name is not None and await encode_text(user_name) != await encode_text(message.author.name): continue
             if regex is None:
@@ -886,3 +891,7 @@ async def edit_interaction(interaction: Union[discord.Interaction, discord.Webho
         await interaction.edit(content=content, embed=embed, view=view)
     else:
         await interaction.edit_original_message(content=content, file=file, embed=embed, view=view)
+
+
+async def bool_to_text(boolean: bool) -> str:
+        return f'{emojis.GREENTICK}`Enabled`' if boolean else f'{emojis.REDTICK}`Disabled`'

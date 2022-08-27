@@ -123,7 +123,7 @@ async def get_all_prefixes(bot: commands.Bot, ctx: commands.Context) -> Tuple:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (guild_id,))
         record = cur.fetchone()
-        prefixes = ['rpg ','Rpg ','rPg ','rpG ','RPg ','rPG ','RpG ','RPG ']
+        prefixes = []
         if record:
             prefix_db = record['prefix'].replace('"','')
             prefix_db_mixed_case = await _get_mixed_case_prefixes(prefix_db)
