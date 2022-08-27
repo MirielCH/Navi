@@ -250,11 +250,13 @@ class SettingsUserCog(commands.Cog):
             alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
             if not alert_settings.enabled:
                 ready_event_activities.remove(activity)
-
+        """
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
             title = f'{user_discord.name}\'S READY'.upper()
         )
+        """
+        answer = answer_title = f'**{user_discord.name}\'S READY**'.upper()
         if ready_command_activities:
             field_ready_commands = ''
             ready_commands = []
@@ -294,7 +296,12 @@ class SettingsUserCog(commands.Cog):
                     f'{emojis.BP} {command}'
                 )
             if field_ready_commands != '':
-                embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**COMMANDS**\n'
+                    f'{field_ready_commands.strip()}'
+                )
+                #embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
         if ready_event_activities:
             field_ready_events = ''
             ready_events = []
@@ -314,19 +321,36 @@ class SettingsUserCog(commands.Cog):
                     f'{emojis.BP} {event}'
                 )
             if field_ready_events != '':
-                embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**EVENTS**\n'
+                    f'{field_ready_events.strip()}'
+                )
+                #embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
         clan_alert_enabled = getattr(clan, 'alert_enabled', False)
         if not clan_reminder and clan_alert_enabled:
             field_ready_clan = f"{emojis.BP} {clan_command}"
-            embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
-        if not embed.fields: embed.description = f'{emojis.BP} All done!'
+            answer = (
+                f'{answer}\n'
+                f'**GUILD CHANNEL**\n'
+                f'{field_ready_clan}'
+            )
+            #embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
+        if answer == answer_title:
+            answer = (
+                f'{answer}\n'
+                f'{emojis.BP} All done!'
+            )
+        #if not embed.fields: embed.description = f'{emojis.BP} All done!'
         if auto_ready:
-            prefix = await guilds.get_prefix(message)
-            embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
-            await message.channel.send(embed=embed)
+            #prefix = await guilds.get_prefix(message)
+            #embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
+            #await message.channel.send(embed=embed)
+            await message.channel.send(answer)
         else:
             view = views.AutoReadyView(user, user_settings)
-            interaction_message = await message.reply(embed=embed, view=view)
+            #interaction_message = await message.reply(embed=embed, view=view)
+            interaction_message = await message.reply(answer, view=view)
             view.message = interaction_message
             await view.wait()
             if view.value == 'timeout':

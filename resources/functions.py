@@ -63,8 +63,8 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
             if not message.content.lower().startswith('rpg'):
                 if not message.mentions: continue
                 correct_mention = False
-                for user in message.mentions:
-                    if user.id == settings.EPIC_RPG_ID:
+                for mentioned_user in message.mentions:
+                    if mentioned_user.id == settings.EPIC_RPG_ID:
                         correct_mention = True
                         break
                 if not correct_mention: return
