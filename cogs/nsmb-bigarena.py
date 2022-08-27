@@ -135,17 +135,21 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                         user_name_match = re.search(r"^\*\*(.+?)\*\*,", message_content)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA,
-                                    user_name=user_name
-                                )
-                            )
-                        if not user_name_match or user_command_message is None:
+                        else:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in big-arena or minin\'tboss message.', message)
+                            await errors.log_error('User name not found in big-arena or minin\'tboss message.', message)
                             return
-                        user = user_command_message.author
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA,
+                            user=user, user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User command not found for big-arena or minin\'tboss message.', message)
+                        return
+                    if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

@@ -246,8 +246,9 @@ class HuntCog(commands.Cog):
                         last_hunt_mode = f'{last_hunt_mode} alone'
                     if old and together and slash_command:
                         last_hunt_mode = f'{last_hunt_mode} old'
+                    last_hunt_mode = last_hunt_mode.strip()
                     if last_hunt_mode != '':
-                        user_command = f'{user_command} `mode: {last_hunt_mode.strip()}`'
+                        user_command = f'{user_command} `mode: {last_hunt_mode}`'
                 if event_mob:
                     if user_settings.last_hunt_mode is not None:
                         user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'

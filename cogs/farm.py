@@ -237,13 +237,13 @@ class FarmCog(commands.Cog):
                 interaction = await functions.get_interaction(message)
                 if interaction is not None:
                     if interaction.name != 'farm': return
-                    user_command = await functions.get_slash_command(user_settings, 'farm')
                     user = interaction.user
                     try:
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled: return
+                    user_command = await functions.get_slash_command(user_settings, 'farm')
                     current_time = datetime.utcnow().replace(microsecond=0)
                     if user_settings.tracking_enabled:
                         await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
