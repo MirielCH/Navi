@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class WorkCog(commands.Cog):
@@ -48,12 +48,12 @@ class WorkCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                         else:
@@ -62,7 +62,7 @@ class WorkCog(commands.Cog):
                             return
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_WORK,
+                            message.channel, regex.COMMAND_WORK,
                             user=user, user_name=user_name
                         )
                     )
@@ -80,7 +80,6 @@ class WorkCog(commands.Cog):
                     interaction = await functions.get_interaction(message)
                     last_work_command = interaction.name
                 else:
-                    regex = r"^rpg\s+(?:"
                     for command in strings.WORK_COMMANDS:
                         if command in user_command_message.content.lower():
                             last_work_command = command
@@ -91,7 +90,7 @@ class WorkCog(commands.Cog):
                     return
                 user_command = await functions.get_slash_command(user_settings, last_work_command)
                 await user_settings.update(last_work_command=last_work_command)
-                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
+                timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
                     await functions.add_warning_reaction(message)
@@ -169,7 +168,7 @@ class WorkCog(commands.Cog):
                         return
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_WORK,
+                            message.channel, regex.COMMAND_WORK,
                             user=user, user_name=user_name
                         )
                     )
@@ -192,7 +191,6 @@ class WorkCog(commands.Cog):
                     if interaction.name not in strings.WORK_COMMANDS: return
                     last_work_command = interaction.name
                 else:
-                    regex = r"^rpg\s+(?:"
                     for command in strings.WORK_COMMANDS:
                         if command in user_command_message.content.lower():
                             last_work_command = command
@@ -268,12 +266,12 @@ class WorkCog(commands.Cog):
                 slash_command = True if interaction is not None else False
                 if interaction is None:
                     user_name = user_command = user_command_message = None
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
                     if user_name_match:
                         user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_WORK,
+                                message.channel, regex.COMMAND_WORK,
                                 user_name=user_name
                             )
                         )

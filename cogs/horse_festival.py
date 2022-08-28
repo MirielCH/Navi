@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, strings
+from resources import emojis, exceptions, functions, logs, regex, strings
 
 
 class HorseFestivalCog(commands.Cog):
@@ -45,11 +45,11 @@ class HorseFestivalCog(commands.Cog):
                     user_command = '`/hf minirace`'
                 else:
                     user_command = '`rpg hf minirace`'
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = await functions.encode_text(user_name_match.group(1))
                         else:
@@ -109,7 +109,7 @@ class HorseFestivalCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_HF_LIGHTSPEED,
+                                message.channel, regex.COMMAND_HF_LIGHTSPEED,
                                 user_name=user_name
                             )
                         )
@@ -227,7 +227,7 @@ class HorseFestivalCog(commands.Cog):
                     user_command = '`/hf minirace`'
                 else:
                     user_command = '`rpg hf minirace`'
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:
@@ -285,11 +285,11 @@ class HorseFestivalCog(commands.Cog):
                     user_command = '`/hf megarace action: start`'
                 else:
                     user_command = '`rpg hf megarace start`'
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = await functions.encode_text(user_name_match.group(1))
                         else:
@@ -391,7 +391,7 @@ class HorseFestivalCog(commands.Cog):
                     user_command = '`/hf megarace action: start`'
                 else:
                     user_command = '`rpg hf megarace start`'
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_field0_name)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_field0_name)
                     if user_name_match:
                         user_name = await functions.encode_text(user_name_match.group(1))
                     else:
@@ -444,11 +444,11 @@ class HorseFestivalCog(commands.Cog):
                 user_name = user_id = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = await functions.encode_text(user_name_match.group(1))
                         else:

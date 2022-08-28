@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import cooldowns, clans, errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class QuestCog(commands.Cog):
@@ -56,17 +56,17 @@ class QuestCog(commands.Cog):
                 user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_QUEST,
+                                    message.channel, regex.COMMAND_QUEST,
                                     user_name=user_name
                                 )
                             )
@@ -118,12 +118,12 @@ class QuestCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                         else:
@@ -132,7 +132,7 @@ class QuestCog(commands.Cog):
                             return
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_QUEST_EPIC_QUEST,
+                            message.channel, regex.COMMAND_QUEST_EPIC_QUEST,
                             user=user, user_name=user_name
                         )
                     )
@@ -154,7 +154,7 @@ class QuestCog(commands.Cog):
                     last_quest_command = 'epic quest' if 'epic quest' in user_command_message_content else 'quest'
                 user_command = await functions.get_slash_command(user_settings, last_quest_command)
                 await user_settings.update(last_quest_command=last_quest_command)
-                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
+                timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
                     await functions.add_warning_reaction(message)
@@ -180,17 +180,17 @@ class QuestCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_QUEST_EPIC_QUEST,
+                                    message.channel, regex.COMMAND_QUEST_EPIC_QUEST,
                                     user_name=user_name
                                 )
                             )
@@ -229,17 +229,17 @@ class QuestCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_EPIC_QUEST,
+                                    message.channel, regex.COMMAND_EPIC_QUEST,
                                     user_name=user_name
                                 )
                             )
@@ -296,12 +296,12 @@ class QuestCog(commands.Cog):
                     if message.mentions:
                         user = message.mentions[0]
                     else:
-                        user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                        user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_QUEST,
+                                    message.channel, regex.COMMAND_QUEST,
                                     user_name=user_name
                                 )
                             )

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, settings, strings
+from resources import emojis, exceptions, functions, logs, regex, settings, strings
 
 
 class HorseCog(commands.Cog):
@@ -48,7 +48,7 @@ class HorseCog(commands.Cog):
                 if interaction_user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_HORSE
+                            message.channel, regex.COMMAND_HORSE
                         )
                     )
                     interaction_user = user_command_message.author
@@ -56,12 +56,12 @@ class HorseCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Interaction user not found in horse cooldown message.', message)
                         return
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                     embed_user = await message.guild.fetch_member(user_id)
                 else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
@@ -78,7 +78,7 @@ class HorseCog(commands.Cog):
                 command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
                 command_race = await functions.get_slash_command(user_settings, 'horse race')
                 user_command = f"{command_breed} or {command_race}"
-                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
+                timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                         message_title)
                 if not timestring_match:
                     await functions.add_warning_reaction(message)
@@ -111,7 +111,7 @@ class HorseCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_OMEGA_HORSE_TOKEN,
+                                message.channel, regex.COMMAND_OMEGA_HORSE_TOKEN,
                                 user_name=user_name
                             )
                         )

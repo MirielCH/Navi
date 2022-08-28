@@ -3,8 +3,8 @@
 import discord
 from discord.ext import commands
 
-from database import errors, users
-from resources import exceptions, functions, settings, strings
+from database import users
+from resources import exceptions, functions, settings
 
 
 class HelperContextCog(commands.Cog):

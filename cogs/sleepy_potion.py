@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class SleepyPotionCog(commands.Cog):
@@ -49,7 +49,7 @@ class SleepyPotionCog(commands.Cog):
                     user_name = user_name_match.group(1)
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_SLEEPY_POTION,
+                            message.channel, regex.COMMAND_SLEEPY_POTION,
                             user_name=user_name
                         )
                     )

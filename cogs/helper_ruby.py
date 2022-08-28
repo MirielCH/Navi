@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, functions, settings, strings, views
+from resources import emojis, exceptions, functions, regex, settings, strings, views
 
 
 class HelperRubyCog(commands.Cog):
@@ -54,7 +54,7 @@ class HelperRubyCog(commands.Cog):
                         if user_name in strings.EPIC_NPC_NAMES: user_name = user_name_match.group(2)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_TRADE_RUBY,
+                                message.channel, regex.COMMAND_TRADE_RUBY,
                                 user_name=user_name
                             )
                         )
@@ -97,17 +97,17 @@ class HelperRubyCog(commands.Cog):
                 user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_LOOTBOX,
+                                    message.channel, regex.COMMAND_LOOTBOX,
                                     user_name=user_name
                                 )
                             )
@@ -147,7 +147,7 @@ class HelperRubyCog(commands.Cog):
                 if interaction_user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_INVENTORY
+                            message.channel, regex.COMMAND_INVENTORY
                         )
                     )
                     if user_command_message is None:
@@ -155,12 +155,12 @@ class HelperRubyCog(commands.Cog):
                         await errors.log_error('Couldn\'t find an interaction user for the inventory message.', message)
                         return
                     interaction_user = user_command_message.author
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                     embed_user = await message.guild.fetch_member(user_id)
                 else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
@@ -201,12 +201,12 @@ class HelperRubyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_TRAINING,
+                                message.channel, regex.COMMAND_TRAINING,
                                 user_name=user_name
                             )
                         )
@@ -262,7 +262,7 @@ class HelperRubyCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_SELL_RUBY
+                            message.channel, regex.COMMAND_SELL_RUBY
                         )
                     )
                     if user_command_message is None:
@@ -309,7 +309,7 @@ class HelperRubyCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_WORK,
+                                message.channel, regex.COMMAND_WORK,
                                 user_name=user_name
                             )
                         )
@@ -352,7 +352,7 @@ class HelperRubyCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_CRAFT_RUBY_SWORD
+                            message.channel, regex.COMMAND_CRAFT_RUBY_SWORD
                         )
                     )
                     if user_command_message is None:
@@ -382,7 +382,7 @@ class HelperRubyCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_CRAFT_RUBY_ARMOR
+                            message.channel, regex.COMMAND_CRAFT_RUBY_ARMOR
                         )
                     )
                     if user_command_message is None:
@@ -412,7 +412,7 @@ class HelperRubyCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_CRAFT_COIN_SWORD
+                            message.channel, regex.COMMAND_CRAFT_COIN_SWORD
                         )
                     )
                     if user_command_message is None:
@@ -442,7 +442,7 @@ class HelperRubyCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_FORGE_ULTRAEDGY_ARMOR
+                            message.channel, regex.COMMAND_FORGE_ULTRAEDGY_ARMOR
                         )
                     )
                     if user_command_message is None:

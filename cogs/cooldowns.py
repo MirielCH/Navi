@@ -8,7 +8,7 @@ from discord.ext import commands
 from datetime import timedelta
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class CooldownsCog(commands.Cog):
@@ -51,7 +51,7 @@ class CooldownsCog(commands.Cog):
             if interaction_user is None:
                 user_command_message = (
                     await functions.get_message_from_channel_history(
-                        message.channel, strings.REGEX_COMMAND_COOLDOWNS
+                        message.channel, regex.COMMAND_COOLDOWNS
                     )
                 )
                 if user_command_message is None:
@@ -59,12 +59,12 @@ class CooldownsCog(commands.Cog):
                     await errors.log_error('Couldn\'t find an interaction user for the cooldowns message.', message)
                     return
                 interaction_user = user_command_message.author
-            user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+            user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
             if user_id_match:
                 user_id = int(user_id_match.group(1))
                 embed_user = await message.guild.fetch_member(user_id)
             else:
-                user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
@@ -285,17 +285,17 @@ class CooldownsCog(commands.Cog):
             user_id = user_name = user_command_message = None
             user = await functions.get_interaction_user(message)
             if user is None:
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                     user = await message.guild.fetch_member(user_id)
                 else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_COOLDOWNS,
+                                message.channel, regex.COMMAND_COOLDOWNS,
                                 user_name=user_name
                             )
                         )

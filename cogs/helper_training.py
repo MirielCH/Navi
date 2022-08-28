@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from database import errors, users
 from database import settings as settings_db
-from resources import emojis, exceptions, functions, settings, strings, views
+from resources import emojis, exceptions, functions, settings, regex, views
 
 
 class HelperTrainingCog(commands.Cog):
@@ -82,12 +82,12 @@ class HelperTrainingCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_TRAINING,
+                                message.channel, regex.COMMAND_TRAINING,
                                 user_name=user_name
                             )
                         )

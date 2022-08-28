@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import exceptions, functions, settings, strings
+from resources import exceptions, functions, regex, settings
 
 
 class LotteryCog(commands.Cog):
@@ -47,7 +47,7 @@ class LotteryCog(commands.Cog):
                 user_command_message = None
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_LOTTERY)
+                        await functions.get_message_from_channel_history(message.channel, regex.COMMAND_LOTTERY)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -99,7 +99,7 @@ class LotteryCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_LOTTERY,
+                                message.channel, regex.COMMAND_LOTTERY,
                                 user_name=user_name
                             )
                         )

@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users, tracking
-from resources import emojis, functions, exceptions, settings, strings
+from resources import emojis, functions, exceptions, regex, settings, strings
 
 
 class TrackingCog(commands.Cog):
@@ -129,7 +129,7 @@ class TrackingCog(commands.Cog):
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_TIME_TRAVEL,
+                                    message.channel, regex.COMMAND_TIME_TRAVEL,
                                     user_name=user_name
                                 )
                             )

@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, settings, regex
 
 
 class HelperPetsCog(commands.Cog):
@@ -84,12 +84,12 @@ class HelperPetsCog(commands.Cog):
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
                     if not user_name_match:
-                        user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_TRAINING,
+                                message.channel, regex.COMMAND_TRAINING,
                                 user_name=user_name
                             )
                         )

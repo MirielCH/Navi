@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import exceptions, functions, settings, strings
+from resources import exceptions, functions, regex, settings
 
 
 class NotSoMiniBossBigArenaCog(commands.Cog):
@@ -63,7 +63,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 else:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA
+                            message.channel, regex.COMMAND_NSMB_BIGARENA
                         )
                     )
                     if user_command_message is None:
@@ -137,7 +137,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_NSMB_BIGARENA,
+                                    message.channel, regex.COMMAND_NSMB_BIGARENA,
                                     user_name=user_name
                                 )
                             )

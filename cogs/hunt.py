@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import cooldowns, errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class HuntCog(commands.Cog):
@@ -50,19 +50,19 @@ class HuntCog(commands.Cog):
                 slash_command = True if interaction_user is not None else False
                 if interaction_user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_HUNT)
+                        await functions.get_message_from_channel_history(message.channel, regex.COMMAND_HUNT)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Interaction user not found for hunt cooldown message.', message)
                         return
                     interaction_user = user_command_message.author
-                user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                     embed_user = await message.guild.fetch_member(user_id)
                 else:
-                    user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
@@ -104,7 +104,7 @@ class HuntCog(commands.Cog):
                 user_command = await functions.get_slash_command(user_settings, 'hunt')
                 if user_settings.last_hunt_mode != '':
                     user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
-                timestring_match = await functions.get_match_from_patterns(strings.PATTERNS_COOLDOWN_TIMESTRING,
+                timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
                     await functions.add_warning_reaction(message)
@@ -215,7 +215,7 @@ class HuntCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_HUNT,
+                            message.channel, regex.COMMAND_HUNT,
                             user_name=user_name
                         )
                     )
@@ -442,12 +442,12 @@ class HuntCog(commands.Cog):
                 if interaction is None:
                     user_name = user_command = last_hunt_mode = user_command_message = None
                     hardmode = together = found_together = alone = False
-                    user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_HUNT,
+                                message.channel, regex.COMMAND_HUNT,
                                 user_name=user_name
                             )
                         )
