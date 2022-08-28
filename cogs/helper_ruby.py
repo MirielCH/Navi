@@ -1,4 +1,4 @@
-# ruby_counter.py
+# helper_ruby.py
 
 import re
 
@@ -9,7 +9,7 @@ from database import errors, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
-class RubyCounterCog(commands.Cog):
+class HelperRubyCog(commands.Cog):
     """Cog that contains all commands related to the ruby counter"""
     def __init__(self, bot):
         self.bot = bot
@@ -464,4 +464,4 @@ class RubyCounterCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(RubyCounterCog(bot))
+    bot.add_cog(HelperRubyCog(bot))

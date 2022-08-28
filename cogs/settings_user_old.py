@@ -13,7 +13,7 @@ from database import clans, guilds, reminders, users
 from resources import emojis, functions, exceptions, settings, strings, views
 
 
-class SettingsUserCog(commands.Cog):
+class SettingsUserOldCog(commands.Cog):
     """Cog with user settings commands"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -1263,7 +1263,7 @@ class SettingsUserCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(SettingsUserCog(bot))
+    bot.add_cog(SettingsUserOldCog(bot))
 
 
 # --- Embeds ---

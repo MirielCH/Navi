@@ -1,4 +1,4 @@
-# training-helper.py
+# helper_training.py
 
 import re
 from datetime import datetime
@@ -11,7 +11,7 @@ from database import settings as settings_db
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
-class TrainingHelperCog(commands.Cog):
+class HelperTrainingCog(commands.Cog):
     """Cog that contains the training helper detection"""
     def __init__(self, bot):
         self.bot = bot
@@ -130,4 +130,4 @@ class TrainingHelperCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(TrainingHelperCog(bot))
+    bot.add_cog(HelperTrainingCog(bot))

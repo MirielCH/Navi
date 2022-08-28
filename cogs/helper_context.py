@@ -1,4 +1,4 @@
-# context-helper.py
+# helper_context.py
 
 import discord
 from discord.ext import commands
@@ -7,7 +7,7 @@ from database import errors, users
 from resources import exceptions, functions, settings, strings
 
 
-class ContextHelperCog(commands.Cog):
+class HelperContextCog(commands.Cog):
     """Cog that contains the training helper detection"""
     def __init__(self, bot):
         self.bot = bot
@@ -228,4 +228,4 @@ class ContextHelperCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(ContextHelperCog(bot))
+    bot.add_cog(HelperContextCog(bot))

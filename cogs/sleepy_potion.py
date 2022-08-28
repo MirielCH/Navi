@@ -1,4 +1,4 @@
-# sleepy-potion.py
+# sleepy_potion.py
 
 from datetime import timedelta
 

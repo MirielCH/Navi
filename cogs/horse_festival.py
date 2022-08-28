@@ -1,4 +1,4 @@
-# horse-festival.py
+# horse_festival.py
 # This is outdated, needs to be reworked next year
 
 from datetime import datetime, timedelta

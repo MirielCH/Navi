@@ -1,4 +1,4 @@
-# pet-helper.py
+# helper_pets.py
 
 import re
 
@@ -9,7 +9,7 @@ from database import errors, users
 from resources import emojis, exceptions, functions, settings, strings
 
 
-class PetHelperCog(commands.Cog):
+class HelperPetsCog(commands.Cog):
     """Cog that contains the pets detection commands"""
     def __init__(self, bot):
         self.bot = bot
@@ -161,4 +161,4 @@ class PetHelperCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(PetHelperCog(bot))
+    bot.add_cog(HelperPetsCog(bot))

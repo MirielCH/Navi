@@ -1,4 +1,4 @@
-# dungeon-miniboss.py
+# dungeon_miniboss.py
 
 from datetime import timedelta
 import re

@@ -64,7 +64,6 @@ class SettingsCog(commands.Cog):
         """Manage user settings"""
         await settings_cmd.command_settings_user(self.bot, ctx)
 
-
     # Events
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:

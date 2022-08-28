@@ -1,4 +1,4 @@
-# heal-warning.py
+# helper_heal.py
 
 import re
 
@@ -9,7 +9,7 @@ from database import errors, users
 from resources import emojis, functions, exceptions, settings, strings
 
 
-class HealWarningCog(commands.Cog):
+class HelperHealCog(commands.Cog):
     """Cog that contains the heal warning detection"""
     def __init__(self, bot):
         self.bot = bot
@@ -184,4 +184,4 @@ class HealWarningCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(HealWarningCog(bot))
+    bot.add_cog(HelperHealCog(bot))

@@ -1,4 +1,4 @@
-# pet-tournament.py
+# pets_tournament.py
 
 from datetime import datetime, timedelta
 import re
@@ -10,7 +10,7 @@ from database import errors, reminders, users
 from resources import exceptions, functions, settings, strings
 
 
-class PetTournamentCog(commands.Cog):
+class PetsTournamentCog(commands.Cog):
     """Cog that contains the horse race detection"""
     def __init__(self, bot):
         self.bot = bot
@@ -151,4 +151,4 @@ class PetTournamentCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(PetTournamentCog(bot))
+    bot.add_cog(PetsTournamentCog(bot))

@@ -10,7 +10,7 @@ from database import users
 from resources import emojis, exceptions, functions, strings
 
 
-class SettingsPartnerCog(commands.Cog):
+class SettingsPartnerOldCog(commands.Cog):
     """Cog with partner settings commands"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -252,4 +252,4 @@ class SettingsPartnerCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(SettingsPartnerCog(bot))
+    bot.add_cog(SettingsPartnerOldCog(bot))

@@ -1,4 +1,4 @@
-# horse-race.py
+# horse_race.py
 
 from datetime import timedelta
 import re

@@ -1,4 +1,4 @@
-# nsmb-bigarena.py
+# nsmb_bigarena.py
 
 from datetime import timedelta
 import re

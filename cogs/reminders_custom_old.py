@@ -1,4 +1,4 @@
-# custom-reminders.py
+# reminders_custom_old.py
 
 from discord.ext import commands
 
@@ -6,7 +6,7 @@ from database import reminders, users
 from resources import emojis, exceptions, functions, strings
 
 
-class CustomRemindersOldCog(commands.Cog):
+class RemindersCustomOldCog(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     """Cog that contains custom reminder commands"""
@@ -112,4 +112,4 @@ class CustomRemindersOldCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(CustomRemindersOldCog(bot))
+    bot.add_cog(RemindersCustomOldCog(bot))
