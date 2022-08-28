@@ -129,15 +129,7 @@ class EventsCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_field0_name = message_field1_name = message_field0_value = message_field1_value = message_author = ''
-            message_description = ''
-            if embed.description: message_description = str(embed.description)
-            if embed.author:
-                message_author = str(embed.author.name)
-                icon_url = embed.author.icon_url
-            if embed.fields:
-                message_field0_name = embed.fields[0].name
-                message_field0_value = embed.fields[0].value
+            message_field1_name = message_field1_value = ''
             if len(embed.fields) > 1:
                 message_field1_name = embed.fields[1].name
                 message_field1_value = embed.fields[1].value

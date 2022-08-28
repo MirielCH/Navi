@@ -298,6 +298,7 @@ class WorkCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a command for work event non-slash message.', message)
                         return
                     await user_settings.update(last_work_command=last_work_command)
+                    user_command = await functions.get_slash_command(user_settings, last_work_command)
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_work.message.replace('{command}', user_command)

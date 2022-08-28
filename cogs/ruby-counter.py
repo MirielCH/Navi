@@ -107,7 +107,7 @@ class RubyCounterCog(commands.Cog):
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, strings.REGEX_COMMAND_LOOTBOX,
+                                    message.channel, strings.REGEX_COMMAND_OPEN,
                                     user_name=user_name
                                 )
                             )

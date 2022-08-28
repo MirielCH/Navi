@@ -571,7 +571,7 @@ REGEX_NAME_FROM_MESSAGE = re.compile(r"\s\*\*(.+?)\*\*\s")
 REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
 
 #REGEX_PREFIX = rf'^(rpg\b\s+|<@!?{settings.EPIC_RPG_ID}>\s+)?'
-REGEX_PREFIX = rf'^(?:rpg\b\s+)?'
+REGEX_PREFIX = rf'(?:rpg\b\s+)?'
 REGEX_COMMAND_ADVENTURE = re.compile(rf"{REGEX_PREFIX}(?:\badv\b|\badventure\b)")
 REGEX_COMMAND_ARENA = re.compile(rf"{REGEX_PREFIX}\barena\b")
 REGEX_COMMAND_CLAN_RAID = re.compile(rf"{REGEX_PREFIX}\bguild\b\s+\braid\b")

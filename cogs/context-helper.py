@@ -119,8 +119,11 @@ class ContextHelperCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
                 search_strings_tt = [
                     'the following pets are back instantly', #English
+                    'voidog pet made all pets travel', #English VOIDog
                     'las siguientes mascotas están de vuelta instantaneamente', #Spanish
+                    'voidog pet made all pets travel', #Spanish VOIDog, MISSING
                     'os seguintes pets voltaram instantaneamente', #Portuguese
+                    'voidog pet made all pets travel', #Portuguese VOIDog, MISSING
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_tt):
                     command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')

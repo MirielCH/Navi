@@ -444,7 +444,7 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction_user(message)
                 if interaction is None:
                     user_name = user_command = last_hunt_mode = user_command_message = None
-                    hardmode = together = found_together = alone = False
+                    hardmode = together = found_together = alone = old = False
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
