@@ -85,10 +85,8 @@ EXTENSIONS = [
         'cogs.clan',
         'cogs.context-helper',
         'cogs.custom_reminders',
-        'cogs.custom_reminders_old',
         'cogs.daily',
         'cogs.dev',
-        'cogs.dev_old',
         'cogs.duel',
         'cogs.dungeon-miniboss',
         'cogs.events',
@@ -111,8 +109,6 @@ EXTENSIONS = [
         'cogs.ruby-counter',
         'cogs.settings',
         'cogs.settings_guild',
-        'cogs.settings_partner',
-        'cogs.settings_user',
         'cogs.sleepy-potion',
         'cogs.tasks',
         'cogs.tracking',
@@ -121,6 +117,11 @@ EXTENSIONS = [
         'cogs.vote',
         'cogs.weekly',
         'cogs.work',
+        'cogs.dev_old',
+        'cogs.settings_clan_old',
+        'cogs.custom_reminders_old',
+        'cogs.settings_partner_old',
+        'cogs.settings_user_old',
     ]
 
 if __name__ == '__main__':

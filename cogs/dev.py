@@ -175,7 +175,7 @@ class DevCog(commands.Cog):
             title = embed_title,
             description = message.content
         )
-        view = views.ConfirmCancelView(ctx)
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
             f'I will send the following embed to the channel `{channel.name}`. Proceed?',
             view=view,
@@ -206,7 +206,7 @@ class DevCog(commands.Cog):
     @commands.is_owner()
     async def shutdown(self, ctx: discord.ApplicationContext):
         """Shuts down the bot"""
-        view = views.ConfirmCancelView(ctx)
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
         view.interaction = interaction
         await view.wait()

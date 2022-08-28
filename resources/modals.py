@@ -6,7 +6,8 @@ import re
 import discord
 from discord.ui import InputText, Modal
 
-from resources import emojis, strings
+from database import reminders
+from resources import emojis, exceptions, strings
 
 
 class SetStealthThresholdModal(Modal):
@@ -21,18 +22,27 @@ class SetStealthThresholdModal(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        stealth_threshold = self.children[0].value
+        new_threshold = self.children[0].value
         try:
-            stealth_threshold = int(stealth_threshold)
+            new_threshold = int(new_threshold)
         except ValueError:
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('That is not a valid number.', ephemeral=True)
             return
-        if not 1 <= stealth_threshold <= 95:
+        if not 1 <= new_threshold <= 95:
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('The stealth threshold needs to be between 1 and 95.', ephemeral=True)
             return
-        await self.view.clan_settings.update(stealth_threshold=stealth_threshold)
+        await self.view.clan_settings.update(stealth_threshold=new_threshold)
+        try:
+            reminder: reminders.Reminder = await reminders.get_clan_reminder(self.view.clan_settings.clan_name)
+            if new_threshold <= self.view.clan_settings.stealth_current:
+                new_message = reminder.message.replace('upgrade','raid')
+            else:
+                new_message = reminder.message.replace('raid','upgrade')
+            await reminder.update(message=new_message)
+        except exceptions.NoDataFoundError:
+            pass
         embed = await self.view.embed_function(self.view.bot, self.view.clan_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
@@ -80,9 +90,5 @@ class SetLastTTModal(Modal):
             await interaction.followup.send(msg_error, ephemeral=True)
             return
         await self.view.user_settings.update(last_tt=tt_time.isoformat(sep=' '))
-        if self.view.user_settings.last_tt != tt_time:
-            await interaction.response.edit_message(view=self.view)
-            await interaction.followup.send(strings.MSG_ERROR, ephemeral=True)
-            return
         embed = await self.view.embed_function(self.view.bot, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)

@@ -885,12 +885,13 @@ async def edit_interaction(interaction: Union[discord.Interaction, discord.Webho
     """Edits a reponse. The response can either be an interaction OR a WebhookMessage"""
     content = kwargs.get('content', MISSING)
     embed = kwargs.get('embed', MISSING)
+    embeds = kwargs.get('embeds', MISSING)
     view = kwargs.get('view', MISSING)
     file = kwargs.get('file', MISSING)
     if isinstance(interaction, discord.WebhookMessage):
-        await interaction.edit(content=content, embed=embed, view=view)
+        await interaction.edit(content=content, embed=embed, embeds=embeds, view=view)
     else:
-        await interaction.edit_original_message(content=content, file=file, embed=embed, view=view)
+        await interaction.edit_original_message(content=content, file=file, embed=embed, embeds=embeds, view=view)
 
 
 async def bool_to_text(boolean: bool) -> str:

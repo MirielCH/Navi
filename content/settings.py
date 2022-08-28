@@ -1,7 +1,8 @@
 # settings_clan.py
 """Contains clan settings commands"""
 
-from typing import Optional
+import re
+from typing import List, Optional
 
 import discord
 
@@ -34,9 +35,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         welcome_message = (
             f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on!\n\n'
             f'**Donor tier**\n'
-            f'You can set your EPIC RPG donor tier with {strings.SLASH_COMMANDS_NAVI["settings user"]} and - '
-            f'if you are married - the donor tier of your partner in '
-            f'{strings.SLASH_COMMANDS_NAVI["settings partner"]}.\n\n'
+            f'You can set your EPIC RPG donor tier with {strings.SLASH_COMMANDS_NAVI["settings user"]}.\n\n'
             f'**Command tracking**\n'
             f'Please note that I track the amount of some EPIC RPG commands you use. Check '
             f'{strings.SLASH_COMMANDS_NAVI["stats"]} to see what commands are tracked.\n'
@@ -60,7 +59,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         f'tracking and the reminders. It will also delete all of your active reminders.\n'
         f'Are you sure?'
     )
-    view = views.ConfirmCancelView(ctx)
+    view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
     interaction = await ctx.respond(answer, view=view, ephemeral=True)
     view.interaction = interaction
     await view.wait()
@@ -133,6 +132,122 @@ async def command_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationCon
     await view.wait()
 
 
+async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                    switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder message settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsMessagesView(ctx, bot, user_settings, embed_settings_messages, 'all')
+    embeds = await embed_settings_messages(bot, user_settings, 'all')
+    if interaction is None:
+        interaction = await ctx.respond(embeds=embeds, view=view)
+    else:
+        await functions.edit_interaction(interaction, embeds=embeds, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                   new_partner: Optional[discord.User] = None,
+                                   switch_view: Optional[discord.ui.View] = None) -> None:
+    """Partner settings command"""
+    user_settings = interaction = partner_settings = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        partner_settings = getattr(switch_view, 'partner_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    if partner_settings is None and user_settings.partner_id is not None:
+        try:
+            partner_settings: users.User = await users.get_user(user_settings.partner_id)
+        except exceptions.NoDataFoundError:
+            await ctx.respond(strings.MSG_ERROR, ephemeral=True)
+            return
+    if new_partner is None:
+        view = views.SettingsPartnerView(ctx, bot, user_settings, partner_settings, embed_settings_partner)
+        embed = await embed_settings_partner(bot, user_settings, partner_settings)
+        if interaction is None:
+            interaction = await ctx.respond(embed=embed, view=view)
+        else:
+            await functions.edit_interaction(interaction, embed=embed, view=view)
+        view.interaction = interaction
+        await view.wait()
+    else:
+        try:
+            new_partner_settings: users.User = await users.get_user(new_partner.id)
+        except exceptions.FirstTimeUserError:
+            await ctx.respond(
+                f'**{new_partner.name}** is not registered with this bot yet. They need to do '
+                f'{strings.SLASH_COMMANDS_NAVI["on"]} first.'
+            )
+            return
+        if user_settings.partner_id is not None:
+            view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            interaction = await ctx.respond(
+                f'**{ctx.author.name}**, you already have a partner set.\n'
+                f'Setting a new partner will remove your old partner. Do you want to continue?',
+                view=view
+            )
+            view.interaction = interaction
+            await view.wait()
+            if view.value is None:
+                await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
+                                                 view=None)
+                return
+            elif view.value == 'confirm':
+                await functions.edit_interaction(interaction, view=None)
+            else:
+                await functions.edit_interaction(interaction, content='Aborted.', view=None)
+                return
+        view = views.ConfirmMarriagelView(ctx, new_partner)
+        interaction = await ctx.respond(
+            f'{new_partner.mention}, **{ctx.author.name}** wants to set you as their partner.\n'
+            f'Do you want to grind together until... idk, drama?',
+            view=view
+        )
+        view.interaction = interaction
+        await view.wait()
+        if view.value is None:
+            await functions.edit_interaction(interaction,
+                                             content=f'**{ctx.author.name}**, your lazy partner didn\'t answer in time.',
+                                             view=None)
+        elif view.value == 'confirm':
+            if user_settings.partner_id is not None:
+                try:
+                    old_partner_settings = await users.get_user(user_settings.partner_id)
+                    await old_partner_settings.update(partner_id=None)
+                except exceptions.NoDataFoundError:
+                    pass
+            await user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier)
+            await new_partner_settings.update(partner_id=ctx.author.id, partner_donor_tier=user_settings.user_donor_tier)
+            if user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == ctx.author.id:
+                await functions.edit_interaction(interaction, view=None)
+                await ctx.respond(
+                    f'{emojis.BP} **{ctx.author.name}**, {new_partner.name} is now set as your partner!\n'
+                    f'{emojis.BP} **{new_partner.name}**, {ctx.author.name} is now set as your partner!\n'
+                    f'{emojis.BP} **{ctx.author.name}**, {ctx.author.name} is now set as your partner\'s partner!\n'
+                    f'{emojis.BP} **{new_partner.name}**, ... wait what?\n\n'
+                    f'Anyway, you may now kiss the brides.'
+                )
+                return
+            else:
+                await ctx.send(strings.MSG_ERROR)
+                return
+        else:
+            await functions.edit_interaction(interaction,
+                                             content=(
+                                                 f'**{new_partner.name}** prefers to be forever alone.\n'
+                                                 f'Stood up at the altar, that\'s gotta hurt, rip.'
+                                             ),
+                                             view=None)
+            return
+
+
 async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
                                      switch_view: Optional[discord.ui.View] = None) -> None:
     """Reminder settings command"""
@@ -195,7 +310,7 @@ async def embed_settings_clan(bot: discord.Bot, clan_settings: clans.Clan) -> di
         f'{emojis.DETAIL} _Reminders will always be sent to this channel._\n'
         f'{emojis.BP} **Reminder**: {reminder_enabled}\n'
         f'{emojis.BP} **Stealth threshold**: `{clan_settings.stealth_threshold}`\n'
-        f'{emojis.DETAIL} _Navi will tell you to upgrade below and raid at or above the threshold._\n'
+        f'{emojis.DETAIL} _Navi will tell you to upgrade below threshold and raid afterwards._\n'
     )
     quests = (
         f'{emojis.BP} **Quests below stealth threshold**: `{clan_upgrade_quests}`\n'
@@ -230,7 +345,7 @@ async def embed_settings_helpers(bot: discord.Bot, user_settings: users.User) ->
     """Helper settings embed"""
     helpers = (
         f'{emojis.BP} **Context helper**: {await functions.bool_to_text(user_settings.context_helper_enabled)}\n'
-        f'{emojis.DETAIL} _Shows some helpful slash commands depending on context._\n'
+        f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (slash only)._\n'
         f'{emojis.BP} **Heal warning**: {await functions.bool_to_text(user_settings.heal_warning_enabled)}\n'
         f'{emojis.DETAIL} _Warns you when you are about to die._\n'
         f'{emojis.BP} **Pet catch helper**: {await functions.bool_to_text(user_settings.pet_helper_enabled)}\n'
@@ -238,7 +353,7 @@ async def embed_settings_helpers(bot: discord.Bot, user_settings: users.User) ->
         f'{emojis.BP} **Ruby counter**: {await functions.bool_to_text(user_settings.ruby_counter_enabled)}\n'
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
-        f'{emojis.DETAIL} x§_Provides the answers for all training types except ruby training._\n'
+        f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -246,6 +361,98 @@ async def embed_settings_helpers(bot: discord.Bot, user_settings: users.User) ->
         description = '_Settings to toggle some helpful little features._'
     )
     embed.add_field(name='HELPERS', value=helpers, inline=False)
+    return embed
+
+
+async def embed_settings_messages(bot: discord.Bot, user_settings: users.User, activity: str) -> List[discord.Embed]:
+    """Reminder message specific activity embed"""
+    embed_no = 1
+    embed_descriptions = {embed_no: ''}
+    embeds = []
+    if activity == 'all':
+        description = ''
+        for activity in strings.ACTIVITIES:
+            title = 'ALL REMINDER MESSAGES'
+            activity_column = strings.ACTIVITIES_COLUMNS[activity]
+            alert = getattr(user_settings, activity_column)
+            alert_message = (
+                f'{emojis.BP} **{activity.replace("-"," ").capitalize()}**\n'
+                f'{emojis.DETAIL} {alert.message}'
+            )
+            activity = activity.replace('-',' ').capitalize()
+            if len(embed_descriptions[embed_no]) + len(alert_message) > 4096:
+                embed_no += 1
+                embed_descriptions[embed_no] = ''
+            embed_descriptions[embed_no] = f'{embed_descriptions[embed_no]}\n{alert_message}'
+        for embed_no, description in embed_descriptions.items():
+            embed = discord.Embed(
+                color = settings.EMBED_COLOR,
+                title = title if embed_no < 2 else None,
+                description = description
+            )
+            embeds.append(embed)
+    else:
+        activity_column = strings.ACTIVITIES_COLUMNS[activity]
+        alert = getattr(user_settings, activity_column)
+        title = f'{activity.replace("-"," ")} REMINDER MESSAGE'.upper()
+        embed = discord.Embed(
+            color = settings.EMBED_COLOR,
+            title = title if embed_no < 2 else None
+        )
+        allowed_placeholders = ''
+        for placeholder in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
+            allowed_placeholders = (
+                f'{allowed_placeholders}\n'
+                f'{emojis.BP} {{{placeholder.group(1)}}}'
+            )
+        if allowed_placeholders == '':
+            allowed_placeholders = f'_There are no placeholders available for this message._'
+        embed.add_field(name='CURRENT MESSAGE', value=f'{emojis.BP} {alert.message}', inline=False)
+        embed.add_field(name='SUPPORTED PLACEHOLDERS', value=allowed_placeholders.strip(), inline=False)
+        embeds = [embed,]
+
+    return embeds
+
+
+async def embed_settings_partner(bot: discord.Bot, user_settings: users.User,
+                                 partner_settings: Optional[users.User] = None) -> discord.Embed:
+    """Partner settings embed"""
+    user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
+    user_partner_channel_name = partner = partner_hardmode_status = '`N/A`'
+    partner_partner_channel_name = user_partner_channel_name = '`N/A`'
+    if user_partner_channel is not None:
+        user_partner_channel_name = f'`{user_partner_channel.name}`)'
+    if partner_settings is not None:
+        partner = f'<@{user_settings.partner_id}>'
+        partner_hardmode_status = await functions.bool_to_text(partner_settings.hardmode_mode_enabled)
+        partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
+        if partner_partner_channel is not None:
+            partner_partner_channel_name = f'`{partner_partner_channel.name}`)'
+    donor_tier = (
+        f'{emojis.BP} **Partner donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
+        f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._'
+    )
+    settings_user = (
+        f'{emojis.BP} **Partner**: {partner}\n'
+        f'{emojis.BP} **Partner alert channel**: {user_partner_channel_name}\n'
+        f'{emojis.DETAIL} _Lootbox and hardmode alerts are sent to this channel._\n'
+    )
+    settings_partner = (
+        f'{emojis.BP} **Hardmode mode**: {partner_hardmode_status}\n'
+        f'{emojis.BP} **Partner alert channel**: {partner_partner_channel_name}\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'PARTNER SETTINGS',
+        description = (
+            f'_Settings for your partner. To add or change your partner, use '
+            f'{strings.SLASH_COMMANDS_NAVI["settings partner"]} `partner: @partner`._\n'
+        )
+    )
+    embed.add_field(name='EPIC RPG DONOR TIER', value=donor_tier, inline=False)
+    embed.add_field(name='YOUR SETTINGS', value=settings_user, inline=False)
+    embed.add_field(name='YOUR PARTNER\'S SETTINGS', value=settings_partner, inline=False)
     return embed
 
 
@@ -266,6 +473,8 @@ async def embed_settings_reminders(bot: discord.Bot, user_settings: users.User) 
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
+        f'{emojis.DETAIL} _Lootbox and hardmode alerts are sent to this channel._\n'
+        f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
@@ -304,11 +513,15 @@ async def embed_settings_user(bot: discord.Bot, user_settings: users.User) -> di
 
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
-        f'{emojis.DETAIL} _You can turn off Navi by using {strings.SLASH_COMMANDS_NAVI["off"]}._\n'
+        f'{emojis.DETAIL} _You can toggle this by using {strings.SLASH_COMMANDS_NAVI["on"]} '
+        f'and {strings.SLASH_COMMANDS_NAVI["off"]}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
     )
     donor_tier = (
-        f'{emojis.BP} **Donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.BP} **You**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'
+        f'{emojis.BP} **Your partner**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
+        f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._'
     )
     behaviour = (
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
@@ -316,7 +529,7 @@ async def embed_settings_user(bot: discord.Bot, user_settings: users.User) -> di
         f'{emojis.BP} **Hardmode mode**: {await functions.bool_to_text(user_settings.hardmode_mode_enabled)}\n'
         f'{emojis.DETAIL} _Tells your partner to hunt solo if he uses `together`._\n'
         f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
-        f'{emojis.DETAIL} _Alternates hunt reminders between hunting solo and together._\n'
+        f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash mentions**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
         f'{emojis.BP} **Ping mode**: `{ping_mode_setting}` reminder message\n'
@@ -334,7 +547,7 @@ async def embed_settings_user(bot: discord.Bot, user_settings: users.User) -> di
         )
     )
     embed.add_field(name='MAIN', value=bot, inline=False)
-    embed.add_field(name='EPIC RPG DONOR TIER', value=donor_tier, inline=False)
+    embed.add_field(name='EPIC RPG DONOR TIERS', value=donor_tier, inline=False)
     embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
     embed.add_field(name='TRACKING', value=tracking, inline=False)
     return embed

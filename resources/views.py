@@ -1,7 +1,7 @@
 # views.py
 """Contains global interaction views"""
 
-from typing import Dict, Optional
+from typing import List, Optional
 
 import discord
 
@@ -12,6 +12,8 @@ from resources import components, functions, settings, strings
 COMMANDS_SETTINGS = {
     'Guild settings': settings_cmd.command_settings_clan,
     'Helper settings': settings_cmd.command_settings_helpers,
+    'Message settings': settings_cmd.command_settings_messages,
+    'Partner settings': settings_cmd.command_settings_partner,
     'Reminder settings': settings_cmd.command_settings_reminders,
     'User settings': settings_cmd.command_settings_user,
 }
@@ -59,27 +61,22 @@ class AutoReadyView(discord.ui.View):
 class ConfirmCancelView(discord.ui.View):
     """View with confirm and cancel button.
 
-    Args: ctx, labels: Optional[list[str]]
+    Args: ctx, styles: Optional[list[discord.ButtonStyle]], labels: Optional[list[str]]
 
     Also needs the message with the view, so do view.message = await ctx.interaction.original_message().
     Without this message, buttons will not be disabled when the interaction times out.
 
     Returns 'confirm', 'cancel' or None (if timeout/error)
     """
-    def __init__(self, ctx: discord.ApplicationCommand, labels: Optional[list[str]] = ['Yes','No'],
-                 interaction: Optional[discord.Interaction] = None):
+    def __init__(self, ctx: discord.ApplicationCommand,
+                 styles: Optional[List[discord.ButtonStyle]] = [discord.ButtonStyle.grey, discord.ButtonStyle.grey],
+                 labels: Optional[list[str]] = ['Yes','No'], interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
         self.user = ctx.author
         self.interaction = interaction
-        self.label_confirm = labels[0]
-        self.label_cancel = labels[1]
-        self.add_item(components.CustomButton(style=discord.ButtonStyle.blurple,
-                                              custom_id='confirm',
-                                              label=self.label_confirm))
-        self.add_item(components.CustomButton(style=discord.ButtonStyle.blurple,
-                                              custom_id='cancel',
-                                              label=self.label_cancel))
+        self.add_item(components.CustomButton(style=styles[0], custom_id='confirm', label=labels[0]))
+        self.add_item(components.CustomButton(style=styles[1], custom_id='cancel', label=labels[1]))
 
     async def interaction_check(self, interaction: discord.Interaction):
         if interaction.user != self.user:
@@ -88,6 +85,45 @@ class ConfirmCancelView(discord.ui.View):
 
     async def on_timeout(self):
         self.value = None
+        if self.interaction is not None:
+            try:
+                await functions.edit_interaction(self.interaction, view=None)
+            except discord.errors.NotFound:
+                pass
+        self.stop()
+
+
+class ConfirmMarriagelView(discord.ui.View):
+    """View with confirm and cancel button.
+
+    Args: ctx, labels: Optional[list[str]]
+
+    Also needs the message with the view, so do view.message = await ctx.interaction.original_message().
+    Without this message, buttons will not be disabled when the interaction times out.
+
+    Returns 'confirm', 'cancel' or None (if timeout/error)
+    """
+    def __init__(self, ctx: discord.ApplicationCommand, new_partner: discord.User,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.value = None
+        self.user = ctx.author
+        self.new_partner = new_partner
+        self.interaction = interaction
+        self.add_item(components.CustomButton(style=discord.ButtonStyle.green,
+                                              custom_id='confirm',
+                                              label='I do!'))
+        self.add_item(components.CustomButton(style=discord.ButtonStyle.grey,
+                                              custom_id='cancel',
+                                              label='Forever alone'))
+    async def interaction_check(self, interaction: discord.Interaction):
+        if interaction.user != self.new_partner:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self):
+        self.value = 'timeout'
         if self.interaction is not None:
             try:
                 await functions.edit_interaction(self.interaction, view=None)
@@ -168,7 +204,7 @@ class SettingsHelpersView(discord.ui.View):
     user_settings: User object with the settings of the user.
     embed_function: Function that returns the settings embed. The view expects the following arguments:
     - bot: Bot
-    - user_settings: Clan object with the settings of the clan
+    - user_settings: User object with the settings of the user
 
     Returns
     -------
@@ -217,7 +253,7 @@ class SettingsRemindersView(discord.ui.View):
     user_settings: User object with the settings of the user.
     embed_function: Function that returns the settings embed. The view expects the following arguments:
     - bot: Bot
-    - user_settings: Clan object with the settings of the clan
+    - user_settings: User object with the settings of the user
 
     Returns
     -------
@@ -289,7 +325,7 @@ class SettingsUserView(discord.ui.View):
     user_settings: User object with the settings of the user.
     embed_function: Function that returns the settings embed. The view expects the following arguments:
     - bot: Bot
-    - user_settings: Clan object with the settings of the clan
+    - user_settings: User object with the settings of the user
 
     Returns
     -------
@@ -307,6 +343,109 @@ class SettingsUserView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         self.add_item(components.ManageUserSettingsSelect(self))
+        self.add_item(components.SetDonorTierSelect(self, 'Change your donor tier', 'user'))
+        partner_select_disabled = True if user_settings.partner_id is not None else False
+        self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit_original_message(view=None)
+        self.stop()
+
+
+class SettingsMessagesView(discord.ui.View):
+    """View with a all components to change message reminders.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    embed_function: Function that returns a list of embeds to see specific messages. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+    - activity: str, If this is None, the view doesn't show the buttons to change a message
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 embed_function: callable, activity: Optional[str] = 'all',
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.embed_function = embed_function
+        self.activity = activity
+        if activity == 'all':
+            self.add_item(components.SetReminderMessageButton(style=discord.ButtonStyle.red, custom_id='reset_all',
+                                                              label='Reset all messages'))
+        else:
+            self.add_item(components.SetReminderMessageButton(style=discord.ButtonStyle.blurple, custom_id='set_message',
+                                                              label='Change'))
+            self.add_item(components.SetReminderMessageButton(style=discord.ButtonStyle.red, custom_id='reset_message',
+                                                              label='Reset'))
+        self.add_item(components.ReminderMessageSelect(self, row=2))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=3))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit_original_message(view=None)
+        self.stop()
+
+
+class SettingsPartnerView(discord.ui.View):
+    """View with a all components to manage partner settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+    - partner_settings: User object with the settings of the partner
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 partner_settings: users.User, embed_function: callable,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.partner_settings = partner_settings
+        self.embed_function = embed_function
+        self.add_item(components.ManagePartnerSettingsSelect(self))
+        partner_select_disabled = True if user_settings.partner_id is not None else False
+        self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
