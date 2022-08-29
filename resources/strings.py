@@ -574,6 +574,7 @@ REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
 REGEX_PREFIX = rf'(?:rpg\b\s+)?'
 REGEX_COMMAND_ADVENTURE = re.compile(rf"{REGEX_PREFIX}(?:\badv\b|\badventure\b)")
 REGEX_COMMAND_ARENA = re.compile(rf"{REGEX_PREFIX}\barena\b")
+REGEX_COMMAND_CLAN = re.compile(rf"{REGEX_PREFIX}\bguild\b")
 REGEX_COMMAND_CLAN_RAID = re.compile(rf"{REGEX_PREFIX}\bguild\b\s+\braid\b")
 REGEX_COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"{REGEX_PREFIX}\bguild\b\s+(?:\braid\b|\bupgrade\b)")
 REGEX_COMMAND_CLAN_UPGRADE = re.compile(rf"{REGEX_PREFIX}guild\b\s+upgrade\b")

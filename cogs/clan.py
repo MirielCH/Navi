@@ -140,6 +140,17 @@ class ClanCog(commands.Cog):
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 if message.mentions: return # Yes that also disables it if you ping yourself but who does that
+                if user is None:
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, strings.REGEX_COMMAND_CLAN
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for guild overview message.', message)
+                        return
+                    user = user_command_message.author
                 try:
                     clan_name = re.search(r"^\*\*(.+?)\*\*", message_description).group(1)
                 except Exception as error:
@@ -170,7 +181,7 @@ class ClanCog(commands.Cog):
                 if stealth_match:
                     stealth = stealth_match.group(1)
                     stealth = int(stealth)
-                    await clan.update(stealth_current=stealth)
+                    if clan is not None: await clan.update(stealth_current=stealth)
                 else:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Stealth not found in clan message.', message)
