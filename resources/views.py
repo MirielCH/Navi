@@ -1,9 +1,10 @@
 # views.py
 """Contains global interaction views"""
 
-from typing import List, Optional
+from typing import List, Optional, Union
 
 import discord
+from discord.ext import commands
 
 from content import settings as settings_cmd
 from database import clans, users
@@ -30,11 +31,12 @@ class AutoReadyView(discord.ui.View):
     'timeout' on timeout.
     None if nothing happened yet.
     """
-    def __init__(self, user: discord.User, user_settings: users.User,
-                 message: Optional[discord.Message] = None):
+    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
+                 user_settings: users.User, interaction_message: Optional[discord.Message] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
-        self.message = message
+        self.ctx = ctx
+        self.interaction_message = interaction_message
         self.user = user
         self.user_settings = user_settings
         if not user_settings.auto_ready_enabled:
@@ -52,9 +54,11 @@ class AutoReadyView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        for child in self.children:
-            child.disabled = True
-        await self.message.edit(view=self)
+        self.disable_all_items()
+        if isinstance(self.ctx, discord.ApplicationContext):
+            await functions.edit_interaction(self.interaction_message, view=self)
+        else:
+            await self.interaction_message.edit(view=self)
         self.stop()
 
 
@@ -84,12 +88,8 @@ class ConfirmCancelView(discord.ui.View):
         return True
 
     async def on_timeout(self):
-        self.value = None
-        if self.interaction is not None:
-            try:
-                await functions.edit_interaction(self.interaction, view=None)
-            except discord.errors.NotFound:
-                pass
+        self.disable_all_items()
+        await functions.edit_interaction(self.interaction, view=self)
         self.stop()
 
 
@@ -123,12 +123,8 @@ class ConfirmMarriagelView(discord.ui.View):
         return True
 
     async def on_timeout(self):
-        self.value = 'timeout'
-        if self.interaction is not None:
-            try:
-                await functions.edit_interaction(self.interaction, view=None)
-            except discord.errors.NotFound:
-                pass
+        self.disable_all_items()
+        await functions.edit_interaction(self.interaction, view=self)
         self.stop()
 
 
@@ -189,7 +185,7 @@ class SettingsClanView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await self.interaction.edit_original_message(view=None)
+        await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
 
@@ -238,7 +234,7 @@ class SettingsHelpersView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await self.interaction.edit_original_message(view=None)
+        await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
 
@@ -310,7 +306,7 @@ class SettingsRemindersView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await self.interaction.edit_original_message(view=None)
+        await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
 
@@ -355,7 +351,7 @@ class SettingsUserView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await self.interaction.edit_original_message(view=None)
+        await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
 
@@ -408,7 +404,7 @@ class SettingsMessagesView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await self.interaction.edit_original_message(view=None)
+        await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
 
@@ -455,5 +451,36 @@ class SettingsPartnerView(discord.ui.View):
         return True
 
     async def on_timeout(self) -> None:
-        await self.interaction.edit_original_message(view=None)
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
+class OneButtonView(discord.ui.View):
+    """View with one button that returns the custom id of that button.
+
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Returns
+    -------
+    None while active
+    custom id of the button when pressed
+    'timeout' on timeout.
+    """
+    def __init__(self, ctx: discord.ApplicationContext, style: discord.ButtonStyle, custom_id: str, label: str,
+                 emoji: Optional[discord.PartialEmoji] = None, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.add_item(components.CustomButton(style=style, custom_id=custom_id, label=label, emoji=emoji))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        self.disable_all_items()
+        await functions.edit_interaction(self.interaction, view=self)
         self.stop()

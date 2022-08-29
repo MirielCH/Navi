@@ -4,9 +4,11 @@
 import re
 from typing import List, Optional
 
+
 import discord
 
 
+from content import settings as settings_cmd
 from database import clans, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
@@ -28,24 +30,38 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         await ctx.respond(strings.MSG_ERROR, ephemeral=True)
         return
     if not first_time_user:
-        welcome_message = (
-            f'Hey! **{ctx.author.name}**! Welcome back!'
-        )
+        await ctx.respond(f'Hey! **{ctx.author.name}**! Welcome back!')
     else:
-        welcome_message = (
-            f'Hey! **{ctx.author.name}**! Hello! I\'m now turned on!\n\n'
-            f'**Donor tier**\n'
-            f'You can set your EPIC RPG donor tier with {strings.SLASH_COMMANDS_NAVI["settings user"]}.\n\n'
-            f'**Command tracking**\n'
-            f'Please note that I track the amount of some EPIC RPG commands you use. Check '
+        field_settings = (
+            f'You may want to have a look at my settings. You can also set your EPIC RPG donor tier there.\n'
+            f'Click the button below or use {strings.SLASH_COMMANDS_NAVI["settings user"]}.'
+        )
+        field_tracking = (
+            f'I track the amount of some EPIC RPG commands you use. Check '
             f'{strings.SLASH_COMMANDS_NAVI["stats"]} to see what commands are tracked.\n'
-            f'__No personal data is processed or stored in any way.__\n'
-            f'If you want to opt-out of command tracking, you can do so in '
-            f'{strings.SLASH_COMMANDS_NAVI["settings user"]}.\n\n'
+            f'**__No personal data is processed or stored in any way!__**\n'
+            f'You can opt-out of command tracking in {strings.SLASH_COMMANDS_NAVI["stats"]} or in your user settings.\n\n'
+        )
+        field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
             f'{strings.SLASH_COMMANDS_NAVI["help"]}.'
         )
-    await ctx.respond(welcome_message, ephemeral=True)
+        img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
+        image_url = 'attachment://navi.png'
+        embed = discord.Embed(
+            title = f'Hey! {ctx.author.name}! Hello!'.upper(),
+            description = f'Have a look at {strings.SLASH_COMMANDS_NAVI["help"]} for a list of my commands.',
+            color =  settings.EMBED_COLOR,
+        )
+        embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+        embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
+        embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
+        embed.set_thumbnail(url=image_url)
+        view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', 'Show settings')
+        interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
+        view.interaction = interaction
+        await view.wait()
+        if view.value == 'pressed': await settings_cmd.command_settings_user(bot, ctx)
 
 
 async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:

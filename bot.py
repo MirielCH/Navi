@@ -107,6 +107,7 @@ EXTENSIONS = [
         'cogs.pets',
         'cogs.quest',
         'cogs.reminders_custom',
+        'cogs.reminders_lists',
         'cogs.settings',
         'cogs.settings_guild',
         'cogs.sleepy_potion',
@@ -117,8 +118,8 @@ EXTENSIONS = [
         'cogs.weekly',
         'cogs.work',
         'cogs.dev_old',
-        'cogs.settings_clan_old',
         'cogs.reminders_custom_old',
+        'cogs.settings_clan_old',
         'cogs.settings_partner_old',
         'cogs.settings_user_old',
     ]

@@ -3,7 +3,7 @@
 from argparse import ArgumentError
 from datetime import datetime, timedelta
 import re
-from typing import List, Tuple, Union
+from typing import List, Optional, Union
 
 import discord
 from discord.ext import commands
@@ -896,3 +896,12 @@ async def edit_interaction(interaction: Union[discord.Interaction, discord.Webho
 
 async def bool_to_text(boolean: bool) -> str:
         return f'{emojis.GREENTICK}`Enabled`' if boolean else f'{emojis.REDTICK}`Disabled`'
+
+
+async def reply_or_respond(ctx: Union[discord.ApplicationContext, commands.Context], answer: str,
+                           ephemeral: Optional[bool] = False) -> Union[discord.Message, discord.Integration]:
+    """Sends a reply or reponse, depending on the context type"""
+    if isinstance(ctx, commands.Context):
+        return await ctx.reply(answer)
+    else:
+        return await ctx.respond(answer, ephemeral=ephemeral)
