@@ -3,11 +3,11 @@
 
 import asyncio
 import re
-from typing import Dict, Optional
+from typing import Dict, List, Optional
 
 import discord
 
-from database import users
+from database import reminders, users
 from resources import emojis, functions, modals, strings, views
 
 
@@ -580,3 +580,44 @@ class SetReminderMessageButton(discord.ui.Button):
             await interaction.message.edit(embeds=embeds, view=self.view)
         else:
             await interaction.response.edit_message(embeds=embeds, view=self.view)
+
+
+class DeleteCustomRemindersButton(discord.ui.Button):
+    """Button to activate the select to delete custom reminders"""
+    def __init__(self):
+        super().__init__(style=discord.ButtonStyle.grey, custom_id='active_select', label='Delete custom reminders',
+                         emoji=None, row=1)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        self.view.remove_item(self)
+        self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))
+        embed = await self.view.embed_function(self.view.user, self.view.user_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class DeleteCustomReminderSelect(discord.ui.Select):
+    """Select to delete custom reminders"""
+    def __init__(self, view: discord.ui.View, custom_reminders: List[reminders.Reminder], row: Optional[int] = None):
+        self.custom_reminders = custom_reminders
+
+        options = []
+        for reminder in custom_reminders:
+            label = f'{reminder.custom_id} - {reminder.message[:92]}'
+            options.append(discord.SelectOption(label=label, value=str(reminder.custom_id), emoji=None))
+        super().__init__(placeholder='Delete custom reminders', min_values=1, max_values=1, options=options,
+                         row=row, custom_id=f'delete_reminders')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        for reminder in self.custom_reminders.copy():
+            if reminder.custom_id == int(select_value):
+                await reminder.delete()
+                self.custom_reminders.remove(reminder)
+        embed = await self.view.embed_function(self.view.user, self.view.user_settings)
+        if self.custom_reminders:
+            self.view.remove_item(self)
+            self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))
+            await interaction.response.edit_message(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=None)
+            self.view.stop()

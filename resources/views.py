@@ -1,13 +1,13 @@
 # views.py
 """Contains global interaction views"""
 
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, users
+from database import clans, reminders, users
 from resources import components, functions, settings, strings
 
 COMMANDS_SETTINGS = {
@@ -32,7 +32,8 @@ class AutoReadyView(discord.ui.View):
     None if nothing happened yet.
     """
     def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
-                 user_settings: users.User, interaction_message: Optional[discord.Message] = None):
+                 user_settings: users.User,
+                 interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
         self.ctx = ctx
@@ -88,8 +89,6 @@ class ConfirmCancelView(discord.ui.View):
         return True
 
     async def on_timeout(self):
-        self.disable_all_items()
-        await functions.edit_interaction(self.interaction, view=self)
         self.stop()
 
 
@@ -483,4 +482,42 @@ class OneButtonView(discord.ui.View):
     async def on_timeout(self) -> None:
         self.disable_all_items()
         await functions.edit_interaction(self.interaction, view=self)
+        self.stop()
+
+
+class RemindersListView(discord.ui.View):
+    """View with a select that deletes custom reminders.
+
+    Also needs the message of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Returns
+    -------
+    None
+    """
+    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
+                 user_settings: users.User, custom_reminders: List[reminders.Reminder],
+                 embed_function: callable,
+                 interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.value = None
+        self.ctx = ctx
+        self.custom_reminders = custom_reminders
+        self.embed_function = embed_function
+        self.interaction_message = interaction_message
+        self.user = user
+        self.user_settings = user_settings
+        self.add_item(components.DeleteCustomRemindersButton())
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        self.disable_all_items()
+        if isinstance(self.ctx, discord.ApplicationContext):
+            await functions.edit_interaction(self.interaction_message, view=self)
+        else:
+            await self.interaction_message.edit(view=self)
         self.stop()

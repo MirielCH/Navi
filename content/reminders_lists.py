@@ -14,148 +14,45 @@ from resources import emojis, functions, exceptions, settings, strings, views
 
 
 # -- Commands ---
-async def list_reminders(self, ctx: commands.Context, *args: str) -> None:
+async def command_list(
+    bot: discord.Bot,
+    ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
+    user: Optional[discord.User] = None
+) -> None:
     """Lists all active reminders"""
-    if ctx.prefix.lower() == 'rpg ': return
-    if ctx.message.mentions:
-        user_id = ctx.message.mentions[0].id
-    elif args:
-        arg = args[0].lower().replace('<@!','').replace('<@','').replace('>','')
-        if arg.isnumeric():
-            try:
-                user_id = int(arg)
-            except:
-                user_id = ctx.author.id
-        else:
-            user_id = ctx.author.id
+    if isinstance(ctx, discord.Message):
+        message = message
+        auto_ready = True
     else:
-        user_id = ctx.author.id
-    user_discord = await functions.get_discord_user(self.bot, user_id)
-    if user_discord is None:
-        await ctx.reply('This user doesn\'t exist.')
-        return
-    if user_discord.bot:
-        await ctx.reply('Imagine trying to check the reminders of a bot.')
-        return
+        message = ctx.message
+        auto_ready = False
+    user = user if user is not None else ctx.author
     try:
-        user: users.User = await users.get_user(user_discord.id)
+        user_settings: users.User = await users.get_user(user.id)
     except exceptions.FirstTimeUserError:
-        if user_discord == ctx.author:
+        if user == ctx.author:
             raise
         else:
-            await ctx.reply('This user is not registered with this bot.')
+            await functions.reply_or_respond(ctx, 'This user is not registered with this bot.', True)
         return
-    current_time = datetime.utcnow().replace(microsecond=0)
     try:
-        user_reminders = await reminders.get_active_user_reminders(user.user_id)
-    except:
-        user_reminders = ()
-    clan_reminders = ()
-    if user.clan_name is not None:
-        try:
-            clan_reminders = await reminders.get_active_clan_reminders(user.clan_name)
-        except:
-            pass
-    reminders_commands_list = []
-    reminders_events_list = []
-    reminders_pets_list = []
-    reminders_custom_list = []
-    for reminder in user_reminders:
-        if 'pets' in reminder.activity:
-            reminders_pets_list.append(reminder)
-        elif reminder.activity == 'custom':
-            reminders_custom_list.append(reminder)
-        elif reminder.activity in strings.ACTIVITIES_EVENTS:
-            reminders_events_list.append(reminder)
+        custom_reminders = list(await reminders.get_active_user_reminders(user.id, 'custom'))
+    except exceptions.NoDataFoundError:
+        custom_reminders = []
+    embed = await embed_reminders_list(user, user_settings)
+    if custom_reminders:
+        view = views.RemindersListView(ctx, user, user_settings, custom_reminders, embed_reminders_list)
+        if isinstance(ctx, discord.ApplicationContext):
+            interaction_message = await ctx.respond(embed=embed, view=view)
         else:
-            reminders_commands_list.append(reminder)
-
-    # Sort pets with same time left together
-    if reminders_pets_list:
-        counter = -1
-        field_pets_list = {}
-        for index, reminder in enumerate(reminders_pets_list):
-            reminder_last = reminders_pets_list[index-1] if index != 0 else None
-            pet_id = reminder.activity.replace('pets-','')
-            time_left = reminder.end_time - current_time
-            if reminder_last is None:
-                field_pets_list[time_left.total_seconds()] = pet_id
-                counter += 1
-                continue
-            if reminder_last.end_time == reminder.end_time:
-                last_pet_id = field_pets_list[time_left.total_seconds()]
-                field_pets_list[time_left.total_seconds()] = f'{last_pet_id}, {pet_id}'
-            else:
-                field_pets_list[time_left.total_seconds()] = pet_id
-                counter += 1
-
-    embed = discord.Embed(
-        color = settings.EMBED_COLOR,
-        title = f'{user_discord.name}\'S REMINDERS'.upper()
-    )
-    if not user_reminders and not clan_reminders:
-        embed.description = f'{emojis.BP} You have no active reminders'
-    if reminders_commands_list:
-        field_command_reminders = ''
-        for reminder in reminders_commands_list:
-            time_left = reminder.end_time - current_time
-            timestring = await functions.parse_timedelta_to_timestring(time_left)
-            activity = 'Dungeon / Miniboss' if reminder.activity == 'dungeon-miniboss' else reminder.activity
-            activity = activity.replace('-',' ').capitalize()
-            field_command_reminders = (
-                f'{field_command_reminders}\n'
-                f'{emojis.BP} **`{activity}`** (**{timestring}**)'
-            )
-        embed.add_field(name='COMMANDS', value=field_command_reminders.strip(), inline=False)
-    if reminders_events_list:
-        field_event_reminders = ''
-        for reminder in reminders_events_list:
-            time_left = reminder.end_time - current_time
-            timestring = await functions.parse_timedelta_to_timestring(time_left)
-            activity = reminder.activity.replace('-',' ').capitalize()
-            field_event_reminders = (
-                f'{field_event_reminders}\n'
-                f'{emojis.BP} **`{activity}`** (**{timestring}**)'
-            )
-        embed.add_field(name='EVENTS', value=field_event_reminders.strip(), inline=False)
-    if clan_reminders:
-        reminder = clan_reminders[0]
-        time_left = reminder.end_time - current_time
-        clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
-        if clan.quest_user_id is not None:
-            if clan.quest_user_id != user_id: time_left = time_left + timedelta(minutes=5)
-        timestring = await functions.parse_timedelta_to_timestring(time_left)
-        field_value = f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)'
-        if clan.quest_user_id == user_id: field_value = f'{field_value} (quest active)'
-        embed.add_field(name='GUILD CHANNEL', value=field_value)
-    if reminders_pets_list:
-        field_no = 1
-        pet_fields = {field_no: ''}
-        for time_left_seconds, pet_ids in field_pets_list.items():
-            timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
-            if ',' in pet_ids:
-                pet_message = f'{emojis.BP} **`Pets {pet_ids}`** (**{timestring}**)'
-            else:
-                pet_message = f'{emojis.BP} **`Pet {pet_ids}`** (**{timestring}**)'
-            if len(pet_fields[field_no]) + len(pet_message) > 1020:
-                field_no += 1
-                pet_fields[field_no] = ''
-            pet_fields[field_no] = f'{pet_fields[field_no]}\n{pet_message}'
-        for field_no, pet_field in pet_fields.items():
-            field_name = f'PETS {field_no}' if field_no > 1 else 'PETS'
-            embed.add_field(name=field_name, value=pet_field.strip(), inline=False)
-    if reminders_custom_list:
-        field_custom_reminders = ''
-        for reminder in reminders_custom_list:
-            time_left = reminder.end_time - current_time
-            timestring = await functions.parse_timedelta_to_timestring(time_left)
-            custom_id = f'0{reminder.custom_id}' if reminder.custom_id <= 9 else reminder.custom_id
-            field_custom_reminders = (
-                f'{field_custom_reminders}\n'
-                f'{emojis.BP} **`{custom_id}`** (**{timestring}**) - {reminder.message}'
-            )
-        embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
-    await ctx.reply(embed=embed)
+            interaction_message = await ctx.reply(embed=embed, view=view)
+        view.interaction_message = interaction_message
+        await view.wait()
+    else:
+        if isinstance(ctx, discord.ApplicationContext):
+            await ctx.respond(embed=embed)
+        else:
+            await ctx.reply(embed=embed)
 
 
 async def command_ready(
@@ -322,3 +219,119 @@ async def command_ready(
             interaction_message = await ctx.reply(answer, view=view)
         view.interaction_message = interaction_message
         await view.wait()
+
+
+# -- Embeds ---
+async def embed_reminders_list(user: discord.User, user_settings: users.User) -> discord.Embed:
+    """Embed with active reminders"""
+    current_time = datetime.utcnow().replace(microsecond=0)
+    try:
+        user_reminders = await reminders.get_active_user_reminders(user.id)
+    except:
+        user_reminders = ()
+    clan_reminders = ()
+    if user_settings.clan_name is not None:
+        try:
+            clan_reminders = await reminders.get_active_clan_reminders(user_settings.clan_name)
+        except:
+            pass
+    reminders_commands_list = []
+    reminders_events_list = []
+    reminders_pets_list = []
+    reminders_custom_list = []
+    for reminder in user_reminders:
+        if 'pets' in reminder.activity:
+            reminders_pets_list.append(reminder)
+        elif reminder.activity == 'custom':
+            reminders_custom_list.append(reminder)
+        elif reminder.activity in strings.ACTIVITIES_EVENTS:
+            reminders_events_list.append(reminder)
+        else:
+            reminders_commands_list.append(reminder)
+
+    # Sort pets with same time left together
+    if reminders_pets_list:
+        counter = -1
+        field_pets_list = {}
+        for index, reminder in enumerate(reminders_pets_list):
+            reminder_last = reminders_pets_list[index-1] if index != 0 else None
+            pet_id = reminder.activity.replace('pets-','')
+            time_left = reminder.end_time - current_time
+            if reminder_last is None:
+                field_pets_list[time_left.total_seconds()] = pet_id
+                counter += 1
+                continue
+            if reminder_last.end_time == reminder.end_time:
+                last_pet_id = field_pets_list[time_left.total_seconds()]
+                field_pets_list[time_left.total_seconds()] = f'{last_pet_id}, {pet_id}'
+            else:
+                field_pets_list[time_left.total_seconds()] = pet_id
+                counter += 1
+
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{user.name}\'S REMINDERS'.upper()
+    )
+    if not user_reminders and not clan_reminders:
+        embed.description = f'{emojis.BP} You have no active reminders'
+    if reminders_commands_list:
+        field_command_reminders = ''
+        for reminder in reminders_commands_list:
+            time_left = reminder.end_time - current_time
+            timestring = await functions.parse_timedelta_to_timestring(time_left)
+            activity = 'Dungeon / Miniboss' if reminder.activity == 'dungeon-miniboss' else reminder.activity
+            activity = activity.replace('-',' ').capitalize()
+            field_command_reminders = (
+                f'{field_command_reminders}\n'
+                f'{emojis.BP} **`{activity}`** (**{timestring}**)'
+            )
+        embed.add_field(name='COMMANDS', value=field_command_reminders.strip(), inline=False)
+    if reminders_events_list:
+        field_event_reminders = ''
+        for reminder in reminders_events_list:
+            time_left = reminder.end_time - current_time
+            timestring = await functions.parse_timedelta_to_timestring(time_left)
+            activity = reminder.activity.replace('-',' ').capitalize()
+            field_event_reminders = (
+                f'{field_event_reminders}\n'
+                f'{emojis.BP} **`{activity}`** (**{timestring}**)'
+            )
+        embed.add_field(name='EVENTS', value=field_event_reminders.strip(), inline=False)
+    if clan_reminders:
+        reminder = clan_reminders[0]
+        time_left = reminder.end_time - current_time
+        clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
+        if clan.quest_user_id is not None:
+            if clan.quest_user_id != user.id: time_left = time_left + timedelta(minutes=5)
+        timestring = await functions.parse_timedelta_to_timestring(time_left)
+        field_value = f'{emojis.BP} **`{reminder.clan_name}`** (**{timestring}**)'
+        if clan.quest_user_id == user.id: field_value = f'{field_value} (quest active)'
+        embed.add_field(name='GUILD CHANNEL', value=field_value)
+    if reminders_pets_list:
+        field_no = 1
+        pet_fields = {field_no: ''}
+        for time_left_seconds, pet_ids in field_pets_list.items():
+            timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
+            if ',' in pet_ids:
+                pet_message = f'{emojis.BP} **`Pets {pet_ids}`** (**{timestring}**)'
+            else:
+                pet_message = f'{emojis.BP} **`Pet {pet_ids}`** (**{timestring}**)'
+            if len(pet_fields[field_no]) + len(pet_message) > 1020:
+                field_no += 1
+                pet_fields[field_no] = ''
+            pet_fields[field_no] = f'{pet_fields[field_no]}\n{pet_message}'
+        for field_no, pet_field in pet_fields.items():
+            field_name = f'PETS {field_no}' if field_no > 1 else 'PETS'
+            embed.add_field(name=field_name, value=pet_field.strip(), inline=False)
+    if reminders_custom_list:
+        field_custom_reminders = ''
+        for reminder in reminders_custom_list:
+            time_left = reminder.end_time - current_time
+            timestring = await functions.parse_timedelta_to_timestring(time_left)
+            custom_id = f'0{reminder.custom_id}' if reminder.custom_id <= 9 else reminder.custom_id
+            field_custom_reminders = (
+                f'{field_custom_reminders}\n'
+                f'{emojis.BP} **`{custom_id}`** (**{timestring}**) - {reminder.message}'
+            )
+        embed.add_field(name='CUSTOM', value=field_custom_reminders.strip(), inline=False)
+    return embed

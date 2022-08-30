@@ -24,6 +24,7 @@ NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
 PREFIX = rf'(?:rpg\b\s+)?'
 COMMAND_ADVENTURE = re.compile(rf"{PREFIX}(?:\badv\b|\badventure\b)")
 COMMAND_ARENA = re.compile(rf"{PREFIX}\barena\b")
+COMMAND_CLAN = re.compile(rf"{PREFIX}\bguild\b")
 COMMAND_CLAN_RAID = re.compile(rf"{PREFIX}\bguild\b\s+\braid\b")
 COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"{PREFIX}\bguild\b\s+(?:\braid\b|\bupgrade\b)")
 COMMAND_CLAN_UPGRADE = re.compile(rf"{PREFIX}guild\b\s+upgrade\b")
