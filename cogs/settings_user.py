@@ -31,6 +31,10 @@ class SettingsUserCog(commands.Cog):
     async def list_reminders(self, ctx: commands.Context, *args: str) -> None:
         """Lists all active reminders"""
         if ctx.prefix.lower() == 'rpg ': return
+        for mentioned_user in ctx.message.mentions.copy():
+            if mentioned_user == self.bot.user:
+                ctx.message.mentions.remove(mentioned_user)
+                break
         if ctx.message.mentions:
             user_id = ctx.message.mentions[0].id
         elif args:
@@ -176,6 +180,11 @@ class SettingsUserCog(commands.Cog):
     async def ready(
         self, ctx: Union[commands.Context, discord.Message], *args: str, user: Optional[discord.User] = None
     ) -> None:
+        if not isinstance(ctx, discord.Message):
+            for mentioned_user in ctx.message.mentions.copy():
+                if mentioned_user == self.bot.user:
+                    ctx.message.mentions.remove(mentioned_user)
+                    break
         """Lists all commands that are ready to use"""
         if isinstance(ctx, commands.Context):
             if ctx.prefix.lower() == 'rpg ': return

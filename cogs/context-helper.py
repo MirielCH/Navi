@@ -121,9 +121,9 @@ class ContextHelperCog(commands.Cog):
                     'the following pets are back instantly', #English
                     'voidog pet made all pets travel', #English VOIDog
                     'las siguientes mascotas están de vuelta instantaneamente', #Spanish
-                    'voidog pet made all pets travel', #Spanish VOIDog, MISSING
+                    'mascota voidog hizo que todas tus mascotas', #Spanish VOIDog
                     'os seguintes pets voltaram instantaneamente', #Portuguese
-                    'voidog pet made all pets travel', #Portuguese VOIDog, MISSING
+                    'voidog fez todos os bichinhos', #Portuguese VOIDog
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_tt):
                     command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
