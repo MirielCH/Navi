@@ -505,7 +505,7 @@ class SettingsUserCog(commands.Cog):
                 f'This command toggles slash mentions in reminders. If this is on, Navi will send clickable / tappable '
                 f'command links (example: </chainsaw:959162697398763590>).\n'
                 f'Make sure that you use the placeholder \u007bcommand\u007d in your messages to see them.\n\n'
-                f'Note that this feature is not officially released by Discord and does **not** work on mobile yet!\n\n'
+                f'Note that this feature does only work in the latest Discord app!\n\n'
                 f'{syntax}'
             )
             return

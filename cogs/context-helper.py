@@ -228,6 +228,22 @@ class ContextHelperCog(commands.Cog):
                     return
                 await message.reply(answer)
 
+            search_strings = [
+                'is now in the jail', #English
+                'is now in the jail', #Spanish, MISSING
+                'is now in the jail', #Portuguese, MISSING
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
+                command_jail = await functions.get_slash_command(user_settings, 'jail')
+                await message.reply(f"➜ {command_jail}")
+
 
 # Initialization
 def setup(bot):

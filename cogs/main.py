@@ -176,10 +176,12 @@ async def embed_main_help(message: discord.Message) -> discord.Embed:
         f'{emojis.BP} `{prefix}message` : Change the reminder messages\n'
         f'{emojis.BP} `{prefix}ping-mode` : Change if Navi pings before or after the reminder\n'
         f'{emojis.BP} `{prefix}reactions` : Turn reactions on/off\n'
+        f'{emojis.BP} `{prefix}slash-mentions` : Turns slash mentions on/off\n'
         f'{emojis.BP} `{prefix}tracking` : Turns command tracking on/off\n'
     )
 
     helper_settings = (
+        f'{emojis.BP} `{prefix}context-helper` : Turn context helper on/off\n'
         f'{emojis.BP} `{prefix}heal` : Turn heal warning on/off\n'
         f'{emojis.BP} `{prefix}pet-helper` : Turn the pet catch helper on/off\n'
         f'{emojis.BP} `{prefix}ruby` : Check your current ruby count\n'
