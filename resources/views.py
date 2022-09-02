@@ -46,7 +46,7 @@ class AutoReadyView(discord.ui.View):
         else:
             custom_id = 'unfollow'
             label = 'Stop following me!'
-        self.add_item(components.AutoReadyButton(custom_id=custom_id, label=label))
+        self.add_item(components.ToggleAutoReadyButton(custom_id=custom_id, label=label))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
@@ -507,6 +507,50 @@ class RemindersListView(discord.ui.View):
         self.user = user
         self.user_settings = user_settings
         self.add_item(components.DeleteCustomRemindersButton())
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        self.disable_all_items()
+        if isinstance(self.ctx, discord.ApplicationContext):
+            await functions.edit_interaction(self.interaction_message, view=self)
+        else:
+            await self.interaction_message.edit(view=self)
+        self.stop()
+
+
+class StatsView(discord.ui.View):
+    """View with a button to toggle command tracking.
+
+    Also needs the message of the response with the view, so do AbortView.message = await message.reply('foo').
+
+    Returns
+    -------
+    'track' if tracking was enabled
+    'untrack' if tracking was disabled
+    'timeout' on timeout.
+    None if nothing happened yet.
+    """
+    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
+                 user_settings: users.User,
+                 interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.value = None
+        self.ctx = ctx
+        self.interaction_message = interaction_message
+        self.user = ctx.author
+        self.user_settings = user_settings
+        if not user_settings.tracking_enabled:
+            custom_id = 'track'
+            label = 'Track me!'
+        else:
+            custom_id = 'untrack'
+            label = 'Stop tracking me!'
+        self.add_item(components.ToggleTrackingButton(custom_id=custom_id, label=label))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

@@ -11,7 +11,7 @@ from database import reminders, users
 from resources import emojis, functions, modals, strings, views
 
 
-class AutoReadyButton(discord.ui.Button):
+class ToggleAutoReadyButton(discord.ui.Button):
     """Button to toggle the auto-ready feature"""
     def __init__(self, custom_id: str, label: str, disabled: bool = False, emoji: Optional[discord.PartialEmoji] = None):
         super().__init__(style=discord.ButtonStyle.grey, custom_id=custom_id, label=label, emoji=emoji,
@@ -621,3 +621,26 @@ class DeleteCustomReminderSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(embed=embed, view=None)
             self.view.stop()
+
+
+class ToggleTrackingButton(discord.ui.Button):
+    """Button to toggle the auto-ready feature"""
+    def __init__(self, custom_id: str, label: str, disabled: bool = False, emoji: Optional[discord.PartialEmoji] = None):
+        super().__init__(style=discord.ButtonStyle.grey, custom_id=custom_id, label=label, emoji=emoji,
+                         disabled=disabled, row=1)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        enabled = True if self.custom_id == 'track' else False
+        await self.view.user_settings.update(tracking_enabled=enabled)
+        self.view.value = self.custom_id
+        await self.view.user_settings.refresh()
+        if self.view.user_settings.tracking_enabled:
+            self.label = 'Stop tracking me!'
+            self.custom_id = 'untrack'
+        else:
+            self.label = 'Track me!'
+            self.custom_id = 'track'
+        if not interaction.response.is_done():
+            await interaction.response.edit_message(view=self.view)
+        else:
+            await self.view.message.edit(view=self.view)

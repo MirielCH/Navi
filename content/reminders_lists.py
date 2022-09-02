@@ -20,12 +20,6 @@ async def command_list(
     user: Optional[discord.User] = None
 ) -> None:
     """Lists all active reminders"""
-    if isinstance(ctx, discord.Message):
-        message = message
-        auto_ready = True
-    else:
-        message = ctx.message
-        auto_ready = False
     user = user if user is not None else ctx.author
     try:
         user_settings: users.User = await users.get_user(user.id)
