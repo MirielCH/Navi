@@ -63,6 +63,7 @@ class LotteryCog(commands.Cog):
                     reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'lottery')
                 except exceptions.NoDataFoundError:
                     return
+                if reminder.triggered: return
                 user_command = await functions.get_slash_command(user_settings, 'lottery')
                 user_command = f"{user_command} `amount: [1-10]`"
                 search_patterns = [
