@@ -113,7 +113,7 @@ class ToggleReadySettingsSelect(discord.ui.Select):
         self.toggled_settings = toggled_settings
         options = []
         options.append(discord.SelectOption(label='Show all', value='enable_all', emoji=None))
-        options.append(discord.SelectOption(label='Ignore all', value='disable_all', emoji=None))
+        options.append(discord.SelectOption(label='Hide all', value='disable_all', emoji=None))
         for label, setting in toggled_settings.items():
             setting_enabled = getattr(view.user_settings, setting)
             if isinstance(setting_enabled, users.UserAlert):
@@ -248,7 +248,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
         options = []
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
         if view.clan_settings is not None:
-            clan_reminder_action = 'Ignore' if view.clan_settings.alert_visible else 'Show'
+            clan_reminder_action = 'Hide' if view.clan_settings.alert_visible else 'Show'
             options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
                                                 value='toggle_alert'))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',

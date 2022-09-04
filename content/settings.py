@@ -501,7 +501,7 @@ async def embed_settings_ready(bot: discord.Bot, user_settings: users.User,
                                clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready settings embed"""
     async def bool_to_text(boolean: bool) -> str:
-        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Ignored`'
+        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Hidden`'
 
     if clan_settings is None:
         clan_alert_visible = '`N/A`'
@@ -542,10 +542,10 @@ async def embed_settings_ready(bot: discord.Bot, user_settings: users.User,
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'READY SETTINGS',
+        title = 'READY LIST SETTINGS',
         description = (
             f'_Settings to toggle visibility of reminders in {strings.SLASH_COMMANDS_NAVI["ready"]}._\n'
-            f'Ignoring a reminder removes it from the ready list but doesn\'t disable the reminder itself.'
+            f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
         )
     )
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
@@ -594,7 +594,7 @@ async def embed_settings_reminders(bot: discord.Bot, user_settings: users.User) 
         title = 'REMINDER SETTINGS',
         description = (
             f'_Settings to toggle your reminders._\n'
-            f'Note that disabling a reminder also deletes the reminder from my database.'
+            f'_Note that disabling a reminder also deletes the reminder from my database._'
         )
     )
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)

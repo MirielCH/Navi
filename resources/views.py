@@ -14,7 +14,7 @@ COMMANDS_SETTINGS = {
     'Guild channel': settings_cmd.command_settings_clan,
     'Helpers': settings_cmd.command_settings_helpers,
     'Partner': settings_cmd.command_settings_partner,
-    'Ready commands': settings_cmd.command_settings_ready,
+    'Ready list': settings_cmd.command_settings_ready,
     'Reminders': settings_cmd.command_settings_reminders,
     'Reminder messages': settings_cmd.command_settings_messages,
     'User settings': settings_cmd.command_settings_user,
