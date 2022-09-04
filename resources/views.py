@@ -1,7 +1,7 @@
 # views.py
 """Contains global interaction views"""
 
-from typing import Dict, List, Optional, Union
+from typing import List, Optional, Union
 
 import discord
 from discord.ext import commands
@@ -11,11 +11,12 @@ from database import clans, reminders, users
 from resources import components, functions, settings, strings
 
 COMMANDS_SETTINGS = {
-    'Guild settings': settings_cmd.command_settings_clan,
-    'Helper settings': settings_cmd.command_settings_helpers,
-    'Message settings': settings_cmd.command_settings_messages,
-    'Partner settings': settings_cmd.command_settings_partner,
-    'Reminder settings': settings_cmd.command_settings_reminders,
+    'Guild channel': settings_cmd.command_settings_clan,
+    'Helpers': settings_cmd.command_settings_helpers,
+    'Partner': settings_cmd.command_settings_partner,
+    'Ready commands': settings_cmd.command_settings_ready,
+    'Reminders': settings_cmd.command_settings_reminders,
+    'Reminder messages': settings_cmd.command_settings_messages,
     'User settings': settings_cmd.command_settings_user,
 }
 
@@ -47,6 +48,8 @@ class AutoReadyView(discord.ui.View):
             custom_id = 'unfollow'
             label = 'Stop following me!'
         self.add_item(components.ToggleAutoReadyButton(custom_id=custom_id, label=label))
+        if isinstance(ctx, discord.ApplicationContext):
+            self.add_item(components.CustomButton(discord.ButtonStyle.grey, 'show_settings', '➜ Settings'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
@@ -224,6 +227,80 @@ class SettingsHelpersView(discord.ui.View):
             'Training helper': 'training_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
+class SettingsReadyView(discord.ui.View):
+    """View with a all components to manage ready settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    clan_settings: Clan object with the settings of the clan.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 clan_settings: clans.Clan, embed_function: callable,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.clan_settings = clan_settings
+        self.embed_function = embed_function
+        toggled_settings_commands = {
+            'Adventure': 'alert_adventure',
+            'Arena': 'alert_arena',
+            'Daily': 'alert_daily',
+            'Duel': 'alert_duel',
+            'Dungeon / Miniboss': 'alert_dungeon_miniboss',
+            'Farm': 'alert_farm',
+            'Guild': 'alert_guild',
+            'Horse': 'alert_horse_breed',
+            'Hunt': 'alert_hunt',
+            'Lootbox': 'alert_lootbox',
+            'Quest': 'alert_quest',
+            'Training': 'alert_training',
+            'Vote': 'alert_vote',
+            'Weekly': 'alert_weekly',
+            'Work': 'alert_work',
+
+        }
+        toggled_settings_events = {
+            'Big arena': 'alert_big_arena',
+            'Horse race': 'alert_horse_race',
+            'Lottery': 'alert_lottery',
+            'Minin\'tboss': 'alert_not_so_mini_boss',
+            'Pet tournament': 'alert_pet_tournament',
+        }
+        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
+                                                           'toggle_command_reminders'))
+        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
+                                                           'toggle_event_reminders'))
+        self.add_item(components.ManageReadySettingsSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -465,11 +542,12 @@ class OneButtonView(discord.ui.View):
     custom id of the button when pressed
     'timeout' on timeout.
     """
-    def __init__(self, ctx: discord.ApplicationContext, style: discord.ButtonStyle, custom_id: str, label: str,
-                 emoji: Optional[discord.PartialEmoji] = None, interaction: Optional[discord.Interaction] = None):
+    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], style: discord.ButtonStyle,
+                 custom_id: str, label: str, emoji: Optional[discord.PartialEmoji] = None,
+                 interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
-        self.interaction = interaction
+        self.interaction_message = interaction_message
         self.user = ctx.author
         self.add_item(components.CustomButton(style=style, custom_id=custom_id, label=label, emoji=emoji))
 
@@ -481,7 +559,10 @@ class OneButtonView(discord.ui.View):
 
     async def on_timeout(self) -> None:
         self.disable_all_items()
-        await functions.edit_interaction(self.interaction, view=self)
+        if isinstance(self.view.ctx, discord.ApplicationContext):
+            await functions.edit_interaction(self.interaction_message, view=self)
+        else:
+            await self.interaction_message.edit(view=self)
         self.stop()
 
 
@@ -545,12 +626,14 @@ class StatsView(discord.ui.View):
         self.user = ctx.author
         self.user_settings = user_settings
         if not user_settings.tracking_enabled:
+            style = discord.ButtonStyle.green
             custom_id = 'track'
             label = 'Track me!'
         else:
+            style = discord.ButtonStyle.grey
             custom_id = 'untrack'
             label = 'Stop tracking me!'
-        self.add_item(components.ToggleTrackingButton(custom_id=custom_id, label=label))
+        self.add_item(components.ToggleTrackingButton(style=style, custom_id=custom_id, label=label))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

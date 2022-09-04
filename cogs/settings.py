@@ -15,6 +15,7 @@ class SettingsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
+    # Slash commands
     @slash_command()
     async def on(self, ctx: discord.ApplicationContext) -> None:
         """Turn on Navi"""
@@ -30,7 +31,6 @@ class SettingsCog(commands.Cog):
         "Settings commands",
     )
 
-    # Commands
     @cmd_settings.command()
     async def guild(self, ctx: discord.ApplicationContext) -> None:
         """Manage guild settings"""
@@ -55,6 +55,11 @@ class SettingsCog(commands.Cog):
         await settings_cmd.command_settings_partner(self.bot, ctx, new_partner)
 
     @cmd_settings.command()
+    async def ready(self, ctx: discord.ApplicationContext) -> None:
+        """Manage reminder messages"""
+        await settings_cmd.command_settings_ready(self.bot, ctx)
+
+    @cmd_settings.command()
     async def reminders(self, ctx: discord.ApplicationContext) -> None:
         """Manage reminder settings"""
         await settings_cmd.command_settings_reminders(self.bot, ctx)
@@ -63,6 +68,65 @@ class SettingsCog(commands.Cog):
     async def user(self, ctx: discord.ApplicationContext) -> None:
         """Manage user settings"""
         await settings_cmd.command_settings_user(self.bot, ctx)
+
+    #Prefix commands
+    @commands.command(name='on', aliases=('register', 'activate', 'start'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_on(self, ctx: commands.Context, *args: str) -> None:
+        """Turn on Navi (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["on"]} to activate me.')
+
+    @commands.command(name='off', aliases=('deactivate','stop'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_off(self, ctx: commands.Context, *args: str) -> None:
+        """Turn off Navi (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["off"]} to deactivate me.')
+
+    aliases_settings_user = (
+        'slashmentions','donor','donator','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
+        'hunt-rotate','huntswitch','hunt-switch','dnd','hardmode','hm','ruby','rubies','last_tt','last-tt',
+        'lasttt','tracking','track'
+    )
+    @commands.command(name='slash-mentions', aliases=aliases_settings_user)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_user(self, ctx: commands.Context, *args: str) -> None:
+        """User settings (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings user"]} to change this setting.')
+
+    aliases_settings_helpers = (
+        'context-help','contexthelper','contexthelp','pethelper','pethelp','pet-helper','pet-help','heal',
+        'heal-warning','healwarning','heal-warn','healwarn','trhelper','tr-helper','trhelp','tr-help','traininghelper',
+        'training-helper'
+    )
+    @commands.command(name='context-helper', aliases=aliases_settings_helpers)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_helpers(self, ctx: commands.Context, *args: str) -> None:
+        """Helper settings (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings helpers"]} to change this setting.')
+
+    @commands.command(name='message', aliases=('messages',))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_messages(self, ctx: commands.Context, *args: str) -> None:
+        """Message settings (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings messages"]} to change your messages.')
+
+    @commands.command(name='enable', aliases=('disable',))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_reminders(self, ctx: commands.Context, *args: str) -> None:
+        """Reminder settings (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings reminders"]} to change this setting.')
+
+    @commands.command(name='partner')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_partner(self, ctx: commands.Context, *args: str) -> None:
+        """Partner settings (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings partner"]} to change this settings.')
+
+    @commands.command(name='guild')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_clan(self, ctx: commands.Context, *args: str) -> None:
+        """Clan settings (prefix version)"""
+        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings guild"]} to change this setting.')
 
     # Events
     @commands.Cog.listener()

@@ -15,7 +15,7 @@ class ToggleAutoReadyButton(discord.ui.Button):
     """Button to toggle the auto-ready feature"""
     def __init__(self, custom_id: str, label: str, disabled: bool = False, emoji: Optional[discord.PartialEmoji] = None):
         super().__init__(style=discord.ButtonStyle.grey, custom_id=custom_id, label=label, emoji=emoji,
-                         disabled=disabled, row=1)
+                         disabled=disabled)
 
     async def callback(self, interaction: discord.Interaction) -> None:
         if self.custom_id == 'follow':
@@ -106,16 +106,60 @@ class ToggleUserSettingsSelect(discord.ui.Select):
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
+class ToggleReadySettingsSelect(discord.ui.Select):
+    """Toggle select that shows and toggles the status of ready settings."""
+    def __init__(self, view: discord.ui.View, toggled_settings: Dict[str, str], placeholder: str,
+                 custom_id: Optional[str] = 'toggle_ready_settings', row: Optional[int] = None):
+        self.toggled_settings = toggled_settings
+        options = []
+        options.append(discord.SelectOption(label='Show all', value='enable_all', emoji=None))
+        options.append(discord.SelectOption(label='Ignore all', value='disable_all', emoji=None))
+        for label, setting in toggled_settings.items():
+            setting_enabled = getattr(view.user_settings, setting)
+            if isinstance(setting_enabled, users.UserAlert):
+                setting_enabled = getattr(setting_enabled, 'visible')
+            emoji = emojis.GREENTICK if setting_enabled else emojis.REDTICK
+            options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id=custom_id)
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        kwargs = {}
+        if select_value in ('enable_all','disable_all'):
+            enabled = True if select_value == 'enable_all' else False
+            for setting in self.toggled_settings.values():
+                if not setting.endswith('_visible'):
+                    setting = f'{setting}_visible'
+                kwargs[setting] = enabled
+        else:
+            setting_value = getattr(self.view.user_settings, select_value)
+            if isinstance(setting_value, users.UserAlert):
+                setting_value = getattr(setting_value, 'enabled')
+            if not select_value.endswith('_visible'):
+                select_value = f'{select_value}_visible'
+            kwargs[select_value] = not setting_value
+        await self.view.user_settings.update(**kwargs)
+        for child in self.view.children.copy():
+            if child.custom_id == self.custom_id:
+                self.view.remove_item(child)
+                self.view.add_item(ToggleReadySettingsSelect(self.view, self.toggled_settings,
+                                                             self.placeholder, self.custom_id))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.clan_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
 class ManageClanSettingsSelect(discord.ui.Select):
     """Select to change guild settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        reminder_emoji = emojis.GREENTICK if view.clan_settings.alert_enabled else emojis.REDTICK
-        quest_emoji = emojis.GREENTICK if view.clan_settings.upgrade_quests_enabled else emojis.REDTICK
-        options.append(discord.SelectOption(label='Toggle reminder',
-                                            value='toggle_reminder', emoji=reminder_emoji))
-        options.append(discord.SelectOption(label='Toggle quests below stealth threshold',
-                                            value='toggle_quest', emoji=quest_emoji))
+        reminder_action = 'Disable' if view.clan_settings.alert_enabled else 'Enable'
+        quest_action = 'Disable' if view.clan_settings.upgrade_quests_enabled else 'Allow'
+        options.append(discord.SelectOption(label=f'{reminder_action} reminder',
+                                            value='toggle_reminder'))
+        options.append(discord.SelectOption(label=f'{quest_action} quests below stealth threshold',
+                                            value='toggle_quest'))
         options.append(discord.SelectOption(label='Change stealth threshold',
                                             value='set_threshold', emoji=None))
         options.append(discord.SelectOption(label='Set this channel as guild channel',
@@ -198,6 +242,38 @@ class ManageClanSettingsSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
+class ManageReadySettingsSelect(discord.ui.Select):
+    """Select to change ready settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
+        if view.clan_settings is not None:
+            clan_reminder_action = 'Ignore' if view.clan_settings.alert_visible else 'Show'
+            options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
+                                                value='toggle_alert'))
+        options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
+                                            value='toggle_message_style', emoji=None))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_ready_settings')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'toggle_alert':
+            await self.view.clan_settings.update(alert_visible=not self.view.clan_settings.alert_visible)
+        elif select_value == 'toggle_message_style':
+            await self.view.user_settings.update(ready_as_embed=not self.view.user_settings.ready_as_embed)
+        for child in self.view.children.copy():
+            if isinstance(child, ManageReadySettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageReadySettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.clan_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
 class SwitchSettingsSelect(discord.ui.Select):
     """Select to switch between settings embeds"""
     def __init__(self, view: discord.ui.View, commands_settings: Dict[str, callable], row: Optional[int] = None):
@@ -219,25 +295,25 @@ class ManageUserSettingsSelect(discord.ui.Select):
     """Select to change user settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        reactions_emoji = emojis.GREENTICK if view.user_settings.reactions_enabled else emojis.REDTICK
-        dnd_emoji = emojis.GREENTICK if view.user_settings.dnd_mode_enabled else emojis.REDTICK
-        hardmode_emoji = emojis.GREENTICK if view.user_settings.hardmode_mode_enabled else emojis.REDTICK
-        hunt_emoji = emojis.GREENTICK if view.user_settings.hunt_rotation_enabled else emojis.REDTICK
-        mentions_emoji = emojis.GREENTICK if view.user_settings.slash_mentions_enabled else emojis.REDTICK
-        tracking_emoji = emojis.GREENTICK if view.user_settings.tracking_enabled else emojis.REDTICK
+        reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
+        dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
+        hardmode_action = 'Disable' if view.user_settings.hardmode_mode_enabled else 'Enable'
+        hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
+        mentions_action = 'Disable' if view.user_settings.slash_mentions_enabled else 'Enable'
+        tracking_action = 'Disable' if view.user_settings.tracking_enabled else 'Enable'
         ping_mode = 'before' if view.user_settings.ping_after_message else 'after'
-        options.append(discord.SelectOption(label=f'Toggle reactions',
-                                            value='toggle_reactions', emoji=reactions_emoji))
-        options.append(discord.SelectOption(label=f'Toggle DND mode',
-                                            value='toggle_dnd', emoji=dnd_emoji))
-        options.append(discord.SelectOption(label=f'Toggle hardmode mode',
-                                            value='toggle_hardmode', emoji=hardmode_emoji))
-        options.append(discord.SelectOption(label=f'Toggle hunt rotation',
-                                            value='toggle_hunt', emoji=hunt_emoji))
-        options.append(discord.SelectOption(label=f'Toggle slash mentions',
-                                            value='toggle_mentions', emoji=mentions_emoji))
-        options.append(discord.SelectOption(label=f'Toggle command tracking',
-                                            value='toggle_tracking', emoji=tracking_emoji))
+        options.append(discord.SelectOption(label=f'{reactions_action} reactions',
+                                            value='toggle_reactions'))
+        options.append(discord.SelectOption(label=f'{dnd_action} DND mode',
+                                            value='toggle_dnd'))
+        options.append(discord.SelectOption(label=f'{hardmode_action} hardmode mode',
+                                            value='toggle_hardmode'))
+        options.append(discord.SelectOption(label=f'{hunt_action} hunt rotation',
+                                            value='toggle_hunt'))
+        options.append(discord.SelectOption(label=f'{mentions_action} slash mentions',
+                                            value='toggle_mentions'))
+        options.append(discord.SelectOption(label=f'{tracking_action} command tracking',
+                                            value='toggle_tracking'))
         options.append(discord.SelectOption(label=f'Ping me {ping_mode} reminder',
                                             value='toggle_ping', emoji=None))
         options.append(discord.SelectOption(label=f'Change last time travel time',
@@ -625,8 +701,9 @@ class DeleteCustomReminderSelect(discord.ui.Select):
 
 class ToggleTrackingButton(discord.ui.Button):
     """Button to toggle the auto-ready feature"""
-    def __init__(self, custom_id: str, label: str, disabled: bool = False, emoji: Optional[discord.PartialEmoji] = None):
-        super().__init__(style=discord.ButtonStyle.grey, custom_id=custom_id, label=label, emoji=emoji,
+    def __init__(self, style: Optional[discord.ButtonStyle], custom_id: str, label: str,
+                 disabled: bool = False, emoji: Optional[discord.PartialEmoji] = None):
+        super().__init__(style=style, custom_id=custom_id, label=label, emoji=emoji,
                          disabled=disabled, row=1)
 
     async def callback(self, interaction: discord.Interaction) -> None:
@@ -635,9 +712,11 @@ class ToggleTrackingButton(discord.ui.Button):
         self.view.value = self.custom_id
         await self.view.user_settings.refresh()
         if self.view.user_settings.tracking_enabled:
+            self.style = discord.ButtonStyle.grey
             self.label = 'Stop tracking me!'
             self.custom_id = 'untrack'
         else:
+            self.style = discord.ButtonStyle.green
             self.label = 'Track me!'
             self.custom_id = 'track'
         if not interaction.response.is_done():

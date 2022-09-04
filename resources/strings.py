@@ -154,6 +154,7 @@ ACTIVITIES_EVENTS = (
     'pet-tournament',
 )
 
+
 ACTIVITIES_SLASH_COMMANDS = {
     'adventure': 'adventure',
     'arena': 'arena',
@@ -270,7 +271,7 @@ ACTIVITIES_WITH_COOLDOWN = (
     'weekly',
     'work',
 )
-ACTIVITIES_WITH_COOLDOWN_ALL = list(ACTIVITIES[:])
+ACTIVITIES_WITH_COOLDOWN_ALL = list(ACTIVITIES_WITH_COOLDOWN[:])
 ACTIVITIES_WITH_COOLDOWN_ALL.append('all')
 ACTIVITIES_WITH_COOLDOWN_ALL.sort()
 

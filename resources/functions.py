@@ -860,7 +860,7 @@ async def get_megarace_answer(message: discord.Message, slash_command: bool = Fa
 # Miscellaneous
 async def call_ready_command(bot: commands.Bot, message: discord.Message, user: discord.User) -> None:
     """Calls the ready command as a reply to the current message"""
-    command = bot.get_command(name='ready')
+    command = bot.get_application_command(name='ready')
     if command is not None: await command.callback(command.cog, message, user=user)
 
 

@@ -57,7 +57,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
         embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
         embed.set_thumbnail(url=image_url)
-        view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', 'Show settings')
+        view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
         interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
         view.interaction = interaction
         await view.wait()
@@ -76,7 +76,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         f'Are you sure?'
     )
     view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-    interaction = await ctx.respond(answer, view=view, ephemeral=True)
+    interaction = await ctx.respond(answer, view=view)
     view.interaction = interaction
     await view.wait()
     if view.value is None:
@@ -96,7 +96,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         )
         await functions.edit_interaction(interaction, content=answer, view=None)
         if user.bot_enabled:
-            await ctx.followup.send(strings.MSG_ERROR, ephemeral=True)
+            await ctx.followup.send(strings.MSG_ERROR)
             return
     else:
         await functions.edit_interaction(interaction, content='Aborted.', view=None)
@@ -262,6 +262,31 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
                                              ),
                                              view=None)
             return
+
+
+async def command_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                 switch_view: Optional[discord.ui.View] = None) -> None:
+    """ready settings command"""
+    user_settings = clan_settings = interaction = None
+    if switch_view is not None:
+        clan_settings = getattr(switch_view, 'clan_settings', None)
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    if clan_settings is None:
+        try:
+            clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
+        except exceptions.NoDataFoundError:
+            clan_settings = None
+    view = views.SettingsReadyView(ctx, bot, user_settings, clan_settings, embed_settings_ready)
+    embed = await embed_settings_ready(bot, user_settings, clan_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
 
 
 async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
@@ -469,6 +494,65 @@ async def embed_settings_partner(bot: discord.Bot, user_settings: users.User,
     embed.add_field(name='EPIC RPG DONOR TIER', value=donor_tier, inline=False)
     embed.add_field(name='YOUR SETTINGS', value=settings_user, inline=False)
     embed.add_field(name='YOUR PARTNER\'S SETTINGS', value=settings_partner, inline=False)
+    return embed
+
+
+async def embed_settings_ready(bot: discord.Bot, user_settings: users.User,
+                               clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
+    """Ready settings embed"""
+    async def bool_to_text(boolean: bool) -> str:
+        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Ignored`'
+
+    if clan_settings is None:
+        clan_alert_visible = '`N/A`'
+    else:
+        clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
+    message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
+    command_reminders = (
+        f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
+        f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
+        f'{emojis.BP} **Daily**: {await bool_to_text(user_settings.alert_daily.visible)}\n'
+        f'{emojis.BP} **Duel**: {await bool_to_text(user_settings.alert_duel.visible)}\n'
+        f'{emojis.BP} **Dungeon / Miniboss**: {await bool_to_text(user_settings.alert_dungeon_miniboss.visible)}\n'
+        f'{emojis.BP} **Farm**: {await bool_to_text(user_settings.alert_farm.visible)}\n'
+        f'{emojis.BP} **Guild**: {await bool_to_text(user_settings.alert_guild.visible)}\n'
+        f'{emojis.BP} **Horse**: {await bool_to_text(user_settings.alert_horse_breed.visible)}\n'
+    )
+    command_reminders2 = (
+        f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
+        f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
+        f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
+        f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
+        f'{emojis.BP} **Vote**: {await bool_to_text(user_settings.alert_vote.visible)}\n'
+        f'{emojis.BP} **Weekly**: {await bool_to_text(user_settings.alert_weekly.visible)}\n'
+        f'{emojis.BP} **Work**: {await bool_to_text(user_settings.alert_work.visible)}'
+    )
+    event_reminders = (
+        f'{emojis.BP} **Big arena**: {await bool_to_text(user_settings.alert_big_arena.visible)}\n'
+        f'{emojis.BP} **Horse race**: {await bool_to_text(user_settings.alert_horse_race.visible)}\n'
+        f'{emojis.BP} **Lottery**: {await bool_to_text(user_settings.alert_lottery.visible)}\n'
+        f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
+        f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
+    )
+    clan_reminder = (
+        f'{emojis.BP} **Guild channel**: {clan_alert_visible}\n'
+    )
+    field_settings = (
+        f'{emojis.BP} **Message style**: `{message_style}`\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'READY SETTINGS',
+        description = (
+            f'_Settings to toggle visibility of reminders in {strings.SLASH_COMMANDS_NAVI["ready"]}._\n'
+            f'Ignoring a reminder removes it from the ready list but doesn\'t disable the reminder itself.'
+        )
+    )
+    embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
+    embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
+    embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='GUILD CHANNEL REMINDER', value=clan_reminder, inline=False)
+    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
     return embed
 
 

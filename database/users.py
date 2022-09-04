@@ -15,6 +15,7 @@ class UserAlert(NamedTuple):
     """Object that summarizes all user settings for a specific alert"""
     enabled: bool
     message: str
+    visible: bool
 
 @dataclass()
 class User():
@@ -66,6 +67,7 @@ class User():
     ping_after_message: bool
     guild_quest_prompt_active: bool
     reactions_enabled: bool
+    ready_as_embed: bool
     rubies: int
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -124,6 +126,7 @@ class User():
         self.ping_after_message = new_settings.ping_after_message
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
+        self.ready_as_embed = new_settings.ready_as_embed
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -142,46 +145,65 @@ class User():
             alert_adventure_message: str
             alert_arena_enabled: bool
             alert_arena_message: str
+            alert_arena_visible: bool
             alert_big_arena_enabled: bool
             alert_big_arena_message: str
+            alert_big_arena_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
+            alert_daily_visible: bool
             alert_duel_enabled: bool
             alert_duel_message: str
+            alert_duel_visible: bool
             alert_dungeon_miniboss_enabled: bool
             alert_dungeon_miniboss_message: str
+            alert_dungeon_miniboss_visible: bool
             alert_farm_enabled: bool
             alert_farm_message: str
+            alert_farm_visible: bool
             alert_guild_enabled: bool
             alert_guild_message: str
+            alert_guild_visible: bool
             alert_horse_breed_enabled: bool
             alert_horse_breed_message: str
+            alert_horse_breed_visible: bool
             alert_horse_race_enabled: bool
             alert_horse_race_message: str
+            alert_horse_race_visible: bool
             alert_hunt_enabled: bool
             alert_hunt_message: str
+            alert_hunt_visible: bool
             alert_lootbox_enabled: bool
             alert_lootbox_message: str
+            alert_lootbox_visible: bool
             alert_lottery_enabled: bool
             alert_lottery_message: str
+            alert_lottery_visible: bool
             alert_not_so_mini_boss_enabled: bool
             alert_not_so_mini_boss_message: str
+            alert_not_so_mini_boss_visible: bool
             alert_partner_enabled: bool
             alert_partner_message: str
             alert_pet_tournament_enabled: bool
             alert_pet_tournament_message: str
+            alert_pet_tournament_visible: bool
             alert_pets_enabled: bool
             alert_pets_message: str
             alert_quest_enabled: bool
             alert_quest_message: str
+            alert_quest_visible: bool
             alert_training_enabled: bool
             alert_training_message: str
+            alert_training_visible: bool
             alert_vote_enabled: bool
             alert_vote_message: str
+            alert_vote_visible: bool
             alert_weekly_enabled: bool
             alert_weekly_message: str
+            alert_weekly_visible: bool
             alert_work_enabled: bool
             alert_work_message: str
+            alert_work_visible: bool
             auto_ready_enabled: bool
             bot_enabled: bool
             clan_name: str
@@ -207,6 +229,7 @@ class User():
             pet_tip_read: bool
             ping_after_message: bool
             reactions_enabled: bool
+            ready_as_embed: bool
             rubies: int
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -238,49 +261,71 @@ async def _dict_to_user(record: dict) -> User:
     try:
         user = User(
             alert_adventure = UserAlert(enabled=bool(record['alert_adventure_enabled']),
-                                        message=record['alert_adventure_message']),
+                                        message=record['alert_adventure_message'],
+                                        visible=bool(record['alert_adventure_visible'])),
             alert_arena = UserAlert(enabled=bool(record['alert_arena_enabled']),
-                                    message=record['alert_arena_message']),
+                                    message=record['alert_arena_message'],
+                                    visible=bool(record['alert_arena_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
-                                        message=record['alert_big_arena_message']),
+                                        message=record['alert_big_arena_message'],
+                                        visible=bool(record['alert_big_arena_visible'])),
             alert_daily = UserAlert(enabled=bool(record['alert_daily_enabled']),
-                                    message=record['alert_daily_message']),
+                                    message=record['alert_daily_message'],
+                                    visible=bool(record['alert_daily_visible'])),
             alert_duel = UserAlert(enabled=bool(record['alert_duel_enabled']),
-                                   message=record['alert_duel_message']),
+                                   message=record['alert_duel_message'],
+                                   visible=bool(record['alert_duel_visible'])),
             alert_dungeon_miniboss = UserAlert(enabled=bool(record['alert_dungeon_miniboss_enabled']),
-                                               message=record['alert_dungeon_miniboss_message']),
+                                               message=record['alert_dungeon_miniboss_message'],
+                                               visible=bool(record['alert_dungeon_miniboss_visible'])),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
-                                   message=record['alert_farm_message']),
+                                   message=record['alert_farm_message'],
+                                   visible=bool(record['alert_farm_visible'])),
             alert_guild = UserAlert(enabled=bool(record['alert_guild_enabled']),
-                                   message=record['alert_guild_message']),
+                                   message=record['alert_guild_message'],
+                                   visible=bool(record['alert_guild_visible'])),
             alert_horse_breed = UserAlert(enabled=bool(record['alert_horse_breed_enabled']),
-                                          message=record['alert_horse_breed_message']),
+                                          message=record['alert_horse_breed_message'],
+                                          visible=bool(record['alert_horse_breed_visible'])),
             alert_horse_race = UserAlert(enabled=bool(record['alert_horse_race_enabled']),
-                                         message=record['alert_horse_race_message']),
+                                         message=record['alert_horse_race_message'],
+                                         visible=bool(record['alert_horse_race_visible'])),
             alert_hunt = UserAlert(enabled=bool(record['alert_hunt_enabled']),
-                                   message=record['alert_hunt_message']),
+                                   message=record['alert_hunt_message'],
+                                   visible=bool(record['alert_hunt_visible'])),
             alert_lootbox = UserAlert(enabled=bool(record['alert_lootbox_enabled']),
-                                      message=record['alert_lootbox_message']),
+                                      message=record['alert_lootbox_message'],
+                                      visible=bool(record['alert_lootbox_visible'])),
             alert_lottery = UserAlert(enabled=bool(record['alert_lottery_enabled']),
-                                      message=record['alert_lottery_message']),
+                                      message=record['alert_lottery_message'],
+                                      visible=bool(record['alert_lottery_visible'])),
             alert_not_so_mini_boss = UserAlert(enabled=bool(record['alert_not_so_mini_boss_enabled']),
-                                               message=record['alert_not_so_mini_boss_message']),
+                                               message=record['alert_not_so_mini_boss_message'],
+                                               visible=bool(record['alert_not_so_mini_boss_visible'])),
             alert_partner = UserAlert(enabled=bool(record['alert_partner_enabled']),
-                                      message=record['alert_partner_message']),
+                                      message=record['alert_partner_message'],
+                                      visible=True),
             alert_pet_tournament = UserAlert(enabled=bool(record['alert_pet_tournament_enabled']),
-                                             message=record['alert_pet_tournament_message']),
+                                             message=record['alert_pet_tournament_message'],
+                                             visible=bool(record['alert_pet_tournament_visible'])),
             alert_pets = UserAlert(enabled=bool(record['alert_pets_enabled']),
-                                   message=record['alert_pets_message']),
+                                   message=record['alert_pets_message'],
+                                   visible=True),
             alert_quest = UserAlert(enabled=bool(record['alert_quest_enabled']),
-                                    message=record['alert_quest_message']),
+                                    message=record['alert_quest_message'],
+                                    visible=bool(record['alert_quest_visible'])),
             alert_training = UserAlert(enabled=bool(record['alert_training_enabled']),
-                                       message=record['alert_training_message']),
+                                       message=record['alert_training_message'],
+                                       visible=bool(record['alert_training_visible'])),
             alert_vote = UserAlert(enabled=bool(record['alert_vote_enabled']),
-                                   message=record['alert_vote_message']),
+                                   message=record['alert_vote_message'],
+                                   visible=bool(record['alert_vote_visible'])),
             alert_weekly = UserAlert(enabled=bool(record['alert_weekly_enabled']),
-                                    message=record['alert_weekly_message']),
+                                    message=record['alert_weekly_message'],
+                                    visible=bool(record['alert_weekly_visible'])),
             alert_work = UserAlert(enabled=bool(record['alert_work_enabled']),
-                                   message=record['alert_work_message']),
+                                   message=record['alert_work_message'],
+                                   visible=bool(record['alert_work_visible'])),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
@@ -306,6 +351,7 @@ async def _dict_to_user(record: dict) -> User:
             pet_tip_read = bool(record['pet_tip_read']),
             ping_after_message = bool(record['ping_after_message']),
             reactions_enabled = bool(record['reactions_enabled']),
+            ready_as_embed = bool(record['ready_as_embed']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -470,44 +516,65 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_adventure_message: str
         alert_arena_enabled: bool
         alert_arena_message: str
+        alert_arena_visible: bool
         alert_big_arena_enabled: bool
         alert_big_arena_message: str
+        alert_big_arena_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
+        alert_daily_visible: bool
         alert_duel_enabled: bool
         alert_duel_message: str
+        alert_duel_visible: bool
         alert_dungeon_miniboss_enabled: bool
         alert_dungeon_miniboss_message: str
+        alert_dungeon_miniboss_visible: bool
         alert_farm_enabled: bool
         alert_farm_message: str
+        alert_farm_visible: bool
         alert_guild_enabled: bool
         alert_guild_message: str
+        alert_guild_visible: bool
         alert_horse_breed_enabled: bool
         alert_horse_breed_message: str
+        alert_horse_breed_visible: bool
         alert_horse_race_enabled: bool
         alert_horse_race_message: str
+        alert_horse_race_visible: bool
         alert_hunt_enabled: bool
         alert_hunt_message: str
+        alert_hunt_visible: bool
         alert_lootbox_enabled: bool
         alert_lootbox_message: str
+        alert_lootbox_visible: bool
         alert_lottery_enabled: bool
         alert_lottery_message: str
+        alert_lottery_visible: bool
         alert_not_so_mini_boss_enabled: bool
         alert_not_so_mini_boss_message: str
+        alert_not_so_mini_boss_visible: bool
         alert_partner_enabled: bool
         alert_partner_message: str
+        alert_pet_tournament_enabled: bool
+        alert_pet_tournament_message: str
+        alert_pet_tournament_visible: bool
         alert_pets_enabled: bool
         alert_pets_message: str
         alert_quest_enabled: bool
         alert_quest_message: str
+        alert_quest_visible: bool
         alert_training_enabled: bool
         alert_training_message: str
+        alert_training_visible: bool
         alert_vote_enabled: bool
         alert_vote_message: str
+        alert_vote_visible: bool
         alert_weekly_enabled: bool
         alert_weekly_message: str
+        alert_weekly_visible: bool
         alert_work_enabled: bool
         alert_work_message: str
+        alert_work_visible: bool
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
@@ -529,6 +596,7 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_id: int
         partner_name: str
         pet_helper_enabled: bool
+        ready_as_embed: bool
         rubies: int
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

@@ -17,6 +17,7 @@ class Clan():
     """Object that represents a record from table "clans"."""
     alert_enabled: bool
     alert_message: str
+    alert_visible: bool
     channel_id: int
     clan_name: str
     leader_id: int
@@ -53,6 +54,7 @@ class Clan():
             return
         self.alert_enabled = new_settings.alert_enabled
         self.alert_message = new_settings.alert_message
+        self.alert_visible = new_settings.alert_visible
         self.channel_id = new_settings.channel_id
         self.leader_id = new_settings.leader_id
         self.member_ids = new_settings.member_ids
@@ -69,6 +71,7 @@ class Clan():
         kwargs (column=value):
             alert_enabled: bool
             alert_message: str
+            alert_visible: bool
             channel_id: int
             clan_name: str
             leader_id: int
@@ -129,6 +132,7 @@ async def _dict_to_clan(record: dict) -> Clan:
         clan = Clan(
             alert_enabled = bool(record['alert_enabled']),
             alert_message = record['alert_message'],
+            alert_visible = bool(record['alert_visible']),
             channel_id = record['channel_id'],
             clan_name = record['clan_name'],
             leader_id = record['leader_id'],
@@ -478,6 +482,7 @@ async def _update_clan(clan_name: str, **kwargs) -> None:
     kwargs (column=value):
         alert_enabled: bool
         alert_message: str
+        alert_visible: bool
         channel_id: int
         clan_name: str
         leader_id: int

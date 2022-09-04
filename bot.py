@@ -118,10 +118,6 @@ EXTENSIONS = [
         'cogs.weekly',
         'cogs.work',
         'cogs.dev_old',
-        'cogs.reminders_custom_old',
-        'cogs.settings_clan_old',
-        'cogs.settings_partner_old',
-        'cogs.settings_user_old',
     ]
 
 if __name__ == '__main__':

@@ -9,6 +9,7 @@ from typing import Optional, Union
 import discord
 from discord.ext import commands
 
+from content import settings as settings_cmd
 from database import clans, guilds, reminders, users
 from resources import emojis, functions, exceptions, settings, strings, views
 
@@ -56,7 +57,7 @@ async def command_ready(
 ) -> None:
     """Lists all commands that are ready to use"""
     if isinstance(ctx, discord.Message):
-        message = message
+        message = ctx
         auto_ready = True
     else:
         message = ctx.message
@@ -83,7 +84,8 @@ async def command_ready(
         except exceptions.NoDataFoundError:
             pass
     clan_alert_enabled = getattr(clan, 'alert_enabled', False)
-    if clan_alert_enabled:
+    clan_alert_visible = getattr(clan, 'alert_visible', False)
+    if clan_alert_enabled and clan_alert_visible:
         if clan.stealth_current >= clan.stealth_threshold:
             clan_command = await functions.get_slash_command(user_settings, 'guild raid')
         else:
@@ -107,17 +109,18 @@ async def command_ready(
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:
             ready_event_activities.remove(activity)
-    """
+
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user.name}\'S READY'.upper()
     )
-    """
     answer = answer_title = f'**{user.name}\'S READY**'.upper()
     if ready_command_activities:
         field_ready_commands = ''
         ready_commands = []
         for activity in ready_command_activities:
+            alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
+            if not alert_settings.visible: continue
             if activity == 'dungeon-miniboss':
                 command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
                 command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
@@ -158,11 +161,13 @@ async def command_ready(
                 f'**COMMANDS**\n'
                 f'{field_ready_commands.strip()}'
             )
-            #embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
+            embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
     if ready_event_activities:
         field_ready_events = ''
         ready_events = []
         for activity in ready_event_activities:
+            alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
+            if not alert_settings.visible: continue
             if activity == 'big-arena' and not 'arena' in ready_command_activities:
                 continue
             elif activity == 'horse-race' and not 'horse' in ready_command_activities:
@@ -183,7 +188,7 @@ async def command_ready(
                 f'**EVENTS**\n'
                 f'{field_ready_events.strip()}'
             )
-            #embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
+            embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
     clan_alert_enabled = getattr(clan, 'alert_enabled', False)
     if not clan_reminder and clan_alert_enabled:
         field_ready_clan = f"{emojis.BP} {clan_command}"
@@ -192,27 +197,35 @@ async def command_ready(
             f'**GUILD CHANNEL**\n'
             f'{field_ready_clan}'
         )
-        #embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
+        embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
     if answer == answer_title:
         answer = (
             f'{answer}\n'
             f'{emojis.BP} All done!'
         )
-    #if not embed.fields: embed.description = f'{emojis.BP} All done!'
+    if not embed.fields: embed.description = f'{emojis.BP} All done!'
     if auto_ready:
-        #prefix = await guilds.get_prefix(message)
-        #embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
-        #await message.channel.send(embed=embed)
-        await message.channel.send(answer)
+        embed.set_footer(text=f"See '/ready' if you want to disable this message.")
+        if user_settings.ready_as_embed:
+            await message.channel.send(embed=embed)
+        else:
+            await message.channel.send(answer)
     else:
         view = views.AutoReadyView(ctx, user, user_settings)
-        #interaction_message = await message.reply(embed=embed, view=view)
         if isinstance(ctx, discord.ApplicationContext):
-            interaction_message = await ctx.respond(answer, view=view)
+            if user_settings.ready_as_embed:
+                interaction_message = await ctx.respond(embed=embed, view=view)
+            else:
+                interaction_message = await ctx.respond(answer, view=view)
         else:
-            interaction_message = await ctx.reply(answer, view=view)
+            if user_settings.ready_as_embed:
+                interaction_message = await ctx.reply(embed=embed, view=view)
+            else:
+                interaction_message = await ctx.reply(answer, view=view)
         view.interaction_message = interaction_message
         await view.wait()
+        if view.value == 'show_settings':
+            await settings_cmd.command_settings_ready(bot, ctx)
 
 
 # -- Embeds ---
