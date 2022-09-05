@@ -96,7 +96,7 @@ class DevCog(commands.Cog):
             return
         if activity.lower() == 'all':
             all_cooldowns = await cooldowns.get_all_cooldowns()
-            answer = 'Changed event reduction for all activites as follows:'
+            answer = 'Changed event reduction for all activities as follows:'
             for cooldown in all_cooldowns:
                 await cooldown.update(event_reduction=event_reduction)
                 if cooldown.event_reduction == event_reduction:
@@ -104,8 +104,8 @@ class DevCog(commands.Cog):
         else:
             cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
             await cooldown.update(event_reduction=event_reduction)
-        if cooldown.event_reduction == event_reduction:
-            answer =  f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.'
+            if cooldown.event_reduction == event_reduction:
+                answer =  f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.'
         await ctx.respond(answer)
 
     @dev.command(name='base-cooldown')

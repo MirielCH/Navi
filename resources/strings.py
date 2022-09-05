@@ -59,7 +59,7 @@ CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
     '<:amongus_sus:875996946903478292> There is one player among us that wants us to believe he is not an impostor.'
 )
 
-MSG_ERROR = 'Whoops, something went wrong here.'
+MSG_ERROR = 'Whoops, something went wrong here. You should probably tell Miriel#0001 about this.'
 MSG_NOT_CLAN_LEADER = (
     '**{username}**, you are not registered as a guild owner. Only guild owners can change guild channel settings.\n'
     'If you _are_ the guild owner, run `rpg guild list` to add or update your guild in my database.\n'
@@ -259,9 +259,9 @@ ACTIVITIES_COLUMNS = {
 ACTIVITIES_WITH_COOLDOWN = (
     'adventure',
     'arena',
+    'clan',
     'daily',
     'farm',
-    'guild',
     'horse',
     'hunt',
     'lootbox',
@@ -272,8 +272,8 @@ ACTIVITIES_WITH_COOLDOWN = (
     'work',
 )
 ACTIVITIES_WITH_COOLDOWN_ALL = list(ACTIVITIES_WITH_COOLDOWN[:])
-ACTIVITIES_WITH_COOLDOWN_ALL.append('all')
 ACTIVITIES_WITH_COOLDOWN_ALL.sort()
+ACTIVITIES_WITH_COOLDOWN_ALL.insert(0, 'all')
 
 # --- Monsters ---
 MONSTERS_ADVENTURE = (

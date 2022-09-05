@@ -128,6 +128,20 @@ class SettingsCog(commands.Cog):
         """Clan settings (prefix version)"""
         await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings guild"]} to change this setting.')
 
+    @commands.command(name='settings', aliases=('me',))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings(self, ctx: commands.Context, *args: str) -> None:
+        """Settings (prefix version)"""
+        await ctx.reply(
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings guild"]}\n'
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings helpers"]}\n'
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings messages"]}\n'
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings partner"]}\n'
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings ready"]}\n'
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings reminders"]}\n'
+            f'➜ {strings.SLASH_COMMANDS_NAVI["settings user"]}\n'
+        )
+
     # Events
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:

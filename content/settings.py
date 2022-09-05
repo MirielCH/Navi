@@ -61,7 +61,9 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
         view.interaction = interaction
         await view.wait()
-        if view.value == 'pressed': await settings_cmd.command_settings_user(bot, ctx)
+        if view.value == 'pressed':
+            await functions.edit_interaction(interaction, view=None)
+            await settings_cmd.command_settings_user(bot, ctx)
 
 
 async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
@@ -90,12 +92,13 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
                 await reminder.delete()
         except exceptions.NoDataFoundError:
             pass
-        answer = (
-            f'**{ctx.author.name}**, I\'m now turned off.\n'
-            f'All active reminders were deleted.'
-        )
-        await functions.edit_interaction(interaction, content=answer, view=None)
-        if user.bot_enabled:
+        if not user.bot_enabled:
+            answer = (
+                f'**{ctx.author.name}**, I\'m now turned off.\n'
+                f'All active reminders were deleted.'
+            )
+            await functions.edit_interaction(interaction, content=answer, view=None)
+        else:
             await ctx.followup.send(strings.MSG_ERROR)
             return
     else:
@@ -114,11 +117,12 @@ async def command_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContex
             clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
             await ctx.respond(
-                f'Your guild is not registered with me yet. Use {strings.SLASH_COMMANDS_NEW("guild list")} '
+                f'Your guild is not registered with me yet. Use {strings.SLASH_COMMANDS_NEW["guild list"]} '
                 f'to do that first.',
                 ephemeral=True
             )
             return
+    if switch_view is not None: switch_view.stop()
     view = views.SettingsClanView(ctx, bot, clan_settings, embed_settings_clan)
     embed = await embed_settings_clan(bot, clan_settings)
     if interaction is None:
@@ -136,6 +140,7 @@ async def command_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationCon
     if switch_view is not None:
         user_settings = getattr(switch_view, 'user_settings', None)
         interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsHelpersView(ctx, bot, user_settings, embed_settings_helpers)
@@ -155,6 +160,7 @@ async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCo
     if switch_view is not None:
         user_settings = getattr(switch_view, 'user_settings', None)
         interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsMessagesView(ctx, bot, user_settings, embed_settings_messages, 'all')
@@ -176,6 +182,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
         user_settings = getattr(switch_view, 'user_settings', None)
         partner_settings = getattr(switch_view, 'partner_settings', None)
         interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     if partner_settings is None and user_settings.partner_id is not None:
@@ -220,7 +227,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
             else:
                 await functions.edit_interaction(interaction, content='Aborted.', view=None)
                 return
-        view = views.ConfirmMarriagelView(ctx, new_partner)
+        view = views.ConfirmMarriageView(ctx, new_partner)
         interaction = await ctx.respond(
             f'{new_partner.mention}, **{ctx.author.name}** wants to set you as their partner.\n'
             f'Do you want to grind together until... idk, drama?',
@@ -242,14 +249,21 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
             await user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier)
             await new_partner_settings.update(partner_id=ctx.author.id, partner_donor_tier=user_settings.user_donor_tier)
             if user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == ctx.author.id:
-                await functions.edit_interaction(interaction, view=None)
-                await ctx.respond(
+                answer = (
                     f'{emojis.BP} **{ctx.author.name}**, {new_partner.name} is now set as your partner!\n'
                     f'{emojis.BP} **{new_partner.name}**, {ctx.author.name} is now set as your partner!\n'
                     f'{emojis.BP} **{ctx.author.name}**, {ctx.author.name} is now set as your partner\'s partner!\n'
                     f'{emojis.BP} **{new_partner.name}**, ... wait what?\n\n'
                     f'Anyway, you may now kiss the brides.'
                 )
+                view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Partner settings')
+                interaction = await ctx.respond(answer, view=view)
+                view.interaction = interaction
+                await view.wait()
+                if view.value == 'pressed':
+                    await functions.edit_interaction(interaction, view=None)
+                    await settings_cmd.command_settings_partner(bot, ctx)
+                await functions.edit_interaction(interaction, view=None)
                 return
             else:
                 await ctx.send(strings.MSG_ERROR)
@@ -272,6 +286,7 @@ async def command_settings_ready(bot: discord.Bot, ctx: discord.ApplicationConte
         clan_settings = getattr(switch_view, 'clan_settings', None)
         user_settings = getattr(switch_view, 'user_settings', None)
         interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     if clan_settings is None:
@@ -296,6 +311,7 @@ async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationC
     if switch_view is not None:
         user_settings = getattr(switch_view, 'user_settings', None)
         interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsRemindersView(ctx, bot, user_settings, embed_settings_reminders)
@@ -315,6 +331,7 @@ async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContex
     if switch_view is not None:
         user_settings = getattr(switch_view, 'user_settings', None)
         interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsUserView(ctx, bot, user_settings, embed_settings_user)
@@ -367,7 +384,7 @@ async def embed_settings_clan(bot: discord.Bot, clan_settings: clans.Clan) -> di
     members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS_NEW["guild list"]} to update guild members._'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'GUILD SETTINGS',
+        title = f'{clan_settings.clan_name} GUILD SETTINGS',
         description = (
             f'_Settings to set up a guild reminder for the whole guild. Note that if you enable this reminder, Navi will '
             f'ping **all guild members**.\n'

@@ -95,7 +95,7 @@ class ConfirmCancelView(discord.ui.View):
         self.stop()
 
 
-class ConfirmMarriagelView(discord.ui.View):
+class ConfirmMarriageView(discord.ui.View):
     """View with confirm and cancel button.
 
     Args: ctx, labels: Optional[list[str]]

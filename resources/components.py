@@ -44,16 +44,18 @@ class ToggleAutoReadyButton(discord.ui.Button):
 
 
 class CustomButton(discord.ui.Button):
-    """Simple Button. Writes its custom id to the view value, disables all components of the view and stops the view."""
+    """Simple Button. Writes its custom id to the view value, stops the view and does an invisible response."""
     def __init__(self, style: discord.ButtonStyle, custom_id: str, label: Optional[str],
                  emoji: Optional[discord.PartialEmoji] = None):
         super().__init__(style=style, custom_id=custom_id, label=label, emoji=emoji)
 
     async def callback(self, interaction: discord.Interaction):
         self.view.value = self.custom_id
-        self.view.disable_all_items()
         self.view.stop()
-        await interaction.response.edit_message(view=self.view)
+        try:
+            await interaction.response.send_message()
+        except Exception:
+            pass
 
 
 class DisabledButton(discord.ui.Button):
@@ -135,7 +137,7 @@ class ToggleReadySettingsSelect(discord.ui.Select):
         else:
             setting_value = getattr(self.view.user_settings, select_value)
             if isinstance(setting_value, users.UserAlert):
-                setting_value = getattr(setting_value, 'enabled')
+                setting_value = getattr(setting_value, 'visible')
             if not select_value.endswith('_visible'):
                 select_value = f'{select_value}_visible'
             kwargs[select_value] = not setting_value
@@ -287,7 +289,6 @@ class SwitchSettingsSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
         await interaction.response.edit_message()
-        self.view.stop()
         await self.commands_settings[select_value](self.view.bot, self.view.ctx, switch_view = self.view)
 
 

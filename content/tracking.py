@@ -17,11 +17,20 @@ async def command_stats(
     bot: discord.Bot,
     ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
     timestring: Optional[str] = None,
+    user: Optional[discord.User] = None,
 ) -> None:
     """Lists all stats"""
-    user_settings: users.User = await users.get_user(ctx.author.id)
+    if user is None: user = ctx.author
+    try:
+        user_settings: users.User = await users.get_user(user.id)
+    except exceptions.FirstTimeUserError:
+        if user == ctx.author:
+            raise
+        else:
+            await functions.reply_or_respond(ctx, 'This user is not registered with this bot.', True)
+            return
     if timestring is None:
-        embed = await embed_stats_overview(ctx, ctx.author)
+        embed = await embed_stats_overview(ctx, user)
     else:
         try:
             timestring = await functions.check_timestring(timestring)
@@ -40,8 +49,8 @@ async def command_stats(
         if time_left.days > 365:
             await ctx.reply('The maximum time is 365d, sorry.')
             return
-        embed = await embed_stats_timeframe(ctx, ctx.author, time_left)
-    view = views.StatsView(ctx, ctx.author, user_settings)
+        embed = await embed_stats_timeframe(ctx, user, time_left)
+    view = views.StatsView(ctx, user, user_settings)
     if isinstance(ctx, discord.ApplicationContext):
         interaction_message = await ctx.respond(embed=embed, view=view)
     else:

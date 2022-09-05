@@ -226,6 +226,7 @@ async def command_ready(
         await view.wait()
         if view.value == 'show_settings':
             await settings_cmd.command_settings_ready(bot, ctx)
+            await functions.edit_interaction(interaction_message, view=None)
 
 
 # -- Embeds ---
