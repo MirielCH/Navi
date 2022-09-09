@@ -243,7 +243,7 @@ async def command_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationCon
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsHelpersView(ctx, bot, user_settings, embed_settings_helpers)
-    embed = await embed_settings_helpers(bot, user_settings)
+    embed = await embed_settings_helpers(bot, ctx, user_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -263,7 +263,7 @@ async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCo
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsMessagesView(ctx, bot, user_settings, embed_settings_messages, 'all')
-    embeds = await embed_settings_messages(bot, user_settings, 'all')
+    embeds = await embed_settings_messages(bot, ctx, user_settings, 'all')
     if interaction is None:
         interaction = await ctx.respond(embeds=embeds, view=view)
     else:
@@ -292,7 +292,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
             return
     if new_partner is None:
         view = views.SettingsPartnerView(ctx, bot, user_settings, partner_settings, embed_settings_partner)
-        embed = await embed_settings_partner(bot, user_settings, partner_settings)
+        embed = await embed_settings_partner(bot, ctx, user_settings, partner_settings)
         if interaction is None:
             interaction = await ctx.respond(embed=embed, view=view)
         else:
@@ -394,7 +394,7 @@ async def command_settings_ready(bot: discord.Bot, ctx: discord.ApplicationConte
         except exceptions.NoDataFoundError:
             clan_settings = None
     view = views.SettingsReadyView(ctx, bot, user_settings, clan_settings, embed_settings_ready)
-    embed = await embed_settings_ready(bot, user_settings, clan_settings)
+    embed = await embed_settings_ready(bot, ctx, user_settings, clan_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -414,7 +414,7 @@ async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationC
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsRemindersView(ctx, bot, user_settings, embed_settings_reminders)
-    embed = await embed_settings_reminders(bot, user_settings)
+    embed = await embed_settings_reminders(bot, ctx, user_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -434,7 +434,7 @@ async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContex
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsUserView(ctx, bot, user_settings, embed_settings_user)
-    embed = await embed_settings_user(bot, user_settings)
+    embed = await embed_settings_user(bot, ctx, user_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -548,7 +548,8 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
             kwargs[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
             answer_user = f'{answer_user}\n{emojis.BP}`{setting}`'
 
-    await user_settings.update(**kwargs)
+    if updated_reminders or updated_helpers or updated_user:
+        await user_settings.update(**kwargs)
 
     if ignored_settings:
         answer_ignored = f'Couldn\'t find the following settings:'
@@ -623,7 +624,7 @@ async def embed_settings_clan(bot: discord.Bot, clan_settings: clans.Clan) -> di
     return embed
 
 
-async def embed_settings_helpers(bot: discord.Bot, user_settings: users.User) -> discord.Embed:
+async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
     """Helper settings embed"""
     helpers = (
         f'{emojis.BP} **Context helper**: {await functions.bool_to_text(user_settings.context_helper_enabled)}\n'
@@ -639,14 +640,15 @@ async def embed_settings_helpers(bot: discord.Bot, user_settings: users.User) ->
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'HELPER SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S HELPER SETTINGS',
         description = '_Settings to toggle some helpful little features._'
     )
     embed.add_field(name='HELPERS', value=helpers, inline=False)
     return embed
 
 
-async def embed_settings_messages(bot: discord.Bot, user_settings: users.User, activity: str) -> List[discord.Embed]:
+async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                  user_settings: users.User, activity: str) -> List[discord.Embed]:
     """Reminder message specific activity embed"""
     embed_no = 1
     embed_descriptions = {embed_no: ''}
@@ -654,7 +656,7 @@ async def embed_settings_messages(bot: discord.Bot, user_settings: users.User, a
     if activity == 'all':
         description = ''
         for activity in strings.ACTIVITIES:
-            title = 'ALL REMINDER MESSAGES'
+            title = f'{ctx.author.name.upper()}\'S REMINDER MESSAGES'
             activity_column = strings.ACTIVITIES_COLUMNS[activity]
             alert = getattr(user_settings, activity_column)
             alert_message = (
@@ -696,7 +698,7 @@ async def embed_settings_messages(bot: discord.Bot, user_settings: users.User, a
     return embeds
 
 
-async def embed_settings_partner(bot: discord.Bot, user_settings: users.User,
+async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
     user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
@@ -726,7 +728,7 @@ async def embed_settings_partner(bot: discord.Bot, user_settings: users.User,
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'PARTNER SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S PARTNER SETTINGS',
         description = (
             f'_Settings for your partner. To add or change your partner, use '
             f'{strings.SLASH_COMMANDS_NAVI["settings partner"]} `partner: @partner`._\n'
@@ -738,7 +740,7 @@ async def embed_settings_partner(bot: discord.Bot, user_settings: users.User,
     return embed
 
 
-async def embed_settings_ready(bot: discord.Bot, user_settings: users.User,
+async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready settings embed"""
     async def bool_to_text(boolean: bool) -> str:
@@ -783,7 +785,7 @@ async def embed_settings_ready(bot: discord.Bot, user_settings: users.User,
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'READY LIST SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
         description = (
             f'_Settings to toggle visibility of reminders in {strings.SLASH_COMMANDS_NAVI["ready"]}._\n'
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
@@ -797,7 +799,8 @@ async def embed_settings_ready(bot: discord.Bot, user_settings: users.User,
     return embed
 
 
-async def embed_settings_reminders(bot: discord.Bot, user_settings: users.User) -> discord.Embed:
+async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                   user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
@@ -832,7 +835,7 @@ async def embed_settings_reminders(bot: discord.Bot, user_settings: users.User) 
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'REMINDER SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S REMINDER SETTINGS',
         description = (
             f'_Settings to toggle your reminders._\n'
             f'_Note that disabling a reminder also deletes the reminder from my database._'
@@ -844,7 +847,8 @@ async def embed_settings_reminders(bot: discord.Bot, user_settings: users.User) 
     return embed
 
 
-async def embed_settings_user(bot: discord.Bot, user_settings: users.User) -> discord.Embed:
+async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
+                              user_settings: users.User) -> discord.Embed:
     """User settings embed"""
     ping_mode_setting = 'After' if user_settings.ping_after_message else 'Before'
     try:
@@ -882,7 +886,7 @@ async def embed_settings_user(bot: discord.Bot, user_settings: users.User) -> di
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'USER SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S USER SETTINGS',
         description = (
             f'_Various user settings. If you are married, also check out `Partner settings`._\n'
         )

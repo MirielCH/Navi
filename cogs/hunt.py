@@ -119,12 +119,13 @@ class HuntCog(commands.Cog):
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
                 else:
+                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
                     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                    partner_cooldown = (cooldown.actual_cooldown()
+                    partner_cooldown = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[partner_donor_tier])
-                    user_cooldown = (cooldown.actual_cooldown()
+                    user_cooldown = (actual_cooldown
                                     * settings.DONOR_COOLDOWNS[user_donor_tier])
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user == embed_user):
@@ -284,12 +285,13 @@ class HuntCog(commands.Cog):
                 else:
                     donor_tier = user_settings.user_donor_tier
                 donor_tier = 3 if donor_tier > 3 else donor_tier
+                actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 if cooldown.donor_affected:
-                    time_left_seconds = (cooldown.actual_cooldown()
+                    time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[donor_tier]
                                         - time_elapsed.total_seconds())
                 else:
-                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
@@ -504,12 +506,13 @@ class HuntCog(commands.Cog):
                     else:
                         donor_tier = user_settings.user_donor_tier
                     donor_tier = 3 if donor_tier > 3 else donor_tier
+                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     if cooldown.donor_affected:
-                        time_left_seconds = (cooldown.actual_cooldown()
+                        time_left_seconds = (actual_cooldown
                                             * settings.DONOR_COOLDOWNS[donor_tier]
                                             - time_elapsed.total_seconds())
                     else:
-                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     time_left = timedelta(seconds=time_left_seconds)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
@@ -556,12 +559,13 @@ class HuntCog(commands.Cog):
                     else:
                         donor_tier = user_settings.user_donor_tier
                     donor_tier = 3 if donor_tier > 3 else donor_tier
+                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     if cooldown.donor_affected:
-                        time_left_seconds = (cooldown.actual_cooldown()
+                        time_left_seconds = (actual_cooldown
                                             * settings.DONOR_COOLDOWNS[donor_tier]
                                             - time_elapsed.total_seconds())
                     else:
-                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     time_left = timedelta(seconds=time_left_seconds)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)

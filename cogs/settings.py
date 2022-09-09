@@ -83,7 +83,7 @@ class SettingsCog(commands.Cog):
     async def disable(
         self,
         ctx: discord.ApplicationContext,
-        settings: Option(str, 'Setting(s) you want to disable', default='')
+        settings: Option(str, 'Setting(s) you want to disable', max_length=1024, default='')
     ) -> None:
         """Disable specific settings"""
         await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.split())
@@ -94,6 +94,9 @@ class SettingsCog(commands.Cog):
     async def prefix_enable(self, ctx: commands.Context, *args: str) -> None:
         """Enable/disable specific settings (prefix version)"""
         action = ctx.invoked_with
+        if len(args) > 1024:
+            await ctx.reply('Did you just try to spam me :thinking:')
+            return
         await settings_cmd.command_enable_disable(self.bot, ctx, action, list(args))
 
     @commands.command(name='on', aliases=('register', 'activate', 'start'))
@@ -141,12 +144,6 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_partner(self, ctx: commands.Context, *args: str) -> None:
         """Partner settings (prefix version)"""
         await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings partner"]} to change this settings.')
-
-    @commands.command(name='guild')
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_clan(self, ctx: commands.Context, *args: str) -> None:
-        """Clan settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings guild"]} to change this setting.')
 
     @commands.command(name='settings', aliases=('me',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)

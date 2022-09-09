@@ -5,6 +5,7 @@ from datetime import datetime
 from humanfriendly import format_timespan
 import psutil
 import sys
+from typing import Union
 
 import discord
 from discord.ext import commands
@@ -25,11 +26,14 @@ class LinksView(discord.ui.View):
 
 
 # --- Commands ---
-async def command_help(ctx: discord.ApplicationContext) -> None:
+async def command_help(ctx: Union[discord.ApplicationContext, commands.Context, discord.Message]) -> None:
     """Help command"""
     view = LinksView()
     embed = await embed_help(ctx)
-    await ctx.respond(embed=embed, view=view)
+    if isinstance(ctx, discord.ApplicationContext):
+        await ctx.respond(embed=embed, view=view)
+    else:
+        await ctx.reply(embed=embed, view=view)
 
 
 async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
@@ -58,8 +62,8 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["stats"]} : Shows your command stats\n'
     )
     user_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["on"]} : Turn Navi on\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["off"]} : Turn Navi off\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["on"]} : Turn on Navi\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["off"]} : Turn off Navi\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings user"]} : Manage your user settings\n'
     )
     helper_settings = (
@@ -71,7 +75,7 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
     guild_settings = (
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["guild-leaderboard"]} : Check the weekly raid leaderboard\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings guild"]} : Manage guild channel reminders\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS["guild list"]} : Add/update your guild\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NEW["guild list"]} : Add/update your guild\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'

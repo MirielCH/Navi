@@ -101,7 +101,7 @@ class ClanCog(commands.Cog):
                 if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                    alert_message = strings.SLASH_COMMANDS[action]
+                    alert_message = strings.SLASH_COMMANDS_NEW[action]
                     reminder: reminders.Reminder = (
                         await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                             clan.channel_id, alert_message)
@@ -182,7 +182,7 @@ class ClanCog(commands.Cog):
                 if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                    alert_message = strings.SLASH_COMMANDS[action]
+                    alert_message = strings.SLASH_COMMANDS_NEW[action]
                     reminder: reminders.Reminder = (
                         await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                             clan.channel_id, alert_message)
@@ -221,6 +221,7 @@ class ClanCog(commands.Cog):
             if any(search_string == message_field0_name.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
+                slash_command = True if user is not None else False
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
@@ -250,11 +251,12 @@ class ClanCog(commands.Cog):
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
-                time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
+                actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
+                time_left = timedelta(seconds=actual_cooldown) - time_elapsed
                 if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                    alert_message = strings.SLASH_COMMANDS[action]
+                    alert_message = strings.SLASH_COMMANDS_NEW[action]
                     clan_stealth_before = clan.stealth_current
                     stealth_match = re.search(r"--> \*\*(.+?)\*\*", message_field0_value)
                     if stealth_match:
@@ -308,6 +310,7 @@ class ClanCog(commands.Cog):
                 and ':crossed_swords:' in message_description.lower()):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
                 if user is None:
                     search_patterns = [
                         r"\*\*(.+?)\*\* throws", #English
@@ -346,7 +349,8 @@ class ClanCog(commands.Cog):
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
-                time_left = timedelta(seconds=cooldown.actual_cooldown()) - time_elapsed
+                actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
+                time_left = timedelta(seconds=actual_cooldown) - time_elapsed
                 if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     search_patterns = [
@@ -369,7 +373,7 @@ class ClanCog(commands.Cog):
                                 'There was an error adding the raid to the leaderboard. Please tell Miri he\'s an idiot.'
                             )
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
-                    alert_message = strings.SLASH_COMMANDS[action]
+                    alert_message = strings.SLASH_COMMANDS_NEW[action]
                     reminder: reminders.Reminder = (
                         await reminders.insert_clan_reminder(clan.clan_name, time_left,
                                                             clan.channel_id, alert_message)

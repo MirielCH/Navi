@@ -18,18 +18,24 @@ class Cooldown():
     activity: str
     base_cooldown: int
     donor_affected: bool
-    event_reduction: float
+    event_reduction_mention: float
+    event_reduction_slash: float
 
-    def actual_cooldown(self) -> int:
-        """Returns the actual cooldown, factoring in the event_reduction"""
-        return ceil(self.base_cooldown * ((100 - self.event_reduction) / 100))
+    def actual_cooldown_mention(self) -> int:
+        """Returns the actual mention cooldown, factoring in the event_reduction"""
+        return ceil(self.base_cooldown * ((100 - self.event_reduction_mention) / 100))
+
+    def actual_cooldown_slash(self) -> int:
+        """Returns the actual slash cooldown, factoring in the event_reduction"""
+        return ceil(self.base_cooldown * ((100 - self.event_reduction_slash) / 100))
 
     async def refresh(self) -> None:
         """Refreshes cooldown data from the database."""
         new_settings = await get_cooldown(self.activity)
         self.base_cooldown = new_settings.base_cooldown
         self.donor_affected = new_settings.donor_affected
-        self.event_reduction = new_settings.event_reduction
+        self.event_reduction_mention = new_settings.event_reduction_mention
+        self.event_reduction_slash = new_settings.event_reduction_slash
 
     async def update(self, **kwargs) -> None:
         """Updates the cooldown record in the database. Also calls refresh().
@@ -39,7 +45,8 @@ class Cooldown():
         kwargs (column=value):
             base_cooldown: int
             donor_affected: bool
-            event_reduction: float
+            event_reduction_mention: float
+            event_reduction_slash: float
         """
         await _update_cooldown(self.activity, **kwargs)
         await self.refresh()
@@ -67,7 +74,8 @@ async def _dict_to_cooldown(record: dict) -> Cooldown:
             activity = record['activity'],
             base_cooldown = record['cooldown'],
             donor_affected = bool(record['donor_affected']),
-            event_reduction = record['event_reduction']
+            event_reduction_mention = record['event_reduction_mention'],
+            event_reduction_slash = record['event_reduction_slash'],
         )
     except Exception as error:
         await errors.log_error(
@@ -164,7 +172,8 @@ async def _update_cooldown(activity: str, **kwargs) -> None:
     kwargs (column=value):
         cooldown: int
         donor_affected: bool
-        event_reduction: float
+        event_reduction_mention: float
+        event_reduction_slash: float
 
     Raises
     ------

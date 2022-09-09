@@ -1,10 +1,6 @@
 # strings.py
 """Contains global strings"""
 
-import re
-
-from resources import settings
-
 # --- Error messages ---
 MSG_INTERACTION_ERROR = 'You are not allowed to use this interaction.'
 
@@ -60,15 +56,7 @@ CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
 )
 
 MSG_ERROR = 'Whoops, something went wrong here. You should probably tell Miriel#0001 about this.'
-MSG_NOT_CLAN_LEADER = (
-    '**{username}**, you are not registered as a guild owner. Only guild owners can change guild channel settings.\n'
-    'If you _are_ the guild owner, run `rpg guild list` to add or update your guild in my database.\n'
-    'If you don\'t know yet, check `{prefix}guild` to see how guild channel reminders work.\n\n'
-    'If you want to enable or disable the personal guild command reminder, use `{prefix}enable|disable guild` instead.'
-)
-MSG_INVALID_ARGUMENT = 'Invalid argument. Check `{prefix}help` for the correct commands.'
 MSG_SYNTAX = 'The command syntax is `{syntax}`.'
-MSG_CLAN_NOT_REGISTERED = 'Your guild is not registered with Navi. If you are in a guild, use `rpg guild list` to add it.'
 
 DONOR_TIERS = (
     'Non-donator',

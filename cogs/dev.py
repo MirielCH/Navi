@@ -12,6 +12,12 @@ from database import cooldowns
 from resources import emojis, functions, settings, strings, views
 
 
+EVENT_REDUCTION_TYPES = [
+    'Mention',
+    'Slash',
+]
+
+
 class DevCog(commands.Cog):
     """Cog class containing internal dev commands"""
     def __init__(self, bot: discord.Bot):
@@ -73,39 +79,60 @@ class DevCog(commands.Cog):
     async def event_reduction(
         self,
         ctx: discord.ApplicationContext,
-        activity: Option(str, 'Activity to update', choices=strings.ACTIVITIES_WITH_COOLDOWN_ALL, default=None),
+        command_type: Option(str, 'Reduction type', choices=EVENT_REDUCTION_TYPES),
+        activities: Option(str, 'Activities to update', default=''),
         event_reduction: Option(float, 'Event reduction in percent', min_value=0, max_value=99, default=None),
     ) -> None:
         """Changes the event reduction for activities"""
-        if activity is None and event_reduction is None:
+        activities = activities.split()
+        if not activities and event_reduction is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
-            answer = 'Current event reductions:'
+            answer = f'Current event reductions for {command_type.lower()} commands:'
             for cooldown in all_cooldowns:
+                event_reduction = getattr(cooldown, f'event_reduction_{command_type.lower()}')
+                actual_cooldown = cooldown.actual_cooldown_mention() if command_type == 'Mention' else cooldown.actual_cooldown_slash()
                 cooldown_message = (
-                    f'{emojis.BP} {cooldown.activity}: {cooldown.event_reduction}% '
-                    f'({cooldown.actual_cooldown():,}s)'
+                    f'{emojis.BP} {cooldown.activity}: {event_reduction}% '
+                    f'({actual_cooldown:,}s)'
                 )
-                answer = f'{answer}\n**{cooldown_message}**' if cooldown.event_reduction > 0 else f'{answer}\n{cooldown_message}'
+                answer = f'{answer}\n**{cooldown_message}**' if event_reduction > 0 else f'{answer}\n{cooldown_message}'
             await ctx.respond(answer)
             return
-        if activity is None or event_reduction is None:
+        if not activities or event_reduction is None:
             await ctx.respond(
-                'You need to set both options. If you want to see the current reductions, leave both options empty.',
+                f'You need to set both activity _and_ event_reduction. If you want to see the current reductions, '
+                f'leave both options empty.',
                 ephemeral=True
             )
             return
-        if activity.lower() == 'all':
-            all_cooldowns = await cooldowns.get_all_cooldowns()
-            answer = 'Changed event reduction for all activities as follows:'
-            for cooldown in all_cooldowns:
-                await cooldown.update(event_reduction=event_reduction)
-                if cooldown.event_reduction == event_reduction:
-                    answer = f'{answer}\n{emojis.BP} `{cooldown.activity}` to **{cooldown.event_reduction}%**'
-        else:
-            cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-            await cooldown.update(event_reduction=event_reduction)
-            if cooldown.event_reduction == event_reduction:
-                answer =  f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.'
+        for index, activity in enumerate(activities):
+            if activity in strings.ACTIVITIES_ALIASES: activities[index] = strings.ACTIVITIES_ALIASES[activity]
+
+        if 'all' in activities:
+            activities += strings.ACTIVITIES_WITH_COOLDOWN
+            activities.remove('all')
+        updated_activities = []
+        ignored_activities = []
+        for activity in activities:
+            if activity in strings.ACTIVITIES_WITH_COOLDOWN:
+                updated_activities.append(activity)
+            else:
+                ignored_activities.append(activity)
+        all_cooldowns = await cooldowns.get_all_cooldowns()
+        answer = ''
+        if updated_activities:
+            answer = f'Updated event reductions for {command_type.lower()} commands as follows:'
+            for activity in updated_activities:
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
+                kwarg = {
+                    f'event_reduction_{command_type.lower()}': event_reduction,
+                }
+                await cooldown.update(**kwarg)
+                answer = f'{answer}\n{emojis.BP} `{cooldown.activity}` to **{event_reduction}%**'
+        if ignored_activities:
+            answer = f'{answer}\n\nDidn\'t find the following activities:'
+            for ignored_activity in ignored_activities:
+                answer = f'{answer}\n{emojis.BP} `{ignored_activity}`'
         await ctx.respond(answer)
 
     @dev.command(name='base-cooldown')

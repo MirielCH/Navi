@@ -260,12 +260,13 @@ class QuestCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 if cooldown.donor_affected:
-                    time_left_seconds = (cooldown.actual_cooldown()
+                    time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[user_donor_tier]
                                         - time_elapsed.total_seconds())
                 else:
-                    time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
@@ -326,12 +327,13 @@ class QuestCog(commands.Cog):
                 else:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
                     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     if cooldown.donor_affected:
-                        time_left_seconds = (cooldown.actual_cooldown()
+                        time_left_seconds = (actual_cooldown
                                             * settings.DONOR_COOLDOWNS[user_donor_tier]
                                             - time_elapsed.total_seconds())
                     else:
-                        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+                        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)

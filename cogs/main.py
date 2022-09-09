@@ -1,6 +1,8 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
+from typing import Union
+
 import discord
 from discord.ext import commands
 from discord.commands import slash_command
@@ -25,6 +27,23 @@ class MainCog(commands.Cog):
     async def about(self, ctx: discord.ApplicationContext) -> None:
         """About command"""
         await main.command_about(self.bot, ctx)
+
+    @commands.command(name='help', aliases=('h',))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_help(self, ctx: Union[commands.Context, discord.Message]) -> None:
+        """Main help command (prefix version)"""
+        await main.command_help(ctx)
+
+    @commands.command(aliases=('inv',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def prefix_invite(self, ctx: commands.Context) -> None:
+        """Invite command"""
+        message = (
+            f'Sorry, you can\'t invite me.\n'
+            f'However, I am fully open source on an MIT license, so feel free to run me yourself.\n'
+            f'https://github.com/Miriel-py/Navi'
+        )
+        await ctx.reply(message)
 
      # Events
     @commands.Cog.listener()
@@ -86,6 +105,60 @@ class MainCog(commands.Cog):
             if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
 
     @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, error: Exception) -> None:
+        """Runs when an error occurs and handles them accordingly.
+        Interesting errors get written to the database for further review.
+        """
+        async def send_error() -> None:
+            """Sends error message as embed"""
+            embed = discord.Embed(title='An error occured')
+            embed.add_field(name='Command', value=f'`{ctx.command.qualified_name}`', inline=False)
+            embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
+            await ctx.reply(embed=embed)
+
+        error = getattr(error, 'original', error)
+        if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
+            return
+        elif isinstance(error, commands.CommandOnCooldown):
+            await ctx.reply(
+                f'**{ctx.author.name}**, you can only use this command every '
+                f'{int(error.cooldown.per)} seconds.\n'
+                f'You have to wait another **{error.retry_after:.1f}s**.'
+            )
+        elif isinstance(error, commands.DisabledCommand):
+            await ctx.reply(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
+        elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
+                                commands.TooManyArguments, commands.BadArgument)):
+            await send_error()
+        elif isinstance(error, commands.BotMissingPermissions):
+            if 'send_messages' in error.missing_permissions:
+                return
+            if 'embed_links' in error.missing_perms:
+                await ctx.reply(error)
+            else:
+                await send_error()
+        elif isinstance(error, exceptions.FirstTimeUserError):
+            await ctx.reply(
+                f'**{ctx.author.name}**, looks like I don\'t know you yet.\n'
+                f'Use `{ctx.prefix}on` to activate me first.'
+            )
+        elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
+                                commands.ExpectedClosingQuoteError)):
+            await ctx.reply(
+                f'**{ctx.author.name}**, whatever you just entered contained invalid characters I can\'t process.\n'
+                f'Please try that again.'
+            )
+            await errors.log_error(error, ctx)
+        elif isinstance(error, commands.CheckFailure):
+            await ctx.respond(
+                await ctx.respond('As you might have guessed, you are not allowed to use this command.',
+                ephemeral=True)
+            )
+        else:
+            await errors.log_error(error, ctx)
+            if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.bot: return
@@ -94,7 +167,7 @@ class MainCog(commands.Cog):
             and (message.content.lower().replace('<@!','').replace('<@','').replace('>','')
                  .replace(str(self.bot.user.id),'')) == ''
         ):
-            await self.main_help(message)
+            await self.prefix_help(message)
 
     # Events
     @commands.Cog.listener()

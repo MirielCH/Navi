@@ -142,17 +142,19 @@ async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Unio
 
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
     """Returns the time left for a reminder based on a cooldown."""
+    slash_command = True if message.interaction is not None else False
     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
     bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
     current_time = datetime.utcnow().replace(microsecond=0)
     time_elapsed = current_time - bot_answer_time
     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
     if cooldown.donor_affected:
-        time_left_seconds = (cooldown.actual_cooldown()
+        time_left_seconds = (actual_cooldown
                              * settings.DONOR_COOLDOWNS[user_donor_tier]
                              - time_elapsed.total_seconds())
     else:
-        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
     return timedelta(seconds=time_left_seconds)
 
 

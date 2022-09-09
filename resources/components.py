@@ -104,7 +104,7 @@ class ToggleUserSettingsSelect(discord.ui.Select):
                 self.view.add_item(ToggleUserSettingsSelect(self.view, self.toggled_settings,
                                                             self.placeholder, self.custom_id))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.user_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
@@ -148,7 +148,7 @@ class ToggleReadySettingsSelect(discord.ui.Select):
                 self.view.add_item(ToggleReadySettingsSelect(self.view, self.toggled_settings,
                                                              self.placeholder, self.custom_id))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.clan_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.clan_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
@@ -269,7 +269,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManageReadySettingsSelect(self.view))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.clan_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.clan_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -370,7 +370,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManageUserSettingsSelect(self.view))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.user_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -478,7 +478,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManagePartnerSettingsSelect(self.view))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.partner_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.partner_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -502,7 +502,7 @@ class SetDonorTierSelect(discord.ui.Select):
             await self.view.user_settings.update(user_donor_tier=int(select_value))
         elif self.donor_type == 'partner':
             await self.view.user_settings.update(partner_donor_tier=int(select_value))
-        embed = await self.view.embed_function(self.view.bot, self.view.user_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
@@ -541,7 +541,7 @@ class ReminderMessageSelect(discord.ui.Select):
             if 'reset_message' not in all_custom_ids:
                 self.view.add_item(SetReminderMessageButton(style=discord.ButtonStyle.red, custom_id='reset_message',
                                                        label='Reset', row=1))
-        embeds = await self.view.embed_function(self.view.bot, self.view.user_settings, select_value)
+        embeds = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, select_value)
         await interaction.response.edit_message(embeds=embeds, view=self.view)
 
 
@@ -579,7 +579,7 @@ class SetReminderMessageButton(discord.ui.Button):
                     ),
                     view=None
                 )
-                embeds = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.activity)
+                embeds = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.activity)
                 await interaction.message.edit(embeds=embeds, view=self.view)
                 return
             else:
@@ -652,7 +652,7 @@ class SetReminderMessageButton(discord.ui.Button):
         activity_column = strings.ACTIVITIES_COLUMNS[self.view.activity]
         kwargs[f'{activity_column}_message'] = new_message
         await self.view.user_settings.update(**kwargs)
-        embeds = await self.view.embed_function(self.view.bot, self.view.user_settings, self.view.activity)
+        embeds = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.activity)
         if interaction.response.is_done():
             await interaction.message.edit(embeds=embeds, view=self.view)
         else:
