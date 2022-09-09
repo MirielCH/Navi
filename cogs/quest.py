@@ -205,10 +205,7 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
-                if slash_command:
-                    user_command = await functions.get_slash_command(user_settings, 'quest')
-                else:
-                    user_command = '`rpg quest`'
+                user_command = await functions.get_slash_command(user_settings, 'quest')
                 await user_settings.update(last_quest_command='quest')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'quest')
                 if time_left < timedelta(0): return

@@ -207,6 +207,39 @@ class TrainingCog(commands.Cog):
                 if user_settings.auto_ready_enabled and slash_command:
                     await functions.call_ready_command(self.bot, message, user)
 
+            # Training VOID event
+            search_strings = [
+                'attempts to fly', #English butterfly
+                'runs the area command', #English keyboard
+                'it seems like a mysterious player saved', #English cry
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
+                    user_name_match = re.search(r"\*\*(.+?)\*\*", message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, regex.COMMAND_TRAINING,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in training event message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
+
 
 # Initialization
 def setup(bot):
