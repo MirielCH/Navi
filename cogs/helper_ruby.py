@@ -233,20 +233,16 @@ class HelperRubyCog(commands.Cog):
                     await errors.log_error('Ruby count not found in ruby training message for ruby counter.', message)
                     return
                 answer = f'You have {user_settings.rubies:,} {emojis.RUBY}'
-                if slash_command:
-                    buttons = {}
-                    correct_button = 'training_yes' if user_settings.rubies > ruby_count else 'training_no'
-                    for row, action_row in enumerate(message.components, start=1):
-                        buttons[row] = {}
-                        for button in action_row.children:
-                            if button.custom_id == correct_button:
-                                buttons[row][button.custom_id] = (button.label, button.emoji, True)
-                            else:
-                                buttons[row][button.custom_id] = (button.label, button.emoji, False)
-                    view = views.TrainingAnswerView(buttons)
-                else:
-                    answer = f'`YES` ({answer})' if user_settings.rubies > ruby_count else f'`NO` ({answer})'
-                    view = None
+                buttons = {}
+                correct_button = 'training_yes' if user_settings.rubies > ruby_count else 'training_no'
+                for row, action_row in enumerate(message.components, start=1):
+                    buttons[row] = {}
+                    for button in action_row.children:
+                        if button.custom_id == correct_button:
+                            buttons[row][button.custom_id] = (button.label, button.emoji, True)
+                        else:
+                            buttons[row][button.custom_id] = (button.label, button.emoji, False)
+                view = views.TrainingAnswerView(buttons)
                 if not user_settings.dnd_mode_enabled:
                     answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
                 await message.reply(content=answer, view=view)

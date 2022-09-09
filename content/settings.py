@@ -207,6 +207,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
 async def command_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
                                 switch_view: Optional[discord.ui.View] = None) -> None:
     """Clan settings command"""
+    user_settings: users.User = await users.get_user(ctx.author.id)
     clan_settings = interaction = None
     if switch_view is not None:
         clan_settings = getattr(switch_view, 'clan_settings', None)
@@ -573,7 +574,10 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
 async def embed_settings_clan(bot: discord.Bot, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
-    clan_upgrade_quests = 'Allowed' if clan_settings.upgrade_quests_enabled else 'Not allowed'
+    if clan_settings.upgrade_quests_enabled:
+        clan_upgrade_quests = f'{emojis.GREENTICK}`Allowed`'
+    else:
+        clan_upgrade_quests = f'{emojis.REDTICK}`Not allowed`'
     if clan_settings.channel_id is not None:
         clan_channel = await functions.get_discord_channel(bot, clan_settings.channel_id)
         clan_channel_name = clan_channel.name
@@ -596,7 +600,7 @@ async def embed_settings_clan(bot: discord.Bot, clan_settings: clans.Clan) -> di
         f'{emojis.DETAIL} _Navi will tell you to upgrade below threshold and raid afterwards._\n'
     )
     quests = (
-        f'{emojis.BP} **Quests below stealth threshold**: `{clan_upgrade_quests}`\n'
+        f'{emojis.BP} **Quests below stealth threshold**: {clan_upgrade_quests}\n'
         f'{emojis.BP} **Member currently on quest**: {quest_user}\n'
         f'{emojis.DETAIL} _The member on a guild quest will get pinged 5 minutes early._'
     )
