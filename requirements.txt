@@ -1,2 +1,2 @@
-py-cord>=2.1.1
+py-cord>=2.1.3
 python-dotenv>=0.20.0

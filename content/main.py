@@ -73,7 +73,7 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings partner"]} : Manage partner settings\n'
     )
     guild_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["guild-leaderboard"]} : Check the weekly raid leaderboard\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["leaderboard guild"]} : Check the weekly raid leaderboard\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings guild"]} : Manage guild channel reminders\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NEW["guild list"]} : Add/update your guild\n'
     )
