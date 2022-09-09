@@ -225,8 +225,11 @@ class SettingsCog(commands.Cog):
                     clan: clans.Clan = await clans.get_clan_by_user_id(clan_leader_id)
                     if clan.leader_id == clan_leader_id and clan.clan_name != clan_name:
                         if clan.member_ids == tuple(clan_member_ids):
-                            reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
-                            await reminder.update(clan_name=clan_name)
+                            try:
+                                reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+                                await reminder.update(clan_name=clan_name)
+                            except exceptions.NoDataFoundError:
+                                pass
                             await clan.update(clan_name=clan_name)
                         else:
                             try:
@@ -242,8 +245,8 @@ class SettingsCog(commands.Cog):
                                 f'is an invalid state I can\'t resolve.\n'
                                 f'As a consequence I deleted the guild **{clan.clan_name}** including **all settings and '
                                 f'the leaderboard** from the database and added **{clan_name}** as a new guild.\n\n'
-                                f'If you renamed your guild: To prevent this from happening, please run `rpg guild list`'
-                                f'immediately after renaming next time.'
+                                f'If you renamed your guild: To prevent this from happening, please run '
+                                f'{strings.SLASH_COMMANDS_NEW["guild list"]} immediately after renaming next time.'
                             )
                 except exceptions.NoDataFoundError:
                     pass
@@ -256,41 +259,42 @@ class SettingsCog(commands.Cog):
                     if settings.DEBUG_MODE: await message_after.channel.send(strings.MSG_ERROR)
                     return
                 for member_id in clan.member_ids:
-                    try:
-                        user: users.User = await users.get_user(member_id)
-                        if user.clan_name != clan.clan_name:
-                            try:
-                                old_clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
-                                old_leader_id = None if old_clan.leader_id == member_id else old_clan.leader_id
-                                old_member_ids = []
-                                for old_member_id in old_clan.member_ids:
-                                    if old_member_id == member_id:
-                                        old_member_ids.append(None)
-                                    else:
-                                        old_member_ids.append(old_member_id)
-                                old_member_ids = sorted(old_member_ids, key=lambda id: (id is None, id))
-                                if old_leader_id is None and all(id is None for id in old_member_ids):
-                                    await old_clan.delete()
-                                    await message_after.channel.send(
-                                        f'Removed the guild **{old_clan.clan_name}** because it doesn\'t have any '
-                                        f'registered members anymore.'
-                                    )
-                                else:
-                                    await old_clan.update(leader_id=old_leader_id, member_ids=old_member_ids)
-                                    if old_leader_id is None:
+                    if member_id is not None:
+                        try:
+                            user: users.User = await users.get_user(member_id)
+                            if user.clan_name != clan.clan_name:
+                                try:
+                                    old_clan: clans.Clan = await clans.get_clan_by_clan_name(user.clan_name)
+                                    old_leader_id = None if old_clan.leader_id == member_id else old_clan.leader_id
+                                    old_member_ids = []
+                                    for old_member_id in old_clan.member_ids:
+                                        if old_member_id == member_id:
+                                            old_member_ids.append(None)
+                                        else:
+                                            old_member_ids.append(old_member_id)
+                                    old_member_ids = sorted(old_member_ids, key=lambda id: (id is None, id))
+                                    if old_leader_id is None and all(id is None for id in old_member_ids):
+                                        await old_clan.delete()
                                         await message_after.channel.send(
-                                            f'Note that the guild **{old_clan.clan_name}** doesn\'t have an owner '
-                                            f'registered anymore. Please tell one of the remaining members to use '
-                                            f'`rpg guild list` to update it.'
+                                            f'Removed the guild **{old_clan.clan_name}** because it doesn\'t have any '
+                                            f'registered members anymore.'
                                         )
-                            except exceptions.NoDataFoundError:
-                                pass
-                        await user.update(clan_name=clan.clan_name)
-                        if user.clan_name != clan.clan_name:
-                            await message_after.channel.send(strings.MSG_ERROR)
-                            return
-                    except exceptions.FirstTimeUserError:
-                        pass
+                                    else:
+                                        await old_clan.update(leader_id=old_leader_id, member_ids=old_member_ids)
+                                        if old_leader_id is None:
+                                            await message_after.channel.send(
+                                                f'Note that the guild **{old_clan.clan_name}** doesn\'t have an owner '
+                                                f'registered anymore. Please tell one of the remaining members to use '
+                                                f'{strings.SLASH_COMMANDS_NEW["guild list"]} to update it.'
+                                            )
+                                except exceptions.NoDataFoundError:
+                                    pass
+                            await user.update(clan_name=clan.clan_name)
+                            if user.clan_name != clan.clan_name:
+                                await message_after.channel.send(strings.MSG_ERROR)
+                                return
+                        except exceptions.FirstTimeUserError:
+                            pass
                 users_with_clan_name = await users.get_users_by_clan_name(clan_name)
                 for user in users_with_clan_name:
                     if not user.user_id in clan_member_ids: await user.update(clan_name=None)

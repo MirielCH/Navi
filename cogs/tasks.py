@@ -95,11 +95,10 @@ class TasksCog(commands.Cog):
                     quest_user_id = clan.quest_user_id
                     await clan.update(quest_user_id=None)
                     time_left_all_members = timedelta(minutes=5)
-                    alert_message_prefix = '/' if '/guild' in first_reminder.message else 'rpg '
                     if clan.stealth_current >= clan.stealth_threshold:
-                        alert_message = f'{alert_message_prefix}guild raid'
+                        alert_message = strings.SLASH_COMMANDS_NEW["guild raid"]
                     else:
-                        alert_message = f'{alert_message_prefix}guild upgrade'
+                        alert_message = strings.SLASH_COMMANDS_NEW["guild upgrade"]
                     time_left = get_time_left()
                     try:
                         await asyncio.sleep(time_left.total_seconds())
@@ -121,8 +120,7 @@ class TasksCog(commands.Cog):
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
-                    embed = discord.Embed(title=first_reminder.message)
-                    await channel.send(f'{message_mentions}\nIt\'s time for:', embed=embed)
+                    await channel.send(f'It\'s time for {first_reminder.message}!\n\n{message_mentions}')
                 except asyncio.CancelledError:
                     return
             running_tasks.pop(first_reminder.task_name, None)
@@ -205,7 +203,7 @@ class TasksCog(commands.Cog):
                     f'Reminder: {reminder}\nError: {error}'
             )
 
-    @tasks.loop(minutes=1.0)
+    @tasks.loop(seconds=55)
     async def reset_clans(self) -> None:
         """Task that creates the weekly reports and resets the clans"""
         clan_reset_time = settings.ClanReset()
@@ -227,7 +225,10 @@ class TasksCog(commands.Cog):
                 except:
                     pass
                 if not clan.alert_enabled: continue
-                command = 'rpg guild upgrade'
+                if clan.stealth_threshold > 1:
+                    command = strings.SLASH_COMMANDS_NEW["guild upgrade"]
+                else:
+                    command = strings.SLASH_COMMANDS_NEW["guild raid"]
                 time_left = timedelta(minutes=1)
                 await reminders.insert_clan_reminder(clan.clan_name, time_left, clan.channel_id, command)
                 try:

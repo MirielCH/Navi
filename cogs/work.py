@@ -125,7 +125,7 @@ class WorkCog(commands.Cog):
                 'extra life points', #English, overheal
                 'puntos extras de vida', #Spanish, overheal
                 'pontos de vida extras', #Portuguese, overheal
-                ':crossed_sword:', #Ruby dragon event, all languages
+                ':crossed_swords:', #Ruby dragon event, all languages
                 'guildring', #Stuff bought from guild shop, all languages
             ]
             search_strings = [
@@ -268,7 +268,7 @@ class WorkCog(commands.Cog):
                     user_name = user_command = user_command_message = None
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
                     if user_name_match:
-                        user_name_match.group(1)
+                        user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
                                 message.channel, regex.COMMAND_WORK,
@@ -298,6 +298,7 @@ class WorkCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a command for work event non-slash message.', message)
                         return
                     await user_settings.update(last_work_command=last_work_command)
+                    user_command = await functions.get_slash_command(user_settings, last_work_command)
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_work.message.replace('{command}', user_command)

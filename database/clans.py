@@ -473,7 +473,7 @@ async def _delete_clan(clan_name: str) -> None:
     await delete_clan_leaderboard()
 
 
-async def _update_clan(clan_name: str, **kwargs) -> None:
+async def _update_clan(current_clan_name: str, **kwargs) -> None:
     """Updates clan record. Use Clan.update() to trigger this function.
 
     Arguments
@@ -520,7 +520,7 @@ async def _update_clan(clan_name: str, **kwargs) -> None:
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'
         sql = sql.strip(",")
-        kwargs['clan_name_old'] = clan_name
+        kwargs['clan_name_old'] = current_clan_name
         sql = f'{sql} WHERE clan_name = :clan_name_old'
         cur.execute(sql, kwargs)
     except sqlite3.Error as error:
