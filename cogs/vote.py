@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, settings, strings
+from resources import emojis, exceptions, functions, logs, regex, settings
 
 
 class VoteCog(commands.Cog):
@@ -45,7 +45,7 @@ class VoteCog(commands.Cog):
                     user = await functions.get_interaction_user(message)
                     if user is None:
                         user_command_message = (
-                            await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_VOTE)
+                            await functions.get_message_from_channel_history(message.channel, regex.COMMAND_VOTE)
                         )
                         if user_command_message is None:
                             await functions.add_warning_reaction(message)

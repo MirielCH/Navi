@@ -3,10 +3,11 @@
 from argparse import ArgumentError
 from datetime import datetime, timedelta
 import re
-from typing import List, Union
+from typing import List, Optional, Union
 
 import discord
 from discord.ext import commands
+from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
@@ -142,17 +143,19 @@ async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Unio
 
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
     """Returns the time left for a reminder based on a cooldown."""
+    slash_command = True if message.interaction is not None else False
     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
     bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
     current_time = datetime.utcnow().replace(microsecond=0)
     time_elapsed = current_time - bot_answer_time
     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
     if cooldown.donor_affected:
-        time_left_seconds = (cooldown.actual_cooldown()
+        time_left_seconds = (actual_cooldown
                              * settings.DONOR_COOLDOWNS[user_donor_tier]
                              - time_elapsed.total_seconds())
     else:
-        time_left_seconds = cooldown.actual_cooldown() - time_elapsed.total_seconds()
+        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
     return timedelta(seconds=time_left_seconds)
 
 
@@ -860,7 +863,7 @@ async def get_megarace_answer(message: discord.Message, slash_command: bool = Fa
 # Miscellaneous
 async def call_ready_command(bot: commands.Bot, message: discord.Message, user: discord.User) -> None:
     """Calls the ready command as a reply to the current message"""
-    command = bot.get_command(name='ready')
+    command = bot.get_application_command(name='ready')
     if command is not None: await command.callback(command.cog, message, user=user)
 
 
@@ -870,3 +873,38 @@ async def get_slash_command(user_settings: users.User, command_name: str) -> Non
         return strings.SLASH_COMMANDS_NEW.get(command_name, None)
     else:
         return strings.SLASH_COMMANDS.get(command_name, None)
+
+
+def await_coroutine(coro):
+    """Function to call a coroutine outside of an async function"""
+    while True:
+        try:
+            coro.send(None)
+        except StopIteration as error:
+            return error.value
+
+
+async def edit_interaction(interaction: Union[discord.Interaction, discord.WebhookMessage], **kwargs) -> None:
+    """Edits a reponse. The response can either be an interaction OR a WebhookMessage"""
+    content = kwargs.get('content', MISSING)
+    embed = kwargs.get('embed', MISSING)
+    embeds = kwargs.get('embeds', MISSING)
+    view = kwargs.get('view', MISSING)
+    file = kwargs.get('file', MISSING)
+    if isinstance(interaction, discord.WebhookMessage):
+        await interaction.edit(content=content, embed=embed, embeds=embeds, view=view)
+    else:
+        await interaction.edit_original_message(content=content, file=file, embed=embed, embeds=embeds, view=view)
+
+
+async def bool_to_text(boolean: bool) -> str:
+        return f'{emojis.GREENTICK}`Enabled`' if boolean else f'{emojis.REDTICK}`Disabled`'
+
+
+async def reply_or_respond(ctx: Union[discord.ApplicationContext, commands.Context], answer: str,
+                           ephemeral: Optional[bool] = False) -> Union[discord.Message, discord.Integration]:
+    """Sends a reply or reponse, depending on the context type"""
+    if isinstance(ctx, commands.Context):
+        return await ctx.reply(answer)
+    else:
+        return await ctx.respond(answer, ephemeral=ephemeral)

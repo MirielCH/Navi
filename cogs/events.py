@@ -143,10 +143,8 @@ class EventsCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
                 if user is None:
-                    user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_EVENTS
-                        )
+                    user_command_message, _ = (
+                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+events?\b")
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

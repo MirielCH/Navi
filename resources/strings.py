@@ -1,10 +1,6 @@
 # strings.py
 """Contains global strings"""
 
-import re
-
-from resources import settings
-
 # --- Error messages ---
 MSG_INTERACTION_ERROR = 'You are not allowed to use this interaction.'
 
@@ -16,6 +12,10 @@ INTERNAL_ERROR_LOOKUP = 'Error assigning values.\nError: {error}\nTable: {table}
 INTERNAL_ERROR_NO_ARGUMENTS = 'You need to specify at least one keyword argument.\nTable: {table}\nFunction: {function}'
 INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: {function}\nRecord: {record}\n'
 
+
+# Links
+LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
+LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 
 # --- Default messages ---
 DEFAULT_MESSAGE = 'Hey! It\'s time for {command}!'
@@ -38,7 +38,7 @@ DEFAULT_MESSAGES = {
     'horse-race': DEFAULT_MESSAGE_EVENT,
     'hunt': DEFAULT_MESSAGE,
     'lootbox': DEFAULT_MESSAGE,
-    'lottery': 'Hey! The lottery just finished. Use `rpg lottery` to check out who won and {command} to enter the next draw!',
+    'lottery': 'Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '**{user}** found {loot} for you!',
     'pets': 'Hey! Your pet `{id}` is back! {emoji}',
@@ -55,16 +55,8 @@ CLAN_LEADERBOARD_ROAST_ZERO_ENERGY = (
     '<:amongus_sus:875996946903478292> There is one player among us that wants us to believe he is not an impostor.'
 )
 
-MSG_ERROR = 'Whoops, something went wrong here.'
-MSG_NOT_CLAN_LEADER = (
-    '**{username}**, you are not registered as a guild owner. Only guild owners can change guild channel settings.\n'
-    'If you _are_ the guild owner, run `rpg guild list` to add or update your guild in my database.\n'
-    'If you don\'t know yet, check `{prefix}guild` to see how guild channel reminders work.\n\n'
-    'If you want to enable or disable the personal guild command reminder, use `{prefix}enable|disable guild` instead.'
-)
-MSG_INVALID_ARGUMENT = 'Invalid argument. Check `{prefix}help` for the correct commands.'
+MSG_ERROR = 'Whoops, something went wrong here. You should probably tell Miriel#0001 about this.'
 MSG_SYNTAX = 'The command syntax is `{syntax}`.'
-MSG_CLAN_NOT_REGISTERED = 'Your guild is not registered with Navi. If you are in a guild, use `rpg guild list` to add it.'
 
 DONOR_TIERS = (
     'Non-donator',
@@ -121,8 +113,8 @@ ACTIVITIES = (
 )
 
 ACTIVITIES_ALL = list(ACTIVITIES[:])
-ACTIVITIES_ALL.append('all')
 ACTIVITIES_ALL.sort()
+ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
     'adventure',
@@ -149,6 +141,7 @@ ACTIVITIES_EVENTS = (
     'minintboss',
     'pet-tournament',
 )
+
 
 ACTIVITIES_SLASH_COMMANDS = {
     'adventure': 'adventure',
@@ -254,9 +247,9 @@ ACTIVITIES_COLUMNS = {
 ACTIVITIES_WITH_COOLDOWN = (
     'adventure',
     'arena',
+    'clan',
     'daily',
     'farm',
-    'guild',
     'horse',
     'hunt',
     'lootbox',
@@ -266,7 +259,9 @@ ACTIVITIES_WITH_COOLDOWN = (
     'weekly',
     'work',
 )
-
+ACTIVITIES_WITH_COOLDOWN_ALL = list(ACTIVITIES_WITH_COOLDOWN[:])
+ACTIVITIES_WITH_COOLDOWN_ALL.sort()
+ACTIVITIES_WITH_COOLDOWN_ALL.insert(0, 'all')
 
 # --- Monsters ---
 MONSTERS_ADVENTURE = (
@@ -556,74 +551,24 @@ SLASH_COMMANDS_NEW = {
     'void areas': '</void areas:959942192623931442>',
     'vote': '</vote:964351963720478760>',
     'weekly': '</weekly:956658465185603645>',
-    'wheel': '</wheel:959916179525341194>',
 }
 
 
-# --- Regex ---
-PATTERNS_COOLDOWN_TIMESTRING = [
-    "wait at least \*\*(.+?)\*\*...", #English
-    "espera al menos \*\*(.+?)\*\*...", #Spanish
-    "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
-]
-
-REGEX_USER_ID_FROM_ICON_URL = re.compile(r"avatars\/(.+?)\/")
-REGEX_USERNAME_FROM_EMBED_AUTHOR = re.compile(r"^(.+?) — ")
-REGEX_NAME_FROM_MESSAGE = re.compile(r"\s\*\*(.+?)\*\*\s")
-REGEX_NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
-
-#REGEX_PREFIX = rf'^(rpg\b\s+|<@!?{settings.EPIC_RPG_ID}>\s+)?'
-REGEX_PREFIX = rf'(?:rpg\b\s+)?'
-REGEX_COMMAND_ADVENTURE = re.compile(rf"{REGEX_PREFIX}(?:\badv\b|\badventure\b)")
-REGEX_COMMAND_ARENA = re.compile(rf"{REGEX_PREFIX}\barena\b")
-REGEX_COMMAND_CLAN = re.compile(rf"{REGEX_PREFIX}\bguild\b")
-REGEX_COMMAND_CLAN_RAID = re.compile(rf"{REGEX_PREFIX}\bguild\b\s+\braid\b")
-REGEX_COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"{REGEX_PREFIX}\bguild\b\s+(?:\braid\b|\bupgrade\b)")
-REGEX_COMMAND_CLAN_UPGRADE = re.compile(rf"{REGEX_PREFIX}guild\b\s+upgrade\b")
-REGEX_COMMAND_CRAFT_COIN_SWORD = re.compile(rf"{REGEX_PREFIX}\bcraft\b\s+\bcoin\b\s+\bsword\b")
-REGEX_COMMAND_CRAFT_RUBY_ARMOR = re.compile(rf"{REGEX_PREFIX}\bcraft\b\s+\bruby\b\s+\barmor\b")
-REGEX_COMMAND_CRAFT_RUBY_SWORD = re.compile(rf"{REGEX_PREFIX}\bcraft\b\s+\bruby\b\s+\bsword\b")
-REGEX_COMMAND_COOLDOWNS = re.compile(rf"{REGEX_PREFIX}(?:\bcd\b|\bcooldowns?\b)")
-REGEX_COMMAND_DAILY = re.compile(rf"{REGEX_PREFIX}\bdaily\b")
-REGEX_COMMAND_DUEL = re.compile(rf"{REGEX_PREFIX}\bduel\b")
-REGEX_COMMAND_DUNGEON_MINIBOSS = re.compile(rf"{REGEX_PREFIX}(?:\bdung\b|\bdungeon\b|\bminiboss\b)")
-REGEX_COMMAND_DUNGEON_MINIBOSS_NSMB = re.compile(rf"{REGEX_PREFIX}(?:\bdung\b|\bdungeon\b|\bminiboss\b|\bminintboss\b\s+\bjoin\b)")
-REGEX_COMMAND_ENCHANT = re.compile(rf"{REGEX_PREFIX}(?:\benchant\b|\brefine\b|\btransmute\b|\btranscend\b)")
-REGEX_COMMAND_EPIC_QUEST = re.compile(rf"{REGEX_PREFIX}\bepic\b\s+\bquest\b")
-REGEX_COMMAND_EVENTS = re.compile(rf"{REGEX_PREFIX}\bevents?\b")
-REGEX_COMMAND_FARM = re.compile(rf"{REGEX_PREFIX}\bfarm\b")
-REGEX_COMMAND_FORGE_ULTRAEDGY_ARMOR = re.compile(rf"{REGEX_PREFIX}\bforge\b\s+\bultra-edgy\b\s+\barmor\b")
-REGEX_COMMAND_HEAL = re.compile(rf"{REGEX_PREFIX}\bheal\b")
-REGEX_COMMAND_HF_LIGHTSPEED = re.compile(rf"{REGEX_PREFIX}\bhf\b\s+\blightspeed\b")
-REGEX_COMMAND_HORSE = re.compile(rf"{REGEX_PREFIX}horse\b\s+(?:\bbreed\b|\bbreeding\b|\brace\b)")
-REGEX_COMMAND_HORSE_RACE = re.compile(rf"{REGEX_PREFIX}\bhorse\b\s+\brace\b")
-REGEX_COMMAND_HUNT = re.compile(rf'{REGEX_PREFIX}\bhunt\b')
-REGEX_COMMAND_HUNT_ADVENTURE = re.compile(rf"{REGEX_PREFIX}(?:\bhunt\b|\badv\b|\badventure\b)")
-REGEX_COMMAND_INVENTORY = re.compile(rf"{REGEX_PREFIX}(?:\bi\b|\binv\b|\binventory\b)")
-REGEX_COMMAND_LOOTBOX = re.compile(rf"{REGEX_PREFIX}\bbuy\s+[a-z]+\s+(?:\blb\b|\blootbox\b)")
-REGEX_COMMAND_LOTTERY = re.compile(rf'{REGEX_PREFIX}(?:\blottery\b|\bbuy\b\s+\blottery\b\s+\bticket\b)')
-REGEX_COMMAND_NSMB_BIGARENA = re.compile(rf"{REGEX_PREFIX}(?:\bbig\b\s+\barena\b|\bminintboss\b)")
-REGEX_COMMAND_OMEGA_HORSE_TOKEN = re.compile(rf"{REGEX_PREFIX}\buse\b\s+\bomega\b\s+\bhorse\b\s+\btoken\b")
-REGEX_COMMAND_OPEN = re.compile(rf"{REGEX_PREFIX}\bopen\b")
-REGEX_COMMAND_PETS = re.compile(rf"{REGEX_PREFIX}\bpets?\b")
-REGEX_COMMAND_PETS_ADVENTURE_CLAIM = re.compile(rf"{REGEX_PREFIX}\bpets?\s+(?:\badv\b|\badventure\b)\s+\bclaim\b")
-REGEX_COMMAND_PETS_ADVENTURE_START = re.compile(rf"{REGEX_PREFIX}\bpets?\s+(?:\badv\b|\badventure\b)\s+(?:\bfind\b|\blearn\b|\bdrill\b)")
-REGEX_COMMAND_PETS_ADVENTURE_CANCEL = re.compile(rf"{REGEX_PREFIX}\bpets?\s+(?:\badv\b|\badventure\b)\s+\bcancel\b")
-REGEX_COMMAND_PETS_FUSION = re.compile(rf"{REGEX_PREFIX}\bpets?\b\s+\bfusion\b")
-REGEX_COMMAND_PETS_TOURNAMENT = re.compile(rf"{REGEX_PREFIX}\bpets?\b\s+\btournament\s+\b[a-z]+\b")
-REGEX_COMMAND_QUEST = re.compile(rf'{REGEX_PREFIX}\bquest\b')
-REGEX_COMMAND_QUEST_EPIC_QUEST = re.compile(rf"{REGEX_PREFIX}(?:\bepic\b\s+\bquest\b|\bquest\b)")
-REGEX_COMMAND_READY = re.compile(rf"{REGEX_PREFIX}(?:\brd\b|\bready\b)")
-REGEX_COMMAND_SELL_RUBY = re.compile(rf"{REGEX_PREFIX}\bsell\b\s+\bruby\b")
-REGEX_COMMAND_SLEEPY_POTION = re.compile(rf"{REGEX_PREFIX}\b[a-z]+\b\s+\buse\b\s+\bsleepy\b\s+\bpotion\b")
-REGEX_COMMAND_TIME_TRAVEL = re.compile(rf"{REGEX_PREFIX}(?:\bsuper\b|\bsuper\b\s+\btime\b|\btime\b)\s+\btravel\b")
-REGEX_COMMAND_TRADE_RUBY = re.compile(rf"{REGEX_PREFIX}\btrade\b\s+\b[e-f]\b")
-REGEX_COMMAND_TRAINING = re.compile(rf"{REGEX_PREFIX}(?:\btr\b|\btraining\b)")
-REGEX_COMMAND_TRAINING_ULTRAINING = re.compile(rf"{REGEX_PREFIX}(?:ul)?(?:tr\b|training\b)")
-REGEX_COMMAND_ULTRAINING = re.compile(rf"{REGEX_PREFIX}(?:ultr\b|ultraining\b)")
-REGEX_COMMAND_VOTE = re.compile(rf"{REGEX_PREFIX}\bvote\b")
-REGEX_COMMAND_WEEKLY = re.compile(rf"{REGEX_PREFIX}\bweekly\b")
-REGEX_COMMAND_WORK = rf"{REGEX_PREFIX}(?:"
-for command in WORK_COMMANDS:
-    REGEX_COMMAND_WORK = fr'{REGEX_COMMAND_WORK}\b{command}\b|'
-REGEX_COMMAND_WORK = re.compile(fr'{REGEX_COMMAND_WORK.strip("|")})')
+SLASH_COMMANDS_NAVI = {
+    'about': '`/about`',
+    'custom-reminder': '`/custom-reminder`',
+    'guild-leaderboard': '`/guild-leaderboard`',
+    'help': '`/help`',
+    'list': '`/list`',
+    'off': '`/off`',
+    'on': '`/on`',
+    'ready': '`/ready`',
+    'settings guild': '`/settings guild`',
+    'settings helpers': '`/settings helpers`',
+    'settings messages': '`/settings messages`',
+    'settings partner': '`/settings partner`',
+    'settings ready': '`/settings ready`',
+    'settings reminders': '`/settings reminders`',
+    'settings user': '`/settings user`',
+    'stats': '`/stats`',
+}

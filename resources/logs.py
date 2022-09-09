@@ -17,7 +17,7 @@ logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 """
 if settings.DEBUG_MODE:
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.INFO)
 else:
     logger.setLevel(logging.INFO)
 """

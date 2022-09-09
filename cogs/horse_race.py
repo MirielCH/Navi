@@ -1,4 +1,4 @@
-# horse-race.py
+# horse_race.py
 
 from datetime import timedelta
 import re
@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import exceptions, functions, settings, strings
+from resources import exceptions, functions, regex, settings
 
 
 class HorseRaceCog(commands.Cog):
@@ -57,7 +57,7 @@ class HorseRaceCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await functions.get_message_from_channel_history(
-                                message.channel, strings.REGEX_COMMAND_HORSE_RACE,
+                                message.channel, regex.COMMAND_HORSE_RACE,
                                 user_name=user_name
                             )
                         )

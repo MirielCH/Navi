@@ -1,381 +1,250 @@
 # dev.py
 """Internal dev commands"""
 
-import asyncio
-from datetime import datetime, timedelta
 import importlib
 import sys
 
 import discord
+from discord.commands import SlashCommandGroup, Option
 from discord.ext import commands
 
 from database import cooldowns
-from resources import emojis, strings
+from resources import emojis, functions, settings, strings, views
+
+
+EVENT_REDUCTION_TYPES = [
+    'Mention',
+    'Slash',
+]
 
 
 class DevCog(commands.Cog):
     """Cog class containing internal dev commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: discord.Bot):
         self.bot = bot
 
-    @commands.group(invoke_without_command=True, case_insensitive=True)
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def dev(self, ctx: commands.Context) -> None:
-        """Dev command group"""
-        if ctx.prefix.lower() == 'rpg ': return
-        subcommands = ''
-        for command in self.bot.walk_commands():
-            if isinstance(command, commands.Group):
-                if command.qualified_name == 'dev':
-                    for subcommand in command.walk_commands():
-                        if subcommand.parents[0] == command:
-                            aliases = f'`{subcommand.qualified_name}`'
-                            for alias in subcommand.aliases:
-                                aliases = f'{aliases}, `{alias}`'
-                            subcommands = f'{subcommands}{emojis.BP} {aliases}\n'
-        await ctx.reply(f'Available dev commands:\n{subcommands}')
+    dev = SlashCommandGroup(
+        "dev",
+        "Development commands",
+        guild_ids=settings.DEV_GUILDS,
+        default_member_permissions=discord.Permissions(administrator=True)
+    )
 
-    @dev.group(name='event-reduction', aliases=('er',), invoke_without_command=True)
-    @commands.bot_has_permissions(send_messages=True)
+    test = SlashCommandGroup(
+        "test",
+        "Test commands",
+        guild_ids=settings.DEV_GUILDS,
+        default_member_permissions=discord.Permissions(administrator=True)
+    )
+
+    # Commands
+    @dev.command()
     @commands.is_owner()
-    async def dev_event_reduction(self, ctx: commands.Context, *args: str) -> None:
-        """Sets event reductions of activities"""
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-        prefix = ctx.prefix
-        if prefix.lower() == 'rpg ': return
-        syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [reduction in %]')
-        activity_list = 'Possible activities:'
-        for activity in strings.ACTIVITIES_WITH_COOLDOWN:
-            activity_list = f'{activity_list}\n{emojis.BP} `{activity}`'
-        if not args or len(args) != 2:
-            all_cooldowns = await cooldowns.get_all_cooldowns()
-            message = 'Current event reductions:'
-            for cooldown in all_cooldowns:
-                cooldown_message = (
-                    f'{emojis.BP} {cooldown.activity}: {cooldown.event_reduction}% '
-                    f'({cooldown.actual_cooldown():,}s)'
-                )
-                message = f'{message}\n**{cooldown_message}**' if cooldown.event_reduction > 0 else f'{message}\n{cooldown_message}'
-            message = f'{message}\n\n{syntax}'
-            await ctx.reply(message)
-            return
-        activity = args[0].lower()
-        reduction = args[1].lower().replace('%','')
-        try:
-            reduction = float(reduction)
-        except:
+    async def reload(
+        self,
+        ctx: discord.ApplicationContext,
+        modules: Option(str, 'Cogs or modules to reload'),
+    ) -> None:
+        """Reloads cogs or modules"""
+        modules = modules.split(' ')
+        actions = []
+        for module in modules:
+            name_found = False
+            cog_name = f'cogs.{module}' if not 'cogs.' in module else module
             try:
-                reduction = float(activity)
-                activity = args[1]
+                cog_status = self.bot.reload_extension(cog_name)
             except:
-                await ctx.reply(f'{syntax}\n\n{activity_list}')
-                return
-        if not 0 <= reduction <= 99:
-            await ctx.reply(f'**{ctx.author.name}**, a reduction of **{reduction}%** doesn\'t make much sense, does it.')
+                cog_status = 'Error'
+            if cog_status is None:
+                actions.append(f'+ Extension \'{cog_name}\' reloaded.')
+                name_found = True
+            if not name_found:
+                for module_name in sys.modules.copy():
+                    if module == module_name:
+                        module = sys.modules.get(module_name)
+                        if module is not None:
+                            importlib.reload(module)
+                            actions.append(f'+ Module \'{module_name}\' reloaded.')
+                            name_found = True
+            if not name_found:
+                actions.append(f'- No loaded cog or module with the name \'{module}\' found.')
+
+        message = ''
+        for action in actions:
+            message = f'{message}\n{action}'
+        await ctx.respond(f'```diff\n{message}\n```')
+
+    @dev.command(name='event-reduction')
+    @commands.is_owner()
+    async def event_reduction(
+        self,
+        ctx: discord.ApplicationContext,
+        command_type: Option(str, 'Reduction type', choices=EVENT_REDUCTION_TYPES),
+        activities: Option(str, 'Activities to update', default=''),
+        event_reduction: Option(float, 'Event reduction in percent', min_value=0, max_value=99, default=None),
+    ) -> None:
+        """Changes the event reduction for activities"""
+        activities = activities.split()
+        if not activities and event_reduction is None:
+            all_cooldowns = await cooldowns.get_all_cooldowns()
+            answer = f'Current event reductions for {command_type.lower()} commands:'
+            for cooldown in all_cooldowns:
+                event_reduction = getattr(cooldown, f'event_reduction_{command_type.lower()}')
+                actual_cooldown = cooldown.actual_cooldown_mention() if command_type == 'Mention' else cooldown.actual_cooldown_slash()
+                cooldown_message = (
+                    f'{emojis.BP} {cooldown.activity}: {event_reduction}% '
+                    f'({actual_cooldown:,}s)'
+                )
+                answer = f'{answer}\n**{cooldown_message}**' if event_reduction > 0 else f'{answer}\n{cooldown_message}'
+            await ctx.respond(answer)
             return
-        if activity in strings.ACTIVITIES_ALIASES:
-            activity = strings.ACTIVITIES_ALIASES[activity]
-        if activity not in strings.ACTIVITIES_WITH_COOLDOWN:
-            await ctx.reply(f'**{ctx.author.name}**, couldn\'t find activity `{activity}`.')
+        if not activities or event_reduction is None:
+            await ctx.respond(
+                f'You need to set both activity _and_ event_reduction. If you want to see the current reductions, '
+                f'leave both options empty.',
+                ephemeral=True
+            )
             return
-        await ctx.reply(
-            f'**{ctx.author.name}**, this will change the event reduction of activity `{activity}` to '
-            f'**{reduction}%**. Continue? [`yes/no`]'
-        )
-        try:
-            answer = await self.bot.wait_for('message', check=check, timeout=30)
-        except asyncio.TimeoutError:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+        for index, activity in enumerate(activities):
+            if activity in strings.ACTIVITIES_ALIASES: activities[index] = strings.ACTIVITIES_ALIASES[activity]
+
+        if 'all' in activities:
+            activities += strings.ACTIVITIES_WITH_COOLDOWN
+            activities.remove('all')
+        updated_activities = []
+        ignored_activities = []
+        for activity in activities:
+            if activity in strings.ACTIVITIES_WITH_COOLDOWN:
+                updated_activities.append(activity)
+            else:
+                ignored_activities.append(activity)
+        all_cooldowns = await cooldowns.get_all_cooldowns()
+        answer = ''
+        if updated_activities:
+            answer = f'Updated event reductions for {command_type.lower()} commands as follows:'
+            for activity in updated_activities:
+                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
+                kwarg = {
+                    f'event_reduction_{command_type.lower()}': event_reduction,
+                }
+                await cooldown.update(**kwarg)
+                answer = f'{answer}\n{emojis.BP} `{cooldown.activity}` to **{event_reduction}%**'
+        if ignored_activities:
+            answer = f'{answer}\n\nDidn\'t find the following activities:'
+            for ignored_activity in ignored_activities:
+                answer = f'{answer}\n{emojis.BP} `{ignored_activity}`'
+        await ctx.respond(answer)
+
+    @dev.command(name='base-cooldown')
+    @commands.is_owner()
+    async def base_cooldown(
+        self,
+        ctx: discord.ApplicationContext,
+        activity: Option(str, 'Activity to update', choices=strings.ACTIVITIES_WITH_COOLDOWN, default=None),
+        base_cooldown: Option(int, 'Base cooldown in seconds', min_value=1, max_value=604_200, default=None),
+    ) -> None:
+        """Changes the base cooldown for activities"""
+        if activity is None and base_cooldown is None:
+            all_cooldowns = await cooldowns.get_all_cooldowns()
+            answer = 'Current base cooldowns:'
+            for cooldown in all_cooldowns:
+                answer = f'{answer}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown}s'
+            await ctx.respond(answer)
             return
-        if not answer.content.lower() in ['yes','y']:
-            await ctx.send('Aborted')
+        if activity is None or base_cooldown is None:
+            await ctx.resond(
+                'You need to set both options. If you want to see the current cooldowns, leave both options empty.',
+                ephemeral=True
+            )
             return
         cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-        await cooldown.update(event_reduction=reduction)
-        if cooldown.event_reduction == reduction:
-            await ctx.reply(
-                f'Changed event reduction for activity `{cooldown.activity}` to **{cooldown.event_reduction}%**.'
-            )
+        await cooldown.update(cooldown=base_cooldown)
+        if cooldown.base_cooldown == base_cooldown:
+            answer =  f'Changed base cooldown for activity `{cooldown.activity}` to **{cooldown.base_cooldown}s**.'
+        await ctx.respond(answer)
 
-    @dev.group(name='post-message', aliases=('pm',), invoke_without_command=True)
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    @dev.command(name='post-message')
     @commands.is_owner()
-    async def post_message(self, ctx: commands.Context, message_id: int, channel_id: int, *embed_title: str) -> None:
-        """Post an embed to a channel"""
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-        prefix = ctx.prefix
-        if prefix.lower() == 'rpg ': return
-        syntax = strings.MSG_SYNTAX.format(
-            syntax=f'{ctx.prefix}{ctx.command.qualified_name} [embed title] [content message ID] [target channel ID]'
-        )
+    async def post_message(
+        self,
+        ctx: discord.ApplicationContext,
+        message_id: Option(str, 'Message ID of the message IN THIS CHANNEL with the content'),
+        channel_id: Option(str, 'Channel ID of the channel where the message is sent to'),
+        embed_title: Option(str, 'Title of the embed', max_length=256),
+    ) -> None:
+        """Sends the content of a message to a channel in an embed"""
         await self.bot.wait_until_ready()
+        try:
+            message_id = int(message_id)
+        except ValueError:
+            await ctx.respond('The message ID is not a valid number.', ephemeral=True)
+            return
+        try:
+            channel_id = int(channel_id)
+        except ValueError:
+            await ctx.respond('The channel ID is not a valid number.', ephemeral=True)
+            return
         try:
             message = await ctx.channel.fetch_message(message_id)
         except:
-            await ctx.reply(
-                f'No message with that ID found.\n'
-                f'Command syntax is `{syntax}`\n'
-                f'Note that the message needs to be in **this** channel.'
+            await ctx.respond(
+                f'No message with that message ID found.\n'
+                f'Note that the message needs to be in **this** channel!',
+                ephemeral=True
             )
             return
         try:
             channel = await self.bot.fetch_channel(channel_id)
         except:
-            await ctx.reply(
-                f'No channel with that ID found.\n'
-                f'Command syntax is `{syntax}`'
-            )
+            await ctx.respond('No channel with that channel ID found.', ephemeral=True)
             return
-        embed_title_str = " ".join(embed_title)
-        if len(embed_title_str) > 256:
-            await ctx.reply(
-                f'Embed title can\'t be longer than 256 characters.\n'
-                f'Command syntax is `{syntax}`'
-            )
-            return
-
-
         embed = discord.Embed(
-            title = embed_title_str,
+            title = embed_title,
             description = message.content
         )
-
-        await ctx.reply(
-            f'Sending the following embed to the channel `{channel.name}`. Proceed? [`yes/no`]',
-            embed = embed
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(
+            f'I will send the following embed to the channel `{channel.name}`. Proceed?',
+            view=view,
+            embed=embed
         )
-        try:
-            answer = await self.bot.wait_for('message', check=check, timeout=30)
-        except asyncio.TimeoutError:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-            return
-        if not answer.content.lower() in ['yes','y']:
-            await ctx.send('Aborted')
-            return
-        await channel.send(embed=embed)
-        await ctx.send('Message sent.')
-
-    @dev_event_reduction.command(name='reset')
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def dev_event_reduction_reset(self, ctx: commands.Context) -> None:
-        """Resets event reductions of all activities"""
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-        if ctx.prefix.lower() == 'rpg ': return
-        await ctx.reply(
-            f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]'
-        )
-        try:
-            answer = await self.bot.wait_for('message', check=check, timeout=30)
-        except asyncio.TimeoutError as error:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-        if not answer.content.lower() in ['yes','y']:
-            await ctx.send('Aborted')
-            return
-        all_cooldowns = await cooldowns.get_all_cooldowns()
-        for cooldown in all_cooldowns:
-            await cooldown.update(event_reduction=0.0)
-        await ctx.reply(f'All event reductions have been reset.')
-
-    @dev.command(name='cooldown-setup', aliases=('cd-setup',))
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def cooldown_setup(self, ctx: commands.Context, *args: str) -> None:
-        """Sets base cooldowns of all activities"""
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-
-        prefix = ctx.prefix
-        if prefix.lower() == 'rpg ': return
-        syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [seconds]')
-        activity_list = 'Possible activities:'
-        for activity in strings.ACTIVITIES_WITH_COOLDOWN:
-            activity_list = f'{activity_list}\n{emojis.BP} `{activity}`'
-        if not args or len(args) != 2:
-            all_cooldowns = await cooldowns.get_all_cooldowns()
-            message = 'Current base cooldowns:'
-            for cooldown in all_cooldowns:
-                message = f'{message}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown:,}s'
-            message = f'{message}\n\n{syntax}'
-            await ctx.reply(message)
-            return
-        activity = args[0].lower()
-        new_cooldown = args[1]
-        if new_cooldown.isnumeric():
-            new_cooldown = int(new_cooldown)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+        elif view.value == 'confirm':
+            await channel.send(embed=embed)
+            await functions.edit_interaction(interaction, view=None)
+            await ctx.followup.send('Message sent.')
         else:
-            if activity.isnumeric():
-                new_cooldown = int(activity)
-                activity = args[1]
-        if activity in strings.ACTIVITIES_ALIASES:
-            activity = strings.ACTIVITIES_ALIASES[activity]
-        if activity not in strings.ACTIVITIES_WITH_COOLDOWN:
-            await ctx.reply(f'**{ctx.author.name}**, couldn\'t find activity `{activity}`.')
-            return
-        await ctx.reply(
-            f'**{ctx.author.name}**, this will change the base cooldown (before donor reduction) of activity '
-            f'`{activity}` to **{new_cooldown:,}** seconds. Continue? [`yes/no`]'
-        )
-        try:
-            answer = await self.bot.wait_for('message', check=check, timeout=30)
-        except asyncio.TimeoutError as error:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-        if not answer.content.lower() in ['yes','y']:
-            await ctx.send('Aborted')
-            return
-        cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-        await cooldown.update(cooldown=new_cooldown)
-        if cooldown.base_cooldown == new_cooldown:
-            await ctx.reply(
-                f'Changed base cooldown for activity `{cooldown.activity}` to '
-                f'**{cooldown.base_cooldown:,}s**.'
-            )
-        else:
-            await ctx.reply(strings.MSG_ERROR)
+            await functions.edit_interaction(interaction, view=None)
+            await ctx.followup.send('Sending aborted.')
+
 
     @dev.command()
     @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True, read_message_history=True)
-    async def shutdown(self, ctx: commands.Context) -> None:
-        """Shut down the bot"""
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-        prefix = ctx.prefix
-        if prefix.lower() == 'rpg ': return
-        await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
-        try:
-            answer = await self.bot.wait_for('message', check=check, timeout=30)
-        except asyncio.TimeOutError:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
-        if answer.content.lower() in ['yes','y']:
-            await ctx.send('Shutting down.')
+    async def test(self, ctx: discord.ApplicationContext):
+        """Test test"""
+        cmd_settings_user = self.bot.get_application_command('settings', type=discord.commands.SlashCommandGroup)
+        pass
+
+
+    @dev.command()
+    @commands.is_owner()
+    async def shutdown(self, ctx: discord.ApplicationContext):
+        """Shuts down the bot"""
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
+                                             view=None)
+        elif view.value == 'confirm':
+            await functions.edit_interaction(interaction, content='Shutting down.', view=None)
             await self.bot.close()
         else:
-            await ctx.send('Phew, was afraid there for a second.')
-
-    @dev.command(aliases=('unload','reload',))
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def load(self, ctx: commands.Context, *args: str) -> None:
-        """Loads/unloads cogs and reloads cogs or modules"""
-        action = ctx.invoked_with
-        message_syntax = f'The syntax is `{ctx.prefix}dev {action} [name(s)]`'
-        if ctx.prefix.lower() == 'rpg ': return
-        if not args:
-            await ctx.send(message_syntax)
-            return
-        args = [arg.lower() for arg in args]
-        actions = []
-        for mod_or_cog in args:
-            name_found = False
-            if not 'cogs.' in mod_or_cog:
-                cog_name = f'cogs.{mod_or_cog}'
-            try:
-                if action == 'load':
-                    cog_status = self.bot.load_extension(cog_name)
-                elif action == 'reload':
-                    cog_status = self.bot.reload_extension(cog_name)
-                else:
-                    cog_status = self.bot.unload_extension(cog_name)
-            except:
-                cog_status = 'Error'
-            if cog_status is None:
-                actions.append(f'+ Extension \'{cog_name}\' {action}ed.')
-                name_found = True
-            if not name_found:
-                if action == 'reload':
-                    for module_name in sys.modules.copy():
-                        if mod_or_cog == module_name:
-                            module = sys.modules.get(module_name)
-                            if module is not None:
-                                importlib.reload(module)
-                                actions.append(f'+ Module \'{module_name}\' reloaded.')
-                                name_found = True
-            if not name_found:
-                if action == 'reload':
-                    actions.append(f'- No cog with the name \'{mod_or_cog}\' found or cog not loaded.')
-                else:
-                    actions.append(f'- No cog with the name \'{mod_or_cog}\' found or cog already {action}ed.')
-
-        message = ''
-        for action in actions:
-            message = f'{message}\n{action}'
-        await ctx.send(f'```diff\n{message}\n```')
-
-    # Enable/disable commands
-    @dev.command(aliases=('disable',))
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def enable(self, ctx: commands.Context, *args: str) -> None:
-        if ctx.prefix.lower() == 'rpg ': return
-        action = ctx.invoked_with
-        if args:
-            command = ''
-            for arg in args:
-                command = f'{command} {arg}'
-            command = self.bot.get_command(command)
-            if command is None:
-                await ctx.reply(
-                    'No command with that name found.'
-                    )
-            elif ctx.command == command:
-                await ctx.reply(
-                    f'You can not {action} this command.'
-                    )
-            else:
-                if action == 'enable':
-                    command.enabled = True
-                else:
-                    command.enabled = False
-                await ctx.reply(
-                    f'Command {command.qualified_name} {action}d.'
-                    )
-        else:
-            await ctx.reply(
-                f'Syntax is `{ctx.prefix}{ctx.command} [command]`'
-                )
-
-    # Test command
-    @dev.command()
-    @commands.bot_has_permissions(send_messages=True)
-    async def test(self, ctx: commands.Context) -> None:
-        if ctx.prefix.lower() == 'rpg ': return
-        if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        from database import clans, reminders, users
-        from resources import exceptions
-        user = ctx.author
-        user_settings = await users.get_user(user.id)
-        try:
-            current_time = datetime.utcnow().replace(microsecond=0)
-            clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
-            if clan.alert_enabled:
-                try:
-                    clan_reminder: reminders.Reminder = (
-                        await reminders.get_clan_reminder(clan.clan_name)
-                    )
-                except exceptions.NoDataFoundError:
-                    clan_reminder = None
-            if clan_reminder is not None:
-                for member_id in clan.member_ids:
-                    try:
-                        user_clan_reminder: reminders.Reminder = (
-                            await reminders.get_user_reminder(member_id, 'guild')
-                        )
-                        user_reminder_time_left = user_clan_reminder.end_time - current_time
-                        clan_reminder_time_left = clan_reminder.end_time - current_time
-                        range_upper = clan_reminder_time_left + timedelta(seconds=2)
-                        range_lower = clan_reminder_time_left - timedelta(seconds=2)
-                        if range_lower <= user_reminder_time_left <= range_upper:
-                            new_end_time = current_time + (clan_reminder_time_left + timedelta(minutes=5))
-                            await user_clan_reminder.update(end_time=new_end_time)
-                    except exceptions.NoDataFoundError:
-                        continue
-        except exceptions.NoDataFoundError:
-            pass
+            await functions.edit_interaction(interaction, content='Shutdown aborted.', view=None)
 
 
 def setup(bot):

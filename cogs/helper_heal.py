@@ -1,4 +1,4 @@
-# heal-warning.py
+# helper_heal.py
 
 import re
 
@@ -6,10 +6,10 @@ import discord
 from discord.ext import commands
 
 from database import errors, users
-from resources import emojis, functions, exceptions, settings, strings
+from resources import emojis, functions, exceptions, regex, settings
 
 
-class HealWarningCog(commands.Cog):
+class HelperHealCog(commands.Cog):
     """Cog that contains the heal warning detection"""
     def __init__(self, bot):
         self.bot = bot
@@ -55,7 +55,7 @@ class HealWarningCog(commands.Cog):
             if user is None:
                 user_command_message = (
                     await functions.get_message_from_channel_history(
-                        message.channel, strings.REGEX_COMMAND_HUNT,
+                        message.channel, regex.COMMAND_HUNT,
                         user_name=user_name
                     )
                 )
@@ -120,12 +120,12 @@ class HealWarningCog(commands.Cog):
             interaction = await functions.get_interaction(message)
             user = await functions.get_interaction_user(message)
             if user is None:
-                user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE_START, message_content)
+                user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_HUNT_ADVENTURE,
+                            message.channel, regex.COMMAND_HUNT_ADVENTURE,
                             user_name=user_name
                         )
                     )
@@ -184,4 +184,4 @@ class HealWarningCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(HealWarningCog(bot))
+    bot.add_cog(HelperHealCog(bot))
