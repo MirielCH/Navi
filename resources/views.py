@@ -76,13 +76,15 @@ class ConfirmCancelView(discord.ui.View):
 
     Returns 'confirm', 'cancel' or None (if timeout/error)
     """
-    def __init__(self, ctx: discord.ApplicationCommand,
+    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext],
                  styles: Optional[List[discord.ButtonStyle]] = [discord.ButtonStyle.grey, discord.ButtonStyle.grey],
-                 labels: Optional[list[str]] = ['Yes','No'], interaction: Optional[discord.Interaction] = None):
+                 labels: Optional[list[str]] = ['Yes','No'],
+                 interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
         self.value = None
         self.user = ctx.author
-        self.interaction = interaction
+        self.interaction_message = interaction_message
         self.add_item(components.CustomButton(style=styles[0], custom_id='confirm', label=labels[0]))
         self.add_item(components.CustomButton(style=styles[1], custom_id='cancel', label=labels[1]))
 

@@ -50,7 +50,8 @@ class SettingsCog(commands.Cog):
     async def partner(
         self,
         ctx: discord.ApplicationContext,
-        new_partner: Option(discord.User, 'Set a new partner', default=None)) -> None:
+        new_partner: Option(discord.User, 'Set a new partner', default=None)
+    ) -> None:
         """Manage partner settings"""
         await settings_cmd.command_settings_partner(self.bot, ctx, new_partner)
 
@@ -69,7 +70,32 @@ class SettingsCog(commands.Cog):
         """Manage user settings"""
         await settings_cmd.command_settings_user(self.bot, ctx)
 
+    @slash_command()
+    async def enable(
+        self,
+        ctx: discord.ApplicationContext,
+        settings: Option(str, 'Setting(s) you want to enable', default='')
+    ) -> None:
+        """Enable specific settings"""
+        await settings_cmd.command_enable_disable(self.bot, ctx, 'enable', settings.split())
+
+    @slash_command()
+    async def disable(
+        self,
+        ctx: discord.ApplicationContext,
+        settings: Option(str, 'Setting(s) you want to disable', default='')
+    ) -> None:
+        """Disable specific settings"""
+        await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.split())
+
     #Prefix commands
+    @commands.command(name='enable', aliases=('disable',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def prefix_enable(self, ctx: commands.Context, *args: str) -> None:
+        """Enable/disable specific settings (prefix version)"""
+        action = ctx.invoked_with
+        await settings_cmd.command_enable_disable(self.bot, ctx, action, list(args))
+
     @commands.command(name='on', aliases=('register', 'activate', 'start'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_on(self, ctx: commands.Context, *args: str) -> None:
@@ -109,12 +135,6 @@ class SettingsCog(commands.Cog):
     async def prefix_settings_messages(self, ctx: commands.Context, *args: str) -> None:
         """Message settings (prefix version)"""
         await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings messages"]} to change your messages.')
-
-    @commands.command(name='enable', aliases=('disable',))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_reminders(self, ctx: commands.Context, *args: str) -> None:
-        """Reminder settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings reminders"]} to change this setting.')
 
     @commands.command(name='partner')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)

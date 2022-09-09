@@ -2,16 +2,112 @@
 """Contains clan settings commands"""
 
 import re
-from typing import List, Optional
-
+from typing import List, Optional, Union
 
 import discord
-
+from discord.ext import commands
 
 from content import settings as settings_cmd
 from database import clans, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
+
+SETTINGS_HELPERS = [
+    'context-helper',
+    'heal-warning',
+    'pet-helper',
+    'ruby-counter',
+    'training-helper',
+]
+
+SETTINGS_HELPER_ALIASES = {
+    'ctx': 'context-helper',
+    'context': 'context-helper',
+    'contexthelp': 'context-helper',
+    'contexthelper': 'context-helper',
+    'context-help': 'context-helper',
+    'ctx-help': 'context-helper',
+    'ctxhelp': 'context-helper',
+    'ctxhelper': 'context-helper',
+    'ctx-helper': 'context-helper',
+    'heal': 'heal-warning',
+    'healwarn': 'heal-warning',
+    'heal-warn': 'heal-warning',
+    'healwarning': 'heal-warning',
+    'pethelper': 'pet-helper',
+    'pethelp': 'pet-helper',
+    'pet-catch': 'pet-helper',
+    'pet-catch-helper': 'pet-helper',
+    'pet-catchhelper': 'pet-helper',
+    'petcatchhelper': 'pet-helper',
+    'petcatchhelp': 'pet-helper',
+    'petcatch-help': 'pet-helper',
+    'petcatch-helper': 'pet-helper',
+    'ruby': 'ruby-counter',
+    'rubycounter': 'ruby-counter',
+    'rubycount': 'ruby-counter',
+    'ruby-count': 'ruby-counter',
+    'counter': 'ruby-counter',
+    'tr-helper': 'training-helper',
+    'tr-help': 'training-helper',
+    'trhelp': 'training-helper',
+    'trhelper': 'training-helper',
+    'traininghelp': 'training-helper',
+    'traininghelper': 'training-helper',
+}
+
+SETTINGS_HELPER_COLUMNS = {
+    'context-helper': 'context_helper',
+    'heal-warning': 'heal_warning',
+    'pet-helper': 'pet_helper',
+    'ruby-counter': 'ruby_counter',
+    'training-helper': 'training_helper',
+}
+
+SETTINGS_USER = [
+    'dnd-mode',
+    'hardmode-mode',
+    'hunt-rotation',
+    'slash-mentions',
+    'tracking',
+]
+
+SETTINGS_USER_ALIASES = {
+    'dnd': 'dnd-mode',
+    'dndmode': 'dnd-mode',
+    'hm': 'hardmode-mode',
+    'hardmode': 'hardmode-mode',
+    'hardmodemode': 'hardmode-mode',
+    'hm-mode': 'hardmode-mode',
+    'hmmode': 'hardmode-mode',
+    'huntrotation': 'hunt-rotation',
+    'rotation': 'hunt-rotation',
+    'huntswitch': 'hunt-rotation',
+    'switch': 'hunt-rotation',
+    'hunt-switch': 'hunt-rotation',
+    'slash': 'slash-mentions',
+    'mention': 'slash-mentions',
+    'mentions': 'slash-mentions',
+    'slashmention': 'slash-mentions',
+    'slashmentions': 'slash-mentions',
+    'track': 'tracking',
+    'commandtrack': 'tracking',
+    'commandtracking': 'tracking',
+    'command-tracking': 'tracking',
+    'command-track': 'tracking',
+    'cmd-track': 'tracking',
+    'cmd-tracking': 'tracking',
+    'cmdtrack': 'tracking',
+    'cmdtracking': 'tracking',
+}
+
+SETTINGS_USER_COLUMNS = {
+    'dnd-mode': 'dnd_mode',
+    'hardmode-mode': 'hardmode_mode',
+    'hunt-rotation': 'hunt_rotation',
+    'slash-mentions': 'slash_mentions',
+    'tracking': 'tracking',
+}
 
 # --- Commands ---
 async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
@@ -50,7 +146,10 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         image_url = 'attachment://navi.png'
         embed = discord.Embed(
             title = f'Hey! {ctx.author.name}! Hello!'.upper(),
-            description = f'Have a look at {strings.SLASH_COMMANDS_NAVI["help"]} for a list of my commands.',
+            description = (
+                f'I am here to help you with your EPIC RPG commands!\n'
+                f'Have a look at {strings.SLASH_COMMANDS_NAVI["help"]} for a list of my own commands.'
+            ),
             color =  settings.EMBED_COLOR,
         )
         embed.add_field(name='SETTINGS', value=field_settings, inline=False)
@@ -79,7 +178,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
     )
     view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
     interaction = await ctx.respond(answer, view=view)
-    view.interaction = interaction
+    view.interaction_message = interaction
     await view.wait()
     if view.value is None:
         await functions.edit_interaction(
@@ -216,7 +315,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
                 f'Setting a new partner will remove your old partner. Do you want to continue?',
                 view=view
             )
-            view.interaction = interaction
+            view.interaction_message = interaction
             await view.wait()
             if view.value is None:
                 await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
@@ -342,6 +441,131 @@ async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContex
         await functions.edit_interaction(interaction, embed=embed, view=view)
     view.interaction = interaction
     await view.wait()
+
+
+async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context],
+                                 action: str, settings: List[str]) -> None:
+    """Enables/disables specific settings"""
+    user_settings: users.User = await users.get_user(ctx.author.id)
+    enabled = True if action == 'enable' else False
+    possible_reminders = 'Reminders:'
+    for activity in strings.ACTIVITIES_ALL:
+        possible_reminders = f'{possible_reminders}\n{emojis.BP} `{activity}`'
+    possible_helpers = 'Helpers:'
+    for helper in SETTINGS_HELPERS:
+        possible_helpers = f'{possible_helpers}\n{emojis.BP} `{helper}`'
+    possible_user = 'User settings:'
+    for setting in SETTINGS_USER:
+        possible_user = f'{possible_user}\n{emojis.BP} `{setting}`'
+
+    if not settings:
+        await functions.reply_or_respond(
+            ctx,
+            f'This command can be used to quickly enable or disable certain settings.\n'
+            f'You can disable multiple settings at once by separating them with a space.\n\n'
+            f'**Possible settings**\n'
+            f'{possible_reminders}\n\n'
+            f'{possible_helpers}\n\n'
+            f'{possible_user}'
+        )
+        return
+
+    for index, setting in enumerate(settings):
+        if setting in strings.ACTIVITIES_ALIASES: settings[index] = strings.ACTIVITIES_ALIASES[setting]
+        if setting in SETTINGS_HELPER_ALIASES: settings[index] = SETTINGS_HELPER_ALIASES[setting]
+        if setting in SETTINGS_USER_ALIASES: settings[index] = SETTINGS_USER_ALIASES[setting]
+
+    if 'all' in settings:
+        if not enabled:
+            answer_delete = (
+                f'**{ctx.author.name}**, this will turn off all reminders which will also delete all of your active '
+                f'reminders. Are you sure?'
+            )
+            view = views.ConfirmCancelView(ctx, [discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            if isinstance(ctx, discord.ApplicationContext):
+                interaction_message = await ctx.respond(answer_delete, view=view)
+            else:
+                interaction_message = await ctx.reply(answer_delete, view=view)
+            view.interaction_message = interaction_message
+            await view.wait()
+            if view.value == 'confirm':
+                if isinstance(ctx, discord.ApplicationContext):
+                    await functions.edit_interaction(interaction_message, view=None)
+                else:
+                    await interaction_message.edit(view=None)
+            else:
+                if isinstance(ctx, discord.ApplicationContext):
+                    await functions.edit_interaction(interaction_message, content='Aborted.', view=None)
+                else:
+                    await interaction_message.edit(content='Aborted', view=None)
+                return
+        for setting in settings.copy():
+            if setting in strings.ACTIVITIES:
+                settings.remove(setting)
+        settings += strings.ACTIVITIES
+        settings.remove('all')
+
+    updated_reminders = []
+    updated_helpers = []
+    updated_user = []
+    ignored_settings = []
+    answer_reminders = answer_helpers = answer_user = answer_ignored = ''
+    for setting in settings:
+        if setting in strings.ACTIVITIES: updated_reminders.append(setting)
+        elif setting in SETTINGS_HELPERS: updated_helpers.append(setting)
+        elif setting in SETTINGS_USER: updated_user.append(setting)
+        else: ignored_settings.append(setting)
+
+    kwargs = {}
+    if updated_reminders:
+        answer_reminders = f'{action.capitalize()}d reminders for the following activities:'
+        for activity in updated_reminders:
+            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_enabled'] = enabled
+            answer_reminders = f'{answer_reminders}\n{emojis.BP}`{activity}`'
+            if not enabled:
+                if activity == 'pets':
+                    try:
+                        all_reminders = await reminders.get_active_user_reminders(ctx.author.id)
+                        for reminder in all_reminders:
+                            if 'pets' in reminder.activity: await reminder.delete()
+                    except:
+                        pass
+                try:
+                    reminder: reminders.Reminder = await reminders.get_user_reminder(ctx.author.id, activity)
+                    await reminder.delete()
+                except exceptions.NoDataFoundError:
+                    pass
+
+    if updated_helpers:
+        answer_helpers = f'{action.capitalize()}d the following helpers:'
+        for helper in updated_helpers:
+            kwargs[f'{SETTINGS_HELPER_COLUMNS[helper]}_enabled'] = enabled
+            answer_helpers = f'{answer_helpers}\n{emojis.BP}`{helper}`'
+
+    if updated_user:
+        answer_user = f'{action.capitalize()}d the following user settings:'
+        for setting in updated_user:
+            kwargs[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
+            answer_user = f'{answer_user}\n{emojis.BP}`{setting}`'
+
+    await user_settings.update(**kwargs)
+
+    if ignored_settings:
+        answer_ignored = f'Couldn\'t find the following settings:'
+        for setting in ignored_settings:
+            answer_ignored = f'{answer_ignored}\n{emojis.BP}`{setting}`'
+
+    answer = ''
+    if answer_reminders != '':
+        answer = answer_reminders
+    if answer_helpers != '':
+        answer = f'{answer}\n\n{answer_helpers}'
+    if answer_user != '':
+        answer = f'{answer}\n\n{answer_user}'
+    if answer_ignored != '':
+        answer = f'{answer}\n\n{answer_ignored}'
+
+    await functions.reply_or_respond(ctx, answer.strip())
 
 
 # --- Embeds ---

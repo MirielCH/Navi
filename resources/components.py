@@ -201,7 +201,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
                 view=confirm_view,
                 ephemeral=True
             )
-            confirm_view.interaction = confirm_interaction
+            confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.clan_settings.update(channel_id=interaction.channel.id)
@@ -224,7 +224,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
                 view=confirm_view,
                 ephemeral=True
             )
-            confirm_view.interaction = confirm_interaction
+            confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.clan_settings.update(channel_id=None, alert_enabled=False)
@@ -409,7 +409,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 view=confirm_view,
                 ephemeral=True
             )
-            confirm_view.interaction = confirm_interaction
+            confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_channel_id=interaction.channel.id)
@@ -437,7 +437,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 view=confirm_view,
                 ephemeral=True
             )
-            confirm_view.interaction = confirm_interaction
+            confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_channel_id=None)
@@ -460,7 +460,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 view=confirm_view,
                 ephemeral=True
             )
-            confirm_view.interaction = confirm_interaction
+            confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_id=None, partner_donor_tier=0)
@@ -564,7 +564,7 @@ class SetReminderMessageButton(discord.ui.Button):
                 view=confirm_view,
                 ephemeral=True
             )
-            confirm_view.interaction = confirm_interaction
+            confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 kwargs = {}

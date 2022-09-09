@@ -181,7 +181,7 @@ class DevCog(commands.Cog):
             view=view,
             embed=embed
         )
-        view.interaction = interaction
+        view.interaction_message = interaction
         await view.wait()
         if view.value is None:
             await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
@@ -208,7 +208,7 @@ class DevCog(commands.Cog):
         """Shuts down the bot"""
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
-        view.interaction = interaction
+        view.interaction_message = interaction
         await view.wait()
         if view.value is None:
             await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
