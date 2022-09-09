@@ -45,9 +45,9 @@ class HuntCog(commands.Cog):
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = embed_user = user_command = last_hunt_mode = user_command_message = None
-                slash_command = True if user is not None else False
                 hardmode = together = alone = old = False
                 interaction_user = await functions.get_interaction_user(message)
+                slash_command = True if interaction_user is not None else False
                 if interaction_user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(message.channel, strings.REGEX_COMMAND_HUNT)
@@ -60,7 +60,10 @@ class HuntCog(commands.Cog):
                 user_id_match = re.search(strings.REGEX_USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
-                    embed_user = await message.guild.fetch_member(user_id)
+                    try:
+                        embed_user = await message.guild.fetch_member(user_id)
+                    except discord.NotFound:
+                        embed_user = None
                 else:
                     user_name_match = re.search(strings.REGEX_USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
@@ -246,8 +249,9 @@ class HuntCog(commands.Cog):
                         last_hunt_mode = f'{last_hunt_mode} alone'
                     if old and together and slash_command:
                         last_hunt_mode = f'{last_hunt_mode} old'
+                    last_hunt_mode = last_hunt_mode.strip()
                     if last_hunt_mode != '':
-                        user_command = f'{user_command} `mode: {last_hunt_mode.strip()}`'
+                        user_command = f'{user_command} `mode: {last_hunt_mode}`'
                 if event_mob:
                     if user_settings.last_hunt_mode is not None:
                         user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
@@ -440,7 +444,7 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction_user(message)
                 if interaction is None:
                     user_name = user_command = last_hunt_mode = user_command_message = None
-                    hardmode = together = found_together = alone = False
+                    hardmode = together = found_together = alone = old = False
                     user_name_match = re.search(strings.REGEX_NAME_FROM_MESSAGE, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)

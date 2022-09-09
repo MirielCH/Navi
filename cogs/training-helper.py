@@ -115,18 +115,10 @@ class TrainingHelperCog(commands.Cog):
                         answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
                     await message.reply(answer)
                 else:
-                    if slash_command:
-                        answer = None if user_settings.dnd_mode_enabled else user.mention
-                        buttons = await functions.get_training_answer_slash(message)
-                        view = views.TrainingAnswerView(buttons)
-                        await message.reply(content=answer, view=view)
-                    else:
-                        answer = await functions.get_training_answer(message)
-                        if user_settings.dnd_mode_enabled:
-                            await message.reply(answer)
-                        else:
-                            answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
-                            await message.reply(answer)
+                    answer = None if user_settings.dnd_mode_enabled else user.mention
+                    buttons = await functions.get_training_answer_slash(message)
+                    view = views.TrainingAnswerView(buttons)
+                    await message.reply(content=answer, view=view)
 
 # Initialization
 def setup(bot):

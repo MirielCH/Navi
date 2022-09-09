@@ -1,6 +1,6 @@
 # lottery.py
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 import re
 
 import discord
@@ -37,7 +37,7 @@ class LotteryCog(commands.Cog):
 
             # Lottery event check
             search_strings = [
-                'join with `rpg lottery', #English 1
+                'join with `lottery', #English 1
                 'join with `/lottery', #English 2
                 'participa con `/lottery', #Spanis
                 'participe com `/lottery', #Portuguese
@@ -59,6 +59,11 @@ class LotteryCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
+                try:
+                    reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'lottery')
+                except exceptions.NoDataFoundError:
+                    return
+                if reminder.triggered: return
                 user_command = await functions.get_slash_command(user_settings, 'lottery')
                 user_command = f"{user_command} `amount: [1-10]`"
                 search_patterns = [
@@ -128,6 +133,42 @@ class LotteryCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'lottery', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.auto_ready_enabled and slash_command:
+                    await functions.call_ready_command(self.bot, message, user)
+
+            search_strings = [
+                'you cannot buy more than 10 tickets per lottery', #English
+                'no puedes comprar más de 10 tickets por lotería', #Spanish
+                'você não pode comprar mais de 10 bilhetes por loteria', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                slash_command = True if user is not None else False
+                if user is None: user = message.mentions[0]
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'lottery')
+                user_command = f"{user_command} `amount: [1-10]`"
+                current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
+                today_12pm = datetime.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
+                today_12am = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                tomorrow_12am = today_12am + timedelta(days=1)
+                if today_12am > current_time:
+                    time_left = today_12am - current_time
+                elif today_12pm > current_time:
+                    time_left = today_12pm - current_time
+                else:
+                    time_left = tomorrow_12am - current_time
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,

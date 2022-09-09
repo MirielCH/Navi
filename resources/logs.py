@@ -14,10 +14,13 @@ if not os.path.isfile(settings.LOG_FILE):
 
 
 logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+"""
 if settings.DEBUG_MODE:
     logger.setLevel(logging.DEBUG)
 else:
     logger.setLevel(logging.INFO)
+"""
 handler = logging.handlers.TimedRotatingFileHandler(filename=settings.LOG_FILE,when='D',interval=1, encoding='utf-8', utc=True)
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)

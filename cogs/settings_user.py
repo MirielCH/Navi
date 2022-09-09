@@ -31,6 +31,10 @@ class SettingsUserCog(commands.Cog):
     async def list_reminders(self, ctx: commands.Context, *args: str) -> None:
         """Lists all active reminders"""
         if ctx.prefix.lower() == 'rpg ': return
+        for mentioned_user in ctx.message.mentions.copy():
+            if mentioned_user == self.bot.user:
+                ctx.message.mentions.remove(mentioned_user)
+                break
         if ctx.message.mentions:
             user_id = ctx.message.mentions[0].id
         elif args:
@@ -176,6 +180,11 @@ class SettingsUserCog(commands.Cog):
     async def ready(
         self, ctx: Union[commands.Context, discord.Message], *args: str, user: Optional[discord.User] = None
     ) -> None:
+        if not isinstance(ctx, discord.Message):
+            for mentioned_user in ctx.message.mentions.copy():
+                if mentioned_user == self.bot.user:
+                    ctx.message.mentions.remove(mentioned_user)
+                    break
         """Lists all commands that are ready to use"""
         if isinstance(ctx, commands.Context):
             if ctx.prefix.lower() == 'rpg ': return
@@ -250,11 +259,13 @@ class SettingsUserCog(commands.Cog):
             alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
             if not alert_settings.enabled:
                 ready_event_activities.remove(activity)
-
+        """
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
             title = f'{user_discord.name}\'S READY'.upper()
         )
+        """
+        answer = answer_title = f'**{user_discord.name}\'S READY**'.upper()
         if ready_command_activities:
             field_ready_commands = ''
             ready_commands = []
@@ -294,7 +305,12 @@ class SettingsUserCog(commands.Cog):
                     f'{emojis.BP} {command}'
                 )
             if field_ready_commands != '':
-                embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**COMMANDS**\n'
+                    f'{field_ready_commands.strip()}'
+                )
+                #embed.add_field(name='COMMANDS', value=field_ready_commands.strip(), inline=False)
         if ready_event_activities:
             field_ready_events = ''
             ready_events = []
@@ -314,19 +330,36 @@ class SettingsUserCog(commands.Cog):
                     f'{emojis.BP} {event}'
                 )
             if field_ready_events != '':
-                embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**EVENTS**\n'
+                    f'{field_ready_events.strip()}'
+                )
+                #embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
         clan_alert_enabled = getattr(clan, 'alert_enabled', False)
         if not clan_reminder and clan_alert_enabled:
             field_ready_clan = f"{emojis.BP} {clan_command}"
-            embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
-        if not embed.fields: embed.description = f'{emojis.BP} All done!'
+            answer = (
+                f'{answer}\n'
+                f'**GUILD CHANNEL**\n'
+                f'{field_ready_clan}'
+            )
+            #embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
+        if answer == answer_title:
+            answer = (
+                f'{answer}\n'
+                f'{emojis.BP} All done!'
+            )
+        #if not embed.fields: embed.description = f'{emojis.BP} All done!'
         if auto_ready:
-            prefix = await guilds.get_prefix(message)
-            embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
-            await message.channel.send(embed=embed)
+            #prefix = await guilds.get_prefix(message)
+            #embed.set_footer(text=f"See '{prefix}rd' if you want to disable this message.")
+            #await message.channel.send(embed=embed)
+            await message.channel.send(answer)
         else:
             view = views.AutoReadyView(user, user_settings)
-            interaction_message = await message.reply(embed=embed, view=view)
+            #interaction_message = await message.reply(embed=embed, view=view)
+            interaction_message = await message.reply(answer, view=view)
             view.message = interaction_message
             await view.wait()
             if view.value == 'timeout':
@@ -472,7 +505,7 @@ class SettingsUserCog(commands.Cog):
                 f'This command toggles slash mentions in reminders. If this is on, Navi will send clickable / tappable '
                 f'command links (example: </chainsaw:959162697398763590>).\n'
                 f'Make sure that you use the placeholder \u007bcommand\u007d in your messages to see them.\n\n'
-                f'Note that this feature is not officially released by Discord and does **not** work on mobile yet!\n\n'
+                f'Note that this feature does only work in the latest Discord app!\n\n'
                 f'{syntax}'
             )
             return

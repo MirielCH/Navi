@@ -119,8 +119,11 @@ class ContextHelperCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
                 search_strings_tt = [
                     'the following pets are back instantly', #English
+                    'voidog pet made all pets travel', #English VOIDog
                     'las siguientes mascotas están de vuelta instantaneamente', #Spanish
+                    'mascota voidog hizo que todas tus mascotas', #Spanish VOIDog
                     'os seguintes pets voltaram instantaneamente', #Portuguese
+                    'voidog fez todos os bichinhos', #Portuguese VOIDog
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_tt):
                     command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
@@ -141,12 +144,12 @@ class ContextHelperCog(commands.Cog):
                 'conseguiu uma **nova missão**', #Portuguese accepted
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None: return
                 if message.reference.cached_message is not None:
                     quest_message = message.reference.cached_message
                 else:
                     quest_message = await message.channel.fetch_message(message.reference.message_id)
-                user = quest_message.interaction.user
-                if user is None: return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -224,6 +227,22 @@ class ContextHelperCog(commands.Cog):
                 else:
                     return
                 await message.reply(answer)
+
+            search_strings = [
+                'is now in the jail', #English
+                'is now in the jail', #Spanish, MISSING
+                'is now in the jail', #Portuguese, MISSING
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
+                command_jail = await functions.get_slash_command(user_settings, 'jail')
+                await message.reply(f"➜ {command_jail}")
 
 
 # Initialization

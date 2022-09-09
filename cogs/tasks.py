@@ -95,11 +95,10 @@ class TasksCog(commands.Cog):
                     quest_user_id = clan.quest_user_id
                     await clan.update(quest_user_id=None)
                     time_left_all_members = timedelta(minutes=5)
-                    alert_message_prefix = '/' if '/guild' in first_reminder.message else 'rpg '
                     if clan.stealth_current >= clan.stealth_threshold:
-                        alert_message = f'{alert_message_prefix}guild raid'
+                        alert_message = strings.SLASH_COMMANDS['guild raid']
                     else:
-                        alert_message = f'{alert_message_prefix}guild upgrade'
+                        alert_message = strings.SLASH_COMMANDS['guild upgrade']
                     time_left = get_time_left()
                     try:
                         await asyncio.sleep(time_left.total_seconds())
@@ -227,7 +226,7 @@ class TasksCog(commands.Cog):
                 except:
                     pass
                 if not clan.alert_enabled: continue
-                command = 'rpg guild upgrade'
+                command = strings.SLASH_COMMANDS['/guild upgrade']
                 time_left = timedelta(minutes=1)
                 await reminders.insert_clan_reminder(clan.clan_name, time_left, clan.channel_id, command)
                 try:
