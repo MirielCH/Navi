@@ -25,13 +25,11 @@ Reminder / Helper for EPIC RPG. This reminder supports the latest slash commands
 • Use External Emoji  
 • Read Message History  
 
-Note that this bot will transition to slash commands soon, so make sure you give it the `applications.commands` scope.  
-
 # Commands
-• Default prefix is `navi `.  
-• Use `navi help` for an overview.  
+• Navi uses slash commands but also supports some legacy commands.  
+• Default prefix for legacy commands is `navi `.  
+• Use `/help` for an overview.  
 
 # Dev commands
- The dev commands are not listed in `help`. Use `navi dev` to get a list.   
- These can be used to set event reductions, change default cooldowns, load cogs, shutdown the bot, etc.  
- Ignore `navi dev test`, I use this to, well, test.
+ • The dev commands are not listed in `/help`.  
+ • These can be used to set event reductions, change default cooldowns, load cogs, shutdown the bot, etc.  
