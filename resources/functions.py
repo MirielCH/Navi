@@ -775,23 +775,43 @@ async def get_training_answer(message: discord.Message) -> str:
     return answer
 
 
-async def get_void_training_answer(user_settings: users.User) -> str:
+async def get_void_training_answer(message: discord.Message, user_settings: users.User) -> str:
     """Returns the answer to a void training question."""
+    from resources import logs
+    logs.logger.info(f'VOID training message: {message.content} - {message.components}')
     all_settings = await settings_db.get_settings()
     answer = ''
+    current_time = datetime.utcnow().replace(microsecond=0)
     a16_seal_time = all_settings.get('a16_seal_time', None)
     a17_seal_time = all_settings.get('a17_seal_time', None)
     a18_seal_time = all_settings.get('a18_seal_time', None)
     a19_seal_time = all_settings.get('a19_seal_time', None)
     a20_seal_time = all_settings.get('a20_seal_time', None)
     seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-    current_time = datetime.utcnow().replace(microsecond=0)
-    for area_no, seal_time in enumerate(seal_times, 16):
+    seal_times_days = []
+    for seal_time in seal_times:
         if seal_time is not None:
             seal_time = datetime.fromisoformat(seal_time, )
+            time_left = seal_time - current_time
             if seal_time > current_time:
-                time_left = seal_time - current_time
-                answer = f'{answer}\nArea {area_no} will close in {time_left.days} days.'.strip()
+                seal_times_days.append(str(time_left.days))
+    matches = []
+    for row, action_row in enumerate(message.components, start=1):
+        for button in action_row.children:
+            logs.logger.info(f'VOID button id: {button.custom_id}')
+            if button.label in seal_times_days:
+                matches.append(button.label)
+    buttons = {}
+    if len(matches) == 1:
+        for row, action_row in enumerate(message.components, start=1):
+            buttons[row] = {}
+            for button in action_row.children:
+                if button.label == matches[0]:
+                    buttons[row][button.custom_id] = (button.label, button.emoji, True)
+                else:
+                    buttons[row][button.custom_id] = (button.label, button.emoji, False)
+    for area_no, days in enumerate(seal_times_days, 16):
+            answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
     if answer == '':
         command_void_areas = await get_slash_command(user_settings, 'void areas')
         answer = (
@@ -799,7 +819,7 @@ async def get_void_training_answer(user_settings: users.User) -> str:
             f'Please use {command_void_areas} before your next training.'
         )
 
-    return answer
+    return (answer, buttons)
 
 
 async def get_megarace_answer(message: discord.Message, slash_command: bool = False) -> str:

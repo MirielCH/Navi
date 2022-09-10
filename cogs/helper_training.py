@@ -106,14 +106,18 @@ class HelperTrainingCog(commands.Cog):
                     'vacío', #Spanish, UNCONFIRMED
                     'vazio', #Portuguese, UNCONFIRMED
                 ]
-                if any(search_string in message_content for search_string in search_strings_void):
-                    answer = await functions.get_void_training_answer(user_settings)
-                    answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
-                    if user_settings.dnd_mode_enabled:
-                        await message.reply(answer)
+                if any(search_string in message_content.lower() for search_string in search_strings_void):
+                    answer, buttons = await functions.get_void_training_answer(message, user_settings)
+                    if buttons:
+                        answer = None if user_settings.dnd_mode_enabled else user.mention
+                        view = views.TrainingAnswerView(buttons)
+                        await message.reply(content=answer, view=view)
                     else:
-                        answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
-                    await message.reply(answer)
+                        if user_settings.dnd_mode_enabled:
+                            await message.reply(answer)
+                        else:
+                            answer = f'{user.mention}\n{answer}'
+                        await message.reply(answer)
                 else:
                     answer = None if user_settings.dnd_mode_enabled else user.mention
                     buttons = await functions.get_training_answer_slash(message)

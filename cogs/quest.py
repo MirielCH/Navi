@@ -353,6 +353,7 @@ class QuestCog(commands.Cog):
                                     clan_reminder = None
                             if clan_reminder is not None:
                                 for member_id in clan.member_ids:
+                                    if member_id == user.id: continue
                                     try:
                                         user_clan_reminder: reminders.Reminder = (
                                             await reminders.get_user_reminder(member_id, 'guild')
