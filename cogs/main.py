@@ -34,7 +34,7 @@ class MainCog(commands.Cog):
         """Main help command (prefix version)"""
         await main.command_help(ctx)
 
-    @commands.command(aliases=('inv',))
+    @commands.command(name='invite', aliases=('inv',))
     @commands.bot_has_permissions(send_messages=True)
     async def prefix_invite(self, ctx: commands.Context) -> None:
         """Invite command"""

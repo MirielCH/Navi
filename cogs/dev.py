@@ -75,7 +75,6 @@ class DevCog(commands.Cog):
         await ctx.respond(f'```diff\n{message}\n```')
 
     @dev.command(name='event-reduction')
-    @commands.is_owner()
     async def event_reduction(
         self,
         ctx: discord.ApplicationContext,
@@ -84,6 +83,9 @@ class DevCog(commands.Cog):
         event_reduction: Option(float, 'Event reduction in percent', min_value=0, max_value=99, default=None),
     ) -> None:
         """Changes the event reduction for activities"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
         activities = activities.split()
         if not activities and event_reduction is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
