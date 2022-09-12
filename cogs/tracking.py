@@ -84,7 +84,7 @@ class TrackingCog(commands.Cog):
                     return
                 search_strings = [
                     'has traveled in time', #English
-                    'viajó en el tiempo', #Spanish
+                    'viajou no tempo', #Spanish
                     'tempo de viagem', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):

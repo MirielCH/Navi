@@ -551,6 +551,7 @@ SLASH_COMMANDS_NEW = {
     'void areas': '</void areas:959942192623931442>',
     'vote': '</vote:964351963720478760>',
     'weekly': '</weekly:956658465185603645>',
+    'wheel': '</wheel:959916179525341194>',
 }
 
 
