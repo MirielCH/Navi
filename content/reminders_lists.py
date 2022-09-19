@@ -110,11 +110,22 @@ async def command_ready(
         if not alert_settings.enabled:
             ready_event_activities.remove(activity)
 
+    field_other = ''
+    if user_settings.cmd_cd_visible:
+        field_other = f'{emojis.BP} {strings.SLASH_COMMANDS_NEW["cd"]}'
+
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user.name}\'S READY'.upper()
     )
     answer = answer_title = f'**{user.name}\'S READY**'.upper()
+    if user_settings.ready_other_on_top and field_other != '':
+        embed.add_field(name='OTHER', value=field_other.strip(), inline=False)
+        answer = (
+            f'{answer}\n'
+            f'**OTHER**\n'
+            f'{field_other.strip()}'
+        )
     if ready_command_activities:
         field_ready_commands = ''
         ready_commands = []
@@ -198,6 +209,13 @@ async def command_ready(
             f'{field_ready_clan}'
         )
         embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
+    if not user_settings.ready_other_on_top and field_other != '':
+        embed.add_field(name='OTHER', value=field_other.strip(), inline=False)
+        answer = (
+            f'{answer}\n'
+            f'**OTHER**\n'
+            f'{field_other.strip()}'
+        )
     if answer == answer_title:
         answer = (
             f'{answer}\n'

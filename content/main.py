@@ -55,7 +55,7 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["ready"]} : List all commands off cooldown\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["custom-reminder"]} : Add a custom reminder\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings messages"]} : Manage reminder messages\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings ready"]} : Manage ready commands\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings ready"]} : Manage the ready list\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings reminders"]} : Enable/disable reminders\n'
     )
     stats = (

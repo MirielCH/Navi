@@ -45,6 +45,7 @@ class User():
     auto_ready_enabled: bool
     bot_enabled: bool
     clan_name: str
+    cmd_cd_visible: bool
     context_helper_enabled: bool
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
@@ -68,6 +69,7 @@ class User():
     guild_quest_prompt_active: bool
     reactions_enabled: bool
     ready_as_embed: bool
+    ready_other_on_top: bool
     rubies: int
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -104,6 +106,7 @@ class User():
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
+        self.cmd_cd_visible = new_settings.cmd_cd_visible
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
@@ -127,6 +130,7 @@ class User():
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_as_embed = new_settings.ready_as_embed
+        self.ready_other_on_top = new_settings.ready_other_on_top
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -207,6 +211,7 @@ class User():
             auto_ready_enabled: bool
             bot_enabled: bool
             clan_name: str
+            cmd_cd_visible: bool
             context_helper_enabled: bool
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
@@ -230,6 +235,7 @@ class User():
             ping_after_message: bool
             reactions_enabled: bool
             ready_as_embed: bool
+            ready_other_on_top: bool
             rubies: int
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -329,6 +335,7 @@ async def _dict_to_user(record: dict) -> User:
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
+            cmd_cd_visible = record['cmd_cd_visible'],
             context_helper_enabled = bool(record['context_helper_enabled']),
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
@@ -352,6 +359,7 @@ async def _dict_to_user(record: dict) -> User:
             ping_after_message = bool(record['ping_after_message']),
             reactions_enabled = bool(record['reactions_enabled']),
             ready_as_embed = bool(record['ready_as_embed']),
+            ready_other_on_top = bool(record['ready_other_on_top']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -578,6 +586,7 @@ async def _update_user(user: User, **kwargs) -> None:
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
+        cmd_cd_visible: bool
         context_helper_enabled: bool
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
@@ -597,6 +606,7 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_name: str
         pet_helper_enabled: bool
         ready_as_embed: bool
+        ready_other_on_top: bool
         rubies: int
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

@@ -755,6 +755,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     else:
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
+    other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
         f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
@@ -781,11 +782,12 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
     )
-    clan_reminder = (
-        f'{emojis.BP} **Guild channel**: {clan_alert_visible}\n'
-    )
     field_settings = (
+        f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS_NEW["cd"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
+        f'{emojis.BP} **Position of "other" commands**: `{other_field_position}`\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -798,8 +800,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='GUILD CHANNEL REMINDER', value=clan_reminder, inline=False)
-    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+    embed.add_field(name='OTHER SETTINGS', value=field_settings, inline=False)
     return embed
 
 
