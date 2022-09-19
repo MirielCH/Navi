@@ -50,6 +50,15 @@ class TrackingCog(commands.Cog):
 
     # Events
     @commands.Cog.listener()
+    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
+        """Runs when a message is edited in a channel."""
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
+        await self.on_message(message_after)
+
+    @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Fires when a message is sent"""
         if message.author.id == settings.EPIC_RPG_ID:

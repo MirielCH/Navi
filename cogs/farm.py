@@ -166,7 +166,7 @@ class FarmCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled and slash_command:
+                if user_settings.auto_ready_enabled:
                     await functions.call_ready_command(self.bot, message, user)
                 search_strings = [
                     'also got', #English
