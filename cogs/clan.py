@@ -143,7 +143,7 @@ class ClanCog(commands.Cog):
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, strings.REGEX_COMMAND_CLAN
+                            message.channel, regex.COMMAND_CLAN
                         )
                     )
                     if user_command_message is None:

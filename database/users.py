@@ -61,6 +61,7 @@ class User():
     last_work_command: str
     partner_channel_id: int
     partner_donor_tier: int
+    partner_hunt_end_time: datetime
     partner_id: int
     partner_name: str
     pet_helper_enabled: bool
@@ -70,6 +71,7 @@ class User():
     reactions_enabled: bool
     ready_as_embed: bool
     ready_other_on_top: bool
+    ready_up_next_visible: bool
     rubies: int
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -122,6 +124,7 @@ class User():
         self.last_work_command = new_settings.last_work_command
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
+        self.partner_hunt_end_time = new_settings.partner_hunt_end_time
         self.partner_id = new_settings.partner_id
         self.partner_name = new_settings.partner_name
         self.pet_helper_enabled = new_settings.pet_helper_enabled
@@ -131,6 +134,7 @@ class User():
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_as_embed = new_settings.ready_as_embed
         self.ready_other_on_top = new_settings.ready_other_on_top
+        self.ready_up_next_visible = new_settings.ready_up_next_visible
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -228,6 +232,7 @@ class User():
             last_workt_command: str
             partner_channel_id: int
             partner_donor_tier: int
+            partner_hunt_end_time: datetime
             partner_id: int
             partner_name: str
             pet_helper_enabled: bool
@@ -236,6 +241,7 @@ class User():
             reactions_enabled: bool
             ready_as_embed: bool
             ready_other_on_top: bool
+            ready_up_next_visible: bool
             rubies: int
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -352,6 +358,7 @@ async def _dict_to_user(record: dict) -> User:
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
+            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
             pet_helper_enabled = record['pet_helper_enabled'],
@@ -360,6 +367,7 @@ async def _dict_to_user(record: dict) -> User:
             reactions_enabled = bool(record['reactions_enabled']),
             ready_as_embed = bool(record['ready_as_embed']),
             ready_other_on_top = bool(record['ready_other_on_top']),
+            ready_up_next_visible = bool(record['ready_up_next_visible']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -602,11 +610,13 @@ async def _update_user(user: User, **kwargs) -> None:
         last_work_command: str
         partner_channel_id: int
         partner_donor_tier: int
+        partner_hunt_end_time: datetime
         partner_id: int
         partner_name: str
         pet_helper_enabled: bool
         ready_as_embed: bool
         ready_other_on_top: bool
+        ready_up_next_visible: bool
         rubies: int
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

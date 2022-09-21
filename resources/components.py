@@ -236,7 +236,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManageClanSettingsSelect(self.view))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.clan_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.clan_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -249,23 +249,31 @@ class ManageReadySettingsSelect(discord.ui.Select):
         options = []
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
         cmd_cd_action = 'Hide' if view.user_settings.cmd_cd_visible else 'Show'
+        up_next_reminder_action = 'Hide' if view.user_settings.ready_up_next_visible else 'Show'
+        auto_ready_action = 'Disable' if view.user_settings.auto_ready_enabled else 'Enable'
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
+        options.append(discord.SelectOption(label=f'{auto_ready_action} auto-ready',
+                                            value='toggle_auto_ready', emoji=None))
+        options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
+                                            value='toggle_message_style', emoji=None))
+        options.append(discord.SelectOption(label=f'{up_next_reminder_action} "up next" reminder',
+                                                value='toggle_up_next'))
         if view.clan_settings is not None:
             clan_reminder_action = 'Hide' if view.clan_settings.alert_visible else 'Show'
             options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
                                                 value='toggle_alert'))
         options.append(discord.SelectOption(label=f'{cmd_cd_action} /cd command',
                                             value='toggle_cmd_cd'))
-        options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
-                                            value='toggle_message_style', emoji=None))
         options.append(discord.SelectOption(label=f'Show "other" field {other_position}',
                                             value='toggle_other_position', emoji=None))
-        super().__init__(placeholder='Change other settings', min_values=1, max_values=1, options=options, row=row,
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_ready_settings')
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        if select_value == 'toggle_alert':
+        if select_value == 'toggle_auto_ready':
+            await self.view.user_settings.update(auto_ready_enabled=not self.view.user_settings.auto_ready_enabled)
+        elif select_value == 'toggle_alert':
             await self.view.clan_settings.update(alert_visible=not self.view.clan_settings.alert_visible)
         elif select_value == 'toggle_message_style':
             await self.view.user_settings.update(ready_as_embed=not self.view.user_settings.ready_as_embed)
@@ -273,6 +281,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(cmd_cd_visible=not self.view.user_settings.cmd_cd_visible)
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
+        if select_value == 'toggle_up_next':
+            await self.view.user_settings.update(ready_up_next_visible=not self.view.user_settings.ready_up_next_visible)
         for child in self.view.children.copy():
             if isinstance(child, ManageReadySettingsSelect):
                 self.view.remove_item(child)

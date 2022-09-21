@@ -82,7 +82,6 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
         f'{emojis.BP} :flag_es: Spanish\n'
         f'{emojis.BP} :flag_br: Portuguese\n'
     )
-
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'NAVI',

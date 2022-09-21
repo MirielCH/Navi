@@ -224,7 +224,7 @@ async def command_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContex
             return
     if switch_view is not None: switch_view.stop()
     view = views.SettingsClanView(ctx, bot, clan_settings, embed_settings_clan)
-    embed = await embed_settings_clan(bot, clan_settings)
+    embed = await embed_settings_clan(bot, ctx, clan_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -571,7 +571,7 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
 
 
 # --- Embeds ---
-async def embed_settings_clan(bot: discord.Bot, clan_settings: clans.Clan) -> discord.Embed:
+async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
     if clan_settings.upgrade_quests_enabled:
@@ -754,8 +754,18 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         clan_alert_visible = '`N/A`'
     else:
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
+    auto_ready_enabled = f'{emojis.GREENTICK}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.REDTICK}`Disabled`'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
+    field_settings = (
+        f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
+        f'{emojis.BP} **Message style**: `{message_style}`\n'
+        f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
+        f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS_NEW["cd"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
+        f'{emojis.BP} **Position of "other" commands**: `{other_field_position}`\n'
+    )
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
         f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
@@ -782,13 +792,6 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
     )
-    field_settings = (
-        f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
-        f'{emojis.BP} **{strings.SLASH_COMMANDS_NEW["cd"]} command**: '
-        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
-        f'{emojis.BP} **Message style**: `{message_style}`\n'
-        f'{emojis.BP} **Position of "other" commands**: `{other_field_position}`\n'
-    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
@@ -797,10 +800,10 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
         )
     )
+    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='OTHER SETTINGS', value=field_settings, inline=False)
     return embed
 
 

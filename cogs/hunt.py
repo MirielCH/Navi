@@ -232,7 +232,8 @@ class HuntCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if found_together: await user_settings.update(partner_name=partner_name)
+                if found_together:
+                    await user_settings.update(partner_name=partner_name)
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
@@ -282,20 +283,28 @@ class HuntCog(commands.Cog):
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
-                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                    and not user_settings.hunt_rotation_enabled):
-                    donor_tier = user_settings.partner_donor_tier
+                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier):
+                    donor_tier_partner_hunt = user_settings.partner_donor_tier
+                    if not user_settings.hunt_rotation_enabled:
+                        donor_tier = user_settings.partner_donor_tier
+                    else:
+                        donor_tier = user_settings.user_donor_tier
                 else:
-                    donor_tier = user_settings.user_donor_tier
+                    donor_tier = donor_tier_partner_hunt = user_settings.user_donor_tier
                 donor_tier = 3 if donor_tier > 3 else donor_tier
+                donor_tier_partner_hunt = 3 if donor_tier_partner_hunt > 3 else donor_tier_partner_hunt
                 actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 if cooldown.donor_affected:
                     time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[donor_tier]
                                         - time_elapsed.total_seconds())
+                    time_left_seconds_partner_hunt = (actual_cooldown
+                                                      * settings.DONOR_COOLDOWNS[donor_tier_partner_hunt]
+                                                      - time_elapsed.total_seconds())
                 else:
-                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                    time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
                 time_left = timedelta(seconds=time_left_seconds)
+                time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -311,6 +320,7 @@ class HuntCog(commands.Cog):
                     partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
                     # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                     if found_together:
+                        await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
                         lootboxes = {
                             'common lootbox': emojis.LB_COMMON,
                             'uncommon lootbox': emojis.LB_UNCOMMON,
