@@ -149,7 +149,7 @@ async def command_ready(
     if user_settings.cmd_cd_visible:
         field_other = f'{emojis.BP} {strings.SLASH_COMMANDS_NEW["cd"]}'
     embed = discord.Embed(
-        color = settings.EMBED_COLOR,
+        color = int(f'0x{user_settings.ready_embed_color}', 16),
         title = f'{user.name}\'S READY'.upper()
     )
     answer = f'**{user.name}\'S READY**'.upper()
@@ -237,18 +237,21 @@ async def command_ready(
             active_reminders = []
         if active_reminders:
             field_up_next = ''
-            #local_time_difference = datetime.now() - datetime.utcnow()
             current_time = datetime.utcnow().replace(microsecond=0)
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
-                #end_time = reminder.end_time + local_time_difference
-                time_left = reminder.end_time - current_time
-                timestring = await functions.parse_timedelta_to_timestring(time_left)
-                command = await get_command_from_activity(reminder.activity)
+                if user_settings.ready_up_next_as_timestamp:
+                    local_time_difference = datetime.now().replace(microsecond=0) - current_time
+                    end_time = reminder.end_time + local_time_difference
+                    up_next_time = f'- <t:{int(end_time.timestamp())}:R>'
+                else:
+                    time_left = reminder.end_time - current_time
+                    timestring = await functions.parse_timedelta_to_timestring(time_left)
+                    command = await get_command_from_activity(reminder.activity)
+                    up_next_time = f'in **{timestring}**'
                 field_up_next = (
                     f'{field_up_next}\n'
-                    f'{emojis.BP} {command} in **{timestring}**'
-                    #f'{emojis.BP} {command} - <t:{int(end_time.timestamp())}:R>'
+                    f'{emojis.BP} {command} {up_next_time}'
                 )
                 break
             embed.add_field(name='UP NEXT', value=field_up_next.strip(), inline=False)

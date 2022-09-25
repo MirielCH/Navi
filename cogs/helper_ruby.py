@@ -107,7 +107,7 @@ class HelperRubyCog(commands.Cog):
                             user_name = user_name_match.group(1)
                             user_command_message = (
                                 await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_LOOTBOX,
+                                    message.channel, regex.COMMAND_OPEN,
                                     user_name=user_name
                                 )
                             )
@@ -152,7 +152,6 @@ class HelperRubyCog(commands.Cog):
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find an interaction user for the inventory message.', message)
                         return
                     interaction_user = user_command_message.author
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)

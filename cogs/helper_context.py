@@ -97,6 +97,30 @@ class HelperContextCog(commands.Cog):
                 )
                 await message.reply(answer)
 
+            # Vote embed
+            search_strings = [
+                'next vote rewards', #English
+                'recompensas del siguiente voto', #Spanish
+                'recompensas do próximo voto', #Portuguese
+            ]
+            if (any(search_string in embed_field0_name.lower() for search_string in search_strings)
+                and not 'cooldown:' in embed_field0_value.lower()):
+                user = await functions.get_interaction_user(message)
+                if user is None: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
+                command_adventure = await functions.get_slash_command(user_settings, 'adventure')
+                if user_settings.last_adventure_mode != '':
+                    command_adventure = f'{command_adventure} `mode: {user_settings.last_adventure_mode}`'
+                answer = (
+                    f"➜ {command_adventure}\n"
+                )
+                await message.reply(answer)
+
+
         if not message.embeds:
             message_content = message.content
 

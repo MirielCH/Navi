@@ -224,9 +224,9 @@ class PetsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 reminder_created = False
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
+                #bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                #current_time = datetime.utcnow().replace(microsecond=0)
+                #time_elapsed = current_time - bot_answer_time
                 for field in embed.fields:
                     pet_id_match = re.search(r'`ID: (.+?)`', field.name)
                     pet_emoji = ''
@@ -259,7 +259,7 @@ class PetsCog(commands.Cog):
                     if pet_action not in pet_actions: continue
                     pet_timestring = pet_action_timestring_match.group(2)
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
-                    time_left = time_left - time_elapsed
+                    #time_left = time_left - time_elapsed
                     if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
                     reminder_created = True
                     reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)

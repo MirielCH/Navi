@@ -70,7 +70,9 @@ class User():
     guild_quest_prompt_active: bool
     reactions_enabled: bool
     ready_as_embed: bool
+    ready_embed_color: str
     ready_other_on_top: bool
+    ready_up_next_as_timestamp: bool
     ready_up_next_visible: bool
     rubies: int
     ruby_counter_enabled: bool
@@ -133,7 +135,9 @@ class User():
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_as_embed = new_settings.ready_as_embed
+        self.ready_embed_color = new_settings.ready_embed_color
         self.ready_other_on_top = new_settings.ready_other_on_top
+        self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_visible = new_settings.ready_up_next_visible
         self.rubies = new_settings.rubies
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
@@ -240,7 +244,9 @@ class User():
             ping_after_message: bool
             reactions_enabled: bool
             ready_as_embed: bool
+            ready_embed_color: str
             ready_other_on_top: bool
+            ready_up_next_as_timestamp: bool
             ready_up_next_visible: bool
             rubies: int
             ruby_counter_enabled: bool
@@ -366,7 +372,9 @@ async def _dict_to_user(record: dict) -> User:
             ping_after_message = bool(record['ping_after_message']),
             reactions_enabled = bool(record['reactions_enabled']),
             ready_as_embed = bool(record['ready_as_embed']),
+            ready_embed_color = record['ready_embed_color'],
             ready_other_on_top = bool(record['ready_other_on_top']),
+            ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
             rubies = record['rubies'],
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
@@ -615,7 +623,9 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_name: str
         pet_helper_enabled: bool
         ready_as_embed: bool
+        ready_embed_color: str
         ready_other_on_top: bool
+        ready_up_next_as_timestamp: bool
         ready_up_next_visible: bool
         rubies: int
         ruby_counter_enabled: bool

@@ -9,7 +9,7 @@ from discord.commands import SlashCommandGroup, Option
 from discord.ext import commands
 
 from database import cooldowns
-from resources import emojis, functions, settings, strings, views
+from resources import emojis, exceptions, functions, settings, strings, views
 
 
 EVENT_REDUCTION_TYPES = [
@@ -225,10 +225,94 @@ class DevCog(commands.Cog):
 
     @dev.command()
     @commands.is_owner()
-    async def test(self, ctx: discord.ApplicationContext):
-        """Test test"""
-        cmd_settings_user = self.bot.get_application_command('settings', type=discord.commands.SlashCommandGroup)
-        pass
+    async def migrate(self, ctx: discord.ApplicationContext):
+        """Migrate user database"""
+        await ctx.defer()
+        from database import reminders, users
+        all_users = await users.get_all_users()
+        user_count = 0
+        for user in all_users:
+            if user.ping_after_message:
+                alert_adventure_message = f'{user.alert_adventure.message} {{name}}'
+                alert_arena_message = f'{user.alert_arena.message} {{name}}'
+                alert_big_arena_message = f'{user.alert_big_arena.message} {{name}}'
+                alert_daily_message = f'{user.alert_daily.message} {{name}}'
+                alert_duel_message = f'{user.alert_duel.message} {{name}}'
+                alert_dungeon_miniboss_message = f'{user.alert_dungeon_miniboss.message} {{name}}'
+                alert_farm_message = f'{user.alert_farm.message} {{name}}'
+                alert_guild_message = f'{user.alert_guild.message} {{name}}'
+                alert_horse_breed_message = f'{user.alert_horse_breed.message} {{name}}'
+                alert_horse_race_message = f'{user.alert_horse_race.message} {{name}}'
+                alert_hunt_message = f'{user.alert_hunt.message} {{name}}'
+                alert_lootbox_message = f'{user.alert_lootbox.message} {{name}}'
+                alert_lottery_message = f'{user.alert_lottery.message} {{name}}'
+                alert_not_so_mini_boss_message = f'{user.alert_not_so_mini_boss.message} {{name}}'
+                alert_partner_message = f'{user.alert_partner.message.replace("{user}", "{partner}")} {{name}}'
+                alert_pet_tournament_message = f'{user.alert_pet_tournament.message} {{name}}'
+                alert_pets_message = f'{user.alert_pets.message} {{name}}'
+                alert_quest_message = f'{user.alert_quest.message} {{name}}'
+                alert_training_message = f'{user.alert_training.message} {{name}}'
+                alert_vote_message = f'{user.alert_vote.message} {{name}}'
+                alert_weekly_message = f'{user.alert_weekly.message} {{name}}'
+                alert_work_message = f'{user.alert_work.message} {{name}}'
+            else:
+                alert_adventure_message = f'{{name}} {user.alert_adventure.message}'
+                alert_arena_message = f'{{name}} {user.alert_arena.message}'
+                alert_big_arena_message = f'{{name}} {user.alert_big_arena.message}'
+                alert_daily_message = f'{{name}} {user.alert_daily.message}'
+                alert_duel_message = f'{{name}} {user.alert_duel.message}'
+                alert_dungeon_miniboss_message = f'{{name}} {user.alert_dungeon_miniboss.message}'
+                alert_farm_message = f'{{name}} {user.alert_farm.message}'
+                alert_guild_message = f'{{name}} {user.alert_guild.message}'
+                alert_horse_breed_message = f'{{name}} {user.alert_horse_breed.message}'
+                alert_horse_race_message = f'{{name}} {user.alert_horse_race.message}'
+                alert_hunt_message = f'{{name}} {user.alert_hunt.message}'
+                alert_lootbox_message = f'{{name}} {user.alert_lootbox.message}'
+                alert_lottery_message = f'{{name}} {user.alert_lottery.message}'
+                alert_not_so_mini_boss_message = f'{{name}} {user.alert_not_so_mini_boss.message}'
+                alert_partner_message = f'{{name}} {user.alert_partner.message.replace("{user}", "{partner}")}'
+                alert_pet_tournament_message = f'{{name}} {user.alert_pet_tournament.message}'
+                alert_pets_message = f'{{name}} {user.alert_pets.message}'
+                alert_quest_message = f'{{name}} {user.alert_quest.message}'
+                alert_training_message = f'{{name}} {user.alert_training.message}'
+                alert_vote_message = f'{{name}} {user.alert_vote.message}'
+                alert_weekly_message = f'{{name}} {user.alert_weekly.message}'
+                alert_work_message = f'{{name}} {user.alert_work.message}'
+            await user.update(
+                alert_adventure_message = alert_adventure_message,
+                alert_arena_message = alert_arena_message,
+                alert_big_arena_message = alert_big_arena_message,
+                alert_daily_message = alert_daily_message,
+                alert_duel_message = alert_duel_message,
+                alert_dungeon_miniboss_message = alert_dungeon_miniboss_message,
+                alert_farm_message = alert_farm_message,
+                alert_guild_message = alert_guild_message,
+                alert_horse_breed_message = alert_horse_breed_message,
+                alert_horse_race_message = alert_horse_race_message,
+                alert_hunt_message = alert_hunt_message,
+                alert_lootbox_message = alert_lootbox_message,
+                alert_lottery_message = alert_lottery_message,
+                alert_not_so_mini_boss_message = alert_not_so_mini_boss_message,
+                alert_partner_message = alert_partner_message,
+                alert_pet_tournament_message = alert_pet_tournament_message,
+                alert_pets_message = alert_pets_message,
+                alert_quest_message = alert_quest_message,
+                alert_training_message = alert_training_message,
+                alert_vote_message = alert_vote_message,
+                alert_weekly_message = alert_weekly_message,
+                alert_work_message = alert_work_message
+            )
+            user_count += 1
+            try:
+                all_reminders = await reminders.get_active_user_reminders(user.user_id)
+            except exceptions.NoDataFoundError:
+                continue
+            for reminder in all_reminders:
+                if user.ping_after_message:
+                    await reminder.update(message=f'{reminder.message} {{name}}')
+                else:
+                    await reminder.update(message=f'{{name}} {reminder.message}')
+        await ctx.respond(f'Migrated {user_count} users.')
 
 
     @dev.command()

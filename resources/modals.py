@@ -10,6 +10,29 @@ from database import reminders
 from resources import emojis, exceptions, strings
 
 
+class SetEmbedColorModal(Modal):
+    def __init__(self, view: discord.ui.View) -> None:
+        super().__init__(title='Change ready list embed color')
+        self.view = view
+        self.add_item(
+            InputText(
+                label='New embed color:',
+                placeholder="Enter hex code ...",
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        new_color = self.children[0].value
+        color_match = re.match(r'^#?(?:[0-9a-fA-F]{3}){1,2}$', new_color)
+        if not color_match:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('That is not a valid hex code.', ephemeral=True)
+            return
+        await self.view.user_settings.update(ready_embed_color=new_color.replace('#','').upper())
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.clan_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
 class SetStealthThresholdModal(Modal):
     def __init__(self, view: discord.ui.View) -> None:
         super().__init__(title='Change guild stealth threshold')

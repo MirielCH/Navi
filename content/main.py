@@ -77,6 +77,11 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings guild"]} : Manage guild channel reminders\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NEW["guild list"]} : Add/update your guild\n'
     )
+    bug_report = (
+        f'_Please report bugs in one of these channels:_\n'
+        f'{emojis.BP} <#749612892969631796>\n'
+        f'{emojis.BP} <#812687205339365406>\n'
+    )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
         f'{emojis.BP} :flag_es: Spanish\n'
@@ -86,8 +91,8 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
         color = settings.EMBED_COLOR,
         title = 'NAVI',
         description =   (
-            f'Hey! **{ctx.author.name}**! Hello!\n'
-            f'Here are some settings you can change.'
+            f'_Hey! **{ctx.author.name}**! Hello!_\n'
+            f'_Here are some settings you can change._'
         )
     )
     embed.add_field(name='USER', value=user_settings, inline=False)
@@ -97,6 +102,7 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
     embed.add_field(name='GUILD CHANNEL REMINDERS', value=guild_settings, inline=False)
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
+    embed.add_field(name='HELP I FOUND A BUG!', value=bug_report, inline=False)
     return embed
 
 

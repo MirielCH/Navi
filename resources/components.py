@@ -250,14 +250,19 @@ class ManageReadySettingsSelect(discord.ui.Select):
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
         cmd_cd_action = 'Hide' if view.user_settings.cmd_cd_visible else 'Show'
         up_next_reminder_action = 'Hide' if view.user_settings.ready_up_next_visible else 'Show'
+        up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
         auto_ready_action = 'Disable' if view.user_settings.auto_ready_enabled else 'Enable'
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'{auto_ready_action} auto-ready',
                                             value='toggle_auto_ready', emoji=None))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
                                             value='toggle_message_style', emoji=None))
+        options.append(discord.SelectOption(label='Change embed color',
+                                            value='change_embed_color', emoji=None))
         options.append(discord.SelectOption(label=f'{up_next_reminder_action} "up next" reminder',
                                                 value='toggle_up_next'))
+        options.append(discord.SelectOption(label=f'Show "up next" reminder with {up_next_style}',
+                                                value='toggle_up_next_timestamp'))
         if view.clan_settings is not None:
             clan_reminder_action = 'Hide' if view.clan_settings.alert_visible else 'Show'
             options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
@@ -277,12 +282,18 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await self.view.clan_settings.update(alert_visible=not self.view.clan_settings.alert_visible)
         elif select_value == 'toggle_message_style':
             await self.view.user_settings.update(ready_as_embed=not self.view.user_settings.ready_as_embed)
+        elif select_value == 'change_embed_color':
+            modal = modals.SetEmbedColorModal(self.view)
+            await interaction.response.send_modal(modal)
+            return
         elif select_value == 'toggle_cmd_cd':
             await self.view.user_settings.update(cmd_cd_visible=not self.view.user_settings.cmd_cd_visible)
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
-        if select_value == 'toggle_up_next':
+        elif select_value == 'toggle_up_next':
             await self.view.user_settings.update(ready_up_next_visible=not self.view.user_settings.ready_up_next_visible)
+        elif select_value == 'toggle_up_next_timestamp':
+            await self.view.user_settings.update(ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp)
         for child in self.view.children.copy():
             if isinstance(child, ManageReadySettingsSelect):
                 self.view.remove_item(child)
@@ -321,7 +332,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
         hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
         mentions_action = 'Disable' if view.user_settings.slash_mentions_enabled else 'Enable'
         tracking_action = 'Disable' if view.user_settings.tracking_enabled else 'Enable'
-        ping_mode = 'before' if view.user_settings.ping_after_message else 'after'
         options.append(discord.SelectOption(label=f'{reactions_action} reactions',
                                             value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'{dnd_action} DND mode',
@@ -334,8 +344,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
                                             value='toggle_mentions'))
         options.append(discord.SelectOption(label=f'{tracking_action} command tracking',
                                             value='toggle_tracking'))
-        options.append(discord.SelectOption(label=f'Ping me {ping_mode} reminder',
-                                            value='toggle_ping', emoji=None))
         options.append(discord.SelectOption(label=f'Change last time travel time',
                                             value='set_last_tt', emoji=None))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
@@ -350,7 +358,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
         elif select_value == 'toggle_hardmode':
             await self.view.user_settings.update(hardmode_mode_enabled=not self.view.user_settings.hardmode_mode_enabled)
             if self.view.user_settings.partner_id is not None:
-                partner_discord = await functions.get_discord_user(self.bot, self.view.user_settings.partner_id)
+                partner_discord = await functions.get_discord_user(self.view.bot, self.view.user_settings.partner_id)
                 partner: users.User = await users.get_user(self.view.user_settings.partner_id)
                 if partner.partner_channel_id is not None:
                     action = 'started' if self.view.user_settings.hardmode_enabled else 'stopped'
@@ -378,8 +386,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
         elif select_value == 'toggle_tracking':
             await self.view.user_settings.update(tracking_enabled=not self.view.user_settings.tracking_enabled)
-        elif select_value == 'toggle_ping':
-            await self.view.user_settings.update(ping_after_message=not self.view.user_settings.ping_after_message)
         elif select_value == 'set_last_tt':
             modal = modals.SetLastTTModal(self.view)
             await interaction.response.send_modal(modal)

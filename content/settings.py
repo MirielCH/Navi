@@ -756,12 +756,16 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
     auto_ready_enabled = f'{emojis.GREENTICK}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.REDTICK}`Disabled`'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
+    up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
     other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
+        f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
         f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
+        f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
+        f'{emojis.DETAIL} Note that timestamps are often inaccurate\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS_NEW["cd"]} command**: '
         f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
         f'{emojis.BP} **Position of "other" commands**: `{other_field_position}`\n'
@@ -885,7 +889,6 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash mentions**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
-        f'{emojis.BP} **Ping mode**: `{ping_mode_setting}` reminder message\n'
     )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'

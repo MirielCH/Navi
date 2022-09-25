@@ -107,7 +107,11 @@ class AdventureCog(commands.Cog):
                 'encontr', #Spanish, Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
-                and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)):
+                and (
+                    any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)
+                    or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
+                )
+            ):
                 user = await functions.get_interaction_user(message)
                 search_strings_hardmode = [
                     '(but stronger)', #English

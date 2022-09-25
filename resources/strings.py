@@ -18,9 +18,9 @@ LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
 LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 
 # --- Default messages ---
-DEFAULT_MESSAGE = 'Hey! It\'s time for {command}!'
+DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
 DEFAULT_MESSAGE_EVENT = (
-    'Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
+    '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
     f'official EPIC RPG server.'
 )
 DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **{message}**!'
@@ -38,10 +38,10 @@ DEFAULT_MESSAGES = {
     'horse-race': DEFAULT_MESSAGE_EVENT,
     'hunt': DEFAULT_MESSAGE,
     'lootbox': DEFAULT_MESSAGE,
-    'lottery': 'Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
+    'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
-    'partner': '**{user}** found {loot} for you!',
-    'pets': 'Hey! Your pet `{id}` is back! {emoji}',
+    'partner': '{name} **{partner}** found {loot} for you!',
+    'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
     'training': DEFAULT_MESSAGE,
@@ -324,6 +324,18 @@ MONSTERS_ADVENTURE = (
     'Krampus',
     '**Yeti**',
     '**Hyper Giant Ice Block**',
+)
+
+MONSTERS_ADVENTURE_TOP = (
+    '**EPIC NPC** pretending to be a **DRAGON**', #English
+    '**NPC ÉPICO** pretendiendo ser un **DRAGON**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **DRAGON**', #Portuguese
+    '**EPIC NPC** pretending to be a **MERMAID**', #English
+    '**NPC ÉPICO** pretendiendo ser un **MERMAID**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **MERMAID**', #Portuguese
+    '**EPIC NPC** pretending to be a **KILLER ROBOT**', #English
+    '**NPC ÉPICO** pretendiendo ser un **KILLER ROBOT**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **KILLER ROBOT**', #Portuguese
 )
 
 MONSTERS_HUNT = (

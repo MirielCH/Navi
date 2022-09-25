@@ -6,7 +6,7 @@ from typing import Union
 import discord
 from discord.ext import commands
 
-from database import clans
+from database import clans, users
 from resources import emojis, exceptions, functions, settings, strings
 
 

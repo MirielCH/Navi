@@ -365,7 +365,7 @@ class HuntCog(commands.Cog):
                                 )
                                 return
                             partner_message = (partner.alert_partner.message
-                                               .replace('{user}', user.name)
+                                               .replace('{partner}', user.name)
                                                .replace('{loot}', f'{lb_amount} {lb_emoji} {lb_name}'))
                             if lootbox_alert == '':
                                 lootbox_alert = partner_message

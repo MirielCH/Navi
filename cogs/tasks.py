@@ -43,12 +43,9 @@ class TasksCog(commands.Cog):
                     else:
                         reminder_message = reminder.message
                     if user_settings.dnd_mode_enabled:
-                        message = f'**{user.name}**, {reminder_message}\n'
+                        message = f'{reminder_message.replace("{name}", f"**{user.name}**")}\n'
                     else:
-                        if user_settings.ping_after_message:
-                            message = f'{reminder_message} {user.mention}\n'
-                        else:
-                            message = f'{user.mention} {reminder_message}\n'
+                        message = f'{reminder_message.replace("{name}", user.mention)}\n'
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''
