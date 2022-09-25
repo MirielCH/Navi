@@ -49,7 +49,7 @@ class DungeonMinibossCog(commands.Cog):
                 if interaction_user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_DUNGEON_MINIBOSS
+                            message.channel, regex.COMMAND_DUNGEON_MINIBOSS_MININTBOSS
                         )
                     )
                     if user_command_message is None:

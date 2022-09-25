@@ -127,6 +127,7 @@ class WorkCog(commands.Cog):
                 'pontos de vida extras', #Portuguese, overheal
                 ':crossed_swords:', #Ruby dragon event, all languages
                 'guildring', #Stuff bought from guild shop, all languages
+                'zombie', #Zombie horde hunt event, all languages
             ]
             search_strings = [
                 '** got ', #English
