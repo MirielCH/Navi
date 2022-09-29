@@ -247,8 +247,8 @@ async def command_ready(
                 else:
                     time_left = reminder.end_time - current_time
                     timestring = await functions.parse_timedelta_to_timestring(time_left)
-                    command = await get_command_from_activity(reminder.activity)
                     up_next_time = f'in **{timestring}**'
+                command = await get_command_from_activity(reminder.activity)
                 field_up_next = (
                     f'{field_up_next}\n'
                     f'{emojis.BP} {command} {up_next_time}'
