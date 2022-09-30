@@ -154,7 +154,7 @@ class TrainingCog(commands.Cog):
                     'próxima vez', #Spanish, Portuguese
                 ]
                 if any(search_string in message_field1_value.lower() for search_string in search_strings):
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NOOB)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.PEEPO_NOOB)
 
         if not message.embeds:
             message_content = message.content
@@ -239,6 +239,46 @@ class TrainingCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if user_settings.auto_ready_enabled:
                     await functions.call_ready_command(self.bot, message, user)
+
+            # Training reset from ultraining shop
+            search_strings = [
+                'training reset` successfully bought', #English
+                'training reset` comprado(s)', #Spanish, Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else False
+                if user is None:
+                    user_name_match = re.search(r"\*\*(.+?)\*\*", message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, regex.COMMAND_ULTRAINING_BUY_TRAINING_RESET,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in training reset message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                try:
+                    reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'training')
+                except exceptions.NoDataFoundError:
+                    return
+                await reminder.delete()
+                if reminder.record_exists:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error(f'Had an error deleting the training reminder in training reset.', message)
+                    return
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

@@ -34,9 +34,9 @@ async def command_list(
         custom_reminders = list(await reminders.get_active_user_reminders(user.id, 'custom'))
     except exceptions.NoDataFoundError:
         custom_reminders = []
-    embed = await embed_reminders_list(user, user_settings)
+    embed = await embed_reminders_list(bot, user, user_settings)
     if custom_reminders:
-        view = views.RemindersListView(ctx, user, user_settings, custom_reminders, embed_reminders_list)
+        view = views.RemindersListView(bot, ctx, user, user_settings, custom_reminders, embed_reminders_list)
         if isinstance(ctx, discord.ApplicationContext):
             interaction_message = await ctx.respond(embed=embed, view=view)
         else:
@@ -165,9 +165,7 @@ async def command_ready(
         ready_commands = []
         for activity in ready_command_activities.copy():
             alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-            if not alert_settings.visible:
-                ready_command_activities.remove(activity)
-                continue
+            if not alert_settings.visible: continue
             command = await get_command_from_activity(activity)
             ready_commands.append(command)
         for command in sorted(ready_commands):
@@ -187,9 +185,7 @@ async def command_ready(
         ready_events = []
         for activity in ready_event_activities.copy():
             alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-            if not alert_settings.visible:
-                ready_event_activities.remove(activity)
-                continue
+            if not alert_settings.visible: continue
             if activity == 'big-arena' and not 'arena' in ready_command_activities:
                 ready_event_activities.remove(activity)
                 continue
@@ -216,7 +212,10 @@ async def command_ready(
             embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
     clan_alert_enabled = getattr(clan, 'alert_enabled', False)
     if not clan_reminder and clan_alert_enabled:
-        field_ready_clan = f"{emojis.BP} {clan_command}"
+        field_ready_clan = (
+            f"{emojis.BP} {clan_command}\n"
+            f"{emojis.DETAIL} <#{clan.channel_id}>"
+        )
         answer = (
             f'{answer}\n'
             f'**GUILD CHANNEL**\n'
@@ -293,7 +292,7 @@ async def command_ready(
 
 
 # -- Embeds ---
-async def embed_reminders_list(user: discord.User, user_settings: users.User) -> discord.Embed:
+async def embed_reminders_list(bot: discord.Bot, user: discord.User, user_settings: users.User) -> discord.Embed:
     """Embed with active reminders"""
     current_time = datetime.utcnow().replace(microsecond=0)
     try:

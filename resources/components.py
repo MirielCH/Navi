@@ -693,7 +693,7 @@ class DeleteCustomRemindersButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction) -> None:
         self.view.remove_item(self)
         self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))
-        embed = await self.view.embed_function(self.view.user, self.view.user_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 

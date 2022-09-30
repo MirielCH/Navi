@@ -577,12 +577,13 @@ class RemindersListView(discord.ui.View):
     -------
     None
     """
-    def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
+    def __init__(self, bot: discord.Bot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
                  user_settings: users.User, custom_reminders: List[reminders.Reminder],
                  embed_function: callable,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
+        self.bot = bot
         self.ctx = ctx
         self.custom_reminders = custom_reminders
         self.embed_function = embed_function

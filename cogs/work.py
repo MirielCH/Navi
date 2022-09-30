@@ -234,13 +234,13 @@ class WorkCog(commands.Cog):
                         'um deles tinha', #Portuguese
                     ]
                     if any(search_string in message_content.lower() for search_string in search_strings_chop_proc):
-                        await message.add_reaction(emojis.WOAH_THERE)
+                        await message.add_reaction(emojis.PEPE_WOAH_THERE)
                     if any(search_string in message_content.lower() for search_string in search_strings_mine_proc):
-                        await message.add_reaction(emojis.SWEATY)
+                        await message.add_reaction(emojis.PANDA_SWEATY)
                     if any(search_string in message_content.lower() for search_string in search_strings_fish_proc):
                         await message.add_reaction(emojis.FISHPOGGERS)
                     if any(search_string in message_content.lower() for search_string in search_strings_pickup_proc):
-                        await message.add_reaction(emojis.WOW)
+                        await message.add_reaction(emojis.PEEPO_WOW)
                     if 'mega log' in message_content.lower() or '**mega** log' in message_content.lower():
                         await message.add_reaction(emojis.FIRE)
                     elif 'hyper log' in message_content.lower() or '**hyper** log' in message_content.lower():

@@ -511,6 +511,7 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
     updated_user = []
     ignored_settings = []
     answer_reminders = answer_helpers = answer_user = answer_ignored = ''
+    settings = list(dict.fromkeys(settings))
     for setting in settings:
         if setting in strings.ACTIVITIES: updated_reminders.append(setting)
         elif setting in SETTINGS_HELPERS: updated_helpers.append(setting)

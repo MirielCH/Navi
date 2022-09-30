@@ -161,6 +161,23 @@ class HelperContextCog(commands.Cog):
                     )
                 await message.reply(answer)
 
+            # Single pet TT trigger
+            search_strings = [
+                'it came back instantly!!', #English
+                'volvio al instante!!', #Spanish
+                'voltou instantaneamente!!', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                if user is None: return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
+                command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
+                await message.reply(f"➜ {command_pets_claim}")
+
             # Quest - Only works with slash
             search_strings = [
                 'got a **new quest**!', #English accepted

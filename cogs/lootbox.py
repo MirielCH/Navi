@@ -101,7 +101,8 @@ class BuyCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and not 'guild ring' in message_content.lower()
                 and not 'smol coin' in message_content.lower()
-                and not 'horseshoe' in message_content.lower()):
+                and not 'horseshoe' in message_content.lower()
+                and not 'coolrency' in message_content.lower()):
                 user = await functions.get_interaction_user(message)
                 lootbox_type = user_command_message = None
                 lootbox_name = '[lootbox]'

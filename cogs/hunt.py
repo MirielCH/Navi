@@ -332,7 +332,8 @@ class HuntCog(commands.Cog):
                             'ULTRA present': emojis.PRESENT_ULTRA,
                             'OMEGA present': emojis.PRESENT_OMEGA,
                             'GODLY present': emojis.PRESENT_GODLY,
-                            'easter lootbox': emojis.EASTER_LOOTBOX,
+                            'easter lootbox': emojis.LB_EASTER,
+                            'EPIC berry': emojis.EPIC_BERRY,
                         }
                         search_strings = [
                             f'**{user_settings.partner_name}** got ', #English
@@ -378,12 +379,9 @@ class HuntCog(commands.Cog):
                             and lootbox_alert != ''):
                             try:
                                 if partner.dnd_mode_enabled:
-                                    lb_message = f'**{partner_discord.name}**, {lootbox_alert}'
+                                    lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.name}**')
                                 else:
-                                    if partner.ping_after_message:
-                                        lb_message = f'{lootbox_alert} {partner_discord.mention}'
-                                    else:
-                                        lb_message = f'{partner_discord.mention} {lootbox_alert}'
+                                    lb_message = lootbox_alert.replace('{name}', partner_discord.mention)
                                 channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
                                 await channel.send(lb_message)
                                 if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
@@ -424,8 +422,8 @@ class HuntCog(commands.Cog):
                 # Add reactions
                 if user_settings.reactions_enabled:
                     found_stuff = {
-                        'OMEGA lootbox': emojis.SURPRISE,
-                        'GODLY lootbox': emojis.SURPRISE,
+                        'OMEGA lootbox': emojis.PANDA_SURPRISE,
+                        'GODLY lootbox': emojis.PANDA_SURPRISE,
                     }
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):

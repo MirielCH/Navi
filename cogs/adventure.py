@@ -162,8 +162,8 @@ class AdventureCog(commands.Cog):
                 )
                 if user_settings.reactions_enabled:
                     found_stuff = {
-                        'OMEGA lootbox': emojis.SURPRISE,
-                        'GODLY lootbox': emojis.SURPRISE,
+                        'OMEGA lootbox': emojis.PANDA_SURPRISE,
+                        'GODLY lootbox': emojis.PANDA_SURPRISE,
                     }
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if stuff_name in message_content:

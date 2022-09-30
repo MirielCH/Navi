@@ -67,6 +67,7 @@ COMMAND_TRADE_RUBY = re.compile(rf"\btrade\b\s+\b[e-f]\b")
 COMMAND_TRAINING = re.compile(rf"(?:\btr\b|\btraining)")
 COMMAND_TRAINING_ULTRAINING = re.compile(rf"(?:ul)?(?:tr\b|training\b)")
 COMMAND_ULTRAINING = re.compile(rf"(?:ultr\b|ultraining\b)")
+COMMAND_ULTRAINING_BUY_TRAINING_RESET = re.compile(rf"(?:ultr\b|ultraining\b)\s+\bbuy\b\s+\btraining\b\s+\breset\b")
 COMMAND_VOTE = re.compile(rf"\bvote\b")
 COMMAND_WEEKLY = re.compile(rf"\bweekly\b")
 COMMAND_WORK = rf"(?:"

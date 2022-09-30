@@ -221,7 +221,7 @@ class FunCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
-                await message.add_reaction(emojis.XMAS_YAY)
+                await message.add_reaction(emojis.PEEPO_XMAS_YAY)
 
             search_strings = [
                 '<:coolness', #All languages

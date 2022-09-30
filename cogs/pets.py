@@ -83,7 +83,7 @@ class PetsCog(commands.Cog):
                 if 'voidog' in message.content.lower():
                     if user_settings.reactions_enabled:
                         await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
-                        await message.add_reaction(emojis.VOIDOG)
+                        await message.add_reaction(emojis.PET_VOIDOG)
 
             search_strings = [
                 'pet adventure(s) cancelled', #English
@@ -164,8 +164,6 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
-                await message.reply(f"➜ {command_pets_claim}")
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
 
         if message.embeds:
@@ -185,7 +183,7 @@ class PetsCog(commands.Cog):
             if any(search_string in message_description.lower() for search_string in search_strings):
                 pet_names_emojis = {
                     'cat': emojis.PET_CAT,
-                    'voidog': emojis.VOIDOG,
+                    'voidog': emojis.PET_VOIDOG,
                     'dog': emojis.PET_DOG,
                     'dragon': emojis.PET_DRAGON,
                     'golden bunny': emojis.PET_GOLDEN_BUNNY,
@@ -224,9 +222,6 @@ class PetsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 reminder_created = False
-                #bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                #current_time = datetime.utcnow().replace(microsecond=0)
-                #time_elapsed = current_time - bot_answer_time
                 for field in embed.fields:
                     pet_id_match = re.search(r'`ID: (.+?)`', field.name)
                     pet_emoji = ''
@@ -259,7 +254,6 @@ class PetsCog(commands.Cog):
                     if pet_action not in pet_actions: continue
                     pet_timestring = pet_action_timestring_match.group(2)
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
-                    #time_left = time_left - time_elapsed
                     if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
                     reminder_created = True
                     reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
