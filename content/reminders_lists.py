@@ -160,9 +160,9 @@ async def command_ready(
             f'**OTHER**\n'
             f'{field_other.strip()}'
         )
+    ready_commands = []
     if ready_command_activities:
         field_ready_commands = ''
-        ready_commands = []
         for activity in ready_command_activities.copy():
             alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
             if not alert_settings.visible: continue
@@ -185,7 +185,9 @@ async def command_ready(
         ready_events = []
         for activity in ready_event_activities.copy():
             alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-            if not alert_settings.visible: continue
+            if not alert_settings.visible:
+                ready_event_activities.remove(activity)
+                continue
             if activity == 'big-arena' and not 'arena' in ready_command_activities:
                 ready_event_activities.remove(activity)
                 continue
@@ -222,7 +224,7 @@ async def command_ready(
             f'{field_ready_clan}'
         )
         embed.add_field(name='GUILD CHANNEL', value=field_ready_clan)
-    if not ready_command_activities and not ready_event_activities and (clan_reminder or not clan_alert_enabled):
+    if not ready_commands and not ready_event_activities and (clan_reminder or not clan_alert_enabled):
         answer = (
             f'{answer}\n'
             f'**COMMANDS**\n'
