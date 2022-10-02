@@ -77,7 +77,7 @@ class DuelCog(commands.Cog):
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_duel: return
+                if not user_settings.bot_enabled or not user_settings.alert_duel.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'duel')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -131,7 +131,7 @@ class DuelCog(commands.Cog):
                                                                               'duel')
                 if time_left < timedelta(0): return
                 if interaction_user_settings is not None:
-                    if interaction_user_settings.bot_enabled and interaction_user_settings.alert_duel:
+                    if interaction_user_settings.bot_enabled and interaction_user_settings.alert_duel.enabled:
                         user_command = await functions.get_slash_command(interaction_user_settings, 'duel')
                         reminder_message = interaction_user_settings.alert_duel.message.replace('{command}', user_command)
                         reminder: reminders.Reminder = (
@@ -169,7 +169,7 @@ class DuelCog(commands.Cog):
                     duel_user_settings: users.User = await users.get_user(duel_user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if duel_user_settings.bot_enabled and duel_user_settings.alert_duel:
+                if duel_user_settings.bot_enabled and duel_user_settings.alert_duel.enabled:
                     user_command = await functions.get_slash_command(duel_user_settings, 'duel')
                     reminder_message = duel_user_settings.alert_duel.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

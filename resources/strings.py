@@ -538,6 +538,7 @@ SLASH_COMMANDS_NAVI = {
     'settings partner': '</settings partner:1017853591387656310>',
     'settings ready': '</settings ready:1017853591387656310>',
     'settings reminders': '</settings reminders:1017853591387656310>',
+    'settings server': '</settings server:1017853591387656310>',
     'settings user': '</settings user:1017853591387656310>',
     'slashboard': '</slashboard:1026046376527806494>',
     'stats': '</stats:1017853591475724349>',

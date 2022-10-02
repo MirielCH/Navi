@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, reminders, users
+from database import clans, guilds, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
@@ -420,6 +420,16 @@ async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationC
         interaction = await ctx.respond(embed=embed, view=view)
     else:
         await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+    """Server settings command"""
+    guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    view = views.SettingsServerView(ctx, bot, guild_settings, embed_settings_server)
+    embed = await embed_settings_server(bot, ctx, guild_settings)
+    interaction = await ctx.respond(embed=embed, view=view)
     view.interaction = interaction
     await view.wait()
 
@@ -879,6 +889,30 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     return embed
 
 
+async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                guild_settings: guilds.Guild) -> discord.Embed:
+    """Server settings embed"""
+    auto_flex_channel = await functions.get_discord_channel(bot, guild_settings.auto_flex_channel_id)
+    auto_flex_channel_name = f'`{auto_flex_channel.name}`' if auto_flex_channel is not None else '`N/A`'
+    prefix = (
+        f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
+    )
+    auto_flex = (
+        f'{emojis.BP} **Alerts**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
+        f'{emojis.BP} **Channel**: {auto_flex_channel_name}\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.guild.name.upper()} SERVER SETTINGS',
+        description = (
+            f'_Serverwide settings._'
+        )
+    )
+    embed.add_field(name='PREFIX', value=prefix, inline=False)
+    embed.add_field(name='AUTO FLEX', value=auto_flex, inline=False)
+    return embed
+
+
 async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
                               user_settings: users.User) -> discord.Embed:
     """User settings embed"""
@@ -892,6 +926,9 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _You can toggle this by using {strings.SLASH_COMMANDS_NAVI["on"]} '
         f'and {strings.SLASH_COMMANDS_NAVI["off"]}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
+        f'{emojis.BP} **Auto flex alerts**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
+        f'{emojis.DETAIL} _This setting lets you opt in or out of auto flexes._\n'
+        f'{emojis.DETAIL} _Auto flexing itself needs to be configured in the server settings._\n'
     )
     donor_tier = (
         f'{emojis.BP} **You**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'
