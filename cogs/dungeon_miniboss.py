@@ -45,6 +45,7 @@ class DungeonMinibossCog(commands.Cog):
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None
+                embed_users = []
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
                     user_command_message = (
@@ -60,17 +61,17 @@ class DungeonMinibossCog(commands.Cog):
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
-                    embed_user = await message.guild.fetch_member(user_id)
+                    embed_users.append(await message.guild.fetch_member(user_id))
                 else:
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if not user_name_match or embed_user is None:
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or not embed_users:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found for dungeon cooldown message.', message)
                         return
-                if embed_user != interaction_user: return
+                if interaction_user not in embed_users: return
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:

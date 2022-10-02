@@ -246,7 +246,7 @@ class SettingsCog(commands.Cog):
                                 f'As a consequence I deleted the guild **{clan.clan_name}** including **all settings and '
                                 f'the leaderboard** from the database and added **{clan_name}** as a new guild.\n\n'
                                 f'If you renamed your guild: To prevent this from happening, please run '
-                                f'{strings.SLASH_COMMANDS_NEW["guild list"]} immediately after renaming next time.'
+                                f'{strings.SLASH_COMMANDS["guild list"]} immediately after renaming next time.'
                             )
                 except exceptions.NoDataFoundError:
                     pass
@@ -285,7 +285,7 @@ class SettingsCog(commands.Cog):
                                             await message_after.channel.send(
                                                 f'Note that the guild **{old_clan.clan_name}** doesn\'t have an owner '
                                                 f'registered anymore. Please tell one of the remaining members to use '
-                                                f'{strings.SLASH_COMMANDS_NEW["guild list"]} to update it.'
+                                                f'{strings.SLASH_COMMANDS["guild list"]} to update it.'
                                             )
                                 except exceptions.NoDataFoundError:
                                     pass

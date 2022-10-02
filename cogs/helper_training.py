@@ -80,7 +80,6 @@ class HelperTrainingCog(commands.Cog):
                 and all(search_string not in message_content.lower() for search_string in search_strings_not_included)):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
                 if user is None:
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
@@ -107,22 +106,42 @@ class HelperTrainingCog(commands.Cog):
                     'vazio', #Portuguese, UNCONFIRMED
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_void):
-                    answer, buttons = await functions.get_void_training_answer(message, user_settings)
-                    if buttons:
+                    if user_settings.training_helper_button_mode:
+                        answer, buttons = await functions.get_void_training_answer_buttons(message, user_settings)
+                        if buttons:
+                            answer = None if user_settings.dnd_mode_enabled else user.mention
+                            view = views.TrainingAnswerView(buttons)
+                            await message.reply(content=answer, view=view)
+                        else:
+                            if not user_settings.dnd_mode_enabled:
+                                if user_settings.ping_after_message:
+                                    answer = f'{user.mention}\n{answer}' if emojis.BP in answer else f'{user.mention} {answer}'
+                                else:
+                                    answer = f'{answer}\n{user.mention}' if emojis.BP in answer else f'{answer} {user.mention}'
+                            await message.reply(answer)
+                    else:
+                        answer = await functions.get_void_training_answer_text(message, user_settings)
+                        if not user_settings.dnd_mode_enabled:
+                            if user_settings.ping_after_message:
+                                answer = f'{user.mention}\n{answer}' if emojis.BP in answer else f'{user.mention} {answer}'
+                            else:
+                                answer = f'{answer}\n{user.mention}' if emojis.BP in answer else f'{answer} {user.mention}'
+                        await message.reply(answer)
+                else:
+                    if user_settings.training_helper_button_mode:
                         answer = None if user_settings.dnd_mode_enabled else user.mention
+                        buttons = await functions.get_training_answer_buttons(message)
                         view = views.TrainingAnswerView(buttons)
                         await message.reply(content=answer, view=view)
                     else:
-                        if user_settings.dnd_mode_enabled:
-                            await message.reply(answer)
-                        else:
-                            answer = f'{user.mention}\n{answer}'
+                        answer = await functions.get_training_answer_text(message)
+                        if not user_settings.dnd_mode_enabled:
+                            if user_settings.ping_after_message:
+                                answer = f'{answer} {user.mention}'
+                            else:
+                                answer = f'{user.mention} {answer}'
                         await message.reply(answer)
-                else:
-                    answer = None if user_settings.dnd_mode_enabled else user.mention
-                    buttons = await functions.get_training_answer_slash(message)
-                    view = views.TrainingAnswerView(buttons)
-                    await message.reply(content=answer, view=view)
+
 
 # Initialization
 def setup(bot):

@@ -175,7 +175,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
             await interaction.response.send_message(
                 f'**{interaction.user.name}**, you are not registered as the guild owner. Only the guild owner can '
                 f'change these settings.\n'
-                f'If you _are_ the guild owner, run {strings.SLASH_COMMANDS_NEW["guild list"]} to update '
+                f'If you _are_ the guild owner, run {strings.SLASH_COMMANDS["guild list"]} to update '
                 f'your guild in my database.\n',
                 ephemeral=True
             )
@@ -267,9 +267,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
             clan_reminder_action = 'Hide' if view.clan_settings.alert_visible else 'Show'
             options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
                                                 value='toggle_alert'))
-        options.append(discord.SelectOption(label=f'{cmd_cd_action} /cd command',
-                                            value='toggle_cmd_cd'))
-        options.append(discord.SelectOption(label=f'Show "other" field {other_position}',
+        options.append(discord.SelectOption(label=f'Show "other commands" {other_position}',
                                             value='toggle_other_position', emoji=None))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_ready_settings')
@@ -286,14 +284,12 @@ class ManageReadySettingsSelect(discord.ui.Select):
             modal = modals.SetEmbedColorModal(self.view)
             await interaction.response.send_modal(modal)
             return
-        elif select_value == 'toggle_cmd_cd':
-            await self.view.user_settings.update(cmd_cd_visible=not self.view.user_settings.cmd_cd_visible)
-        elif select_value == 'toggle_other_position':
-            await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
         elif select_value == 'toggle_up_next':
             await self.view.user_settings.update(ready_up_next_visible=not self.view.user_settings.ready_up_next_visible)
         elif select_value == 'toggle_up_next_timestamp':
             await self.view.user_settings.update(ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp)
+        elif select_value == 'toggle_other_position':
+            await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
         for child in self.view.children.copy():
             if isinstance(child, ManageReadySettingsSelect):
                 self.view.remove_item(child)
@@ -328,7 +324,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
         options = []
         reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
         dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
-        hardmode_action = 'Disable' if view.user_settings.hardmode_mode_enabled else 'Enable'
+        #hardmode_action = 'Disable' if view.user_settings.hardmode_mode_enabled else 'Enable'
         hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
         mentions_action = 'Disable' if view.user_settings.slash_mentions_enabled else 'Enable'
         tracking_action = 'Disable' if view.user_settings.tracking_enabled else 'Enable'
@@ -336,8 +332,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
                                             value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'{dnd_action} DND mode',
                                             value='toggle_dnd'))
-        options.append(discord.SelectOption(label=f'{hardmode_action} hardmode mode',
-                                            value='toggle_hardmode'))
+        #options.append(discord.SelectOption(label=f'{hardmode_action} hardmode mode',
+        #                                    value='toggle_hardmode'))
         options.append(discord.SelectOption(label=f'{hunt_action} hunt rotation',
                                             value='toggle_hunt'))
         options.append(discord.SelectOption(label=f'{mentions_action} slash mentions',
@@ -688,18 +684,36 @@ class DeleteCustomRemindersButton(discord.ui.Button):
     """Button to activate the select to delete custom reminders"""
     def __init__(self):
         super().__init__(style=discord.ButtonStyle.grey, custom_id='active_select', label='Delete custom reminders',
-                         emoji=None, row=1)
+                         emoji=None, row=2)
 
     async def callback(self, interaction: discord.Interaction) -> None:
         self.view.remove_item(self)
         self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))
-        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_reminders,
+                                               self.view.clan_reminders, self.view.show_timestamps)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class ToggleTimestampsButton(discord.ui.Button):
+    """Button to toggle reminder list between timestamps and timestrings"""
+    def __init__(self, label: str):
+        super().__init__(style=discord.ButtonStyle.grey, custom_id='toggle_timestamps', label=label,
+                         emoji=None, row=1)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        self.view.show_timestamps = not self.view.show_timestamps
+        if self.view.show_timestamps:
+            self.label = 'Show time left'
+        else:
+            self.label = 'Show end time'
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_reminders,
+                                               self.view.clan_reminders, self.view.show_timestamps)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
 class DeleteCustomReminderSelect(discord.ui.Select):
     """Select to delete custom reminders"""
-    def __init__(self, view: discord.ui.View, custom_reminders: List[reminders.Reminder], row: Optional[int] = None):
+    def __init__(self, view: discord.ui.View, custom_reminders: List[reminders.Reminder], row: Optional[int] = 2):
         self.custom_reminders = custom_reminders
 
         options = []
@@ -715,14 +729,16 @@ class DeleteCustomReminderSelect(discord.ui.Select):
             if reminder.custom_id == int(select_value):
                 await reminder.delete()
                 self.custom_reminders.remove(reminder)
-        embed = await self.view.embed_function(self.view.user, self.view.user_settings)
+                for user_reminder in self.view.user_reminders:
+                    if user_reminder.custom_id == reminder.custom_id:
+                        self.view.user_reminders.remove(user_reminder)
+                        break
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_reminders,
+                                               self.view.clan_reminders, self.view.show_timestamps)
+        self.view.remove_item(self)
         if self.custom_reminders:
-            self.view.remove_item(self)
             self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))
-            await interaction.response.edit_message(embed=embed, view=self.view)
-        else:
-            await interaction.response.edit_message(embed=embed, view=None)
-            self.view.stop()
+        await interaction.response.edit_message(embed=embed, view=self.view)
 
 
 class ToggleTrackingButton(discord.ui.Button):
@@ -749,3 +765,52 @@ class ToggleTrackingButton(discord.ui.Button):
             await interaction.response.edit_message(view=self.view)
         else:
             await self.view.message.edit(view=self.view)
+
+
+class ManageHelperSettingsSelect(discord.ui.Select):
+    """Select to change helper settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        tr_helper_mode = 'text' if view.user_settings.training_helper_button_mode else 'buttons'
+        pet_helper_mode = 'commands' if view.user_settings.pet_helper_icon_mode else 'icons'
+        ruby_counter_mode = 'text' if view.user_settings.ruby_counter_button_mode else 'buttons'
+        ping_mode_setting = 'before' if view.user_settings.ping_after_message else 'after'
+        options.append(discord.SelectOption(label=f'Change pet catch helper to {pet_helper_mode}',
+                                            value='toggle_pet_helper_mode'))
+        options.append(discord.SelectOption(label=f'Change ruby counter to {ruby_counter_mode}',
+                                            value='toggle_ruby_counter_mode'))
+        options.append(discord.SelectOption(label=f'Change training helper to {tr_helper_mode}',
+                                            value='toggle_tr_helper_mode'))
+        options.append(discord.SelectOption(label=f'Ping {ping_mode_setting} helper message',
+                                            value='toggle_ping_mode'))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_user_settings')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'toggle_tr_helper_mode':
+            await self.view.user_settings.update(
+                training_helper_button_mode=not self.view.user_settings.training_helper_button_mode
+            )
+        elif select_value == 'toggle_pet_helper_mode':
+            await self.view.user_settings.update(
+                pet_helper_icon_mode=not self.view.user_settings.pet_helper_icon_mode
+            )
+        elif select_value == 'toggle_ruby_counter_mode':
+            await self.view.user_settings.update(
+                ruby_counter_button_mode=not self.view.user_settings.ruby_counter_button_mode
+            )
+        elif select_value == 'toggle_ping_mode':
+            await self.view.user_settings.update(
+                ping_after_message=not self.view.user_settings.ping_after_message
+            )
+        for child in self.view.children.copy():
+            if isinstance(child, ManageHelperSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageHelperSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)

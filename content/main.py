@@ -75,7 +75,7 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
     guild_settings = (
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["leaderboard guild"]} : Check the weekly raid leaderboard\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings guild"]} : Manage guild channel reminders\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NEW["guild list"]} : Add/update your guild\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS["guild list"]} : Add/update your guild\n'
     )
     bug_report = (
         f'_Please report bugs in one of these channels:_\n'

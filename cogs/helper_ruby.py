@@ -142,7 +142,8 @@ class HelperRubyCog(commands.Cog):
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 if icon_url == embed.Empty: return
-                user_id = user_name = embed_user = user_command_message = None
+                user_id = user_name = user_command_message = None
+                embed_users = []
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
                     user_command_message = (
@@ -157,17 +158,17 @@ class HelperRubyCog(commands.Cog):
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
-                    embed_user = await message.guild.fetch_member(user_id)
+                    embed_users.append(await message.guild.fetch_member(user_id))
                 else:
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if not user_name_match or embed_user is None:
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or not embed_users:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found in inventory message for ruby counter.', message)
                         return
-                if embed_user != interaction_user: return
+                if interaction_user not in embed_users: return
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
@@ -232,16 +233,20 @@ class HelperRubyCog(commands.Cog):
                     await errors.log_error('Ruby count not found in ruby training message for ruby counter.', message)
                     return
                 answer = f'You have {user_settings.rubies:,} {emojis.RUBY}'
-                buttons = {}
-                correct_button = 'training_yes' if user_settings.rubies > ruby_count else 'training_no'
-                for row, action_row in enumerate(message.components, start=1):
-                    buttons[row] = {}
-                    for button in action_row.children:
-                        if button.custom_id == correct_button:
-                            buttons[row][button.custom_id] = (button.label, button.emoji, True)
-                        else:
-                            buttons[row][button.custom_id] = (button.label, button.emoji, False)
-                view = views.TrainingAnswerView(buttons)
+                if user_settings.ruby_counter_button_mode:
+                    buttons = {}
+                    correct_button = 'training_yes' if user_settings.rubies > ruby_count else 'training_no'
+                    for row, action_row in enumerate(message.components, start=1):
+                        buttons[row] = {}
+                        for button in action_row.children:
+                            if button.custom_id == correct_button:
+                                buttons[row][button.custom_id] = (button.label, button.emoji, True)
+                            else:
+                                buttons[row][button.custom_id] = (button.label, button.emoji, False)
+                    view = views.TrainingAnswerView(buttons)
+                else:
+                    answer = f'`YES` ({answer})' if user_settings.rubies > ruby_count else f'`NO` ({answer})'
+                    view = None
                 if not user_settings.dnd_mode_enabled:
                     answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
                 await message.reply(content=answer, view=view)

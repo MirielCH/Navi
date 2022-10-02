@@ -21,7 +21,7 @@ async def command_leaderboard_clan(
         await functions.reply_or_respond(
             ctx,
             f'Your guild is not registered with Navi. If you are in a guild, use '
-            f'{strings.SLASH_COMMANDS_NEW["guild list"]} to add it.'
+            f'{strings.SLASH_COMMANDS["guild list"]} to add it.'
         )
         return
     embed = await embed_leaderboard_clan(clan_settings)

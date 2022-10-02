@@ -110,6 +110,7 @@ EXTENSIONS = [
         'cogs.reminders_lists',
         'cogs.settings',
         'cogs.settings_guild',
+        'cogs.slashboard',
         'cogs.sleepy_potion',
         'cogs.tasks',
         'cogs.tracking',

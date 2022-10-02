@@ -217,7 +217,7 @@ async def command_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContex
             clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
         except exceptions.NoDataFoundError:
             await ctx.respond(
-                f'Your guild is not registered with me yet. Use {strings.SLASH_COMMANDS_NEW["guild list"]} '
+                f'Your guild is not registered with me yet. Use {strings.SLASH_COMMANDS["guild list"]} '
                 f'to do that first.',
                 ephemeral=True
             )
@@ -611,7 +611,7 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
         if member_id is not None:
             members = f'{members}\n{emojis.BP} <@{member_id}>'
             member_count += 1
-    members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS_NEW["guild list"]} to update guild members._'
+    members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} to update guild members._'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{clan_settings.clan_name} GUILD SETTINGS',
@@ -631,6 +631,10 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
 
 async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
     """Helper settings embed"""
+    tr_helper_mode = 'Buttons' if user_settings.training_helper_button_mode else 'Text'
+    pet_helper_mode = 'Icons' if user_settings.pet_helper_icon_mode else 'Commands'
+    ruby_counter_mode = 'Buttons' if user_settings.ruby_counter_button_mode else 'Text'
+    ping_mode_setting = 'After' if user_settings.ping_after_message else 'Before'
     helpers = (
         f'{emojis.BP} **Context helper**: {await functions.bool_to_text(user_settings.context_helper_enabled)}\n'
         f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (slash only)._\n'
@@ -643,12 +647,20 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
     )
+    helper_settings = (
+        f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'
+        f'{emojis.BP} **Ruby counter style**: `{ruby_counter_mode}`\n'
+        f'{emojis.BP} **Training helper style**: `{tr_helper_mode}`\n'
+        f'{emojis.BP} **Ping mode**: `{ping_mode_setting}` helper message\n'
+        f'{emojis.DETAIL} _This setting has no effect on button helpers and if DND mode is on._\n'
+    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S HELPER SETTINGS',
         description = '_Settings to toggle some helpful little features._'
     )
     embed.add_field(name='HELPERS', value=helpers, inline=False)
+    embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     return embed
 
 
@@ -766,10 +778,8 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
         f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
         f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
-        f'{emojis.DETAIL} Note that timestamps are often inaccurate\n'
-        f'{emojis.BP} **{strings.SLASH_COMMANDS_NEW["cd"]} command**: '
-        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
-        f'{emojis.BP} **Position of "other" commands**: `{other_field_position}`\n'
+        f'{emojis.DETAIL} If timestamps are inaccurate, set your local time correctly\n'
+        f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
@@ -797,6 +807,14 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
     )
+    other_commands = (
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["cd"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS_NAVI["slashboard"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
+    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
@@ -809,6 +827,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
     return embed
 
 
@@ -863,7 +882,6 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
 async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
                               user_settings: users.User) -> discord.Embed:
     """User settings embed"""
-    ping_mode_setting = 'After' if user_settings.ping_after_message else 'Before'
     try:
         tt_timestamp = int(user_settings.last_tt.timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
@@ -884,8 +902,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     behaviour = (
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
         f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
-        f'{emojis.BP} **Hardmode mode**: {await functions.bool_to_text(user_settings.hardmode_mode_enabled)}\n'
-        f'{emojis.DETAIL} _Tells your partner to hunt solo if he uses `together`._\n'
+        #f'{emojis.BP} **Hardmode mode**: {await functions.bool_to_text(user_settings.hardmode_mode_enabled)}\n'
+        #f'{emojis.DETAIL} _Tells your partner to hunt solo if he uses `together`._\n'
         f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash mentions**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'

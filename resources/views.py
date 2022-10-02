@@ -229,6 +229,7 @@ class SettingsHelpersView(discord.ui.View):
             'Training helper': 'training_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
+        self.add_item(components.ManageHelperSettingsSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -298,11 +299,18 @@ class SettingsReadyView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_other = {
+            '/cd': 'cmd_cd_visible',
+            '/inventory': 'cmd_inventory_visible',
+            '/slashboard': 'cmd_slashboard_visible',
+        }
         self.add_item(components.ManageReadySettingsSelect(self))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
+        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_other, 'Toggle other commands',
+                                                          'toggle_other_commands'))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -550,6 +558,7 @@ class OneButtonView(discord.ui.View):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
         self.interaction_message = interaction_message
+        self.ctx = ctx
         self.user = ctx.author
         self.add_item(components.CustomButton(style=style, custom_id=custom_id, label=label, emoji=emoji))
 
@@ -561,7 +570,7 @@ class OneButtonView(discord.ui.View):
 
     async def on_timeout(self) -> None:
         self.disable_all_items()
-        if isinstance(self.view.ctx, discord.ApplicationContext):
+        if isinstance(self.ctx, discord.ApplicationContext):
             await functions.edit_interaction(self.interaction_message, view=self)
         else:
             await self.interaction_message.edit(view=self)
@@ -578,19 +587,24 @@ class RemindersListView(discord.ui.View):
     None
     """
     def __init__(self, bot: discord.Bot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
-                 user_settings: users.User, custom_reminders: List[reminders.Reminder],
-                 embed_function: callable,
+                 user_reminders: List[reminders.Reminder], clan_reminders: List[reminders.Reminder],
+                 custom_reminders: List[reminders.Reminder],
+                 embed_function: callable, show_timestamps: Optional[bool] = False,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
         self.bot = bot
         self.ctx = ctx
         self.custom_reminders = custom_reminders
+        self.user_reminders = user_reminders
+        self.clan_reminders = clan_reminders
         self.embed_function = embed_function
         self.interaction_message = interaction_message
         self.user = user
-        self.user_settings = user_settings
-        self.add_item(components.DeleteCustomRemindersButton())
+        self.show_timestamps = show_timestamps
+        self.add_item(components.ToggleTimestampsButton('Show end time'))
+        if custom_reminders:
+            self.add_item(components.DeleteCustomRemindersButton())
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

@@ -38,7 +38,7 @@ class HelperPetsCog(commands.Cog):
             if (any(search_string in message_field_name.lower() for search_string in search_strings_name)
                 and any(search_string in message_field_value.lower() for search_string in search_strings_value)):
 
-                async def design_pet_catch_field(feeds: int, pats: int, slash: bool) -> str:
+                async def design_pet_catch_field(feeds: int, pats: int, user_settings: users.User) -> str:
                     """Returns an embed field with the commands and the catch chance"""
                     hunger_remaining_min = hunger - (feeds * 22)
                     if hunger_remaining_min < 0: hunger_remaining_min = 0
@@ -59,16 +59,16 @@ class HelperPetsCog(commands.Cog):
                     else:
                         chance = f'_Catch chance: {chance_max:.2f}%_'
                     commands = ''
-                    for x in range(0,feeds):
-                        commands = f'{commands} feed'
                     for x in range(0,pats):
                         commands = f'{commands} pat'
+                    for x in range(0,feeds):
+                        commands = f'{commands} feed'
                     commands = f'`{commands.upper().strip()}`'
                     hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
                     actions = f'{emojis.PET_HAPPINESS} {pats} pats, {hunger_emoji} {feeds} feeds'
                     if pats + feeds < 6:
                         actions = f'{actions}, {emojis.PET_RANDOM} tame'
-                    field_value = actions if slash else commands
+                    field_value = actions if user_settings.pet_helper_icon_mode else commands
                     field_value = f'{field_value}\n{chance}'
 
                     return field_value
@@ -138,7 +138,7 @@ class HelperPetsCog(commands.Cog):
                 if happiness_rest > 0: pats += 1
                 if feeds + pats > 6: pats = 6 - feeds
                 command_amount_low_risk = feeds + pats
-                field_low_risk = await design_pet_catch_field(feeds, pats, slash_command)
+                field_low_risk = await design_pet_catch_field(feeds, pats, user_settings)
                 # High risk
                 feeds, hunger_rest = divmod(hunger, 22)
                 if hunger_rest >= 9:
@@ -151,7 +151,7 @@ class HelperPetsCog(commands.Cog):
                 if pats < 0: pats = 0
                 command_amount_high_risk = feeds + pats
                 if command_amount_high_risk == command_amount_low_risk: pats -= 1
-                field_high_risk = await design_pet_catch_field(feeds, pats, slash_command)
+                field_high_risk = await design_pet_catch_field(feeds, pats, user_settings)
                 embed = discord.Embed()
                 high_skill_name = 'HIGHER CHANCE AT SKILL' if command_amount_low_risk < 6 else 'CHANCE AT SKILL'
                 embed.add_field(name='LOWEST RISK', value=field_low_risk, inline=False)

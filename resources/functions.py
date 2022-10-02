@@ -135,11 +135,17 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
 
 
 # --- Time calculations ---
-async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> Union[discord.Member, None]:
-    """Returns the first guild member found by the given name"""
+async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> List[discord.Member]:
+    """Returns all guild members found by the given name"""
+    members = []
     for member in guild.members:
-        if await encode_text(member.name) == await encode_text(user_name): return member
-    return None
+        if await encode_text(member.name) == await encode_text(user_name) and not member.bot:
+            try:
+                await users.get_user(member.id)
+            except exceptions.FirstTimeUserError:
+                continue
+            members.append(member)
+    return members
 
 
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
@@ -481,7 +487,7 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
 
 
 # Helper functions
-async def get_training_answer_slash(message: discord.Message) -> str:
+async def get_training_answer_buttons(message: discord.Message) -> str:
     """Returns the buttons for the TrainingAnswerView to a slash training question based on the message content."""
     buttons = {}
     message_content = message.content.lower()
@@ -630,7 +636,7 @@ async def get_training_answer_slash(message: discord.Message) -> str:
     return buttons
 
 
-async def get_training_answer(message: discord.Message) -> str:
+async def get_training_answer_text(message: discord.Message) -> str:
     """Returns the answer to a training question based on the message content."""
     message_content = message.content.lower()
     answer = None
@@ -658,11 +664,11 @@ async def get_training_answer(message: discord.Message) -> str:
     ]
     if any(search_string in message_content for search_string in search_strings_river):
         if '<:epicfish' in message_content:
-            answer = '`3`'
+            answer = '`EPIC fish` (`3`)'
         elif '<:goldenfish' in message_content:
-            answer = '`2`'
+            answer = '`golden fish` (`2`)'
         elif '<:normiefish' in message_content:
-            answer = '`1`'
+            answer = '`normie fish` (`1`)'
     elif any(search_string in message_content for search_string in search_strings_field):
         search_strings_first = [
             '**first**', #English
@@ -776,10 +782,8 @@ async def get_training_answer(message: discord.Message) -> str:
     return answer
 
 
-async def get_void_training_answer(message: discord.Message, user_settings: users.User) -> str:
+async def get_void_training_answer_buttons(message: discord.Message, user_settings: users.User) -> str:
     """Returns the answer to a void training question."""
-    from resources import logs
-    logs.logger.info(f'VOID training message: {message.content} - {message.components}')
     all_settings = await settings_db.get_settings()
     answer = ''
     current_time = datetime.utcnow().replace(microsecond=0)
@@ -799,7 +803,6 @@ async def get_void_training_answer(message: discord.Message, user_settings: user
     matches = []
     for row, action_row in enumerate(message.components, start=1):
         for button in action_row.children:
-            logs.logger.info(f'VOID button id: {button.custom_id}')
             if button.label in seal_times_days:
                 matches.append(button.label)
     buttons = {}
@@ -821,6 +824,42 @@ async def get_void_training_answer(message: discord.Message, user_settings: user
         )
 
     return (answer, buttons)
+
+
+async def get_void_training_answer_text(message: discord.Message, user_settings: users.User) -> str:
+    """Returns the answer to a void training question."""
+    all_settings = await settings_db.get_settings()
+    answer = ''
+    current_time = datetime.utcnow().replace(microsecond=0)
+    a16_seal_time = all_settings.get('a16_seal_time', None)
+    a17_seal_time = all_settings.get('a17_seal_time', None)
+    a18_seal_time = all_settings.get('a18_seal_time', None)
+    a19_seal_time = all_settings.get('a19_seal_time', None)
+    a20_seal_time = all_settings.get('a20_seal_time', None)
+    seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+    seal_times_days = []
+    for seal_time in seal_times:
+        if seal_time is not None:
+            seal_time = datetime.fromisoformat(seal_time, )
+            time_left = seal_time - current_time
+            if seal_time > current_time:
+                seal_times_days.append(str(time_left.days))
+    matches = []
+    for row, action_row in enumerate(message.components, start=1):
+        for button in action_row.children:
+            if button.label in seal_times_days:
+                matches.append(button.label)
+    if len(matches) == 1: answer = f'`{button.label.replace("training_", "")}`'
+    if answer == '':
+        for area_no, days in enumerate(seal_times_days, 16):
+            answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
+    if answer == '':
+        command_void_areas = await get_slash_command(user_settings, 'void areas')
+        answer = (
+            f'No idea, lol.\n'
+            f'Please use {command_void_areas} before your next training.'
+        )
+    return answer
 
 
 async def get_megarace_answer(message: discord.Message, slash_command: bool = False) -> str:
@@ -891,9 +930,9 @@ async def call_ready_command(bot: commands.Bot, message: discord.Message, user: 
 async def get_slash_command(user_settings: users.User, command_name: str) -> None:
     """Gets a slash command string or mention depending on user setting"""
     if user_settings.slash_mentions_enabled:
-        return strings.SLASH_COMMANDS_NEW.get(command_name, None)
-    else:
         return strings.SLASH_COMMANDS.get(command_name, None)
+    else:
+        return f'`/{command_name}`'
 
 
 def await_coroutine(coro):

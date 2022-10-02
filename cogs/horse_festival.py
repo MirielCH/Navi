@@ -302,7 +302,11 @@ class HorseFestivalCog(commands.Cog):
                         except:
                             pass
                     else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
+                        guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        if guild_users:
+                            user = guild_users[1]
+                        else:
+                            user = None
                 if user is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in megarace message.', message)
@@ -398,7 +402,11 @@ class HorseFestivalCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in megarace boost message.', message)
                         return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
+                    guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if guild_users:
+                        user = guild_users[0]
+                    else:
+                        user = None
                 if user is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in megarace boost message.', message)
@@ -458,7 +466,11 @@ class HorseFestivalCog(commands.Cog):
                     if user_id is not None:
                         user = await message.guild.fetch_member(user_id)
                     else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
+                        guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        if guild_users:
+                            user = guild_users[0]
+                        else:
+                            user = None
                 if user is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('User not found in megarace helper message.', message)

@@ -44,8 +44,9 @@ class HuntCog(commands.Cog):
                 'você já olhou ao seu redor', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
-                user_id = user_name = embed_user = user_command = last_hunt_mode = user_command_message = None
+                user_id = user_name = user_command = last_hunt_mode = user_command_message = None
                 hardmode = together = alone = old = False
+                embed_users = []
                 interaction_user = await functions.get_interaction_user(message)
                 slash_command = True if interaction_user is not None else False
                 if interaction_user is None:
@@ -61,14 +62,14 @@ class HuntCog(commands.Cog):
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                     try:
-                        embed_user = await message.guild.fetch_member(user_id)
+                        embed_users.append(await message.guild.fetch_member(user_id))
                     except discord.NotFound:
-                        embed_user = None
+                        pass
                 else:
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_user = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
                     if user_name_match is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found in hunt cooldown message.', message)
@@ -131,7 +132,7 @@ class HuntCog(commands.Cog):
                     user_cooldown = (actual_cooldown
                                     * settings.DONOR_COOLDOWNS[user_donor_tier])
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
-                        and interaction_user == embed_user):
+                        and interaction_user in embed_users):
                         time_left_seconds = (time_left.total_seconds()
                                             + (partner_cooldown - user_cooldown)
                                             - time_elapsed.total_seconds()
@@ -390,6 +391,7 @@ class HuntCog(commands.Cog):
                                     f'Had the following error while trying to send the partner alert:\n{error}',
                                     message
                                 )
+                    """
                     if (found_together and partner.hardmode_mode_enabled and not event_mob
                         and not user_settings.hunt_rotation_enabled):
                         hm_message = (
@@ -419,6 +421,7 @@ class HuntCog(commands.Cog):
                             else:
                                 hm_message = f'{user.mention} {hm_message}'
                         await message.channel.send(hm_message)
+                    """
                 # Add reactions
                 if user_settings.reactions_enabled:
                     found_stuff = {

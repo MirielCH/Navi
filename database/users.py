@@ -46,6 +46,8 @@ class User():
     bot_enabled: bool
     clan_name: str
     cmd_cd_visible: bool
+    cmd_inventory_visible: bool
+    cmd_slashboard_visible: bool
     context_helper_enabled: bool
     dnd_mode_enabled: bool
     hardmode_mode_enabled: bool
@@ -65,6 +67,7 @@ class User():
     partner_id: int
     partner_name: str
     pet_helper_enabled: bool
+    pet_helper_icon_mode: bool
     pet_tip_read: bool
     ping_after_message: bool
     guild_quest_prompt_active: bool
@@ -75,9 +78,11 @@ class User():
     ready_up_next_as_timestamp: bool
     ready_up_next_visible: bool
     rubies: int
+    ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
     tracking_enabled: bool
+    training_helper_button_mode: bool
     training_helper_enabled: bool
     user_donor_tier: int
     user_id: int
@@ -111,6 +116,8 @@ class User():
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
         self.cmd_cd_visible = new_settings.cmd_cd_visible
+        self.cmd_inventory_visible = new_settings.cmd_inventory_visible
+        self.cmd_slashboard_visible = new_settings.cmd_slashboard_visible
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
@@ -130,6 +137,7 @@ class User():
         self.partner_id = new_settings.partner_id
         self.partner_name = new_settings.partner_name
         self.pet_helper_enabled = new_settings.pet_helper_enabled
+        self.pet_helper_icon_mode = new_settings.pet_helper_icon_mode
         self.pet_tip_read = new_settings.pet_tip_read
         self.ping_after_message = new_settings.ping_after_message
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
@@ -140,9 +148,11 @@ class User():
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_visible = new_settings.ready_up_next_visible
         self.rubies = new_settings.rubies
+        self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
         self.tracking_enabled = new_settings.tracking_enabled
+        self.training_helper_button_mode = new_settings.training_helper_button_mode
         self.training_helper_enabled = new_settings.training_helper_enabled
         self.user_donor_tier = new_settings.user_donor_tier
 
@@ -220,6 +230,8 @@ class User():
             bot_enabled: bool
             clan_name: str
             cmd_cd_visible: bool
+            cmd_inventory_visible: bool
+            cmd_slashboard_visible: bool
             context_helper_enabled: bool
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
@@ -240,6 +252,7 @@ class User():
             partner_id: int
             partner_name: str
             pet_helper_enabled: bool
+            pet_helper_icon_mode: bool
             pet_tip_read: bool
             ping_after_message: bool
             reactions_enabled: bool
@@ -249,8 +262,11 @@ class User():
             ready_up_next_as_timestamp: bool
             ready_up_next_visible: bool
             rubies: int
+            ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
+            tracking_enabled: bool
+            training_helper_button_mode: bool
             training_helper_enabled: bool
             user_donor_tier: int
         """
@@ -348,6 +364,8 @@ async def _dict_to_user(record: dict) -> User:
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
             cmd_cd_visible = record['cmd_cd_visible'],
+            cmd_inventory_visible = record['cmd_inventory_visible'],
+            cmd_slashboard_visible = record['cmd_slashboard_visible'],
             context_helper_enabled = bool(record['context_helper_enabled']),
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
@@ -368,6 +386,7 @@ async def _dict_to_user(record: dict) -> User:
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
             pet_helper_enabled = record['pet_helper_enabled'],
+            pet_helper_icon_mode = bool(record['pet_helper_icon_mode']),
             pet_tip_read = bool(record['pet_tip_read']),
             ping_after_message = bool(record['ping_after_message']),
             reactions_enabled = bool(record['reactions_enabled']),
@@ -377,8 +396,10 @@ async def _dict_to_user(record: dict) -> User:
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
             rubies = record['rubies'],
+            ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
+            training_helper_button_mode = bool(record['training_helper_button_mode']),
             tracking_enabled = bool(record['tracking_enabled']),
             training_helper_enabled = bool(record['training_helper_enabled']),
             user_donor_tier = record['user_donor_tier'],
@@ -603,6 +624,8 @@ async def _update_user(user: User, **kwargs) -> None:
         bot_enabled: bool
         clan_name: str
         cmd_cd_visible: bool
+        cmd_inventory_visible: bool
+        cmd_slashboard_visible: bool
         context_helper_enabled: bool
         dnd_mode_enabled: bool
         hardmode_mode_enabled: bool
@@ -622,14 +645,18 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_id: int
         partner_name: str
         pet_helper_enabled: bool
+        pet_helper_icon_mode: bool
         ready_as_embed: bool
         ready_embed_color: str
         ready_other_on_top: bool
         ready_up_next_as_timestamp: bool
         ready_up_next_visible: bool
         rubies: int
+        ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
+        tracking_enabled: bool
+        training_helper_button_mode: bool
         training_helper_enabled: bool
         user_donor_tier: int
 
