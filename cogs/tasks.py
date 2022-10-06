@@ -40,12 +40,16 @@ class TasksCog(commands.Cog):
                 for reminder in reminders_list:
                     if reminder.activity == 'custom':
                         reminder_message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.format(message=reminder.message)
+                        if user_settings.dnd_mode_enabled:
+                            message = f'**{user.name}** {reminder_message}\n'
+                        else:
+                            message = f'{user.mention} {reminder_message}\n'
                     else:
                         reminder_message = reminder.message
-                    if user_settings.dnd_mode_enabled:
-                        message = f'{reminder_message.replace("{name}", f"**{user.name}**")}\n'
-                    else:
-                        message = f'{reminder_message.replace("{name}", user.mention)}\n'
+                        if user_settings.dnd_mode_enabled:
+                            message = f'{reminder_message.replace("{name}", f"**{user.name}**")}\n'
+                        else:
+                            message = f'{reminder_message.replace("{name}", user.mention)}\n'
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''

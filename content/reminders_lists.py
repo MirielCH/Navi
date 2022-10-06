@@ -203,13 +203,16 @@ async def command_ready(
             if not alert_settings.visible:
                 ready_event_activities.remove(activity)
                 continue
-            if activity == 'big-arena' and not 'arena' in ready_command_activities:
+            if (activity == 'big-arena' and user_settings.alert_arena.enabled
+                and not 'arena' in ready_command_activities):
+                    ready_event_activities.remove(activity)
+                    continue
+            elif (activity == 'horse-race' and user_settings.alert_horse_breed.enabled
+                  and not 'horse' in ready_command_activities):
                 ready_event_activities.remove(activity)
                 continue
-            elif activity == 'horse-race' and not 'horse' in ready_command_activities:
-                ready_event_activities.remove(activity)
-                continue
-            elif activity == "minintboss" and not 'dungeon-miniboss' in ready_command_activities:
+            elif (activity == "minintboss" and user_settings.alert_dungeon_miniboss.enabled
+                  and not 'dungeon-miniboss' in ready_command_activities):
                 ready_event_activities.remove(activity)
                 continue
             else:

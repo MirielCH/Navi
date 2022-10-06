@@ -250,18 +250,14 @@ class TrainingCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
                 if user is None:
-                    user_name_match = re.search(r"\*\*(.+?)\*\*", message_content)
-                    if user_name_match:
-                        user_name = user_name_match.group(1)
-                        user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_ULTRAINING_BUY_TRAINING_RESET,
-                                user_name=user_name
-                            )
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, regex.COMMAND_ULTRAINING_BUY_TRAINING_RESET
                         )
-                    if not user_name_match or user_command_message is None:
+                    )
+                    if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in training reset message.', message)
+                        await errors.log_error('User not found for training reset message.', message)
                         return
                     user = user_command_message.author
                 try:

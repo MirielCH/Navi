@@ -788,7 +788,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
         f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
         f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
-        f'{emojis.DETAIL} If timestamps are inaccurate, set your local time correctly\n'
+        f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     command_reminders = (
@@ -905,7 +905,8 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         color = settings.EMBED_COLOR,
         title = f'{ctx.guild.name.upper()} SERVER SETTINGS',
         description = (
-            f'_Serverwide settings._'
+            f'_Serverwide settings._\n'
+            f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
         )
     )
     embed.add_field(name='PREFIX', value=prefix, inline=False)

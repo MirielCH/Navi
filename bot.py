@@ -81,6 +81,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
 EXTENSIONS = [
         'cogs.adventure',
         'cogs.arena',
+        'cogs.auto_flex',
         'cogs.cooldowns',
         'cogs.clan',
         'cogs.daily',

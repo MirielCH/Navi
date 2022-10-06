@@ -321,18 +321,18 @@ class QuestCog(commands.Cog):
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
                 if quest_declined:
-                    time_left = timedelta(hours=1)
+                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest-decline')
                 else:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
-                    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
-                    if cooldown.donor_affected:
-                        time_left_seconds = (actual_cooldown
-                                            * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                            - time_elapsed.total_seconds())
-                    else:
-                        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                    time_left = timedelta(seconds=time_left_seconds)
+                user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
+                if cooldown.donor_affected:
+                    time_left_seconds = (actual_cooldown
+                                        * settings.DONOR_COOLDOWNS[user_donor_tier]
+                                        - time_elapsed.total_seconds())
+                else:
+                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

@@ -59,6 +59,10 @@ class DuelCog(commands.Cog):
                         await errors.log_error('Interaction user not found for duel cooldown message.', message)
                         return
                     interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -73,10 +77,6 @@ class DuelCog(commands.Cog):
                         await errors.log_error('Embed user not found in duel cooldown message.', message)
                         return
                 if interaction_user not in embed_users: return
-                try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
-                except exceptions.FirstTimeUserError:
-                    return
                 if not user_settings.bot_enabled or not user_settings.alert_duel.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'duel')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
