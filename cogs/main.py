@@ -56,7 +56,7 @@ class MainCog(commands.Cog):
         async def send_error() -> None:
             """Sends error message as embed"""
             embed = discord.Embed(title='An error occured')
-            embed.add_field(name='Command', value=f'`{command_name}`', inline=False)
+            embed.add_field(name='Command', value=f'{command_name}', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.respond(embed=embed, ephemeral=True)
 
