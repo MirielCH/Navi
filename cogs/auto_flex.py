@@ -15,6 +15,7 @@ FLEX_TITLES = {
     'work_superfish': 'How much is the fish?',
     'work_watermelon': 'One in a melon',
     'forge_cookie': 'Caution! Hot cookie!',
+    'lb_omega': 'Ooooh, shiny!',
     'lb_omega_partner': 'Oops, wrong recipient, lol',
     'lb_godly': 'Oh hello, what a nice lootbox',
     'lb_godly_partner': 'Best gift ever',
@@ -22,6 +23,8 @@ FLEX_TITLES = {
     'lb_void_partner': 'I don\'t even know what to say',
     'lb_edgy_ultra': 'What could an EDGY lootbox ever be worth',
     'lb_godly_tt': 'There\'s luck, and then there\'s this',
+    'pets_catch_epic': 'EPIC pet incoming',
+    'pets_catch_tt': 'K9, is that you?',
     'pr_ascension': 'Up up and away',
     'event_lb': 'They did what now?',
     'event_enchant': 'Twice the fun',
@@ -35,6 +38,7 @@ FLEX_THUMBNAILS = {
     'work_superfish': 'https://media.tenor.com/B6dwDGql374AAAAC/mcdonald-chris-mcdonald.gif',
     'work_watermelon': 'https://media.tenor.com/mAxfGDKXrZUAAAAC/bunnies-cute.gif',
     'forge_cookie': 'https://media.tenor.com/YP5Xv8Sa45IAAAAC/cookie-monster-awkward.gif',
+    'lb_omega': 'https://c.tenor.com/8yMrP1Cs7ykAAAAC/ninjala-ninjala-season6trailer.gif',
     'lb_omega_partner': 'https://c.tenor.com/l0wNXZN58S8AAAAC/delivery-kick.gif',
     'lb_godly': 'https://c.tenor.com/zBe7Ew1lzPYAAAAi/tkthao219-bubududu.gif',
     'lb_godly_partner': 'https://media.tenor.com/NvP2dNkQWtEAAAAC/i-got-us-a-box-anthony-mennella.gif',
@@ -42,6 +46,8 @@ FLEX_THUMBNAILS = {
     'lb_void_partner': 'https://media.tenor.com/kumodwVv1bcAAAAC/patrick-the-maniacs-in-mail-box.gif',
     'lb_edgy_ultra': 'https://c.tenor.com/clnoM8TeSxcAAAAC/wait-what-unbelievable.gif',
     'lb_godly_tt': 'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
+    'pets_catch_epic': 'https://media.tenor.com/WnprYvrvNp8AAAAC/cat-kitty.gif',
+    'pets_catch_tt': 'https://media.tenor.com/7LMaSfhq9TIAAAAC/flying-omw.gif',
     'pr_ascension': 'https://media.tenor.com/wfma4CqwxCwAAAAC/railgun-misaka-mikoto.gif',
     'event_lb': 'https://media.tenor.com/wn2_Qq6flogAAAAC/magical-magic.gif',
     'event_enchant': 'https://c.tenor.com/gAuPzxRCVw8AAAAC/link-dancing.gif',
@@ -65,8 +71,9 @@ class AutoFlexCog(commands.Cog):
             title = FLEX_TITLES[event],
             description = description,
         )
-        embed.set_author(icon_url=user.display_avatar.url, name=f'{user.name}\'s auto flex')
+        embed.set_author(icon_url=user.display_avatar.url, name=f'{user.name} got lucky!')
         embed.set_thumbnail(url=FLEX_THUMBNAILS[event])
+        embed.set_footer(text='Use \'/settings user\' to enable or disable auto flex.')
         auto_flex_channel = await functions.get_discord_channel(self.bot, guild_settings.auto_flex_channel_id)
         if auto_flex_channel is None:
             await functions.add_warning_reaction(message)
@@ -200,6 +207,57 @@ class AutoFlexCog(commands.Cog):
                     f'Too bad the `ascended` command is gone, it was so much fun...'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'pr_ascend', description)
+
+            # Pets catch
+            search_strings = [
+                "**dog** is now following", #English, dog
+                "**cat** is now following", #English, cat
+                "**dragon** is now following", #English, dragon
+            ]
+            if any(search_string in embed_field0_value.lower() for search_string in search_strings
+                and ('epic**' in embed_field0_value.lower() or 'time traveler**' in embed_field0_value.lower())):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    search_patterns = [
+                        r'\*\*(\w+?)\*\* is now following \*\*(\w+?)\*\*', #English
+                    ]
+                    pet_data_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
+                    if pet_data_match:
+                        pet_type = pet_data_match.group(1)
+                        user_name = pet_data_match.group(2)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, regex.COMMAND_TRAINING,
+                                user_name=user_name
+                            )
+                        )
+                    if not pet_data_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Pet type or user name not found in auto flex pets catch message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                if 'time traveler' in embed_field0_value.lower():
+                    event = 'pets_catch_tt'
+                    description = (
+                        f'**{user.name}** took a stroll when a {pet_type.lower()} popped out of nothingness.\n'
+                        f'Turns out it\'s a {emojis.SKILL_TIME_TRAVELER} **time traveler** {pet_type.lower()}!\n'
+                        f'Wonder if the doctor will come after it?'
+                    )
+                else:
+                    event = 'pets_catch_epic'
+                    description = (
+                        f'**{user.name}** caught a {pet_type.lower()}.\n'
+                        f'What? Not very exciting? HA, but this was an {emojis.SKILL_EPIC} **EPIC** {pet_type.lower()}!\n'
+                        f'What do you say now?'
+                    )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
 
 
@@ -397,6 +455,7 @@ class AutoFlexCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
                 lootboxes_user = {
+                    'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                 }
@@ -470,6 +529,7 @@ class AutoFlexCog(commands.Cog):
                 if not lootbox_user_found and not lootbox_partner_found: return
 
                 events_user = {
+                    'OMEGA lootbox': 'lb_omega',
                     'GODLY lootbox': 'lb_godly',
                     'VOID lootbox': 'lb_void',
                 }
