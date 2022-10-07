@@ -402,6 +402,17 @@ MONSTERS_HUNT = (
     '**Horslime**',
 )
 
+MONSTERS_HUNT_TOP = (
+    '**EPIC NPC** pretending to be a **WOLF**', #English
+    '**NPC ÉPICO** pretendiendo ser un **WOLF**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **WOLF**', #Portuguese
+    '**EPIC NPC** pretending to be a **ZOMBIE**', #English
+    '**NPC ÉPICO** pretendiendo ser un **ZOMBIE**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **ZOMBIE**', #Portuguese
+    '**EPIC NPC** pretending to be a **UNICORN**', #English
+    '**NPC ÉPICO** pretendiendo ser un **UNICORN**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **UNICORN**', #Portuguese
+)
 
 TRACKED_COMMANDS = (
     'hunt',
