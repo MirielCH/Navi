@@ -35,6 +35,13 @@ FLEX_TITLES = {
     'event_heal': strings.FLEX_EVENT_HEAL,
     'event_training': strings.FLEX_EVENT_TRAINING,
     'coinflip_event': strings.FLEX_COINFLIP_EVENT,
+    'time_travel_1': strings.FLEX_TIME_TRAVEL_1,
+    'time_travel_3': strings.FLEX_TIME_TRAVEL_3,
+    'time_travel_5': strings.FLEX_TIME_TRAVEL_5,
+    'time_travel_10': strings.FLEX_TIME_TRAVEL_10,
+    'time_travel_25': strings.FLEX_TIME_TRAVEL_25,
+    'time_travel_50': strings.FLEX_TIME_TRAVEL_50,
+    'time_travel_100': strings.FLEX_TIME_TRAVEL_100,
 }
 
 FLEX_THUMBNAILS = {
@@ -44,7 +51,7 @@ FLEX_THUMBNAILS = {
     'work_superfish': 'https://media.tenor.com/B6dwDGql374AAAAC/mcdonald-chris-mcdonald.gif',
     'work_watermelon': 'https://media.tenor.com/mAxfGDKXrZUAAAAC/bunnies-cute.gif',
     'forge_cookie': 'https://media.tenor.com/YP5Xv8Sa45IAAAAC/cookie-monster-awkward.gif',
-    'lb_omega_multiple': 'https://media.tenor.com/Uakvel4SlHcAAAAd/boxes-moving.gif',
+    'lb_omega_multiple': 'https://media.tenor.com/gHygBs_JkKwAAAAi/moving-boxes.gif',
     'lb_omega_no_hardmode': 'https://media.tenor.com/JQIXRoPBLqYAAAAC/impressive-20th-century.gif',
     'lb_omega_partner': 'https://c.tenor.com/l0wNXZN58S8AAAAC/delivery-kick.gif',
     'lb_godly': 'https://c.tenor.com/zBe7Ew1lzPYAAAAi/tkthao219-bubududu.gif',
@@ -62,6 +69,13 @@ FLEX_THUMBNAILS = {
     'event_heal': 'https://media.tenor.com/lh60y7i9SeQAAAAC/peachmad-peachandgoma.gif',
     'event_training': 'https://media.tenor.com/YAaId6OVgFUAAAAC/baby-up.gif',
     'coinflip_event': 'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
+    'time_travel_1': 'https://media.tenor.com/7n7-MMKE8HUAAAAC/im-a-time-traveler-time-traveler.gif',
+    'time_travel_3': 'https://media.tenor.com/XATWkMEOrZIAAAAC/doctor-dance-doctor-who-dances.gif',
+    'time_travel_5': 'https://media.tenor.com/GctGuDyWlOMAAAAC/back-to-the-future-back-to-the-past.gif',
+    'time_travel_10': 'https://media.tenor.com/pDdh_ISRzZIAAAAC/doctor-who-dr-who.gif',
+    'time_travel_25': 'https://media.tenor.com/mh75FCw3VpoAAAAC/avengers-end-game-black-widow.gif',
+    'time_travel_50': 'https://media.tenor.com/n-vLx1Q_QBQAAAAC/fn2187.gif',
+    'time_travel_100': 'https://media.tenor.com/J82kuX8dFysAAAAC/blue-spiral.gif',
 }
 
 
@@ -81,7 +95,8 @@ class AutoFlexCog(commands.Cog):
             title = title,
             description = description,
         )
-        embed.set_author(icon_url=user.display_avatar.url, name=f'{user.name} got lucky!')
+        author = f'{user.name} is advancing!' if 'time_travel' in event else f'{user.name} got lucky!'
+        embed.set_author(icon_url=user.display_avatar.url, name=author)
         embed.set_thumbnail(url=FLEX_THUMBNAILS[event])
         embed.set_footer(text='Use \'/settings user\' to enable or disable auto flex.')
         auto_flex_channel = await functions.get_discord_channel(self.bot, guild_settings.auto_flex_channel_id)
@@ -95,6 +110,7 @@ class AutoFlexCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -104,7 +120,7 @@ class AutoFlexCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.OWNER_ID]: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_title = embed_field0_name = embed_field0_value = embed_autor = icon_url = ''
@@ -310,6 +326,141 @@ class AutoFlexCog(commands.Cog):
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'coinflip_event',
                                                   description)
 
+            # Update time travel count
+            search_strings = [
+                "— profile", #All languages
+                "— progress", #All languages
+            ]
+            if any(search_string in embed_autor.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, regex.COMMAND_PROFILE_PROGRESS,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in auto flex profile or progress message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                if len(embed_field0_value.split('\n')) < 4:
+                    time_travel_count = 0
+                else:
+                    search_patterns = [
+                        'time travels\*\*: (.+?)$', #English
+                        'el tiempo\*\*: (.+?)$', #Spanish
+                        'no tempo\*\*: (.+?)$', #Portuguese
+                    ]
+                    tt_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
+                    if not tt_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Time travel count not found in profile or progress message.', message)
+                        return
+                    time_travel_count = int(tt_match.group(1))
+                await user_settings.update(time_travel_count=time_travel_count)
+
+            # Time travel
+            search_strings = [
+                "has traveled in time", #English
+                'viajou no tempo', #Spanish
+                'tempo de viagem', #Portuguese
+            ]
+            if any(search_string in embed_description.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(r'\*\*(.+?)\*\* has', embed_description)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, regex.COMMAND_TIME_TRAVEL,
+                                user_name=user_name
+                            )
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in auto flex time travel message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if (not user_settings.bot_enabled or not user_settings.auto_flex_enabled
+                    or user_settings.time_travel_count is None): return
+                added_tts = 1
+                extra_tt_match = re.search(r'\+(\d+?) <', embed_description)
+                if extra_tt_match: added_tts += int(extra_tt_match.group(1))
+                time_travel_count_old = user_settings.time_travel_count
+                time_travel_count_new = time_travel_count_old + added_tts
+                await user_settings.update(time_travel_count=time_travel_count_new)
+                if time_travel_count_old < 1 and time_travel_count_new >= 1:
+                    event = 'time_travel_1'
+                    description = (
+                        f'**{user.name}** just reached their very **first** {emojis.TIME_TRAVEL} **time travel**!\n'
+                        f'Congratulations, we are expecting great things of you!'
+                    )
+                elif time_travel_count_old < 3 and time_travel_count_new >= 3:
+                    event = 'time_travel_3'
+                    description = (
+                        f'**{user.name}** did it again (and again) and just reached {emojis.TIME_TRAVEL} **TT 3**!\n'
+                        f'I think they\'re getting addicted.'
+                    )
+                elif time_travel_count_old < 5 and time_travel_count_new >= 5:
+                    event = 'time_travel_5'
+                    description = (
+                        f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
+                        f'The boss in DD13 can\'t wait to see you.'
+                    )
+                elif time_travel_count_old < 10 and time_travel_count_new >= 10:
+                    event = 'time_travel_10'
+                    description = (
+                        f'**{user.name}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
+                        f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
+                    )
+                elif time_travel_count_old < 25 and time_travel_count_new >= 25:
+                    event = 'time_travel_25'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
+                        f'Good news: Welcome to the endgame!\n'
+                        f'Bad news: Hope you like dragon scale farming.'
+                    )
+                elif time_travel_count_old < 50 and time_travel_count_new >= 50:
+                    event = 'time_travel_50'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 50**!\n'
+                        f'Sadly they went blind after seeing the profile background they got as a reward.'
+                    )
+                elif time_travel_count_old < 100 and time_travel_count_new >= 100:
+                    event = 'time_travel_100'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
+                        f'Damn, you must really like this game. I just hope you don\'t expect any more flexes after this.\n'
+                        f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
+                    )
+                else:
+                    return
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
+                                                  description)
 
         if not message.embeds:
             message_content = message.content
@@ -886,6 +1037,88 @@ class AutoFlexCog(commands.Cog):
                     f'**{amount}** {emojis.DARK_ENERGY} **dark energy** while doing that.'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_training',
+                                                  description)
+
+            # Time capsule
+            search_strings = [
+                "a portal was opened", #English
+                "se abrió un portal", #Spanish
+                "um portal foi aberto", #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(r'\*\*(.+?)\*\* breaks', message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await functions.get_message_from_channel_history(
+                                message.channel, regex.COMMAND_TIME_CAPSULE,
+                                user_name=user_name
+                            )
+                        )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in auto flex time capsule message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if (not user_settings.bot_enabled or not user_settings.auto_flex_enabled
+                    or user_settings.time_travel_count is None): return
+                time_travel_count_old = user_settings.time_travel_count
+                await user_settings.update(time_travel_count=time_travel_count_old + 1)
+                if time_travel_count_old < 1 and time_travel_count_new >= 1:
+                    event = 'time_travel_1'
+                    description = (
+                        f'**{user.name}** just reached their very **first** {emojis.TIME_TRAVEL} **time travel**!\n'
+                        f'Congratulations, we are expecting great things of you!'
+                    )
+                elif time_travel_count_old < 3 and time_travel_count_new >= 3:
+                    event = 'time_travel_3'
+                    description = (
+                        f'**{user.name}** did it again (and again) and just reached {emojis.TIME_TRAVEL} **TT 3**!\n'
+                        f'I think they\'re getting addicted.'
+                    )
+                elif time_travel_count_old < 5 and time_travel_count_new >= 5:
+                    event = 'time_travel_5'
+                    description = (
+                        f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
+                        f'The boss in DD13 can\'t wait to see you.'
+                    )
+                elif time_travel_count_old < 10 and time_travel_count_new >= 10:
+                    event = 'time_travel_10'
+                    description = (
+                        f'**{user.name}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
+                        f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
+                    )
+                elif time_travel_count_old < 25 and time_travel_count_new >= 25:
+                    event = 'time_travel_25'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
+                        f'Good news: Welcome to the endgame!\n'
+                        f'Bad news: Hope you like dragon scale farming.'
+                    )
+                elif time_travel_count_old < 50 and time_travel_count_new >= 50:
+                    event = 'time_travel_50'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 50**!\n'
+                        f'Sadly they went blind after seeing the profile background they got as a reward.'
+                    )
+                elif time_travel_count_old < 100 and time_travel_count_new >= 100:
+                    event = 'time_travel_100'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
+                        f'Damn, you must really like this game. I just hope you don\'t expect any more flexes after this.\n'
+                        f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
+                    )
+                else:
+                    return
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)
 
 # Initialization

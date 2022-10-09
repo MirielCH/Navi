@@ -82,6 +82,7 @@ class User():
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
+    time_travel_count: int
     tracking_enabled: bool
     training_helper_button_mode: bool
     training_helper_enabled: bool
@@ -153,6 +154,7 @@ class User():
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
+        self.time_travel_count = new_settings.time_travel_count
         self.tracking_enabled = new_settings.tracking_enabled
         self.training_helper_button_mode = new_settings.training_helper_button_mode
         self.training_helper_enabled = new_settings.training_helper_enabled
@@ -268,6 +270,7 @@ class User():
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
+            time_travel_count: int
             tracking_enabled: bool
             training_helper_button_mode: bool
             training_helper_enabled: bool
@@ -403,6 +406,7 @@ async def _dict_to_user(record: dict) -> User:
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
+            time_travel_count = record['time_travel_count'],
             training_helper_button_mode = bool(record['training_helper_button_mode']),
             tracking_enabled = bool(record['tracking_enabled']),
             training_helper_enabled = bool(record['training_helper_enabled']),
@@ -660,6 +664,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
+        time_travel_count: int
         tracking_enabled: bool
         training_helper_button_mode: bool
         training_helper_enabled: bool

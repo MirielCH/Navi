@@ -742,3 +742,59 @@ FLEX_COINFLIP_EVENT = [
     'Why is there a flex for this?',
     'MY COOOIIIINN NOOOOOOOOOOOOOOOOOOO',
 ]
+
+FLEX_TIME_TRAVEL_1 = [
+    'First time\'s always special',
+    'Off to a great start!',
+    'It\'s just a leap of faith',
+    'First year student!',
+    'First of many',
+]
+
+FLEX_TIME_TRAVEL_3 = [
+    'Three? Three!',
+    'Third year student!',
+    'Hardmode time, baby',
+    'Dungeon 13, coming for you!',
+    'Thrice the fun',
+]
+
+FLEX_TIME_TRAVEL_5 = [
+    'Five year student!',
+    'I hope you\'re not colorblind',
+    'Hardmode all the things!',
+    'Five is the... eh... something number?',
+    'Still playing, eh?',
+]
+
+FLEX_TIME_TRAVEL_10 = [
+    'Ten year stud... uh, wait, no',
+    'Hope you don\'t plan to hardmode in A15',
+    'Someone tried D15 without a bot once. They\'re still at it.',
+    'Out of school',
+    'Next stop: 25!',
+]
+
+FLEX_TIME_TRAVEL_25 = [
+    'Endgame achieved',
+    'The sky\'s the limit!',
+    'No mo mere time travels. We\'re jumping now, boyz.',
+    'GG EZ',
+    'Twenty bloody five',
+]
+
+FLEX_TIME_TRAVEL_50 = [
+    '50 TTs and all I got was this lousy background',
+    'Still at it! (for some reason)',
+    'Loving dragon scales, I swear!',
+    'How do you do, fellow kids',
+    'Age is just a number',
+]
+
+FLEX_TIME_TRAVEL_100 = [
+    'Hello, I would like my life back',
+    'Next up: World domination',
+    'Another beautiful profile background, oh thank you',
+    'Why am I still playing this',
+    'BOW BEFORE ME PEASANTS',
+]
