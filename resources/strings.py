@@ -554,3 +554,191 @@ SLASH_COMMANDS_NAVI = {
     'slashboard': '</slashboard:1026046376527806494>',
     'stats': '</stats:1017853591475724349>',
 }
+
+
+# Auto flex headlines
+FLEX_WORK_HYPERLOG = [
+    'TIMBER!',
+    'Hyperino',
+    'Justin, that you?',
+    'I swear this happened',
+]
+
+FLEX_WORK_ULTRALOG = [
+    'It\'s not a dream!',
+    'This sounds dangerous',
+    'That\'s not how you use a chainsaw',
+    'Deforesting in progress',
+    'Logging 101',
+]
+
+FLEX_WORK_ULTIMATELOG = [
+    'Wood you log at that!',
+    'What do you even need that stuff for?',
+    'Chainsaw master',
+    'Blinding logs',
+    'Can\'t even dismantle it, lol',
+]
+
+FLEX_WORK_SUPERFISH = [
+    'How much is the fish?',
+    'Goodbye and thank you for the fish',
+    'Nice fish, man',
+    'Is fishing even allowed here?',
+    'Better than an old boot, I guess',
+]
+
+FLEX_WORK_WATERMELON = [
+    'One in a melon',
+    'Rare doesn\'t mean useful, lol',
+    'Anyone know what to do with these?',
+    'Fruit robbery',
+    'Deliciously useless',
+]
+
+FLEX_FORGE_COOKIE = [
+    'Caution! Hot cookie!',
+    'You sure you wanna eat that?',
+    'What a weird recipe',
+    'Next time just use an oven',
+    'Someone say cookie?',
+]
+
+FLEX_LB_OMEGA_MULTIPLE = [
+    'Caution! T10 horse at work!',
+    'Horse power',
+    'One wasn\'t enough apparently',
+    'Now that\'s just greedy',
+    'How is this even fair?',
+]
+
+FLEX_LB_OMEGA_NOHARDMODE = [
+    'Now this is how you find an OMEGA',
+    'Finally some proper lootboxing',
+    'Take note, sweat lords',
+    'Who even needs harmode?',
+    'Hardmode is for losers',
+]
+
+FLEX_LB_OMEGA_PARTNER = [
+    'Oops, wrong recipient, lol',
+    'Mailman, you had one job',
+    '"I am so happy for you, dear partner"',
+    'WHAT ABOUT ME THO?',
+    'Not jealous at all',
+]
+
+FLEX_LB_GODLY = [
+    'Oh hello, what a nice lootbox',
+    'Some heavenly luck right here',
+    'Oh hey, how did that happen?',
+    'Did someone lose a box?',
+    'Oooohh... I\'ll take that, thank you',
+]
+
+FLEX_LB_GODLY_PARTNER = [
+    'Best gift ever',
+    '"Honey... I WANT IT BACK!"',
+    '"MAILMAN... WE NEED TO TALK"',
+    'True love',
+    'Why does this never happen to ME?',
+]
+
+FLEX_LB_VOID = [
+    'Now this is just hacking',
+    'No more luck for you this year',
+    'Is this even legal?',
+    'Oh hey, it\'s Gladstone Gander',
+]
+
+FLEX_LB_VOID_PARTNER = [
+    'I don\'t even know what to say',
+    'Noone was ever supposed to see this line',
+    'That\'s it, there\'s nothing else to achieve',
+    'Bloody hell',
+]
+
+FLEX_EDGY_ULTRA = [
+    'What could an EDGY ever be worth?',
+    'I didn\'t even know this was possible, lol',
+    'It\'s an achievement, right?',
+    'Feels like christmas',
+    'How did that end up in there?',
+]
+
+FLEX_GODLY_TT = [
+    'There\'s luck, and then there\'s THIS',
+    'Jeez, now that is something',
+    'Don\'t get jealous folks... or do',
+    'This should be a bannable offense',
+    'WE ARE ALL HAPPY FOR YOU AND NOT AT ALL JEALOUS',
+]
+
+FLEX_PETS_CATCH_EPIC = [
+    'EPIC pet incoming!',
+    'What a nice kitty!',
+    'Can I still pet it, tho?',
+    'Great, and others can\'t even get one in fusions',
+    'How many abandoned pets did this take?',
+]
+
+FLEX_PETS_CATCH_TT = [
+    'K9, is that you?',
+    'This can happen, yes',
+    'Lost companion',
+    'Wonder how old it is...',
+    'Always close your phone box door',
+]
+
+FLEX_PR_ASCENSION = [
+    'Up up and away',
+    'Goodbye peasants!',
+    'We demand a giveaway!',
+]
+
+FLEX_EVENT_LB = [
+    'They did what now?',
+    'Unauthorized magic',
+    'Mr Ollivander approves',
+    'I guess that\'s one way of getting an OMEGA',
+    'Hey, gimme back my wand!',
+]
+
+FLEX_EVENT_ENCHANT = [
+    'Twice the fun',
+    'Can\'t even enchant properly, lol',
+    'That\'s what happens when you use Ron\'s wand',
+    'Well, at least it didn\'t explode',
+]
+
+FLEX_EVENT_FARM = [
+    'Totally believable level up story',
+    'The what now?',
+    'This sounds like a hacking excuse',
+    'You call this farming?',
+    'Where did you buy those seeds again?',
+]
+
+FLEX_EVENT_HEAL = [
+    'Very mysterious',
+    'OH NO the poor guy',
+    'So wait, this happened while HEALING?',
+    'You sure that was a healing potion you drank there?',
+    'Was that in Gotham by any chance?',
+]
+
+FLEX_EVENT_TRAINING = [
+    'Who even needs a plane',
+    'Yes, that\'s how I go to school all the time',
+    'Tinkerbell? Is it you?',
+    'Where did those even come from?',
+    'So we call this "training" now?',
+]
+
+FLEX_COINFLIP_EVENT = [
+    'Uh... how did that happen?',
+    'Wait. Where\'s my coin?',
+    'I didn\'t even know this could happen, lol',
+    'Why is there a flex for this?',
+    'MY COOOIIIINN NOOOOOOOOOOOOOOOOOOO',
+]

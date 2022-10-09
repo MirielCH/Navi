@@ -1,5 +1,6 @@
 # auto_flex.py
 
+import random
 import re
 
 import discord
@@ -10,30 +11,30 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 FLEX_TITLES = {
-    'work_hyperlog': 'TIMBER!',
-    'work_ultimatelog': 'Wood you log at that!',
-    'work_ultralog': 'It\'s not a dream!',
-    'work_superfish': 'How much is the fish?',
-    'work_watermelon': 'One in a melon',
-    'forge_cookie': 'Caution! Hot cookie!',
-    'lb_omega_multiple': 'Caution! T10 horse at work!',
-    'lb_omega_no_hardmode': 'Now this is how you find an OMEGA',
-    'lb_omega_partner': 'Oops, wrong recipient, lol',
-    'lb_godly': 'Oh hello, what a nice lootbox',
-    'lb_godly_partner': 'Best gift ever',
-    'lb_void': 'Now this is just hacking',
-    'lb_void_partner': 'I don\'t even know what to say',
-    'lb_edgy_ultra': 'What could an EDGY lootbox ever be worth',
-    'lb_godly_tt': 'There\'s luck, and then there\'s this',
-    'pets_catch_epic': 'EPIC pet incoming',
-    'pets_catch_tt': 'K9, is that you?',
-    'pr_ascension': 'Up up and away',
-    'event_lb': 'They did what now?',
-    'event_enchant': 'Twice the fun',
-    'event_farm': 'Totally believable level up story',
-    'event_heal': 'Very mysterious',
-    'event_training': 'Wingman',
-    'coinflip_event': 'How did that happen?',
+    'work_hyperlog': strings.FLEX_WORK_HYPERLOG,
+    'work_ultimatelog': strings.FLEX_WORK_ULTIMATELOG,
+    'work_ultralog': strings.FLEX_WORK_ULTRALOG,
+    'work_superfish': strings.FLEX_WORK_SUPERFISH,
+    'work_watermelon': strings.FLEX_WORK_WATERMELON,
+    'forge_cookie': strings.FLEX_FORGE_COOKIE,
+    'lb_omega_multiple': strings.FLEX_LB_OMEGA_MULTIPLE,
+    'lb_omega_no_hardmode': strings.FLEX_LB_OMEGA_NOHARDMODE,
+    'lb_omega_partner': strings.FLEX_LB_OMEGA_PARTNER,
+    'lb_godly': strings.FLEX_LB_GODLY,
+    'lb_godly_partner': strings.FLEX_LB_GODLY_PARTNER,
+    'lb_void': strings.FLEX_LB_VOID,
+    'lb_void_partner': strings.FLEX_LB_VOID_PARTNER,
+    'lb_edgy_ultra': strings.FLEX_EDGY_ULTRA,
+    'lb_godly_tt': strings.FLEX_GODLY_TT,
+    'pets_catch_epic': strings.FLEX_PETS_CATCH_EPIC,
+    'pets_catch_tt': strings.FLEX_PETS_CATCH_TT,
+    'pr_ascension': strings.FLEX_PR_ASCENSION,
+    'event_lb': strings.FLEX_EVENT_LB,
+    'event_enchant': strings.FLEX_EVENT_ENCHANT,
+    'event_farm': strings.FLEX_EVENT_FARM,
+    'event_heal': strings.FLEX_EVENT_HEAL,
+    'event_training': strings.FLEX_EVENT_TRAINING,
+    'coinflip_event': strings.FLEX_COINFLIP_EVENT,
 }
 
 FLEX_THUMBNAILS = {
@@ -74,9 +75,10 @@ class AutoFlexCog(commands.Cog):
                                      description: str) -> None:
         """Sends a flex embed to the auto flex channel"""
         description = f'{description}\n\n[Check it out]({message.jump_url})'
+        title = random.choice(FLEX_TITLES[event])
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
-            title = FLEX_TITLES[event],
+            title = title,
             description = description,
         )
         embed.set_author(icon_url=user.display_avatar.url, name=f'{user.name} got lucky!')
@@ -229,7 +231,7 @@ class AutoFlexCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     search_patterns = [
-                        r'\*\*(\w+?)\*\* is now following \*\*(\w+?)\*\*', #English
+                        r'\*\*(\w+?)\*\* is now following \*\*(.+?)\*\*!', #English
                     ]
                     pet_data_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
                     if pet_data_match:
@@ -325,8 +327,12 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'(\w+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__)', #English
-                    r'(\w+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)\n', #Spanish, Portuguese
+                    r'\?\? \*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTRA log
+                    r'!!1 (.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English HYPER log
+                    r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTIMATE log, SUPER fish, watermelon
+                    r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
+                    r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
+                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTIMATE log, SUPER fish, watermelon
                 ]
                 item_events = {
                     'hyper log': 'work_hyperlog',
@@ -404,7 +410,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(\w+?)\*\* press', #English
+                    r'\*\*(.+?)\*\* press', #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
@@ -670,7 +676,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(\w+?)\*\* uses', #English
+                    r'\*\*(.+?)\*\* uses', #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
@@ -713,7 +719,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(\w+?)\*\* tries', #English
+                    r'\*\*(.+?)\*\* tries', #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
@@ -755,7 +761,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(\w+?)\*\* hits', #English
+                    r'\*\*(.+?)\*\* hits', #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
@@ -798,7 +804,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(\w+?)\*\* killed', #English
+                    r'\*\*(.+?)\*\* killed', #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
@@ -840,7 +846,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r"\*\*(\w+?)\*\*'s back", #English
+                    r"in \*\*(.+?)\*\*'s back", #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
