@@ -32,6 +32,7 @@ FLEX_TITLES = {
     'event_enchant': 'Twice the fun',
     'event_farm': 'Totally believable level up story',
     'event_heal': 'Very mysterious',
+    'event_training': 'Wingman',
     'coinflip_event': 'How did that happen?',
 }
 
@@ -58,6 +59,7 @@ FLEX_THUMBNAILS = {
     'event_enchant': 'https://c.tenor.com/gAuPzxRCVw8AAAAC/link-dancing.gif',
     'event_farm': 'https://media.tenor.com/z1ru-IqnJFoAAAAC/earthquake-four-arms.gif',
     'event_heal': 'https://media.tenor.com/lh60y7i9SeQAAAAC/peachmad-peachandgoma.gif',
+    'event_training': 'https://media.tenor.com/YAaId6OVgFUAAAAC/baby-up.gif',
     'coinflip_event': 'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
 }
 
@@ -241,7 +243,8 @@ class AutoFlexCog(commands.Cog):
                         )
                     if not pet_data_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Pet type or user name not found in auto flex pets catch message.', message)
+                        await errors.log_error('Pet type or user name not found in auto flex pets catch message.',
+                                               message)
                         return
                     user = user_command_message.author
                 try:
@@ -374,8 +377,8 @@ class AutoFlexCog(commands.Cog):
                     )
                 elif event == 'work_watermelon':
                     description = (
-                        f'**{user_name}** got tired of apples and bananas and stole **{item_amount:,}** {emojis.WATERMELON} '
-                        f'**watermelons** instead.\n'
+                        f'**{user_name}** got tired of apples and bananas and stole **{item_amount:,}** '
+                        f'{emojis.WATERMELON} **watermelons** instead.\n'
                         f'They should be ashamed. And also make cocktails for everyone.'
                     )
                 elif event == 'work_superfish':
@@ -431,7 +434,8 @@ class AutoFlexCog(commands.Cog):
                     f'Oh boy, oh boy, someone is going to try to beat the EPIC NPC today!\n'
                     f'Unless **{user_name}** just crafted a {emojis.GODLY_COOKIE} **GODLY cookie** for fun. You never know.'
                 )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'forge_cookie', description)
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'forge_cookie',
+                                                  description)
 
             # Lootboxes from hunt and adventure
             search_strings = [
@@ -651,8 +655,8 @@ class AutoFlexCog(commands.Cog):
                             )
                         else:
                             description = (
-                                f'**{user_name}** ordered **{amount}** {lootboxes_partner[name]} **{name}** and it just got '
-                                f'delivered.\n'
+                                f'**{user_name}** ordered **{amount}** {lootboxes_partner[name]} **{name}** and it '
+                                f'just got delivered.\n'
                                 f'...to **{partner_name}**\'s address lol.'
                             )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
@@ -739,7 +743,8 @@ class AutoFlexCog(commands.Cog):
                     f'**{user.name}** failed to enchant stuff properly and enchanted the same thing twice.\n'
                     f'Somehow that actually worked tho and got them an **ULTRA-EDGY enchant**? {emojis.ANIME_SUS}'
                 )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_enchant', description)
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_enchant',
+                                                  description)
 
             # Farm event
             search_strings = [
@@ -781,7 +786,8 @@ class AutoFlexCog(commands.Cog):
                     f'and **leveled up 20 times** (??).\n'
                     f'Yeah, that totally makes sense.'
                 )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_farm', description)
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_farm',
+                                                  description)
 
             # Heal event
             search_strings = [
@@ -822,7 +828,59 @@ class AutoFlexCog(commands.Cog):
                     f'**{user.name}** encountered a poor and lonely **mysterious man** and... killed him.\n'
                     f'Enjoy your **level up**, I guess. Hope you feel bad.'
                 )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_heal', description)
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_heal',
+                                                  description)
+
+            # Training event
+            search_strings = [
+                'wings spawned', #English
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                search_patterns = [
+                    r"\*\*(\w+?)\*\*'s back", #English
+                ]
+                user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if not user_name_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find user name in auto flex training event message.', message)
+                    return
+                user_name = user_name_match.group(1)
+                if user is None:
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, regex.COMMAND_TRAINING,
+                            user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find user for auto flex training event message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                search_patterns = [
+                    r'became \*\*(\d+?) ', #English
+                ]
+                amount_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if not amount_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find dark energy amount in auto flex training event message.', message)
+                    return
+                amount = amount_match.group(1)
+                description = (
+                    f'**{user.name}** was tired of an earthly existence and tried to fly away.\n'
+                    f'_Somehow_ they not only spawned wings and didn\'t crash miserably, they also found '
+                    f'**{amount}** {emojis.DARK_ENERGY} **dark energy** while doing that.'
+                )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_training',
+                                                  description)
 
 # Initialization
 def setup(bot):
