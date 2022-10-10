@@ -761,15 +761,16 @@ FLEX_TIME_TRAVEL_3 = [
 
 FLEX_TIME_TRAVEL_5 = [
     'Five year student!',
-    'I hope you\'re not colorblind',
     'Hardmode all the things!',
     'Five is the... eh... something number?',
     'Still playing, eh?',
+    'The Famous Five',
 ]
 
 FLEX_TIME_TRAVEL_10 = [
     'Ten year stud... uh, wait, no',
-    'Hope you don\'t plan to hardmode in A15',
+    'I hope you\'re not colorblind',
+    'Hope you don\'t plan on hardmoding in A15',
     'Someone tried D15 without a bot once. They\'re still at it.',
     'Out of school',
     'Next stop: 25!',
@@ -778,7 +779,7 @@ FLEX_TIME_TRAVEL_10 = [
 FLEX_TIME_TRAVEL_25 = [
     'Endgame achieved',
     'The sky\'s the limit!',
-    'No mo mere time travels. We\'re jumping now, boyz.',
+    'No more mere time travels. We\'re jumping now, boyz.',
     'GG EZ',
     'Twenty bloody five',
 ]

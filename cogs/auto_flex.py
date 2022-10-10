@@ -321,7 +321,7 @@ class AutoFlexCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
                 description = (
                     f'**{user.name}** did some coinflipping and **lost the coin**.\n'
-                    f'I mean, how hard can it be, seriously? Embarassing!'
+                    f'I mean, how hard can it be, seriously? That\'s embarassing!'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'coinflip_event',
                                                   description)
@@ -352,7 +352,6 @@ class AutoFlexCog(commands.Cog):
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in auto flex profile or progress message.', message)
                             return
                         user = user_command_message.author
                 try:
@@ -429,7 +428,7 @@ class AutoFlexCog(commands.Cog):
                     event = 'time_travel_5'
                     description = (
                         f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
-                        f'The boss in DD13 can\'t wait to see you.'
+                        f'The boss in D13 can\'t wait to see you.'
                     )
                 elif time_travel_count_old < 10 and time_travel_count_new >= 10:
                     event = 'time_travel_10'
@@ -1088,7 +1087,7 @@ class AutoFlexCog(commands.Cog):
                     event = 'time_travel_5'
                     description = (
                         f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
-                        f'The boss in DD13 can\'t wait to see you.'
+                        f'The boss in D13 can\'t wait to see you.'
                     )
                 elif time_travel_count_old < 10 and time_travel_count_new >= 10:
                     event = 'time_travel_10'

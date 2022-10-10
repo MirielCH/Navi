@@ -51,6 +51,7 @@ class User():
     cmd_slashboard_visible: bool
     context_helper_enabled: bool
     dnd_mode_enabled: bool
+    halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
     hunt_rotation_enabled: bool
@@ -123,6 +124,7 @@ class User():
         self.cmd_slashboard_visible = new_settings.cmd_slashboard_visible
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
+        self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
         self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
@@ -240,6 +242,7 @@ class User():
             context_helper_enabled: bool
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
+            halloween_helper_enabled: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
             hunt_rotation_enabled: bool
@@ -376,6 +379,7 @@ async def _dict_to_user(record: dict) -> User:
             context_helper_enabled = bool(record['context_helper_enabled']),
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
+            halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
             hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
@@ -637,6 +641,7 @@ async def _update_user(user: User, **kwargs) -> None:
         cmd_slashboard_visible: bool
         context_helper_enabled: bool
         dnd_mode_enabled: bool
+        halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
         hunt_rotation_enabled: bool

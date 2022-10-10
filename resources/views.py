@@ -227,6 +227,7 @@ class SettingsHelpersView(discord.ui.View):
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
             'Training helper': 'training_helper_enabled',
+            'Pumpkin bat helper': 'halloween_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
         self.add_item(components.ManageHelperSettingsSelect(self))
