@@ -11,71 +11,73 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 FLEX_TITLES = {
-    'work_hyperlog': strings.FLEX_WORK_HYPERLOG,
-    'work_ultimatelog': strings.FLEX_WORK_ULTIMATELOG,
-    'work_ultralog': strings.FLEX_WORK_ULTRALOG,
-    'work_superfish': strings.FLEX_WORK_SUPERFISH,
-    'work_watermelon': strings.FLEX_WORK_WATERMELON,
-    'forge_cookie': strings.FLEX_FORGE_COOKIE,
-    'lb_omega_multiple': strings.FLEX_LB_OMEGA_MULTIPLE,
-    'lb_omega_no_hardmode': strings.FLEX_LB_OMEGA_NOHARDMODE,
-    'lb_omega_partner': strings.FLEX_LB_OMEGA_PARTNER,
-    'lb_godly': strings.FLEX_LB_GODLY,
-    'lb_godly_partner': strings.FLEX_LB_GODLY_PARTNER,
-    'lb_void': strings.FLEX_LB_VOID,
-    'lb_void_partner': strings.FLEX_LB_VOID_PARTNER,
-    'lb_edgy_ultra': strings.FLEX_EDGY_ULTRA,
-    'lb_godly_tt': strings.FLEX_GODLY_TT,
-    'pets_catch_epic': strings.FLEX_PETS_CATCH_EPIC,
-    'pets_catch_tt': strings.FLEX_PETS_CATCH_TT,
-    'pr_ascension': strings.FLEX_PR_ASCENSION,
-    'event_lb': strings.FLEX_EVENT_LB,
-    'event_enchant': strings.FLEX_EVENT_ENCHANT,
-    'event_farm': strings.FLEX_EVENT_FARM,
-    'event_heal': strings.FLEX_EVENT_HEAL,
-    'event_training': strings.FLEX_EVENT_TRAINING,
-    'coinflip_event': strings.FLEX_COINFLIP_EVENT,
-    'time_travel_1': strings.FLEX_TIME_TRAVEL_1,
-    'time_travel_3': strings.FLEX_TIME_TRAVEL_3,
-    'time_travel_5': strings.FLEX_TIME_TRAVEL_5,
-    'time_travel_10': strings.FLEX_TIME_TRAVEL_10,
-    'time_travel_25': strings.FLEX_TIME_TRAVEL_25,
-    'time_travel_50': strings.FLEX_TIME_TRAVEL_50,
-    'time_travel_100': strings.FLEX_TIME_TRAVEL_100,
+    'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
+    'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
+    'work_ultralog': strings.FLEX_TITLES_WORK_ULTRALOG,
+    'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
+    'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
+    'forge_cookie': strings.FLEX_TITLES_FORGE_COOKIE,
+    'lb_omega_multiple': strings.FLEX_TITLES_LB_OMEGA_MULTIPLE,
+    'lb_omega_no_hardmode': strings.FLEX_TITLES_LB_OMEGA_NOHARDMODE,
+    'lb_omega_partner': strings.FLEX_TITLES_LB_OMEGA_PARTNER,
+    'lb_godly': strings.FLEX_TITLES_LB_GODLY,
+    'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
+    'lb_void': strings.FLEX_TITLES_LB_VOID,
+    'lb_void_partner': strings.FLEX_TITLES_LB_VOID_PARTNER,
+    'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
+    'lb_omega_ultra': strings.FLEX_TITLES_OMEGA_ULTRA,
+    'lb_godly_tt': strings.FLEX_TITLES_GODLY_TT,
+    'pets_catch_epic': strings.FLEX_TITLES_PETS_CATCH_EPIC,
+    'pets_catch_tt': strings.FLEX_TITLES_PETS_CATCH_TT,
+    'pr_ascension': strings.FLEX_TITLES_PR_ASCENSION,
+    'event_lb': strings.FLEX_TITLES_EVENT_LB,
+    'event_enchant': strings.FLEX_TITLES_EVENT_ENCHANT,
+    'event_farm': strings.FLEX_TITLES_EVENT_FARM,
+    'event_heal': strings.FLEX_TITLES_EVENT_HEAL,
+    'event_training': strings.FLEX_TITLES_EVENT_TRAINING,
+    'coinflip_event': strings.FLEX_TITLES_COINFLIP_EVENT,
+    'time_travel_1': strings.FLEX_TITLES_TIME_TRAVEL_1,
+    'time_travel_3': strings.FLEX_TITLES_TIME_TRAVEL_3,
+    'time_travel_5': strings.FLEX_TITLES_TIME_TRAVEL_5,
+    'time_travel_10': strings.FLEX_TITLES_TIME_TRAVEL_10,
+    'time_travel_25': strings.FLEX_TITLES_TIME_TRAVEL_25,
+    'time_travel_50': strings.FLEX_TITLES_TIME_TRAVEL_50,
+    'time_travel_100': strings.FLEX_TITLES_TIME_TRAVEL_100,
 }
 
 FLEX_THUMBNAILS = {
-    'work_hyperlog': 'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
-    'work_ultimatelog': 'https://media.tenor.com/4kc5AXWNVvQAAAAC/barney-rubble-chopping-wood.gif',
-    'work_ultralog': 'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
-    'work_superfish': 'https://media.tenor.com/B6dwDGql374AAAAC/mcdonald-chris-mcdonald.gif',
-    'work_watermelon': 'https://media.tenor.com/mAxfGDKXrZUAAAAC/bunnies-cute.gif',
-    'forge_cookie': 'https://media.tenor.com/YP5Xv8Sa45IAAAAC/cookie-monster-awkward.gif',
-    'lb_omega_multiple': 'https://media.tenor.com/gHygBs_JkKwAAAAi/moving-boxes.gif',
-    'lb_omega_no_hardmode': 'https://media.tenor.com/JQIXRoPBLqYAAAAC/impressive-20th-century.gif',
-    'lb_omega_partner': 'https://c.tenor.com/l0wNXZN58S8AAAAC/delivery-kick.gif',
-    'lb_godly': 'https://c.tenor.com/zBe7Ew1lzPYAAAAi/tkthao219-bubududu.gif',
-    'lb_godly_partner': 'https://media.tenor.com/NvP2dNkQWtEAAAAC/i-got-us-a-box-anthony-mennella.gif',
-    'lb_void': 'https://media.tenor.com/f8-9UL5OveIAAAAi/box-cute.gif',
-    'lb_void_partner': 'https://media.tenor.com/kumodwVv1bcAAAAC/patrick-the-maniacs-in-mail-box.gif',
-    'lb_edgy_ultra': 'https://c.tenor.com/clnoM8TeSxcAAAAC/wait-what-unbelievable.gif',
-    'lb_godly_tt': 'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
-    'pets_catch_epic': 'https://media.tenor.com/WnprYvrvNp8AAAAC/cat-kitty.gif',
-    'pets_catch_tt': 'https://media.tenor.com/7LMaSfhq9TIAAAAC/flying-omw.gif',
-    'pr_ascension': 'https://media.tenor.com/wfma4CqwxCwAAAAC/railgun-misaka-mikoto.gif',
-    'event_lb': 'https://media.tenor.com/wn2_Qq6flogAAAAC/magical-magic.gif',
-    'event_enchant': 'https://c.tenor.com/gAuPzxRCVw8AAAAC/link-dancing.gif',
-    'event_farm': 'https://media.tenor.com/z1ru-IqnJFoAAAAC/earthquake-four-arms.gif',
-    'event_heal': 'https://media.tenor.com/lh60y7i9SeQAAAAC/peachmad-peachandgoma.gif',
-    'event_training': 'https://media.tenor.com/YAaId6OVgFUAAAAC/baby-up.gif',
-    'coinflip_event': 'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
-    'time_travel_1': 'https://media.tenor.com/7n7-MMKE8HUAAAAC/im-a-time-traveler-time-traveler.gif',
-    'time_travel_3': 'https://media.tenor.com/XATWkMEOrZIAAAAC/doctor-dance-doctor-who-dances.gif',
-    'time_travel_5': 'https://media.tenor.com/GctGuDyWlOMAAAAC/back-to-the-future-back-to-the-past.gif',
-    'time_travel_10': 'https://media.tenor.com/pDdh_ISRzZIAAAAC/doctor-who-dr-who.gif',
-    'time_travel_25': 'https://media.tenor.com/mh75FCw3VpoAAAAC/avengers-end-game-black-widow.gif',
-    'time_travel_50': 'https://media.tenor.com/n-vLx1Q_QBQAAAAC/fn2187.gif',
-    'time_travel_100': 'https://media.tenor.com/J82kuX8dFysAAAAC/blue-spiral.gif',
+    'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
+    'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
+    'work_ultralog': strings.FLEX_THUMBNAILS_WORK_ULTRALOG,
+    'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
+    'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
+    'forge_cookie': strings.FLEX_THUMBNAILS_FORGE_COOKIE,
+    'lb_omega_multiple': strings.FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE,
+    'lb_omega_no_hardmode': strings.FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE,
+    'lb_omega_partner': strings.FLEX_THUMBNAILS_LB_OMEGA_PARTNER,
+    'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
+    'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
+    'lb_void': strings.FLEX_THUMBNAILS_LB_VOID,
+    'lb_void_partner': strings.FLEX_THUMBNAILS_LB_VOID_PARTNER,
+    'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
+    'lb_omega_ultra': strings.FLEX_THUMBNAILS_OMEGA_ULTRA,
+    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_TT,
+    'pets_catch_epic': strings.FLEX_THUMBNAILS_PETS_CATCH_EPIC,
+    'pets_catch_tt': strings.FLEX_THUMBNAILS_PETS_CATCH_TT,
+    'pr_ascension': strings.FLEX_THUMBNAILS_PR_ASCENSION,
+    'event_lb': strings.FLEX_THUMBNAILS_EVENT_LB,
+    'event_enchant': strings.FLEX_THUMBNAILS_EVENT_ENCHANT,
+    'event_farm': strings.FLEX_THUMBNAILS_EVENT_FARM,
+    'event_heal': strings.FLEX_THUMBNAILS_EVENT_HEAL,
+    'event_training': strings.FLEX_THUMBNAILS_EVENT_TRAINING,
+    'coinflip_event': strings.FLEX_THUMBNAILS_COINFLIP_EVENT,
+    'time_travel_1': strings.FLEX_THUMBNAILS_TIME_TRAVEL_1,
+    'time_travel_3': strings.FLEX_THUMBNAILS_TIME_TRAVEL_3,
+    'time_travel_5': strings.FLEX_THUMBNAILS_TIME_TRAVEL_5,
+    'time_travel_10': strings.FLEX_THUMBNAILS_TIME_TRAVEL_10,
+    'time_travel_25': strings.FLEX_THUMBNAILS_TIME_TRAVEL_25,
+    'time_travel_50': strings.FLEX_THUMBNAILS_TIME_TRAVEL_50,
+    'time_travel_100': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100,
 }
 
 
@@ -89,15 +91,14 @@ class AutoFlexCog(commands.Cog):
                                      description: str) -> None:
         """Sends a flex embed to the auto flex channel"""
         description = f'{description}\n\n[Check it out]({message.jump_url})'
-        title = random.choice(FLEX_TITLES[event])
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
-            title = title,
+            title = random.choice(FLEX_TITLES[event]),
             description = description,
         )
         author = f'{user.name} is advancing!' if 'time_travel' in event else f'{user.name} got lucky!'
         embed.set_author(icon_url=user.display_avatar.url, name=author)
-        embed.set_thumbnail(url=FLEX_THUMBNAILS[event])
+        embed.set_thumbnail(url=random.choice(FLEX_THUMBNAILS[event]))
         embed.set_footer(text='Use \'/settings user\' to enable or disable auto flex.')
         auto_flex_channel = await functions.get_discord_channel(self.bot, guild_settings.auto_flex_channel_id)
         if auto_flex_channel is None:
@@ -140,6 +141,8 @@ class AutoFlexCog(commands.Cog):
             if any(search_string in embed_autor.lower() for search_string in search_strings):
                 if 'edgy lootbox' in embed_field0_name.lower() and '<:ultralog' in embed_field0_value.lower():
                     event = 'lb_edgy_ultra'
+                elif 'omega lootbox' in embed_field0_name.lower() and '<:ultralog' in embed_field0_value.lower():
+                    event = 'lb_omega_ultra'
                 elif 'godly lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
                     event = 'lb_godly_tt'
                 else:
@@ -176,20 +179,32 @@ class AutoFlexCog(commands.Cog):
                     match = re.search(r'\+(.+?) (.+?) ultra log', embed_field0_value.lower())
                     if not match:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('ULTRA log amount not found in auto flex lootbox message.', message)
+                        await errors.log_error('ULTRA log amount not found in auto flex edgy lootbox message.', message)
                         return
                     amount = match.group(1)
                     description = (
                         f'Look at **{user.name}**, opening that {emojis.LB_EDGY} EDGY lootbox like it\'s worth '
                         f'anything, haha.\n'
-                        f'See, all they got is {amount} lousy {emojis.LOG_ULTRA} ULTRA log!\n\n'
+                        f'See, all they got is **{amount}** lousy **{emojis.LOG_ULTRA} ULTRA log**!\n\n'
                         f'_**Wait...**_'
+                    )
+                elif event == 'lb_omega_ultra':
+                    match = re.search(r'\+(.+?) (.+?) ultra log', embed_field0_value.lower())
+                    if not match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('ULTRA log amount not found in auto flex omega lootbox message.', message)
+                        return
+                    amount = match.group(1)
+                    description = (
+                        f'Never get ULTRAs out of {emojis.LB_OMEGA} OMEGA lootboxes?\n'
+                        f'**{user.name}** can teach you how it works. They just hacked **{amount}** {emojis.LOG_ULTRA} '
+                        f'**ULTRA logs** out of theirs.\n'
                     )
                 elif event == 'lb_godly_tt':
                     match = re.search(r'\+(.+?) (.+?) time capsule', embed_field0_value.lower())
                     if not match:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Time capsule amount not found in auto flex lootbox message.', message)
+                        await errors.log_error('Time capsule amount not found in auto flex godly lootbox message.', message)
                         return
                     amount = match.group(1)
                     description = (

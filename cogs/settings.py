@@ -158,7 +158,7 @@ class SettingsCog(commands.Cog):
         """Server settings (prefix version)"""
         await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings server"]} to change these settings.')
 
-    @commands.command(name='settings', aliases=('me',))
+    @commands.command(name='settings', aliases=('me','setting','set'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings(self, ctx: commands.Context, *args: str) -> None:
         """Settings (prefix version)"""
