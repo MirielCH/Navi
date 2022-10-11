@@ -51,8 +51,8 @@ async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> No
 async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
     """Main menu embed"""
     reminder_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["list"]} : List all your active reminders\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["ready"]} : List all commands off cooldown\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["list"]} : List active reminders\n'
+        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["ready"]} : List commands off cooldown\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["custom-reminder"]} : Add a custom reminder\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings messages"]} : Manage reminder messages\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings ready"]} : Manage the ready list\n'
@@ -130,7 +130,7 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'ABOUT NAVI',
-        description = f'I am as free as a fairy.'
+        description = 'I am as free as a fairy.'
     )
     embed.add_field(name='BOT STATS', value=general, inline=False)
     embed.add_field(name='CREATOR', value=creator, inline=False)

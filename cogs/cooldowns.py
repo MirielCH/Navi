@@ -19,6 +19,7 @@ class CooldownsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -294,6 +295,10 @@ class CooldownsCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     return
                 interaction_user = user_command_message.author
+            try:
+                user_settings: users.User = await users.get_user(interaction_user.id)
+            except exceptions.FirstTimeUserError:
+                return
             user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
             if user_id_match:
                 user_id = int(user_id_match.group(1))
@@ -308,10 +313,6 @@ class CooldownsCog(commands.Cog):
                     await errors.log_error('Embed user not found for ready message.', message)
                     return
             if interaction_user not in embed_users: return
-            try:
-                user_settings: users.User = await users.get_user(interaction_user.id)
-            except exceptions.FirstTimeUserError:
-                return
             if not user_settings.bot_enabled: return
             ready_commands = []
             if user_settings.alert_daily.enabled and 'daily`**' in message_fields.lower():

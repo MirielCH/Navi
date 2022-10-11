@@ -42,6 +42,8 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
+    auto_flex_enabled: bool
+    auto_flex_tip_read: bool
     auto_ready_enabled: bool
     bot_enabled: bool
     clan_name: str
@@ -50,6 +52,7 @@ class User():
     cmd_slashboard_visible: bool
     context_helper_enabled: bool
     dnd_mode_enabled: bool
+    halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
     hunt_rotation_enabled: bool
@@ -81,6 +84,7 @@ class User():
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
+    time_travel_count: int
     tracking_enabled: bool
     training_helper_button_mode: bool
     training_helper_enabled: bool
@@ -112,6 +116,8 @@ class User():
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
         self.alert_work = new_settings.alert_work
+        self.auto_flex_enabled = new_settings.auto_flex_enabled
+        self.auto_flex_tip_read = new_settings.auto_flex_tip_read
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
@@ -120,6 +126,7 @@ class User():
         self.cmd_slashboard_visible = new_settings.cmd_slashboard_visible
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
+        self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
         self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
@@ -151,6 +158,7 @@ class User():
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
+        self.time_travel_count = new_settings.time_travel_count
         self.tracking_enabled = new_settings.tracking_enabled
         self.training_helper_button_mode = new_settings.training_helper_button_mode
         self.training_helper_enabled = new_settings.training_helper_enabled
@@ -226,6 +234,8 @@ class User():
             alert_work_enabled: bool
             alert_work_message: str
             alert_work_visible: bool
+            auto_flex_enabled: bool
+            auto_flex_tip_read: bool
             auto_ready_enabled: bool
             bot_enabled: bool
             clan_name: str
@@ -235,6 +245,7 @@ class User():
             context_helper_enabled: bool
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
+            halloween_helper_enabled: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
             hunt_rotation_enabled: bool
@@ -265,6 +276,7 @@ class User():
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
+            time_travel_count: int
             tracking_enabled: bool
             training_helper_button_mode: bool
             training_helper_enabled: bool
@@ -360,7 +372,9 @@ async def _dict_to_user(record: dict) -> User:
             alert_work = UserAlert(enabled=bool(record['alert_work_enabled']),
                                    message=record['alert_work_message'],
                                    visible=bool(record['alert_work_visible'])),
+            auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
+            auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
             cmd_cd_visible = record['cmd_cd_visible'],
@@ -369,6 +383,7 @@ async def _dict_to_user(record: dict) -> User:
             context_helper_enabled = bool(record['context_helper_enabled']),
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
+            halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
             hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
@@ -399,6 +414,7 @@ async def _dict_to_user(record: dict) -> User:
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
+            time_travel_count = record['time_travel_count'],
             training_helper_button_mode = bool(record['training_helper_button_mode']),
             tracking_enabled = bool(record['tracking_enabled']),
             training_helper_enabled = bool(record['training_helper_enabled']),
@@ -620,6 +636,8 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_work_enabled: bool
         alert_work_message: str
         alert_work_visible: bool
+        auto_flex_enabled: bool
+        auto_flex_tip_read: bool
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
@@ -628,6 +646,7 @@ async def _update_user(user: User, **kwargs) -> None:
         cmd_slashboard_visible: bool
         context_helper_enabled: bool
         dnd_mode_enabled: bool
+        halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
         hunt_rotation_enabled: bool
@@ -655,6 +674,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
+        time_travel_count: int
         tracking_enabled: bool
         training_helper_button_mode: bool
         training_helper_enabled: bool

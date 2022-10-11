@@ -75,7 +75,7 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
             if regex is None:
                 return message
             else:
-                message_content = re.sub(rf'\b<@!?{settings.EPIC_RPG_ID}>\b', '', message.content.lower())
+                message_content = re.sub(rf'<@!?{settings.EPIC_RPG_ID}>', '', message.content.lower())
                 match = re.search(regex, message_content)
                 if match: return message
     return None

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import exceptions, functions, regex, settings, strings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class DungeonMinibossCog(commands.Cog):
@@ -18,6 +18,7 @@ class DungeonMinibossCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -58,6 +59,10 @@ class DungeonMinibossCog(commands.Cog):
                         await errors.log_error('Interaction user not found for dungeon cooldown message.', message)
                         return
                     interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -72,10 +77,6 @@ class DungeonMinibossCog(commands.Cog):
                         await errors.log_error('Embed user not found for dungeon cooldown message.', message)
                         return
                 if interaction_user not in embed_users: return
-                try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
-                except exceptions.FirstTimeUserError:
-                    return
                 if not user_settings.bot_enabled or not user_settings.alert_dungeon_miniboss.enabled: return
                 command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
                 command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
@@ -95,6 +96,45 @@ class DungeonMinibossCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
+        if not message.embeds:
+            message_content = message.content
+
+            # Dungeon reset from returning shop
+            search_strings = [
+                'dungeon reset` successfully bought', #English
+                'dungeon reset` comprado(s)', #Spanish, Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, regex.COMMAND_RETURNING_BUY_DUNGEON_RESET
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for dungeon reset message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                try:
+                    reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'dungeon-miniboss')
+                except exceptions.NoDataFoundError:
+                    return
+                await reminder.delete()
+                if reminder.record_exists:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error(f'Had an error deleting the dungeon/miniboss reminder in dungeon reset.',
+                                           message)
+                    return
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

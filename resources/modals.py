@@ -115,3 +115,21 @@ class SetLastTTModal(Modal):
         await self.view.user_settings.update(last_tt=tt_time.isoformat(sep=' '))
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class SetPrefixModal(Modal):
+    def __init__(self, view: discord.ui.View) -> None:
+        super().__init__(title='Change prefix')
+        self.view = view
+        self.add_item(
+            InputText(
+                label='New prefix:',
+                placeholder="Enter prefix ...",
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        new_prefix = self.children[0].value
+        await self.view.guild_settings.update(prefix=new_prefix)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)

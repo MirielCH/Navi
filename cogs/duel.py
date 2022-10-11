@@ -18,6 +18,7 @@ class DuelCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -59,6 +60,10 @@ class DuelCog(commands.Cog):
                         await errors.log_error('Interaction user not found for duel cooldown message.', message)
                         return
                     interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -73,11 +78,7 @@ class DuelCog(commands.Cog):
                         await errors.log_error('Embed user not found in duel cooldown message.', message)
                         return
                 if interaction_user not in embed_users: return
-                try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.alert_duel: return
+                if not user_settings.bot_enabled or not user_settings.alert_duel.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'duel')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
@@ -131,7 +132,7 @@ class DuelCog(commands.Cog):
                                                                               'duel')
                 if time_left < timedelta(0): return
                 if interaction_user_settings is not None:
-                    if interaction_user_settings.bot_enabled and interaction_user_settings.alert_duel:
+                    if interaction_user_settings.bot_enabled and interaction_user_settings.alert_duel.enabled:
                         user_command = await functions.get_slash_command(interaction_user_settings, 'duel')
                         reminder_message = interaction_user_settings.alert_duel.message.replace('{command}', user_command)
                         reminder: reminders.Reminder = (
@@ -169,7 +170,7 @@ class DuelCog(commands.Cog):
                     duel_user_settings: users.User = await users.get_user(duel_user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if duel_user_settings.bot_enabled and duel_user_settings.alert_duel:
+                if duel_user_settings.bot_enabled and duel_user_settings.alert_duel.enabled:
                     user_command = await functions.get_slash_command(duel_user_settings, 'duel')
                     reminder_message = duel_user_settings.alert_duel.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

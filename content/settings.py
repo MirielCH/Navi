@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, reminders, users
+from database import clans, guilds, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
@@ -138,6 +138,11 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
             f'**__No personal data is processed or stored in any way!__**\n'
             f'You can opt-out of command tracking in {strings.SLASH_COMMANDS_NAVI["stats"]} or in your user settings.\n\n'
         )
+        field_auto_flex = (
+            f'This bot as an auto flex feature. If auto flexing is turned on by the server admin, I will automatically '
+            f'post certain rare events (rare lootboxes, high tier loot, etc) to an auto flex channel.\n'
+            f'If you don\'t like this, you can turn it off in your user settings.\n'
+        )
         field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
             f'{strings.SLASH_COMMANDS_NAVI["help"]}.'
@@ -154,6 +159,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         )
         embed.add_field(name='SETTINGS', value=field_settings, inline=False)
         embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
+        embed.add_field(name='AUTO FLEXING', value=field_auto_flex, inline=False)
         embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
         embed.set_thumbnail(url=image_url)
         view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
@@ -173,7 +179,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         return
     answer = (
         f'**{ctx.author.name}**, turning me off will disable me completely. This includes all helpers, the command '
-        f'tracking and the reminders. It will also delete all of your active reminders.\n'
+        f'tracking, auto flexing and the reminders. It will also delete all of your active reminders.\n'
         f'Are you sure?'
     )
     view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
@@ -424,6 +430,16 @@ async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationC
     await view.wait()
 
 
+async def command_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+    """Server settings command"""
+    guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    view = views.SettingsServerView(ctx, bot, guild_settings, embed_settings_server)
+    embed = await embed_settings_server(bot, ctx, guild_settings)
+    interaction = await ctx.respond(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
 async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
                                 switch_view: Optional[discord.ui.View] = None) -> None:
     """User settings command"""
@@ -646,6 +662,9 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
+        f'{emojis.BP} {emojis.PET_PUMPKIN_BAT} **Pumpkin bat helper**: '
+        f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
     )
     helper_settings = (
         f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'
@@ -778,7 +797,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
         f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
         f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
-        f'{emojis.DETAIL} If timestamps are inaccurate, set your local time correctly\n'
+        f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     command_reminders = (
@@ -879,6 +898,31 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     return embed
 
 
+async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                guild_settings: guilds.Guild) -> discord.Embed:
+    """Server settings embed"""
+    auto_flex_channel = await functions.get_discord_channel(bot, guild_settings.auto_flex_channel_id)
+    auto_flex_channel_name = f'`{auto_flex_channel.name}`' if auto_flex_channel is not None else '`N/A`'
+    prefix = (
+        f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
+    )
+    auto_flex = (
+        f'{emojis.BP} **Alerts**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
+        f'{emojis.BP} **Channel**: {auto_flex_channel_name}\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.guild.name.upper()} SERVER SETTINGS',
+        description = (
+            f'_Serverwide settings._\n'
+            f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
+        )
+    )
+    embed.add_field(name='PREFIX', value=prefix, inline=False)
+    embed.add_field(name='AUTO FLEX', value=auto_flex, inline=False)
+    return embed
+
+
 async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
                               user_settings: users.User) -> discord.Embed:
     """User settings embed"""
@@ -892,6 +936,9 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _You can toggle this by using {strings.SLASH_COMMANDS_NAVI["on"]} '
         f'and {strings.SLASH_COMMANDS_NAVI["off"]}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
+        f'{emojis.BP} **Auto flex alerts**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
+        f'{emojis.DETAIL} _Auto flexing only works if it\'s enabled in the server settings._\n'
+        f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
     donor_tier = (
         f'{emojis.BP} **You**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'

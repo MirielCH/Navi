@@ -323,6 +323,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
+        auto_flex_action = 'Disable' if view.user_settings.auto_flex_enabled else 'Enable'
         dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
         #hardmode_action = 'Disable' if view.user_settings.hardmode_mode_enabled else 'Enable'
         hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
@@ -330,6 +331,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
         tracking_action = 'Disable' if view.user_settings.tracking_enabled else 'Enable'
         options.append(discord.SelectOption(label=f'{reactions_action} reactions',
                                             value='toggle_reactions'))
+        options.append(discord.SelectOption(label=f'{auto_flex_action} auto flex alerts',
+                                            value='toggle_auto_flex'))
         options.append(discord.SelectOption(label=f'{dnd_action} DND mode',
                                             value='toggle_dnd'))
         #options.append(discord.SelectOption(label=f'{hardmode_action} hardmode mode',
@@ -349,6 +352,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
         select_value = self.values[0]
         if select_value == 'toggle_reactions':
             await self.view.user_settings.update(reactions_enabled=not self.view.user_settings.reactions_enabled)
+        elif select_value == 'toggle_auto_flex':
+            await self.view.user_settings.update(auto_flex_enabled=not self.view.user_settings.auto_flex_enabled)
         elif select_value == 'toggle_dnd':
             await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
         elif select_value == 'toggle_hardmode':
@@ -810,6 +815,82 @@ class ManageHelperSettingsSelect(discord.ui.Select):
                 self.view.add_item(ManageHelperSettingsSelect(self.view))
                 break
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class ManageServerSettingsSelect(discord.ui.Select):
+    """Select to change server settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        reminder_action = 'Disable' if view.guild_settings.auto_flex_enabled else 'Enable'
+        options.append(discord.SelectOption(label='Change prefix',
+                                            value='set_prefix', emoji=None))
+        options.append(discord.SelectOption(label=f'{reminder_action} auto flex alerts',
+                                            value='toggle_auto_flex'))
+        options.append(discord.SelectOption(label='Set this channel as auto flex channel',
+                                            value='set_channel', emoji=None))
+        options.append(discord.SelectOption(label='Reset auto flex channel',
+                                            value='reset_channel', emoji=None))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_server_settings')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'toggle_auto_flex':
+            if not self.view.guild_settings.auto_flex_enabled and self.view.guild_settings.auto_flex_channel_id is None:
+                await interaction.response.send_message('You need to set an auto flex channel first.', ephemeral=True)
+                return
+            await self.view.guild_settings.update(auto_flex_enabled=not self.view.guild_settings.auto_flex_enabled)
+        elif select_value == 'set_prefix':
+            modal = modals.SetPrefixModal(self.view)
+            await interaction.response.send_modal(modal)
+            return
+        elif select_value == 'set_channel':
+            confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+            confirm_interaction = await interaction.response.send_message(
+                f'**{interaction.user.name}**, do you want to set `{interaction.channel.name}` as the auto flex channel?',
+                view=confirm_view,
+                ephemeral=True
+            )
+            confirm_view.interaction_message = confirm_interaction
+            await confirm_view.wait()
+            if confirm_view.value == 'confirm':
+                await self.view.guild_settings.update(auto_flex_channel_id=interaction.channel.id)
+                await confirm_interaction.edit_original_message(content='Channel updated.', view=None)
+            else:
+                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                return
+        elif select_value == 'reset_channel':
+            if self.view.guild_settings.auto_flex_channel_id is None:
+                await interaction.response.send_message(
+                    f'You don\'t have an auto flex channel set already.',
+                    ephemeral=True
+                )
+                return
+            confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            confirm_interaction = await interaction.response.send_message(
+                f'**{interaction.user.name}**, do you want to reset the auto flex channel?\n\n'
+                f'Note that this will also disable the auto flex alerts if enabled.',
+                view=confirm_view,
+                ephemeral=True
+            )
+            confirm_view.interaction_message = confirm_interaction
+            await confirm_view.wait()
+            if confirm_view.value == 'confirm':
+                await self.view.guild_settings.update(auto_flex_channel_id=None, auto_flex_enabled=False)
+                await confirm_interaction.edit_original_message(content='Channel reset.', view=None)
+            else:
+                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                return
+        for child in self.view.children.copy():
+            if isinstance(child, ManageServerSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageServerSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:

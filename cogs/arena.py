@@ -18,6 +18,7 @@ class ArenaCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -44,6 +45,7 @@ class ArenaCog(commands.Cog):
         ]
         if any(search_string in message_title.lower() for search_string in search_strings):
             user_id = user_name = user_command_message = None
+            embed_users = []
             interaction_user = await functions.get_interaction_user(message)
             if interaction_user is None:
                 user_command_message = (
@@ -54,24 +56,24 @@ class ArenaCog(commands.Cog):
                     await errors.log_error('Interaction user not found for arena cooldown message.', message)
                     return
                 interaction_user = user_command_message.author
+            try:
+                user_settings: users.User = await users.get_user(interaction_user.id)
+            except exceptions.FirstTimeUserError:
+                return
             user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
             if user_id_match:
                 user_id = int(user_id_match.group(1))
-                embed_user = await message.guild.fetch_member(user_id)
+                embed_users.append(await message.guild.fetch_member(user_id))
             else:
                 user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                if not user_name_match or not embed_user:
+                if not user_name_match or not embed_users:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Embed user not found for arena cooldown message.', message)
                     return
             if interaction_user not in embed_users: return
-            try:
-                user_settings: users.User = await users.get_user(interaction_user.id)
-            except exceptions.FirstTimeUserError:
-                return
             if not user_settings.bot_enabled or not user_settings.alert_arena.enabled: return
             user_command = await functions.get_slash_command(user_settings, 'arena')
             timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,

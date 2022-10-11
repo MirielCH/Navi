@@ -18,6 +18,7 @@ class HuntCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -58,6 +59,10 @@ class HuntCog(commands.Cog):
                         await errors.log_error('Interaction user not found for hunt cooldown message.', message)
                         return
                     interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -74,10 +79,6 @@ class HuntCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found in hunt cooldown message.', message)
                         return
-                try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
-                except exceptions.FirstTimeUserError:
-                    return
                 if not slash_command:
                     user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
                     user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
@@ -155,7 +156,11 @@ class HuntCog(commands.Cog):
                 'encontr', #Spanish, Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
-                and any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)):
+                and (
+                    any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
+                    or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
+                )
+            ):
                 user_name = partner_name = last_hunt_mode = user_command_message = None
                 hardmode = together = alone = event_mob = found_together = False
                 user = await functions.get_interaction_user(message)
@@ -329,6 +334,8 @@ class HuntCog(commands.Cog):
                             'EPIC lootbox': emojis.LB_EPIC,
                             'EDGY lootbox': emojis.LB_EDGY,
                             'OMEGA lootbox': emojis.LB_OMEGA,
+                            'GODLY lootbox': emojis.LB_GODLY,
+                            'VOID lootbox': emojis.LB_VOID,
                             'MEGA present': emojis.PRESENT_MEGA,
                             'ULTRA present': emojis.PRESENT_ULTRA,
                             'OMEGA present': emojis.PRESENT_OMEGA,
@@ -427,6 +434,7 @@ class HuntCog(commands.Cog):
                     found_stuff = {
                         'OMEGA lootbox': emojis.PANDA_SURPRISE,
                         'GODLY lootbox': emojis.PANDA_SURPRISE,
+                        'VOID lootbox': emojis.PANDA_SURPRISE,
                     }
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):

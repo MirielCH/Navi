@@ -17,6 +17,7 @@ class HelperRubyCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_before.pinned != message_after.pinned: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -155,6 +156,10 @@ class HelperRubyCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         return
                     interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
@@ -169,10 +174,6 @@ class HelperRubyCog(commands.Cog):
                         await errors.log_error('Embed user not found in inventory message for ruby counter.', message)
                         return
                 if interaction_user not in embed_users: return
-                try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
-                except exceptions.FirstTimeUserError:
-                    return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
                 if  '<:ruby' not in message_field.lower():
                     ruby_count = 0

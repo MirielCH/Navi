@@ -402,6 +402,17 @@ MONSTERS_HUNT = (
     '**Horslime**',
 )
 
+MONSTERS_HUNT_TOP = (
+    '**EPIC NPC** pretending to be a **WOLF**', #English
+    '**NPC ÉPICO** pretendiendo ser un **WOLF**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **WOLF**', #Portuguese
+    '**EPIC NPC** pretending to be a **ZOMBIE**', #English
+    '**NPC ÉPICO** pretendiendo ser un **ZOMBIE**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **ZOMBIE**', #Portuguese
+    '**EPIC NPC** pretending to be a **UNICORN**', #English
+    '**NPC ÉPICO** pretendiendo ser un **UNICORN**', #Spanish
+    '**NPC ÉPICO** fingindo ser um **UNICORN**', #Portuguese
+)
 
 TRACKED_COMMANDS = (
     'hunt',
@@ -538,7 +549,481 @@ SLASH_COMMANDS_NAVI = {
     'settings partner': '</settings partner:1017853591387656310>',
     'settings ready': '</settings ready:1017853591387656310>',
     'settings reminders': '</settings reminders:1017853591387656310>',
+    'settings server': '</settings server:1017853591387656310>',
     'settings user': '</settings user:1017853591387656310>',
     'slashboard': '</slashboard:1026046376527806494>',
     'stats': '</stats:1017853591475724349>',
 }
+
+
+# Auto flex headlines
+FLEX_TITLES_WORK_HYPERLOG = [
+    'TIMBER!',
+    'Hyperino',
+    'Justin?',
+    'I swear this is how it happened',
+    'Wooooh...d!',
+]
+
+FLEX_TITLES_WORK_ULTRALOG = [
+    'It\'s not a dream!',
+    'This sounds dangerous',
+    'That\'s not how you use a chainsaw',
+    'Deforesting in progress',
+    'Logging 101',
+    'Y dis never happen in A3',
+]
+
+FLEX_TITLES_WORK_ULTIMATELOG = [
+    'Wood you log at this bad pun!',
+    'What do you even need that stuff for?',
+    'Chainsaw master',
+    'Blinding logs',
+    'Can\'t even dismantle it, lol',
+]
+
+FLEX_TITLES_WORK_SUPERFISH = [
+    'How much is the fish?',
+    'Goodbye and thank you for the fish',
+    'Nice fish, man',
+    'Is fishing even allowed here?',
+    'Better than an old boot, I guess',
+]
+
+FLEX_TITLES_WORK_WATERMELON = [
+    'One in a melon',
+    'Rare doesn\'t mean useful, lol',
+    'Anyone know what to do with these?',
+    'Fruit robbery',
+    'Deliciously useless',
+    'Meloncholia',
+]
+
+FLEX_TITLES_FORGE_COOKIE = [
+    'Caution! Hot cookie!',
+    'You sure you wanna eat that?',
+    'What a weird recipe',
+    'Next time just use an oven',
+    'Someone say cookie?',
+]
+
+FLEX_TITLES_LB_OMEGA_MULTIPLE = [
+    'Caution! T10 horse at work!',
+    'Horse power',
+    'One wasn\'t enough apparently',
+    'Now that\'s just greedy',
+    'How is this even fair?',
+    'My precious',
+]
+
+FLEX_TITLES_LB_OMEGA_NOHARDMODE = [
+    'Now this is how you find an OMEGA',
+    'Finally some proper lootboxing',
+    'Take note, sweat lords',
+    'Who even needs harmode?',
+    'Hardmode is for losers',
+]
+
+FLEX_TITLES_LB_OMEGA_PARTNER = [
+    'Oops, wrong recipient, lol',
+    'Mailman, you had one job',
+    '"I am so happy for you, dear partner"',
+    'WHAT ABOUT ME THO?',
+    'Not jealous at all',
+]
+
+FLEX_TITLES_LB_GODLY = [
+    'Oh hello, what a nice lootbox',
+    'Some heavenly luck right here',
+    'Oh hey, how did that happen?',
+    'Did someone lose a box?',
+    'Oooohh... I\'ll take that, thank you',
+]
+
+FLEX_TITLES_LB_GODLY_PARTNER = [
+    'Best gift ever',
+    '"Honey... I WANT IT BACK!"',
+    '"MAILMAN... WE NEED TO TALK"',
+    'True love',
+    'Why does this never happen to ME?',
+]
+
+FLEX_TITLES_LB_VOID = [
+    'Now this is just hacking',
+    'No more luck for you this year',
+    'Is this even legal?',
+    'Oh hey, it\'s Gladstone Gander',
+]
+
+FLEX_TITLES_LB_VOID_PARTNER = [
+    'I don\'t even know what to say',
+    'Noone was ever supposed to see this line',
+    'That\'s it, there\'s nothing else to achieve',
+    'Bloody hell',
+]
+
+FLEX_TITLES_EDGY_ULTRA = [
+    'What could an EDGY ever be worth?',
+    'I didn\'t even know this was possible, lol',
+    'It\'s an achievement, right?',
+    'Feels like christmas',
+    'How did that end up in there?',
+]
+
+FLEX_TITLES_OMEGA_ULTRA = [
+    'This OMEGA is better than yours',
+    'Pro unboxing',
+    'Teach us',
+    'Don\'t be jealous',
+    'Why are my OMEGAs never like this?',
+]
+
+FLEX_TITLES_GODLY_TT = [
+    'There\'s luck, and then there\'s THIS',
+    'Jeez, now that is something',
+    'Don\'t get jealous folks... or do',
+    'This should be a bannable offense',
+    'WE ARE ALL HAPPY FOR YOU AND NOT AT ALL JEALOUS',
+]
+
+FLEX_TITLES_PETS_CATCH_EPIC = [
+    'EPIC pet incoming!',
+    'What a nice kitty!',
+    'Can I still pet it, tho?',
+    'Great, and others can\'t even get one in fusions',
+    'How many abandoned pets did this take?',
+]
+
+FLEX_TITLES_PETS_CATCH_TT = [
+    'K9, is that you?',
+    'This can happen, yes',
+    'Lost companion',
+    'Wonder how old it is...',
+    'Always close your phone box door',
+]
+
+FLEX_TITLES_PR_ASCENSION = [
+    'Up up and away',
+    'Goodbye peasants!',
+    'We demand a giveaway!',
+]
+
+FLEX_TITLES_EVENT_LB = [
+    'They did what now?',
+    'Unauthorized magic',
+    'Mr Ollivander approves',
+    'I guess that\'s one way of getting an OMEGA',
+    'Hey, gimme back my wand!',
+]
+
+FLEX_TITLES_EVENT_ENCHANT = [
+    'Twice the fun',
+    'Can\'t even enchant properly, lol',
+    'That\'s what happens when you use Ron\'s wand',
+    'Well, at least it didn\'t explode',
+]
+
+FLEX_TITLES_EVENT_FARM = [
+    'Totally believable level up story',
+    'The what now?',
+    'This sounds like a hacking excuse',
+    'You call this farming?',
+    'Where did you buy those seeds again?',
+]
+
+FLEX_TITLES_EVENT_HEAL = [
+    'Very mysterious',
+    'OH NO the poor guy',
+    'So wait, this happened while HEALING?',
+    'You sure that was a healing potion you drank there?',
+    'Was that in Gotham by any chance?',
+]
+
+FLEX_TITLES_EVENT_TRAINING = [
+    'Who even needs a plane',
+    'Yes, that\'s how I go to school all the time',
+    'Tinkerbell? Is it you?',
+    'Where did those even come from?',
+    'So we call this "training" now?',
+]
+
+FLEX_TITLES_COINFLIP_EVENT = [
+    'Uh... how did that happen?',
+    'Wait. Where\'s my coin?',
+    'I didn\'t even know this could happen, lol',
+    'Why is there a flex for this?',
+    'MY COOOIIIINN NOOOOOOOOOOOOOOOOOOO',
+]
+
+FLEX_TITLES_TIME_TRAVEL_1 = [
+    'First time\'s always special',
+    'Off to a great start!',
+    'It\'s just a leap of faith',
+    'First year student!',
+    'First of many',
+]
+
+FLEX_TITLES_TIME_TRAVEL_3 = [
+    'Three? Three!',
+    'Third year student!',
+    'Hardmode time, baby',
+    'Dungeon 13, coming for you!',
+    'Thrice the fun',
+]
+
+FLEX_TITLES_TIME_TRAVEL_5 = [
+    'Five year student!',
+    'Hardmode all the things!',
+    'Five is the... eh... something number?',
+    'Still playing, eh?',
+    'The Famous Five',
+]
+
+FLEX_TITLES_TIME_TRAVEL_10 = [
+    'Ten year stud... uh, wait, no',
+    'I hope you\'re not colorblind',
+    'Hope you don\'t plan on hardmoding in A15',
+    'Someone tried D15 without a bot once. They\'re still at it.',
+    'Out of school',
+    'Next stop: 25!',
+]
+
+FLEX_TITLES_TIME_TRAVEL_25 = [
+    'Endgame achieved',
+    'The sky\'s the limit!',
+    'No more mere time travels. We\'re jumping now, boyz.',
+    'GG EZ',
+    'Twenty bloody five',
+]
+
+FLEX_TITLES_TIME_TRAVEL_50 = [
+    '50 TTs and all I got was this lousy background',
+    'Still at it! (for some reason)',
+    'Loving dragon scales, I swear!',
+    'How do you do, fellow kids',
+    'Age is just a number',
+]
+
+FLEX_TITLES_TIME_TRAVEL_100 = [
+    'Hello, I would like my life back',
+    'Next up: World domination',
+    'Another beautiful profile background, oh thank you',
+    'Why am I still playing this',
+    'BOW BEFORE ME PEASANTS',
+]
+
+
+# Auto flex thumbnails
+FLEX_THUMBNAILS_WORK_HYPERLOG = [
+    'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
+    'https://media.tenor.com/CeKTpmgR3ZkAAAAC/yell-timber.gif',
+    'https://media.tenor.com/Csef0r09V3oAAAAC/timber-timbera.gif',
+    'https://media.tenor.com/OxX-5DEP9OwAAAAC/love-nature.gif',
+    'https://media.tenor.com/r5CYGkSFnT0AAAAC/hyperino-scooter.gif',
+    'https://media.giphy.com/media/3o6Zt7Nu7NikdIvjaw/giphy.gif',
+    'https://media.giphy.com/media/VNdgEiEcRalhe/giphy.gif',
+    'https://media.giphy.com/media/eRJGUjgF4DbCU/giphy.gif',
+]
+
+FLEX_THUMBNAILS_WORK_ULTIMATELOG = [
+    'https://media.tenor.com/4kc5AXWNVvQAAAAC/barney-rubble-chopping-wood.gif',
+    'https://media.giphy.com/media/SGV9O1fuh2nf5T8FNW/giphy-downsized-large.gif',
+    'https://media.tenor.com/vfraS_QhPcEAAAAd/captain-america-pecs.gif',
+    'https://media.tenor.com/Gd9zrsML1tYAAAAC/im-building-construction.gif',
+]
+
+FLEX_THUMBNAILS_WORK_ULTRALOG = [
+    'https://c.tenor.com/4ReodhBihBQAAAAC/ruthe-biber.gif',
+    'https://media.giphy.com/media/0eVM7GVxTDDKxn7OyX/giphy.gif',
+    'https://media.tenor.com/B984YMYS43IAAAAC/chainsaw-wood-cutting.gif',
+    'https://media.tenor.com/oSSU2r9NWrMAAAAC/freddie-chainsaw.gif',
+]
+
+FLEX_THUMBNAILS_WORK_SUPERFISH = [
+    'https://media.tenor.com/B6dwDGql374AAAAC/mcdonald-chris-mcdonald.gif',
+    'https://media.tenor.com/4fGHA-FQ-N8AAAAC/fiska-fisk.gif',
+    'https://media.tenor.com/25FSuyo3WWQAAAAi/%E6%80%9D%E8%80%83%E5%96%B5%E7%94%9F-peach-cat-and-goma.gif',
+    'https://media.tenor.com/nW_vYquFoGwAAAAC/fish-love.gif',
+    'https://media.tenor.com/HLYz9zk-fGQAAAAC/rumia-fish-gif.gif',
+]
+
+FLEX_THUMBNAILS_WORK_WATERMELON = [
+    'https://media.tenor.com/mAxfGDKXrZUAAAAC/bunnies-cute.gif',
+    'https://media.tenor.com/1qy7WBALXg8AAAAC/water.gif',
+    'https://media.tenor.com/o3oQXq9guVAAAAAd/maya-dog.gif',
+    'https://media.tenor.com/3laUQPe252YAAAAC/rabbit-watermelon.gif',
+    'https://media.tenor.com/uS6xykUe7NcAAAAC/pinch-%D5%B1%D5%B4%D5%A5%D6%80%D5%B8%D6%82%D5%AF.gif',
+]
+
+FLEX_THUMBNAILS_FORGE_COOKIE = [
+    'https://media.tenor.com/YP5Xv8Sa45IAAAAC/cookie-monster-awkward.gif',
+    'https://media.giphy.com/media/Y09s2Frxp7wpBGXTyt/giphy.gif',
+    'https://media.giphy.com/media/bAlYQOugzX9sY/giphy.gif',
+]
+
+FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE = [
+    'https://media.tenor.com/gHygBs_JkKwAAAAi/moving-boxes.gif',
+    'https://media.tenor.com/h5-edZgGfu0AAAAC/boxes-move-in-day.gif',
+    'https://media.tenor.com/uoCDp8f_ZicAAAAC/horse-hahaha.gif',
+    'https://media.tenor.com/DYxjt7HJ4LQAAAAC/i-need-a-horse-thor.gif',
+]
+
+FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE = [
+    'https://media.tenor.com/JQIXRoPBLqYAAAAC/impressive-20th-century.gif',
+    'https://media.giphy.com/media/9VrBXYVGAX0bAEzSAT/giphy.gif',
+]
+
+FLEX_THUMBNAILS_LB_OMEGA_PARTNER = [
+    'https://c.tenor.com/l0wNXZN58S8AAAAC/delivery-kick.gif',
+    'https://media.giphy.com/media/AdExwGjrXYjH7yjuIc/giphy.gif',
+    'https://media.tenor.com/OhwPShbFvjcAAAAC/package-ups.gif',
+    'https://media.tenor.com/_lu2Jz1q1s0AAAAC/sunday-delivery.gif',
+]
+
+FLEX_THUMBNAILS_LB_GODLY = [
+    'https://c.tenor.com/zBe7Ew1lzPYAAAAi/tkthao219-bubududu.gif',
+    'https://media.tenor.com/f8-9UL5OveIAAAAi/box-cute.gif',
+    'https://media.tenor.com/ZDW2vrkgYB4AAAAC/whats-inside-ricky-berwick.gif',
+    'https://media.tenor.com/kI9zfph0YdIAAAAC/andre-leon-talley-present.gif',
+    'https://media.tenor.com/GXVWyf8jBgsAAAAd/dancing-box-happy-box.gif',
+]
+
+FLEX_THUMBNAILS_LB_GODLY_PARTNER = [
+    'https://media.tenor.com/NvP2dNkQWtEAAAAC/i-got-us-a-box-anthony-mennella.gif',
+    'https://media.giphy.com/media/mDIQaHAhD33wlOz0DR/giphy.gif',
+    'https://media.tenor.com/ClAp685q6pEAAAAC/drop-off-dropping-off-a-package.gif',
+]
+
+FLEX_THUMBNAILS_LB_VOID = [
+    'https://media.giphy.com/media/JkpHPyZowX6sfFvKp6/giphy.gif',
+]
+
+FLEX_THUMBNAILS_LB_VOID_PARTNER = [
+    'https://media.tenor.com/kumodwVv1bcAAAAC/patrick-the-maniacs-in-mail-box.gif',
+    'https://media.giphy.com/media/atfHlwAhizfxdtdw60/giphy.gif',
+]
+
+FLEX_THUMBNAILS_EDGY_ULTRA = [
+    'https://c.tenor.com/clnoM8TeSxcAAAAC/wait-what-unbelievable.gif',
+    'https://media.giphy.com/media/GjbR6R2XeWKS0yfQaZ/giphy.gif',
+]
+
+FLEX_THUMBNAILS_OMEGA_ULTRA = [
+    'https://media.tenor.com/Dmr7SzwDii0AAAAC/andy-office.gif',
+    'https://media.tenor.com/kJNvpynpU3sAAAAi/boxy-kitten-peek-a-boo.gif',
+    'https://media.giphy.com/media/Q9Clm1DwDR0WWF7Qr4/giphy.gif',
+    'https://media.giphy.com/media/xUOxf8sb4pizGFkBJm/giphy.gif',
+    'https://media.giphy.com/media/5Y2bU7FqLOuzK/giphy.gif',
+    'https://media.giphy.com/media/M9CoztwchmOdSRGH2m/giphy.gif',
+    'https://media.giphy.com/media/3KXd872FGuIO0u0e7h/giphy.gif',
+    'https://media.tenor.com/TukiL_LftA0AAAAC/loz-botw.gif',
+]
+
+FLEX_THUMBNAILS_GODLY_TT = [
+    'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
+    'https://media.giphy.com/media/jltuIcAMViLHYaz9bN/giphy.gif',
+]
+
+FLEX_THUMBNAILS_PETS_CATCH_EPIC = [
+    'https://media.tenor.com/WnprYvrvNp8AAAAC/cat-kitty.gif',
+    'https://media.giphy.com/media/xUOxf8izqVvHEBhRO8/giphy-downsized-large.gif',
+    'https://media.giphy.com/media/QQPpBZs31y2fijvNzo/giphy.gif',
+    'https://media.giphy.com/media/7dwrVhuNR1rPi/giphy.gif',
+]
+
+FLEX_THUMBNAILS_PETS_CATCH_TT = [
+    'https://media.tenor.com/7LMaSfhq9TIAAAAC/flying-omw.gif',
+    'https://media.giphy.com/media/3qsCqrKYjq5DkANgBE/giphy.gif',
+    'https://media.giphy.com/media/5E7vDOIamcWlzg97TG/giphy.gif',
+    'https://media.giphy.com/media/U7JM6ChJMrFnXfFHvE/giphy.gif',
+]
+
+FLEX_THUMBNAILS_PR_ASCENSION = [
+    'https://media.tenor.com/wfma4CqwxCwAAAAC/railgun-misaka-mikoto.gif',
+    'https://media.tenor.com/NF5dnWvoaN8AAAAC/glameow-purugly.gif',
+    'https://media.tenor.com/EoCQm0KsqP8AAAAC/pokemon-anime.gif',
+]
+
+FLEX_THUMBNAILS_EVENT_LB = [
+    'https://media.tenor.com/wn2_Qq6flogAAAAC/magical-magic.gif',
+    'https://media.giphy.com/media/mz1kJeDVueKC4/giphy.gif',
+    'https://media.giphy.com/media/MePp78CYbOaYh3iNBZ/giphy-downsized-large.gif',
+    'https://media.giphy.com/media/LR5UmQvLDDRqp9BI9x/giphy.gif',
+]
+
+FLEX_THUMBNAILS_EVENT_ENCHANT = [
+    'https://c.tenor.com/gAuPzxRCVw8AAAAC/link-dancing.gif',
+    'https://media.giphy.com/media/ef4gyEAxktrF3cWO5g/giphy.gif',
+    'https://media.tenor.com/oTpEgUkQjngAAAAC/vibing-dancing.gif',
+    'https://media.tenor.com/9-b0gUv-HokAAAAC/enchanted-sword-enchanted-iron-sword.gif',
+    'https://media.tenor.com/Z3mgGQaNQt4AAAAC/legendofzelda-navi.gif',
+]
+
+FLEX_THUMBNAILS_EVENT_FARM = [
+    'https://media.tenor.com/z1ru-IqnJFoAAAAC/earthquake-four-arms.gif',
+    'https://media.giphy.com/media/apvx5lPCPsjN6/giphy.gif',
+    'https://media.giphy.com/media/h4Z6RfuQycdiM/giphy.gif',
+    'https://media.giphy.com/media/2SZeeNMm456NO/giphy.gif',
+]
+
+FLEX_THUMBNAILS_EVENT_HEAL = [
+    'https://media.tenor.com/lh60y7i9SeQAAAAC/peachmad-peachandgoma.gif',
+    'https://media.tenor.com/gaHlo3VAWrwAAAAd/invisible-friends-crime-scene.gif',
+    'https://media.tenor.com/gs7Wpi7iJBQAAAAC/tmm-the-mystery-man.gif',
+    'https://media.tenor.com/yST82xLuBOQAAAAd/standing-still-jake-lyon.gif',
+]
+
+FLEX_THUMBNAILS_EVENT_TRAINING = [
+    'https://media.tenor.com/YAaId6OVgFUAAAAC/baby-up.gif',
+    'https://media.giphy.com/media/B5BP3OYgVN5ss/giphy.gif',
+    'https://media.giphy.com/media/yXBqba0Zx8S4/giphy.gif',
+    'https://media.tenor.com/C_YenjB3niUAAAAC/tinkerbell-happy.gif',
+]
+
+FLEX_THUMBNAILS_COINFLIP_EVENT = [
+    'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
+    'https://media.giphy.com/media/JQG2I0rQejbRQiDMQZ/giphy.gif',
+    'https://media.tenor.com/8yBy9hKYpBkAAAAC/where-is-it-melody-pedras.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_1 = [
+    'https://media.tenor.com/7n7-MMKE8HUAAAAC/im-a-time-traveler-time-traveler.gif',
+    'https://media.tenor.com/EYMfaM_5e7wAAAAC/hulk-endgame.gif',
+    'https://media.tenor.com/VVKQ2r1T5n0AAAAd/its-time-travel-sam-hart.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_3 = [
+    'https://media.tenor.com/XATWkMEOrZIAAAAC/doctor-dance-doctor-who-dances.gif',
+    'https://media.tenor.com/XO52a0Voe2AAAAAC/fantastic-doctor-who.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_5 = [
+    'https://media.tenor.com/GctGuDyWlOMAAAAC/back-to-the-future-back-to-the-past.gif',
+    'https://media.tenor.com/xXXrBidPuPEAAAAC/back-to-the-future-doc-brown.gif',
+    'https://media.tenor.com/SD-TxYTh3scAAAAd/precisely-on-schedule-right-on-schedule.gif',
+    'https://media.tenor.com/K84SJ6-ycMUAAAAC/msmbttf-bttf.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_10 = [
+    'https://media.tenor.com/pDdh_ISRzZIAAAAC/doctor-who-dr-who.gif',
+    'https://media.tenor.com/ZIUSH-XNatEAAAAC/doctorwho-tardis.gif',
+    'https://media.tenor.com/dSLlCYF7vikAAAAC/tardis-doctor.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_25 = [
+    'https://media.tenor.com/mh75FCw3VpoAAAAC/avengers-end-game-black-widow.gif',
+    'https://media.tenor.com/FK0u5g5qQUcAAAAd/dr-strange-doctor-strange.gif',
+    'https://media.tenor.com/o3S8K00A2CQAAAAC/the-end-game-welcome-to-the-end-game.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_50 = [
+    'https://media.tenor.com/n-vLx1Q_QBQAAAAC/fn2187.gif',
+    'https://media.tenor.com/P3iWMO_GKksAAAAC/abstract-art.gif',
+    'https://media.tenor.com/U5DTTODnuTcAAAAC/trippy-tripping.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_100 = [
+    'https://media.tenor.com/J82kuX8dFysAAAAC/blue-spiral.gif',
+    'https://media.tenor.com/_Ep8uvjeSHQAAAAC/moon-digibyte.gif',
+    'https://media.giphy.com/media/xT39CTrFW4nHLdBPpu/giphy-downsized-large.gif',
+]
