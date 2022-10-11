@@ -106,7 +106,14 @@ class AutoFlexCog(commands.Cog):
             await errors.log_error('Couldn\'t find auto flex channel.', message)
             return
         await auto_flex_channel.send(embed=embed)
-        if user_settings.reactions_enabled and not message.reactions: await message.add_reaction(emojis.NAVI)
+        if user_settings.reactions_enabled: await message.add_reaction(emojis.PANDA_LUCKY)
+        if not user_settings.auto_flex_tip_read:
+            await message.reply(
+                f'{user.mention} Nice! You just did something flex worthy. Because you have auto flex enabled, '
+                f'this was automatically posted to the channel <#{guild_settings.auto_flex_channel_id}>.\n'
+                f'If you don\'t like this, you can turn it off in {strings.SLASH_COMMANDS_NAVI["settings user"]}.'
+            )
+            await user_settings.update(auto_flex_tip_read=True)
 
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
@@ -196,9 +203,9 @@ class AutoFlexCog(commands.Cog):
                         return
                     amount = match.group(1)
                     description = (
-                        f'Never get ULTRAs out of {emojis.LB_OMEGA} OMEGA lootboxes?\n'
+                        f'Never get ULTRAs out of {emojis.LB_OMEGA} **OMEGA lootboxes**?\n'
                         f'**{user.name}** can teach you how it works. They just hacked **{amount}** {emojis.LOG_ULTRA} '
-                        f'**ULTRA logs** out of theirs.\n'
+                        f'**ULTRA logs** out of theirs.'
                     )
                 elif event == 'lb_godly_tt':
                     match = re.search(r'\+(.+?) (.+?) time capsule', embed_field0_value.lower())
@@ -288,8 +295,8 @@ class AutoFlexCog(commands.Cog):
                 if 'time traveler' in embed_field0_value.lower():
                     event = 'pets_catch_tt'
                     description = (
-                        f'**{user.name}** took a stroll when a {pet_type.lower()} popped out of nothingness.\n'
-                        f'Turns out it\'s a {emojis.SKILL_TIME_TRAVELER} **time traveler** {pet_type.lower()}!\n'
+                        f'**{user.name}** took a stroll when a {emojis.SKILL_TIME_TRAVELER} **time traveler** '
+                        f'{pet_type.lower()} popped out of nothingness.\n'
                         f'Wonder if the doctor will come after it?'
                     )
                 else:
@@ -336,7 +343,7 @@ class AutoFlexCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
                 description = (
                     f'**{user.name}** did some coinflipping and **lost the coin**.\n'
-                    f'I mean, how hard can it be, seriously? That\'s embarassing!'
+                    f'I mean, how hard can it be, seriously? That\'s just embarassing!'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'coinflip_event',
                                                   description)
@@ -442,7 +449,7 @@ class AutoFlexCog(commands.Cog):
                 elif time_travel_count_old < 5 and time_travel_count_new >= 5:
                     event = 'time_travel_5'
                     description = (
-                        f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
+                        f'**{user.name}** got addicted to this game and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
                         f'The boss in D13 can\'t wait to see you.'
                     )
                 elif time_travel_count_old < 10 and time_travel_count_new >= 10:
@@ -455,8 +462,8 @@ class AutoFlexCog(commands.Cog):
                     event = 'time_travel_25'
                     description = (
                         f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
-                        f'Good news: Welcome to the endgame!\n'
-                        f'Bad news: Hope you like dragon scale farming.'
+                        f'Good news: You are now in the endgame!\n'
+                        f'Bad news: Hope you like dragon scales.'
                     )
                 elif time_travel_count_old < 50 and time_travel_count_new >= 50:
                     event = 'time_travel_50'
@@ -543,14 +550,13 @@ class AutoFlexCog(commands.Cog):
                     description = (
                         f'**{user_name}** just cut down **{item_amount:,}** {emojis.LOG_ULTRA} **ULTRA logs** with '
                         f'three chainsaws.\n'
-                        f'One of them in their mouth.\n'
-                        f'Look, let\'s all just back away slowly, okay...'
+                        f'One of them in their mouth... uh... okay.'
                     )
                 elif event == 'work_watermelon':
                     description = (
                         f'**{user_name}** got tired of apples and bananas and stole **{item_amount:,}** '
                         f'{emojis.WATERMELON} **watermelons** instead.\n'
-                        f'They should be ashamed. And also make cocktails for everyone.'
+                        f'They should be ashamed (and make cocktails).'
                     )
                 elif event == 'work_superfish':
                     description = (
@@ -561,8 +567,7 @@ class AutoFlexCog(commands.Cog):
                 elif event == 'work_hyperlog':
                     description = (
                         f'**{user_name}** took a walk in the park when suddenly a tree fell over and split into '
-                        f'**{item_amount:,}** {emojis.LOG_HYPER} **HYPER logs**.\n'
-                        f'You couldn\'t make this up, honestly.'
+                        f'**{item_amount:,}** {emojis.LOG_HYPER} **HYPER logs**.'
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
@@ -603,7 +608,8 @@ class AutoFlexCog(commands.Cog):
 
                 description = (
                     f'Oh boy, oh boy, someone is going to try to beat the EPIC NPC today!\n'
-                    f'Unless **{user_name}** just crafted a {emojis.GODLY_COOKIE} **GODLY cookie** for fun. You never know.'
+                    f'Unless **{user_name}** just crafted a {emojis.GODLY_COOKIE} **GODLY cookie** for fun. '
+                    f'You never know.'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'forge_cookie',
                                                   description)
@@ -630,9 +636,15 @@ class AutoFlexCog(commands.Cog):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
-                together = False
+                hardmode = together = False
                 old_format = True if '__**' not in message_content.lower() else False
-                hardmode = True if '(but stronger' in message_content.lower() else False
+                search_strings_hardmode = [
+                    '(but stronger', #English
+                    '(pero más fuerte', #Spanish
+                    '(só que mais forte', #Portuguese
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
+                    hardmode = True
                 search_strings_together = [
                     'hunting together', #English
                     'cazando juntos', #Spanish
@@ -775,7 +787,7 @@ class AutoFlexCog(commands.Cog):
                         description = (
                             f'Everbody rejoice because **{user_name}** did something almost impossible and found '
                             f'**{amount}** {lootboxes_user[name]} **{name}**!\n'
-                            f'We are all so happy for you and not at all jealous!'
+                            f'We are all so happy for you and not at all jealous.'
                         )
                     elif event == 'lb_omega':
                         if not hardmode:
@@ -783,13 +795,13 @@ class AutoFlexCog(commands.Cog):
                             description = (
                                 f'**{user_name}** found an {lootboxes_user[name]} **{name}** just like that.\n'
                                 f'And by "just like that" I mean **without hardmoding**!\n'
-                                f'Take this as a shining example, hardmode users!'
+                                f'See, hardmoders, that\'s how it\'s done!'
                             )
                         elif int(amount) > 1:
                             event = 'lb_omega_multiple'
                             description = (
-                                f'Yeah yeah I know, an {lootboxes_user[name]} **{name}** isn\'t very exciting.\n'
-                                f'However, **{user_name}** just found a whopping __**{amount}**__ of them!\n'
+                                f'While an {lootboxes_user[name]} **{name}** isn\'t very exciting, '
+                                f'**{user_name}** just found __**{amount}**__ of them at once!\n'
                                 f'(Well, actually, the horse did all the work)'
                             )
                         else:
@@ -797,7 +809,7 @@ class AutoFlexCog(commands.Cog):
                     else:
                         description = (
                             f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
-                            f'~~They should be banned!~~ Congratulations!'
+                            f'~~They should be banned!~~ We are so happy for you!'
                         )
                 if lootbox_partner_found:
                     name, amount = lootbox_partner_found
@@ -805,7 +817,7 @@ class AutoFlexCog(commands.Cog):
                         description = (
                             f'{description}\n\n'
                             f'Ah yes, also... as if that wasn\'t OP enough, they also found their partner '
-                            f'**{partner_name}** **{amount}** {lootboxes_partner[name]} **{name}** ON TOP OF THAT??!!\n'
+                            f'**{partner_name}** **{amount}** {lootboxes_partner[name]} **{name}** ON TOP OF THAT!\n'
                             f'I am really not sure why this much luck is even allowed.'
                         )
                     else:
@@ -869,7 +881,7 @@ class AutoFlexCog(commands.Cog):
 
                 description = (
                     f'**{user.name}** used a magic spell on a lootbox for some reason which then evolved into an '
-                    f'{emojis.LB_OMEGA} **OMEGA lootbox**!\n'
+                    f'{emojis.LB_OMEGA} **OMEGA lootbox**! For some reason.\n'
                     f'I wonder what the Ministry of Magic would say to this.'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_lb', description)

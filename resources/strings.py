@@ -560,9 +560,9 @@ SLASH_COMMANDS_NAVI = {
 FLEX_TITLES_WORK_HYPERLOG = [
     'TIMBER!',
     'Hyperino',
-    'Justin, that you?',
-    'I swear this happened',
-    'Wooooh...d',
+    'Justin?',
+    'I swear this is how it happened',
+    'Wooooh...d!',
 ]
 
 FLEX_TITLES_WORK_ULTRALOG = [
@@ -571,11 +571,11 @@ FLEX_TITLES_WORK_ULTRALOG = [
     'That\'s not how you use a chainsaw',
     'Deforesting in progress',
     'Logging 101',
-    'Y dis almost never happen in A3',
+    'Y dis never happen in A3',
 ]
 
 FLEX_TITLES_WORK_ULTIMATELOG = [
-    'Wood you log at that!',
+    'Wood you log at this bad pun!',
     'What do you even need that stuff for?',
     'Chainsaw master',
     'Blinding logs',
@@ -596,6 +596,7 @@ FLEX_TITLES_WORK_WATERMELON = [
     'Anyone know what to do with these?',
     'Fruit robbery',
     'Deliciously useless',
+    'Meloncholia',
 ]
 
 FLEX_TITLES_FORGE_COOKIE = [
@@ -612,6 +613,7 @@ FLEX_TITLES_LB_OMEGA_MULTIPLE = [
     'One wasn\'t enough apparently',
     'Now that\'s just greedy',
     'How is this even fair?',
+    'My precious',
 ]
 
 FLEX_TITLES_LB_OMEGA_NOHARDMODE = [
@@ -814,10 +816,13 @@ FLEX_TITLES_TIME_TRAVEL_100 = [
 # Auto flex thumbnails
 FLEX_THUMBNAILS_WORK_HYPERLOG = [
     'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
-    'https://media.giphy.com/media/34pjdMdwZCetBbwKNf/giphy-downsized-large.gif',
+    'https://media.tenor.com/CeKTpmgR3ZkAAAAC/yell-timber.gif',
     'https://media.tenor.com/Csef0r09V3oAAAAC/timber-timbera.gif',
     'https://media.tenor.com/OxX-5DEP9OwAAAAC/love-nature.gif',
-    'https://media.tenor.com/4IXEInpfbXoAAAAi/minecraft-loggers.gif',
+    'https://media.tenor.com/r5CYGkSFnT0AAAAC/hyperino-scooter.gif',
+    'https://media.giphy.com/media/3o6Zt7Nu7NikdIvjaw/giphy.gif',
+    'https://media.giphy.com/media/VNdgEiEcRalhe/giphy.gif',
+    'https://media.giphy.com/media/eRJGUjgF4DbCU/giphy.gif',
 ]
 
 FLEX_THUMBNAILS_WORK_ULTIMATELOG = [
@@ -911,6 +916,7 @@ FLEX_THUMBNAILS_OMEGA_ULTRA = [
     'https://media.giphy.com/media/5Y2bU7FqLOuzK/giphy.gif',
     'https://media.giphy.com/media/M9CoztwchmOdSRGH2m/giphy.gif',
     'https://media.giphy.com/media/3KXd872FGuIO0u0e7h/giphy.gif',
+    'https://media.tenor.com/TukiL_LftA0AAAAC/loz-botw.gif',
 ]
 
 FLEX_THUMBNAILS_GODLY_TT = [

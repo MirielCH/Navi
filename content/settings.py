@@ -138,6 +138,11 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
             f'**__No personal data is processed or stored in any way!__**\n'
             f'You can opt-out of command tracking in {strings.SLASH_COMMANDS_NAVI["stats"]} or in your user settings.\n\n'
         )
+        field_auto_flex = (
+            f'This bot as an auto flex feature. If auto flexing is turned on by the server admin, I will automatically '
+            f'post certain rare events (rare lootboxes, high tier loot, etc) to an auto flex channel.\n'
+            f'If you don\'t like this, you can turn it off in your user settings.\n'
+        )
         field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
             f'{strings.SLASH_COMMANDS_NAVI["help"]}.'
@@ -154,6 +159,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         )
         embed.add_field(name='SETTINGS', value=field_settings, inline=False)
         embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
+        embed.add_field(name='AUTO FLEXING', value=field_auto_flex, inline=False)
         embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
         embed.set_thumbnail(url=image_url)
         view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
@@ -173,7 +179,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         return
     answer = (
         f'**{ctx.author.name}**, turning me off will disable me completely. This includes all helpers, the command '
-        f'tracking and the reminders. It will also delete all of your active reminders.\n'
+        f'tracking, auto flexing and the reminders. It will also delete all of your active reminders.\n'
         f'Are you sure?'
     )
     view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
@@ -931,8 +937,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'and {strings.SLASH_COMMANDS_NAVI["off"]}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
         f'{emojis.BP} **Auto flex alerts**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
-        f'{emojis.DETAIL} _This setting lets you opt in or out of auto flexes._\n'
-        f'{emojis.DETAIL} _Auto flexing itself needs to be configured in the server settings._\n'
+        f'{emojis.DETAIL} _Auto flexing only works if it\'s enabled in the server settings._\n'
+        f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
     donor_tier = (
         f'{emojis.BP} **You**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'

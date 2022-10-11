@@ -43,6 +43,7 @@ class User():
     alert_weekly: UserAlert
     alert_work: UserAlert
     auto_flex_enabled: bool
+    auto_flex_tip_read: bool
     auto_ready_enabled: bool
     bot_enabled: bool
     clan_name: str
@@ -116,6 +117,7 @@ class User():
         self.alert_weekly = new_settings.alert_weekly
         self.alert_work = new_settings.alert_work
         self.auto_flex_enabled = new_settings.auto_flex_enabled
+        self.auto_flex_tip_read = new_settings.auto_flex_tip_read
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
@@ -233,6 +235,7 @@ class User():
             alert_work_message: str
             alert_work_visible: bool
             auto_flex_enabled: bool
+            auto_flex_tip_read: bool
             auto_ready_enabled: bool
             bot_enabled: bool
             clan_name: str
@@ -371,6 +374,7 @@ async def _dict_to_user(record: dict) -> User:
                                    visible=bool(record['alert_work_visible'])),
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
+            auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
             cmd_cd_visible = record['cmd_cd_visible'],
@@ -633,6 +637,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_work_message: str
         alert_work_visible: bool
         auto_flex_enabled: bool
+        auto_flex_tip_read: bool
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
