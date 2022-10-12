@@ -303,6 +303,7 @@ class SettingsReadyView(discord.ui.View):
         toggled_settings_other = {
             '/cd': 'cmd_cd_visible',
             '/inventory': 'cmd_inventory_visible',
+            '/ready': 'cmd_ready_visible',
             '/slashboard': 'cmd_slashboard_visible',
         }
         self.add_item(components.ManageReadySettingsSelect(self))

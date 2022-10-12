@@ -227,7 +227,8 @@ class FunCog(commands.Cog):
             search_strings = [
                 '<:coolness', #All languages
             ]
-            if any(search_string in message_content.lower() for search_string in search_strings):
+            if (any(search_string in message_content.lower() for search_string in search_strings)
+                and not 'coolrency' in message_content.lower()):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     search_patterns = [

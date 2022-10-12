@@ -158,6 +158,11 @@ async def command_ready(
             f'{field_other}\n'
             f'{emojis.BP} {strings.SLASH_COMMANDS["inventory"]}'
         )
+    if user_settings.cmd_ready_visible:
+        field_other = (
+            f'{field_other}\n'
+            f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["ready"]}'
+        )
     if user_settings.cmd_slashboard_visible:
         field_other = (
             f'{field_other}\n'

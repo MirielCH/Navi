@@ -49,6 +49,7 @@ class User():
     clan_name: str
     cmd_cd_visible: bool
     cmd_inventory_visible: bool
+    cmd_ready_visible: bool
     cmd_slashboard_visible: bool
     context_helper_enabled: bool
     dnd_mode_enabled: bool
@@ -123,6 +124,7 @@ class User():
         self.clan_name = new_settings.clan_name
         self.cmd_cd_visible = new_settings.cmd_cd_visible
         self.cmd_inventory_visible = new_settings.cmd_inventory_visible
+        self.cmd_ready_visible = new_settings.cmd_ready_visible
         self.cmd_slashboard_visible = new_settings.cmd_slashboard_visible
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
@@ -241,6 +243,7 @@ class User():
             clan_name: str
             cmd_cd_visible: bool
             cmd_inventory_visible: bool
+            cmd_cmd_ready_visible: bool
             cmd_slashboard_visible: bool
             context_helper_enabled: bool
             dnd_mode_enabled: bool
@@ -379,6 +382,7 @@ async def _dict_to_user(record: dict) -> User:
             clan_name = record['clan_name'],
             cmd_cd_visible = record['cmd_cd_visible'],
             cmd_inventory_visible = record['cmd_inventory_visible'],
+            cmd_ready_visible = record['cmd_ready_visible'],
             cmd_slashboard_visible = record['cmd_slashboard_visible'],
             context_helper_enabled = bool(record['context_helper_enabled']),
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
@@ -643,6 +647,7 @@ async def _update_user(user: User, **kwargs) -> None:
         clan_name: str
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
+        cmd_ready_visible: bool
         cmd_slashboard_visible: bool
         context_helper_enabled: bool
         dnd_mode_enabled: bool

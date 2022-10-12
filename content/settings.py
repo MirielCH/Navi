@@ -139,7 +139,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
             f'You can opt-out of command tracking in {strings.SLASH_COMMANDS_NAVI["stats"]} or in your user settings.\n\n'
         )
         field_auto_flex = (
-            f'This bot as an auto flex feature. If auto flexing is turned on by the server admin, I will automatically '
+            f'This bot has an auto flex feature. If auto flexing is turned on by the server admin, I will automatically '
             f'post certain rare events (rare lootboxes, high tier loot, etc) to an auto flex channel.\n'
             f'If you don\'t like this, you can turn it off in your user settings.\n'
         )
@@ -831,6 +831,8 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
         f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS_NAVI["ready"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS_NAVI["slashboard"]} command**: '
         f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
     )
