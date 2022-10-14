@@ -169,11 +169,12 @@ class PetsCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_description = icon_url = ''
+            message_author = message_description = icon_url = message_title = ''
             if embed.author:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.description: message_description = str(embed.description)
+            if embed.title: message_title = embed.title
 
             # Pet list
             search_strings = [
@@ -263,6 +264,43 @@ class PetsCog(commands.Cog):
                                                              message.channel.id, reminder_message)
                     )
                 if reminder_created and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+
+            # Pets claim
+            search_strings = [
+                'pet adventure rewards', #English
+                'recompensas de pet adventure', #Spanish, Portuguese
+            ]
+            if any(search_string in message_title.lower() for search_string in search_strings):
+                user_id = user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, regex.COMMAND_PETS_CLAIM,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in pet claim message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
+                if user_settings.ready_pets_claim_active:
+                    await user_settings.update(ready_pets_claim_active=False)
+
 
 # Initialization
 def setup(bot):

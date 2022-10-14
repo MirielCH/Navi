@@ -251,6 +251,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
         cmd_cd_action = 'Hide' if view.user_settings.cmd_cd_visible else 'Show'
         up_next_reminder_action = 'Hide' if view.user_settings.ready_up_next_visible else 'Show'
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
+        if view.user_settings.ready_pets_claim_after_every_pet:
+            pets_claim_type = 'when all pets are back'
+        else:
+            pets_claim_type = 'after every pet'
         auto_ready_action = 'Disable' if view.user_settings.auto_ready_enabled else 'Enable'
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'{auto_ready_action} auto-ready',
@@ -263,6 +267,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
                                                 value='toggle_up_next'))
         options.append(discord.SelectOption(label=f'Show "up next" reminder with {up_next_style}',
                                                 value='toggle_up_next_timestamp'))
+        options.append(discord.SelectOption(label=f'Show "/pets claim" {pets_claim_type}',
+                                                value='toggle_pets_claim'))
         if view.clan_settings is not None:
             clan_reminder_action = 'Hide' if view.clan_settings.alert_visible else 'Show'
             options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
@@ -290,6 +296,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp)
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
+        elif select_value == 'toggle_pets_claim':
+            await self.view.user_settings.update(
+                ready_pets_claim_after_every_pet=not self.view.user_settings.ready_pets_claim_after_every_pet
+            )
         for child in self.view.children.copy():
             if isinstance(child, ManageReadySettingsSelect):
                 self.view.remove_item(child)

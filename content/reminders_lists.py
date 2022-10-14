@@ -77,6 +77,11 @@ async def command_ready(
         elif activity == 'work':
             command = await functions.get_slash_command(user_settings, user_settings.last_work_command)
             if command is None: command = 'work command'
+        elif activity == 'pets':
+            if user_settings.ready_pets_claim_active:
+                command = await functions.get_slash_command(user_settings, 'pets claim')
+            else:
+                command = await functions.get_slash_command(user_settings, 'pets adventure')
         else:
             command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity])
         if activity == 'lootbox':
@@ -130,11 +135,16 @@ async def command_ready(
         clan_command = f"{command_upgrade} or {command_raid}"
     ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
     ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
+    active_pet_reminders = False
     for reminder in user_reminders:
         if reminder.activity in ready_command_activities:
             ready_command_activities.remove(reminder.activity)
         elif reminder.activity in ready_event_activities:
             ready_event_activities.remove(reminder.activity)
+        elif 'pets' in reminder.activity:
+            active_pet_reminders = True
+    if not active_pet_reminders or user_settings.ready_pets_claim_active:
+        ready_command_activities.append('pets')
     current_time = datetime.utcnow().replace(microsecond=0)
     if 'hunt' in ready_command_activities and user_settings.partner_hunt_end_time > current_time:
         ready_command_activities.remove('hunt')
@@ -192,6 +202,11 @@ async def command_ready(
             field_ready_commands = (
                 f'{field_ready_commands}\n'
                 f'{emojis.BP} {command}'
+            )
+            if 'pets adventure' in command:
+                field_ready_commands = (
+                f'{field_ready_commands}\n'
+                f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["pets list"]} to update reminders._'
             )
         if field_ready_commands != '':
             answer = (

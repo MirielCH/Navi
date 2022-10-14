@@ -790,6 +790,10 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
     other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
+    if user_settings.ready_pets_claim_after_every_pet:
+        pets_claim_type = 'After every pet'
+    else:
+        pets_claim_type = 'When all pets are back'
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
@@ -798,6 +802,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
         f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
         f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["pets claim"]} type**: `{pets_claim_type}`\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     command_reminders = (
@@ -813,6 +818,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
+        f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
         f'{emojis.BP} **Vote**: {await bool_to_text(user_settings.alert_vote.visible)}\n'

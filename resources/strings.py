@@ -563,6 +563,10 @@ FLEX_TITLES_WORK_HYPERLOG = [
     'Justin?',
     'I swear this is how it happened',
     'Wooooh...d!',
+    'Y dis never happen in A3',
+    'Wood you log at this bad pun',
+    'Log? Log!',
+    'Logging 101',
 ]
 
 FLEX_TITLES_WORK_ULTRALOG = [
@@ -570,15 +574,11 @@ FLEX_TITLES_WORK_ULTRALOG = [
     'This sounds dangerous',
     'That\'s not how you use a chainsaw',
     'Deforesting in progress',
-    'Logging 101',
-    'Y dis never happen in A3',
 ]
 
 FLEX_TITLES_WORK_ULTIMATELOG = [
-    'Wood you log at this bad pun!',
     'What do you even need that stuff for?',
     'Chainsaw master',
-    'Blinding logs',
     'Can\'t even dismantle it, lol',
 ]
 
@@ -823,10 +823,15 @@ FLEX_THUMBNAILS_WORK_HYPERLOG = [
     'https://media.giphy.com/media/3o6Zt7Nu7NikdIvjaw/giphy.gif',
     'https://media.giphy.com/media/VNdgEiEcRalhe/giphy.gif',
     'https://media.giphy.com/media/eRJGUjgF4DbCU/giphy.gif',
+    'https://media.tenor.com/4kc5AXWNVvQAAAAC/barney-rubble-chopping-wood.gif',
+    'https://media.giphy.com/media/sA6GWybXhdTfXcQpg5/giphy.gif',
+    'https://media.giphy.com/media/SXkwx68Y4x6MlswX4Y/giphy.gif',
+    'https://media.giphy.com/media/88np7RwIbvA76/giphy.gif',
+    'https://media.giphy.com/media/YWxV34fttb0ljpRcoY/giphy.gif',
+    'https://media.tenor.com/GwTLRYxCEX4AAAAC/raising-my-axe-gawain.gif',
 ]
 
 FLEX_THUMBNAILS_WORK_ULTIMATELOG = [
-    'https://media.tenor.com/4kc5AXWNVvQAAAAC/barney-rubble-chopping-wood.gif',
     'https://media.giphy.com/media/SGV9O1fuh2nf5T8FNW/giphy-downsized-large.gif',
     'https://media.tenor.com/vfraS_QhPcEAAAAd/captain-america-pecs.gif',
     'https://media.tenor.com/Gd9zrsML1tYAAAAC/im-building-construction.gif',

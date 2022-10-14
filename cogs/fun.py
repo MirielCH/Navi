@@ -174,11 +174,18 @@ class FunCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
                 await message.add_reaction(emojis.PEPE_LAUGH)
 
-            if 'you just lost your lootbox' in message_content.lower():
+            search_strings = [
+                'you just lost your lootbox', #English
+                'você perdeu a lootbox', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_name = user_command_message = None
                 if user is None:
-                    user_name_match = re.search(r"\*\*(.+?)\*\* uses a", message_content)
+                    search_patterns = [
+                        r"\*\*(.+?)\*\* uses? ", #English, Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (

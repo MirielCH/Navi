@@ -78,6 +78,8 @@ class User():
     reactions_enabled: bool
     ready_as_embed: bool
     ready_embed_color: str
+    ready_pets_claim_active: bool
+    ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
     ready_up_next_as_timestamp: bool
     ready_up_next_visible: bool
@@ -153,6 +155,8 @@ class User():
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_as_embed = new_settings.ready_as_embed
         self.ready_embed_color = new_settings.ready_embed_color
+        self.ready_pets_claim_active = new_settings.ready_pets_claim_active
+        self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_visible = new_settings.ready_up_next_visible
@@ -221,6 +225,7 @@ class User():
             alert_pet_tournament_visible: bool
             alert_pets_enabled: bool
             alert_pets_message: str
+            alert_pets_visible: bool
             alert_quest_enabled: bool
             alert_quest_message: str
             alert_quest_visible: bool
@@ -272,6 +277,8 @@ class User():
             reactions_enabled: bool
             ready_as_embed: bool
             ready_embed_color: str
+            ready_pets_claim_active: bool
+            ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
             ready_up_next_as_timestamp: bool
             ready_up_next_visible: bool
@@ -359,7 +366,7 @@ async def _dict_to_user(record: dict) -> User:
                                              visible=bool(record['alert_pet_tournament_visible'])),
             alert_pets = UserAlert(enabled=bool(record['alert_pets_enabled']),
                                    message=record['alert_pets_message'],
-                                   visible=True),
+                                   visible=record['alert_pets_visible']),
             alert_quest = UserAlert(enabled=bool(record['alert_quest_enabled']),
                                     message=record['alert_quest_message'],
                                     visible=bool(record['alert_quest_visible'])),
@@ -412,6 +419,8 @@ async def _dict_to_user(record: dict) -> User:
             ready_as_embed = bool(record['ready_as_embed']),
             ready_embed_color = record['ready_embed_color'],
             ready_other_on_top = bool(record['ready_other_on_top']),
+            ready_pets_claim_active = bool(record['ready_pets_claim_active']),
+            ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
             rubies = record['rubies'],
@@ -625,6 +634,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_pet_tournament_visible: bool
         alert_pets_enabled: bool
         alert_pets_message: str
+        alert_pets_visible: bool
         alert_quest_enabled: bool
         alert_quest_message: str
         alert_quest_visible: bool
@@ -672,6 +682,8 @@ async def _update_user(user: User, **kwargs) -> None:
         pet_helper_icon_mode: bool
         ready_as_embed: bool
         ready_embed_color: str
+        ready_pets_claim_active: bool
+        ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool
         ready_up_next_as_timestamp: bool
         ready_up_next_visible: bool

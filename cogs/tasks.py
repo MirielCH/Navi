@@ -60,8 +60,11 @@ class TasksCog(commands.Cog):
                             await reminders.get_active_user_reminders(user_id=reminder.user_id, activity='pets',
                                                                       end_time=reminder.end_time)
                         )
+                        if user_settings.ready_pets_claim_after_every_pet:
+                            await user_settings.update(ready_pets_claim_active=True)
                     except exceptions.NoDataFoundError:
                         pet_reminders = ()
+                        await user_settings.update(ready_pets_claim_active=True)
                     command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
                     if not pet_reminders:
                         messages[message_no] = (

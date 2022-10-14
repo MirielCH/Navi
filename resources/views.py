@@ -287,6 +287,7 @@ class SettingsReadyView(discord.ui.View):
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
             'Quest': 'alert_quest',
+            'Pets claim': 'alert_pets',
             'Training': 'alert_training',
             'Vote': 'alert_vote',
             'Weekly': 'alert_weekly',
