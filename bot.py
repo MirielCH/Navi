@@ -91,6 +91,7 @@ EXTENSIONS = [
         'cogs.events',
         'cogs.farm',
         'cogs.fun',
+        'cogs.halloween',
         'cogs.helper_context',
         'cogs.helper_heal',
         'cogs.helper_ruby',

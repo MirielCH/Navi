@@ -78,11 +78,11 @@ class HalloweenCog(commands.Cog):
                 attack = attack_match.group(1)
                 attacks_answers = {
                     'left': 'pumpkin',
-                    'right': 't pose',
-                    'ahead': 'apple',
+                    'right': 'attack',
+                    'ahead': 'bazooka',
                     'behind': 'dodge',
                 }
-                await message.reply(f'`{attacks_answers[attack]}`')
+                await message.reply(f'`{attacks_answers[attack].upper()}`')
 
 # Initialization
 def setup(bot):
