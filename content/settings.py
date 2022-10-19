@@ -662,7 +662,7 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
-        f'{emojis.BP} {emojis.PET_PUMPKIN_BAT} **Pumpkin bat helper**: '
+        f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
         f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
     )
@@ -808,6 +808,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
         f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
+        f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await bool_to_text(user_settings.alert_boo.visible)}\n'
         f'{emojis.BP} **Daily**: {await bool_to_text(user_settings.alert_daily.visible)}\n'
         f'{emojis.BP} **Duel**: {await bool_to_text(user_settings.alert_duel.visible)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await bool_to_text(user_settings.alert_dungeon_miniboss.visible)}\n'
@@ -864,6 +865,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
+        f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **Duel**: {await functions.bool_to_text(user_settings.alert_duel.enabled)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await functions.bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}\n'

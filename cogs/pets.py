@@ -142,6 +142,30 @@ class PetsCog(commands.Cog):
                         )
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
+            # Pets claim when no pets are on adventures
+            search_strings = [
+                'there are no pet adventure rewards to claim', #English
+                'no hay recompensas de pet adventure para reclamar', #Spanish
+                'não há recompensas de pet adventure para coletar', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    if message.mentions:
+                        user = message.mentions[0]
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for pet claim without active pets message.', message)
+                        return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
+                if user_settings.ready_pets_claim_active:
+                    await user_settings.update(ready_pets_claim_active=False)
+
             search_strings = [
                 'it came back instantly!!', #English
                 'volvio al instante!!', #Spanish

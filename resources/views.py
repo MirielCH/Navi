@@ -278,6 +278,7 @@ class SettingsReadyView(discord.ui.View):
         toggled_settings_commands = {
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
+            'Boo': 'alert_boo',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
@@ -358,6 +359,7 @@ class SettingsRemindersView(discord.ui.View):
         toggled_settings_commands = {
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
+            'Boo': 'alert_boo',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',

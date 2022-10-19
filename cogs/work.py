@@ -129,6 +129,9 @@ class WorkCog(commands.Cog):
                 ':crossed_swords:', #Ruby dragon event, all languages
                 'guildring', #Stuff bought from guild shop, all languages
                 'zombie', #Zombie horde hunt event, all languages
+                'well done', #English, training
+                'bien hecho', #Spanish, training
+                'muito bem', #Portuguese, training
             ]
             search_strings = [
                 '** got ', #English

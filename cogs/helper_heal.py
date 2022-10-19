@@ -101,10 +101,7 @@ class HelperHealCog(commands.Cog):
                 health_lost = 100
                 health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 9)):
-                if interaction is not None:
-                    action = await functions.get_slash_command(user_settings, 'heal')
-                else:
-                    action = 'heal'
+                action = await functions.get_slash_command(user_settings, 'heal')
                 warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:
@@ -116,7 +113,11 @@ class HelperHealCog(commands.Cog):
 
         # Hunt solo and adventure
         elif any(search_string in message_content.lower() for search_string in search_strings_hunt_adv):
-            if 'horslime' in message_content.lower(): return
+            event_mobs = [
+                'horslime',
+                'bat slime',
+            ]
+            if any(event_mob in message_content.lower() for event_mob in event_mobs): return
             user_name = user_command_message = None
             interaction = await functions.get_interaction(message)
             user = await functions.get_interaction_user(message)
@@ -169,10 +170,7 @@ class HelperHealCog(commands.Cog):
                 health_lost = 100
                 health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 10)):
-                if interaction is not None:
-                    action = await functions.get_slash_command(user_settings, 'heal')
-                else:
-                    action = 'heal'
+                action = await functions.get_slash_command(user_settings, 'heal')
                 warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:

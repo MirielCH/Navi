@@ -29,6 +29,7 @@ DEFAULT_MESSAGES = {
     'adventure': DEFAULT_MESSAGE,
     'arena': DEFAULT_MESSAGE,
     'big-arena': DEFAULT_MESSAGE_EVENT,
+    'boo': DEFAULT_MESSAGE,
     'daily': DEFAULT_MESSAGE,
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
@@ -91,6 +92,7 @@ ACTIVITIES = (
     'adventure',
     'arena',
     'big-arena',
+    'boo',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -119,6 +121,7 @@ ACTIVITIES_ALL.insert(0, 'all')
 ACTIVITIES_COMMANDS = (
     'adventure',
     'arena',
+    'boo',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -147,6 +150,7 @@ ACTIVITIES_SLASH_COMMANDS = {
     'adventure': 'adventure',
     'arena': 'arena',
     'big-arena': 'big arena',
+    'boo': 'hal boo',
     'daily': 'daily',
     'duel': 'duel',
     'dungeon-miniboss': 'dungeon',
@@ -225,6 +229,7 @@ ACTIVITIES_COLUMNS = {
     'adventure': 'alert_adventure',
     'arena': 'alert_arena',
     'big-arena': 'alert_big_arena',
+    'boo': 'alert_boo',
     'daily': 'alert_daily',
     'duel': 'alert_duel',
     'dungeon-miniboss': 'alert_dungeon_miniboss',
@@ -326,6 +331,7 @@ MONSTERS_ADVENTURE = (
     'Krampus',
     '**Yeti**',
     '**Hyper Giant Ice Block**',
+    '**Bat Slime**',
 )
 
 MONSTERS_ADVENTURE_TOP = (
@@ -486,6 +492,7 @@ SLASH_COMMANDS = {
     'guild raid': '</guild raid:961046237753257994>',
     'guild stats': '</guild stats:961046237753257994>',
     'guild upgrade': '</guild upgrade:961046237753257994>',
+    'hal boo': '</hal boo:1031664514250330192>',
     'heal': '</heal:959915737777061928>',
     'horse breeding': '</horse breeding:966961638378987540>',
     'horse race': '</horse race:966961638378987540>',
@@ -605,6 +612,15 @@ FLEX_TITLES_FORGE_COOKIE = [
     'What a weird recipe',
     'Next time just use an oven',
     'Someone say cookie?',
+]
+
+FLEX_TITLES_HAL_BOO = [
+    'Stop scaring people, will ya?',
+    'AAAAAAAAAAAAHHHHHHHHHHHH',
+    'Boo or booh?',
+    'A treat for the trick',
+    'Hope they didn\'t get a heart attack',
+    'Halloween hacking',
 ]
 
 FLEX_TITLES_LB_OMEGA_MULTIPLE = [
@@ -864,6 +880,17 @@ FLEX_THUMBNAILS_FORGE_COOKIE = [
     'https://media.tenor.com/YP5Xv8Sa45IAAAAC/cookie-monster-awkward.gif',
     'https://media.giphy.com/media/Y09s2Frxp7wpBGXTyt/giphy.gif',
     'https://media.giphy.com/media/bAlYQOugzX9sY/giphy.gif',
+]
+
+FLEX_THUMBNAILS_HAL_BOO = [
+    'https://media.tenor.com/M6MkMfBBDjcAAAAC/afraid-scared.gif',
+    'https://media.tenor.com/LzqPLLcuAqsAAAAC/peachcat-boo.gif',
+    'https://media.tenor.com/xdP3iAkkZ6cAAAAC/ghost-spooky.gif',
+    'https://media.tenor.com/xdP3iAkkZ6cAAAAC/ghost-spooky.gif',
+    'https://media.tenor.com/SM5IBkvYeX0AAAAC/halloween-creepy-pumpkin.gif',
+    'https://media.tenor.com/A6zk0D9xNVcAAAAC/boo-ghosts.gif',
+    'https://media.giphy.com/media/12RfP2odT4hEOI/giphy.gif',
+    'https://media.giphy.com/media/3o7TKqnN349PBUtGFO/giphy.gif',
 ]
 
 FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE = [

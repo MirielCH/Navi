@@ -23,6 +23,7 @@ class User():
     alert_adventure: UserAlert
     alert_arena: UserAlert
     alert_big_arena: UserAlert
+    alert_boo: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
@@ -99,6 +100,7 @@ class User():
         new_settings: User = await get_user(self.user_id)
         self.alert_adventure = new_settings.alert_adventure
         self.alert_arena = new_settings.alert_arena
+        self.alert_boo = new_settings.alert_boo
         self.alert_big_arena = new_settings.alert_big_arena
         self.alert_daily = new_settings.alert_daily
         self.alert_duel = new_settings.alert_duel
@@ -185,6 +187,9 @@ class User():
             alert_big_arena_enabled: bool
             alert_big_arena_message: str
             alert_big_arena_visible: bool
+            alert_boo_enabled: bool
+            alert_boo_message: str
+            alert_boo_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
             alert_daily_visible: bool
@@ -322,6 +327,9 @@ async def _dict_to_user(record: dict) -> User:
             alert_arena = UserAlert(enabled=bool(record['alert_arena_enabled']),
                                     message=record['alert_arena_message'],
                                     visible=bool(record['alert_arena_visible'])),
+            alert_boo = UserAlert(enabled=bool(record['alert_boo_enabled']),
+                                    message=record['alert_boo_message'],
+                                    visible=bool(record['alert_boo_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
                                         visible=bool(record['alert_big_arena_visible'])),
@@ -594,6 +602,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_big_arena_enabled: bool
         alert_big_arena_message: str
         alert_big_arena_visible: bool
+        alert_boo_enabled: bool
+        alert_boo_message: str
+        alert_boo_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
         alert_daily_visible: bool

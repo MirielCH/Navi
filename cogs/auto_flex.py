@@ -17,6 +17,7 @@ FLEX_TITLES = {
     'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
     'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
     'forge_cookie': strings.FLEX_TITLES_FORGE_COOKIE,
+    'hal_boo': strings.FLEX_TITLES_HAL_BOO,
     'lb_omega_multiple': strings.FLEX_TITLES_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_TITLES_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_TITLES_LB_OMEGA_PARTNER,
@@ -52,6 +53,7 @@ FLEX_THUMBNAILS = {
     'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
     'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
     'forge_cookie': strings.FLEX_THUMBNAILS_FORGE_COOKIE,
+    'hal_boo': strings.FLEX_THUMBNAILS_HAL_BOO,
     'lb_omega_multiple': strings.FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_THUMBNAILS_LB_OMEGA_PARTNER,
@@ -707,16 +709,9 @@ class AutoFlexCog(commands.Cog):
                 }
                 lootbox_user_found = []
                 lootbox_partner_found = []
-                search_patterns_together_new = [
-                    fr"\+(.+?) (.+?)", #All languages
-                ]
                 search_patterns_together_old_user = [
-                    fr"{user_name}\*\* got (.+?) (.+?)", #English
-                    fr"{user_name}\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
-                ]
-                search_patterns_together_old_partner = [
-                    fr"{partner_name}\*\* got (.+?) (.+?)", #English
-                    fr"{partner_name}\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
+                    fr"{re.escape(user_name)}\*\* got (.+?) (.+?)", #English
+                    fr"{re.escape(user_name)}\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
                 ]
                 search_patterns_solo = [
                     fr"\*\* got (.+?) (.+?)", #English
@@ -731,6 +726,13 @@ class AutoFlexCog(commands.Cog):
                     message_content_partner = message_content[partner_loot_start:]
 
                 if together:
+                    search_patterns_together_new = [
+                        fr"\+(.+?) (.+?)", #All languages
+                    ]
+                    search_patterns_together_old_partner = [
+                       fr"{re.escape(partner_name)}\*\* got (.+?) (.+?)", #English
+                        fr"{re.escape(partner_name)}\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
+                    ]
                     if old_format:
                         search_patterns_user = search_patterns_together_old_user
                         search_patterns_partner = search_patterns_together_old_partner
@@ -1145,6 +1147,59 @@ class AutoFlexCog(commands.Cog):
                 else:
                     return
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
+                                                  description)
+
+            # Rare halloween loot
+            search_strings = [
+                'sleepy potion', #English potion
+                'suspicious broom', #English broom
+            ]
+            search_strings_scare = [
+                '** scared **', #English potion
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings)
+                and any(search_string in message_content.lower() for search_string in search_strings_scare)):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                search_patterns = [
+                    r" \*\*(.+?)\*\* scared", #English
+                ]
+                user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if not user_name_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find user name in auto flex hal boo message.', message)
+                    return
+                user_name = user_name_match.group(1)
+                if user is None:
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, regex.COMMAND_HAL_BOO,
+                            user_name=user_name
+                        )
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find user for auto flex hal boo message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+
+                if 'sleepy potion' in message_content.lower():
+                    emoji = emojis.SLEEPY_POTION
+                    item_name = 'sleepy potion'
+                else:
+                    emoji = emojis.SUSPICIOUS_BROOM
+                    item_name = 'suspicious broom'
+                description = (
+                    f'**{user.name}** scared a friend to death and got a {emoji} **{item_name}** as a reward for that.\n'
+                    f'So we\'re getting rewarded for being a bad friend now? Hope you feel bad, okay?'
+                )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'hal_boo',
                                                   description)
 
 # Initialization
