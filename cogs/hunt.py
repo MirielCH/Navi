@@ -477,7 +477,7 @@ class HuntCog(commands.Cog):
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await('User not found in hunt event non-slash message.', message)
+                        await errors.log_error('User not found in hunt event non-slash message.', message)
                         return
                     user = user_command_message.author
                     try:
@@ -528,9 +528,8 @@ class HuntCog(commands.Cog):
                     else:
                         donor_tier = user_settings.user_donor_tier
                     donor_tier = 3 if donor_tier > 3 else donor_tier
-                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     if cooldown.donor_affected:
-                        time_left_seconds = (actual_cooldown
+                        time_left_seconds = (cooldown.actual_cooldown_mention()
                                             * settings.DONOR_COOLDOWNS[donor_tier]
                                             - time_elapsed.total_seconds())
                     else:

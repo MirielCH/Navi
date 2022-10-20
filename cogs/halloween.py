@@ -166,6 +166,7 @@ class HalloweenCog(commands.Cog):
                 '** asustó a **', #Spanish
                 '** assustou a **', #Portuguese
                 '** failed to scare **', #English, failed
+                '** got so much scared by **', #English, failed
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -174,6 +175,7 @@ class HalloweenCog(commands.Cog):
                     search_patterns = [
                         r" \*\*(.+?)\*\* scared", #English
                         r" \*\*(.+?)\*\* failed", #English
+                        r" scared by \*\*(.+?)\*\*", #English
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:

@@ -1156,6 +1156,7 @@ class AutoFlexCog(commands.Cog):
             ]
             search_strings_scare = [
                 '** scared **', #English potion
+                'got so much scared', #English broom
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and any(search_string in message_content.lower() for search_string in search_strings_scare)):
@@ -1164,6 +1165,7 @@ class AutoFlexCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
                     r" \*\*(.+?)\*\* scared", #English
+                    r"scared by \*\*(.+?)\*\*", #English
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not user_name_match:
