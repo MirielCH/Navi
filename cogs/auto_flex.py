@@ -269,24 +269,28 @@ class AutoFlexCog(commands.Cog):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
+                search_patterns = [
+                    r'\*\*(\w+?)\*\* is now following \*\*(.+?)\*\*!', #English
+                ]
+                pet_data_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
+                if not pet_data_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Pet type or user name not found in auto flex pets catch message.',
+                                            message)
+                    return
+                pet_type = pet_data_match.group(1)
+                user_name = pet_data_match.group(2)
                 if user is None:
-                    search_patterns = [
-                        r'\*\*(\w+?)\*\* is now following \*\*(.+?)\*\*!', #English
-                    ]
-                    pet_data_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
-                    if pet_data_match:
-                        pet_type = pet_data_match.group(1)
-                        user_name = pet_data_match.group(2)
-                        user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TRAINING,
-                                user_name=user_name
-                            )
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, regex.COMMAND_TRAINING,
+                            user_name=user_name
                         )
-                    if not pet_data_match or user_command_message is None:
+                    )
+                    if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Pet type or user name not found in auto flex pets catch message.',
-                                               message)
+                        await errors.log_error('User not found for auto flex pets catch message.',
+                                                message)
                         return
                     user = user_command_message.author
                 try:

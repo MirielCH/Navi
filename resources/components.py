@@ -440,7 +440,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             confirm_interaction = await interaction.response.send_message(
                 f'**{interaction.user.name}**, do you want to set `{interaction.channel.name}` as the partner alert '
                 f'channel?\n'
-                f'The partner alert channel is where you will be sent lootbox and hardmode alerts from your '
+                f'The partner alert channel is where you will be sent lootbox alerts from your '
                 f'partner. You can toggle partner alerts in `Reminder settings`.',
                 view=confirm_view,
                 ephemeral=True

@@ -111,9 +111,18 @@ class DuelCog(commands.Cog):
                 created_reminder = False
                 duel_users = []
                 interaction_user = await functions.get_interaction_user(message)
+                duelled_users = message_description.split('\n')
                 if interaction_user is None:
+                    interaction_user_name_match = re.search(r'\*\*(.+?)\*\* ~-~', duelled_users[0])
+                    interaction_user_name = interaction_user_name_match.group(1)
+                    interaction_users = await functions.get_guild_member_by_name(message.guild, interaction_user_name)
+                    if len(interaction_users) > 1:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error(f'Interaction user {interaction_user_name} is not unique.', message)
+                        return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(message.channel, regex.COMMAND_DUEL)
+                        await functions.get_message_from_channel_history(message.channel, regex.COMMAND_DUEL,
+                                                                         user_name=interaction_user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -142,14 +151,13 @@ class DuelCog(commands.Cog):
                         await functions.add_reminder_reaction(message, reminder, interaction_user_settings)
                         created_reminder = True
                 if duel_user is None:
-                    duelled_users = message_description.split('\n')
                     duel_user_name_match = re.search(r'\*\*(.+?)\*\* ~-~', duelled_users[1])
                     if duel_user_name_match:
-                        user_name = duel_user_name_match.group(1)
-                        duel_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        duel_user_name = duel_user_name_match.group(1)
+                        duel_users = await functions.get_guild_member_by_name(message.guild, duel_user_name)
                         if len(duel_users) > 1:
                             await functions.add_warning_reaction(message)
-                            await errors.log_error(f'Duelled user {user_name} is not unique.', message)
+                            await errors.log_error(f'Duelled user {duel_user_name} is not unique.', message)
                             return
                             """
                             await message.reply(

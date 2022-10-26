@@ -132,6 +132,7 @@ class WorkCog(commands.Cog):
                 'well done', #English, training
                 'bien hecho', #Spanish, training
                 'muito bem', #Portuguese, training
+                'suspicious broom', #All languages, hal boo
             ]
             search_strings = [
                 '** got ', #English
@@ -308,7 +309,7 @@ class WorkCog(commands.Cog):
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_work.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                        await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
                     await functions.add_reminder_reaction(message, reminder, user_settings)

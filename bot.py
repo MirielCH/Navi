@@ -40,7 +40,6 @@ async def on_error(event: str, *args, **kwargs) -> None:
     """Runs when an error outside a command appears.
     All errors get written to the database for further review.
     """
-    if not settings.DEBUG_MODE: return
     if event == 'on_message':
         message, = args
         if message.channel.type.name == 'private': return
@@ -53,7 +52,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         embed.add_field(name='Event', value=f'`{event}`', inline=False)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
         await errors.log_error(f'Got an error in event {event}:\nError: {error[1]}\nTraceback: {traceback_str}')
-        await message.channel.send(embed=embed)
+        if settings.DEBUG_MODE: await message.channel.send(embed=embed)
     else:
         try:
             message, = args
@@ -67,7 +66,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         logs.logger.error(traceback_message)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
         await errors.log_error(f'Got an error:\nError: {error[1]}\nTraceback: {traceback_str}')
-        await message.channel.send(embed=embed)
+        if settings.DEBUG_MODE: await message.channel.send(embed=embed)
         if event == 'on_reaction_add':
             reaction, user = args
             return

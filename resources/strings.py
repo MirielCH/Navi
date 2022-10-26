@@ -75,6 +75,7 @@ DONOR_TIERS = (
 SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
+    'boo',
     'daily',
     'duel',
     'dungeon-miniboss',

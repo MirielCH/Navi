@@ -120,7 +120,7 @@ class SettingsCog(commands.Cog):
 
     aliases_settings_user = (
         'slashmentions','donor','donator','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
-        'hunt-rotate','huntswitch','hunt-switch','dnd','hardmode','hm','ruby','rubies','last_tt','last-tt',
+        'hunt-rotate','huntswitch','hunt-switch','dnd','ruby','rubies','last_tt','last-tt',
         'lasttt','tracking','track'
     )
     @commands.command(name='slash-mentions', aliases=aliases_settings_user)

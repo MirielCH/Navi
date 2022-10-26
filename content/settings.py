@@ -756,7 +756,7 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
     settings_user = (
         f'{emojis.BP} **Partner**: {partner}\n'
         f'{emojis.BP} **Partner alert channel**: {user_partner_channel_name}\n'
-        f'{emojis.DETAIL} _Lootbox and hardmode alerts are sent to this channel._\n'
+        f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
     )
     settings_partner = (
         f'{emojis.BP} **Hardmode mode**: {partner_hardmode_status}\n'
@@ -878,7 +878,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
-        f'{emojis.DETAIL} _Lootbox and hardmode alerts are sent to this channel._\n'
+        f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
