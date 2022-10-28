@@ -256,7 +256,7 @@ class AutoFlexCog(commands.Cog):
                     f'Yep, just like that! Congratulations!!\n\n'
                     f'Too bad the `ascended` command is gone, it was so much fun...'
                 )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'pr_ascend', description)
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'pr_ascension', description)
 
             # Pets catch
             search_strings = [
