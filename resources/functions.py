@@ -849,7 +849,7 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
         for button in action_row.children:
             if button.label in seal_times_days:
                 matches.append(button.label)
-    if len(matches) == 1: answer = f'`{button.label.replace("training_", "")}`'
+    if len(matches) == 1: answer = f'`{matches[0]}`'
     if answer == '':
         for area_no, days in enumerate(seal_times_days, 16):
             answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()

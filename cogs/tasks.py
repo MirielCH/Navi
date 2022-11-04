@@ -60,8 +60,6 @@ class TasksCog(commands.Cog):
                             await reminders.get_active_user_reminders(user_id=reminder.user_id, activity='pets',
                                                                       end_time=reminder.end_time)
                         )
-                        if user_settings.ready_pets_claim_after_every_pet:
-                            await user_settings.update(ready_pets_claim_active=True)
                     except exceptions.NoDataFoundError:
                         pet_reminders = ()
                         await user_settings.update(ready_pets_claim_active=True)
@@ -87,6 +85,8 @@ class TasksCog(commands.Cog):
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
+                    if user_settings.ready_pets_claim_after_every_pet and reminder.activity.startswith('pets'):
+                        await user_settings.update(ready_pets_claim_active=True)
                     allowed_mentions = discord.AllowedMentions(users=[user,])
                     for message in messages.values():
                         await channel.send(message.strip(), allowed_mentions=allowed_mentions)
