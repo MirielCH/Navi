@@ -69,7 +69,7 @@ class AutoReadyView(discord.ui.View):
 class ConfirmCancelView(discord.ui.View):
     """View with confirm and cancel button.
 
-    Args: ctx, styles: Optional[list[discord.ButtonStyle]], labels: Optional[list[str]]
+    Args: ctx, styles: Optional[List[discord.ButtonStyle]], labels: Optional[list[str]]
 
     Also needs the message with the view, so do view.message = await ctx.interaction.original_message().
     Without this message, buttons will not be disabled when the interaction times out.
@@ -78,7 +78,7 @@ class ConfirmCancelView(discord.ui.View):
     """
     def __init__(self, ctx: Union[commands.Context, discord.ApplicationContext],
                  styles: Optional[List[discord.ButtonStyle]] = [discord.ButtonStyle.grey, discord.ButtonStyle.grey],
-                 labels: Optional[list[str]] = ['Yes','No'],
+                 labels: Optional[List[str]] = ['Yes','No'],
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
