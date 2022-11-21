@@ -4,7 +4,7 @@
 Reminder / Helper for EPIC RPG. This reminder supports the latest slash commands.  
 
 # Setup
-• Install python 3.8 or higher.  
+• Install python 3.8, 3.9 or 3.10. Note that python 3.11+ is currently not supported by the libraries the bot uses.  
 • Install the third party libraries mentioned in `requirements.txt`.  
 • Create a Discord application with a bot user and generate a bot token.  
 • Rename `default.env` to `.env` and add your token.  
