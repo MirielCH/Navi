@@ -103,7 +103,9 @@ class BuyCog(commands.Cog):
                 and not 'guild ring' in message_content.lower()
                 and not 'smol coin' in message_content.lower()
                 and not 'horseshoe' in message_content.lower()
-                and not 'coolrency' in message_content.lower()):
+                and not 'coolrency' in message_content.lower()
+                and not 'pumpkins' in message_content.lower()
+                and not 'spooky orbs' in message_content.lower()):
                 user = await functions.get_interaction_user(message)
                 lootbox_type = user_command_message = None
                 lootbox_name = '[lootbox]'

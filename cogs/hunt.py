@@ -153,6 +153,7 @@ class HuntCog(commands.Cog):
             # Hunt
             search_strings = [
                 'found a', #English
+                'found the', #English
                 'encontr', #Spanish, Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)

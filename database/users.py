@@ -27,6 +27,7 @@ class User():
     alert_daily: UserAlert
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
+    alert_epic: UserAlert
     alert_farm: UserAlert
     alert_guild: UserAlert
     alert_horse_breed: UserAlert
@@ -105,6 +106,7 @@ class User():
         self.alert_daily = new_settings.alert_daily
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
+        self.alert_epic = new_settings.alert_epic
         self.alert_farm = new_settings.alert_farm
         self.alert_guild = new_settings.alert_guild
         self.alert_horse_breed = new_settings.alert_horse_breed
@@ -199,6 +201,9 @@ class User():
             alert_dungeon_miniboss_enabled: bool
             alert_dungeon_miniboss_message: str
             alert_dungeon_miniboss_visible: bool
+            alert_epic_enabled: bool
+            alert_epic_message: str
+            alert_epic_visible: bool
             alert_farm_enabled: bool
             alert_farm_message: str
             alert_farm_visible: bool
@@ -342,6 +347,9 @@ async def _dict_to_user(record: dict) -> User:
             alert_dungeon_miniboss = UserAlert(enabled=bool(record['alert_dungeon_miniboss_enabled']),
                                                message=record['alert_dungeon_miniboss_message'],
                                                visible=bool(record['alert_dungeon_miniboss_visible'])),
+            alert_epic = UserAlert(enabled=bool(record['alert_epic_enabled']),
+                                               message=record['alert_epic_message'],
+                                               visible=bool(record['alert_epic_visible'])),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
                                    message=record['alert_farm_message'],
                                    visible=bool(record['alert_farm_visible'])),
@@ -614,6 +622,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_dungeon_miniboss_enabled: bool
         alert_dungeon_miniboss_message: str
         alert_dungeon_miniboss_visible: bool
+        alert_epic_enabled: bool
+        alert_epic_message: str
+        alert_epic_visible: bool
         alert_farm_enabled: bool
         alert_farm_message: str
         alert_farm_visible: bool

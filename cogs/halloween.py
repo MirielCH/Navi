@@ -50,7 +50,6 @@ class HalloweenCog(commands.Cog):
             if any(search_string in embed_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:

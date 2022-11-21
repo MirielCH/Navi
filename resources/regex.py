@@ -77,6 +77,13 @@ COMMAND_TRAINING = re.compile(rf"(?:\btr\b|\btraining)")
 COMMAND_TRAINING_ULTRAINING = re.compile(rf"(?:ul)?(?:tr\b|training\b)")
 COMMAND_ULTRAINING = re.compile(rf"(?:ultr\b|ultraining\b)")
 COMMAND_ULTRAINING_BUY_TRAINING_RESET = re.compile(rf"(?:ultr\b|ultraining\b)\s+\bbuy\b\s+\btraining\b\s+\breset\b")
+COMMAND_USE_ARENA_TOKEN = re.compile(rf"use\s+\barena\b\s+\btoken\b")
+COMMAND_USE_EPIC_ITEM = re.compile(
+    rf"use\s+(?:\bepic\b\s+\bseed\b|\bultra\b\s+\bbait\b|\bcoin\b\s+\btrumpet\b|\blegendary\b\s+\btoothbrush\b)"
+)
+COMMAND_USE_EPIC_ITEM_ARENA_TOKEN = re.compile(
+    rf"use\s+(?:\bepic\b\s+\bseed\b|\bultra\b\s+\bbait\b|\bcoin\b\s+\btrumpet\b|\blegendary\b\s+\btoothbrush\b|\barena\b\s+\btoken\b)"
+)
 COMMAND_VOTE = re.compile(rf"\bvote\b")
 COMMAND_WEEKLY = re.compile(rf"\bweekly\b")
 COMMAND_WORK = rf"(?:"

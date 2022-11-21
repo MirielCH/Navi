@@ -66,6 +66,11 @@ async def command_ready(
             command = (
                 f"{command_dungeon} or {command_miniboss}"
             )
+        elif activity == 'epic':
+            command_use = await functions.get_slash_command(user_settings, 'use')
+            command = (
+                f"{command_use} `item: <EPIC item>`"
+            )
         elif activity == 'guild':
             command = clan_command
         elif activity == 'quest':
@@ -388,7 +393,12 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User, user_remind
                 time_left = reminder.end_time - current_time
                 timestring = await functions.parse_timedelta_to_timestring(time_left)
                 reminder_time = f'**{timestring}**'
-            activity = 'Dungeon / Miniboss' if reminder.activity == 'dungeon-miniboss' else reminder.activity
+            if reminder.activity == 'dungeon-miniboss':
+                activity = 'Dungeon / Miniboss'
+            elif reminder.activity == 'epic':
+                activity = 'EPIC items'
+            else:
+                activity = reminder.activity
             activity = activity.replace('-',' ').capitalize()
             field_command_reminders = (
                 f'{field_command_reminders}\n'
