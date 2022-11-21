@@ -101,11 +101,12 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_lootbox.enabled:
                 lb_match = re.search(r"lootbox`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if lb_match:
-                    lootbox_name = '[lootbox]'
-                    if user_settings.last_lootbox != '':
-                        lootbox_name = f'{user_settings.last_lootbox} lootbox'
                     user_command = await functions.get_slash_command(user_settings, 'buy')
-                    user_command = f"{user_command} `item: {lootbox_name}`"
+                    lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
+                    if user_settings.slash_mentions_enabled:
+                        user_command = f"{user_command} `item: {lootbox_name}`"
+                    else:
+                        user_command = f"{user_command} `{lootbox_name}`".replace('` `', ' ')
                     lb_timestring = lb_match.group(1)
                     lb_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                     cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
@@ -114,15 +115,18 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_hunt.enabled:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
+                    user_command = await functions.get_slash_command(user_settings, 'hunt')
                     if user_settings.last_hunt_mode != '':
-                        user_command = await functions.get_slash_command(user_settings, 'hunt')
-                        user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                        else:
+                            user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
                     else:
                         if 'hardmode' in hunt_match.group(0):
-                            user_command = await functions.get_slash_command(user_settings, 'hunt')
-                            user_command = f"{user_command} `mode: hardmode`"
-                        else:
-                            user_command = await functions.get_slash_command(user_settings, 'hunt')
+                            if user_settings.slash_mentions_enabled:
+                                user_command = f"{user_command} `mode: hardmode`"
+                            else:
+                                user_command = f"{user_command} `hardmode`".replace('` `', ' ')
                     hunt_timestring = hunt_match.group(1)
                     if ('together' in user_settings.last_hunt_mode
                         and user_settings.partner_donor_tier < user_settings.user_donor_tier):
@@ -140,15 +144,18 @@ class CooldownsCog(commands.Cog):
             if user_settings.alert_adventure.enabled:
                 adv_match = re.search(r'adventure(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if adv_match:
+                    user_command = await functions.get_slash_command(user_settings, 'adventure')
                     if user_settings.last_adventure_mode != '':
-                        user_command = await functions.get_slash_command(user_settings, 'adventure')
-                        user_command = f"{user_command} `mode: {user_settings.last_adventure_mode}`"
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `mode: {user_settings.last_adventure_mode}`"
+                        else:
+                            user_command = f"{user_command} `{user_settings.last_adventure_mode}`".replace('` `', ' ')
                     else:
                         if 'hardmode' in adv_match.group(0):
-                            user_command = await functions.get_slash_command(user_settings, 'adventure')
-                            user_command = f"{user_command} `mode: hardmode`"
-                        else:
-                            user_command = await functions.get_slash_command(user_settings, 'adventure')
+                            if user_settings.slash_mentions_enabled:
+                                user_command = f"{user_command} `mode: hardmode`"
+                            else:
+                                user_command = f"{user_command} `hardmode`".replace('` `', ' ')
                     adv_timestring = adv_match.group(1)
                     adv_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                     cooldowns.append(['adventure', adv_timestring.lower(), adv_message])
@@ -227,7 +234,10 @@ class CooldownsCog(commands.Cog):
                     farm_timestring = farm_match.group(1)
                     user_command = await functions.get_slash_command(user_settings, 'farm')
                     if user_settings.last_farm_seed != '':
-                        user_command = f'{user_command} `seed: {user_settings.last_farm_seed}`'
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `seed: {user_settings.last_farm_seed}`"
+                        else:
+                            user_command = f"{user_command} `{user_settings.last_farm_seed}`".replace('` `', ' ')
                     farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
                     cooldowns.append(['farm', farm_timestring.lower(), farm_message])
                 else:

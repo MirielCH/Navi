@@ -349,7 +349,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
         #                                    value='toggle_hardmode'))
         options.append(discord.SelectOption(label=f'{hunt_action} hunt rotation',
                                             value='toggle_hunt'))
-        options.append(discord.SelectOption(label=f'{mentions_action} slash mentions',
+        options.append(discord.SelectOption(label=f'{mentions_action} slash command reminders',
                                             value='toggle_mentions'))
         options.append(discord.SelectOption(label=f'{tracking_action} command tracking',
                                             value='toggle_tracking'))

@@ -108,7 +108,10 @@ class HuntCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'hunt')
                 if user_settings.last_hunt_mode != '':
-                    user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                    if user_settings.slash_mentions_enabled:
+                        user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                    else:
+                        user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -260,10 +263,16 @@ class HuntCog(commands.Cog):
                         last_hunt_mode = f'{last_hunt_mode} old'
                     last_hunt_mode = last_hunt_mode.strip()
                     if last_hunt_mode != '':
-                        user_command = f'{user_command} `mode: {last_hunt_mode}`'
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `mode: {last_hunt_mode}`"
+                        else:
+                            user_command = f"{user_command} `{last_hunt_mode}`".replace('` `', ' ')
                 if event_mob:
                     if user_settings.last_hunt_mode is not None:
-                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                        else:
+                            user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
                     else:
                         user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
                         user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)

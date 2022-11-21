@@ -88,7 +88,10 @@ class FarmCog(commands.Cog):
                     await user_settings.update(last_farm_seed=last_farm_seed)
                 user_command = await functions.get_slash_command(user_settings, 'farm')
                 if user_settings.last_farm_seed != '':
-                    user_command = f'{user_command} `seed: {user_settings.last_farm_seed}`'
+                    if user_settings.slash_mentions_enabled:
+                        user_command = f"{user_command} `seed: {user_settings.last_farm_seed}`"
+                    else:
+                        user_command = f"{user_command} `{user_settings.last_farm_seed}`".replace('` `', ' ')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -158,7 +161,10 @@ class FarmCog(commands.Cog):
                     last_farm_seed = 'potato'
                 await user_settings.update(last_farm_seed=last_farm_seed)
                 if user_settings.last_farm_seed != '':
-                    user_command = f'{user_command} `seed: {user_settings.last_farm_seed}`'
+                    if user_settings.slash_mentions_enabled:
+                        user_command = f"{user_command} `seed: {user_settings.last_farm_seed}`"
+                    else:
+                        user_command = f"{user_command} `{user_settings.last_farm_seed}`".replace('` `', ' ')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
@@ -220,7 +226,10 @@ class FarmCog(commands.Cog):
                     elif 'potato' in user_command_message.content.lower():
                         seed = 'potato'
                     if seed is not None:
-                        user_command = f'{user_command} `seed: {seed}`'
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `seed: {seed}`"
+                        else:
+                            user_command = f"{user_command} `{seed}`".replace('` `', ' ')
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)

@@ -965,7 +965,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         #f'{emojis.DETAIL} _Tells your partner to hunt solo if he uses `together`._\n'
         f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
-        f'{emojis.BP} **Slash mentions**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
+        f'{emojis.BP} **Slash command reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
     )
     tracking = (

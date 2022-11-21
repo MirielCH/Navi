@@ -84,7 +84,10 @@ class AdventureCog(commands.Cog):
                     await user_settings.update(last_adventure_mode=last_adventure_mode)
                 user_command = await functions.get_slash_command(user_settings, 'adventure')
                 if user_settings.last_adventure_mode != '':
-                    user_command = f'{user_command} `mode: {user_settings.last_adventure_mode}`'
+                    if user_settings.slash_mentions_enabled:
+                        user_command = f"{user_command} `mode: {user_settings.last_adventure_mode}`"
+                    else:
+                        user_command = f"{user_command} `{user_settings.last_adventure_mode}`".replace('` `', ' ')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -147,8 +150,11 @@ class AdventureCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'adventure')
                 if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
-                    user_command = f'{user_command} `mode: hardmode`'
                     last_adventure_mode = 'hardmode'
+                    if user_settings.slash_mentions_enabled:
+                        user_command = f"{user_command} `mode: {last_adventure_mode}`"
+                    else:
+                        user_command = f"{user_command} `{last_adventure_mode}`".replace('` `', ' ')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)

@@ -927,12 +927,14 @@ async def call_ready_command(bot: commands.Bot, message: discord.Message, user: 
     if command is not None: await command.callback(command.cog, message, user=user)
 
 
-async def get_slash_command(user_settings: users.User, command_name: str) -> None:
+async def get_slash_command(user_settings: users.User, command_name: str, include_prefix: Optional[bool] = True) -> None:
     """Gets a slash command string or mention depending on user setting"""
     if user_settings.slash_mentions_enabled:
         return strings.SLASH_COMMANDS.get(command_name, None)
     else:
-        return f'`/{command_name}`'
+        command = strings.RPG_COMMANDS.get(command_name, None)
+        if not include_prefix: command = command.replace('rpg ', '')
+        return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
 
 
 def await_coroutine(coro):

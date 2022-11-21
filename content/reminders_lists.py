@@ -61,44 +61,55 @@ async def command_ready(
 
     async def get_command_from_activity(activity:str) -> str:
         if activity == 'dungeon-miniboss':
-            command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
-            command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
+            command_dungeon = await functions.get_slash_command(user_settings, 'dungeon', False)
+            command_miniboss = await functions.get_slash_command(user_settings, 'miniboss', False)
             command = (
                 f"{command_dungeon} or {command_miniboss}"
             )
         elif activity == 'epic':
-            command_use = await functions.get_slash_command(user_settings, 'use')
-            command = (
-                f"{command_use} `item: <EPIC item>`"
-            )
+            command_use = await functions.get_slash_command(user_settings, 'use', False)
+            command_options = 'item: <EPIC item>' if user_settings.slash_mentions_enabled else '<EPIC item>'
+            command = f"{command_use} `{command_options}`"
         elif activity == 'guild':
             command = clan_command
         elif activity == 'quest':
-            command = await functions.get_slash_command(user_settings, user_settings.last_quest_command)
-            if command is None: command = await functions.get_slash_command(user_settings, 'quest')
+            command = await functions.get_slash_command(user_settings, user_settings.last_quest_command, False)
+            if command is None: command = await functions.get_slash_command(user_settings, 'quest', False)
         elif activity == 'training':
-            command = await functions.get_slash_command(user_settings, user_settings.last_training_command)
-            if command is None: command = await functions.get_slash_command(user_settings, 'training')
+            command = await functions.get_slash_command(user_settings, user_settings.last_training_command, False)
+            if command is None: command = await functions.get_slash_command(user_settings, 'training', False)
         elif activity == 'work':
-            command = await functions.get_slash_command(user_settings, user_settings.last_work_command)
+            command = await functions.get_slash_command(user_settings, user_settings.last_work_command, False)
             if command is None: command = 'work command'
         elif activity == 'pets':
             if user_settings.ready_pets_claim_active:
-                command = await functions.get_slash_command(user_settings, 'pets claim')
+                command = await functions.get_slash_command(user_settings, 'pets claim', False)
             else:
-                command = await functions.get_slash_command(user_settings, 'pets adventure')
+                command = await functions.get_slash_command(user_settings, 'pets adventure', False)
         else:
-            command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity])
+            command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity], False)
         if activity == 'lootbox':
             lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
-            command = f'{command} `item: {lootbox_name}`'
+            if user_settings.slash_mentions_enabled:
+                command = f"{command} `item: {lootbox_name}`"
+            else:
+                command = f"{command} `{lootbox_name}`"
         elif activity == 'adventure' and user_settings.last_adventure_mode != '':
-            command = f'{command} `mode: {user_settings.last_adventure_mode}`'
+            if user_settings.slash_mentions_enabled:
+                command = f"{command} `mode: {user_settings.last_adventure_mode}`"
+            else:
+                command = f"{command} `{user_settings.last_hunt_mode}`"
         elif activity == 'hunt' and user_settings.last_hunt_mode != '':
-            command = f'{command} `mode: {user_settings.last_hunt_mode}`'
+            if user_settings.slash_mentions_enabled:
+                command = f"{command} `mode: {user_settings.last_hunt_mode}`"
+            else:
+                command = f"{command} `{user_settings.last_hunt_mode}`"
         elif activity == 'farm' and user_settings.last_farm_seed != '':
-            command = f'{command} `seed: {user_settings.last_farm_seed}`'
-        return command
+            if user_settings.slash_mentions_enabled:
+                command = f"{command} `seed: {user_settings.last_farm_seed}`"
+            else:
+                command = f"{command} `{user_settings.last_farm_seed}`"
+        return command.replace('` `', ' ')
 
     if isinstance(ctx, discord.Message):
         message = ctx
@@ -131,12 +142,12 @@ async def command_ready(
     clan_alert_visible = getattr(clan, 'alert_visible', False)
     if clan_alert_enabled and clan_alert_visible:
         if clan.stealth_current >= clan.stealth_threshold:
-            clan_command = await functions.get_slash_command(user_settings, 'guild raid')
+            clan_command = await functions.get_slash_command(user_settings, 'guild raid', False)
         else:
-            clan_command = await functions.get_slash_command(user_settings, 'guild upgrade')
+            clan_command = await functions.get_slash_command(user_settings, 'guild upgrade', False)
     else:
-        command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
-        command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+        command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade', False)
+        command_raid = await functions.get_slash_command(user_settings, 'guild raid', False)
         clan_command = f"{command_upgrade} or {command_raid}"
     ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
     ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
@@ -209,10 +220,11 @@ async def command_ready(
                 f'{emojis.BP} {command}'
             )
             if 'pets adventure' in command:
+                command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                 field_ready_commands = (
-                f'{field_ready_commands}\n'
-                f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["pets list"]} to update reminders._'
-            )
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} _Use {command_pets_list} to update reminders._'
+                )
         if field_ready_commands != '':
             answer = (
                 f'{answer}\n'
@@ -241,8 +253,9 @@ async def command_ready(
                 ready_event_activities.remove(activity)
                 continue
             else:
-                command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity])
-                ready_events.append(command)
+                command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity],
+                                                            False)
+                ready_events.append(command.replace(' join', ''))
         for event in sorted(ready_events):
             field_ready_events = (
                 f'{field_ready_events}\n'

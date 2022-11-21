@@ -75,7 +75,10 @@ class BuyCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
                 lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
                 user_command = await functions.get_slash_command(user_settings, 'buy')
-                user_command = f"{user_command} `item: {lootbox_name}`"
+                if user_settings.slash_mentions_enabled:
+                    user_command = f"{user_command} `item: {lootbox_name}`"
+                else:
+                    user_command = f"{user_command} `{lootbox_name}`".replace('` `', ' ')
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -131,7 +134,10 @@ class BuyCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'buy')
-                user_command = f"{user_command} `item: {lootbox_name}`"
+                if user_settings.slash_mentions_enabled:
+                    user_command = f"{user_command} `item: {lootbox_name}`"
+                else:
+                    user_command = f"{user_command} `{lootbox_name}`".replace('` `', ' ')
                 await user_settings.update(last_lootbox=lootbox_type)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'lootbox')
                 if time_left < timedelta(0): return
