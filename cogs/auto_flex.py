@@ -497,7 +497,7 @@ class AutoFlexCog(commands.Cog):
                 'this may be the luckiest moment of your life', #English, ultimate logs
                 'is this a **dream**????', #English, ultra logs
                 'oooooofff!!', #English, super fish
-                'wwwooooooaaa!!!1', #English, hyper logs
+                #'wwwooooooaaa!!!1', #English, hyper logs
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 or ('nice!' in message_content.lower() and 'watermelon' in message_content.lower())):

@@ -204,9 +204,9 @@ class ManageClanSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.clan_settings.update(channel_id=interaction.channel.id)
-                await confirm_interaction.edit_original_message(content='Channel updated.', view=None)
+                await confirm_interaction.edit_original_response(content='Channel updated.', view=None)
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         elif select_value == 'reset_channel':
             if self.view.clan_settings.channel_id is None:
@@ -227,9 +227,9 @@ class ManageClanSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.clan_settings.update(channel_id=None, alert_enabled=False)
-                await confirm_interaction.edit_original_message(content='Channel reset.', view=None)
+                await confirm_interaction.edit_original_response(content='Channel reset.', view=None)
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         for child in self.view.children.copy():
             if isinstance(child, ManageClanSettingsSelect):
@@ -449,7 +449,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_channel_id=interaction.channel.id)
-                await confirm_interaction.edit_original_message(
+                await confirm_interaction.edit_original_response(
                     content=(
                         f'Channel updated.\n'
                         f'To receive partner alerts, make sure the partner alert is enabled in `Reminder settings`.'
@@ -457,7 +457,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                     view=None
                 )
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         elif select_value == 'reset_channel':
             if self.view.user_settings.partner_channel_id is None:
@@ -477,9 +477,9 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_channel_id=None)
-                await confirm_interaction.edit_original_message(content='Channel reset.', view=None)
+                await confirm_interaction.edit_original_response(content='Channel reset.', view=None)
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         elif select_value == 'reset_partner':
             if self.view.user_settings.partner_id is None:
@@ -502,12 +502,12 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 await self.view.user_settings.update(partner_id=None, partner_donor_tier=0)
                 await self.view.partner_settings.update(partner_id=None, partner_donor_tier=0)
                 self.view.partner_settings = None
-                await confirm_interaction.edit_original_message(content='Partner reset.', view=None)
+                await confirm_interaction.edit_original_response(content='Partner reset.', view=None)
                 for child in self.view.children.copy():
                     if isinstance(child, SetDonorTierSelect):
                         child.disabled = False
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         for child in self.view.children.copy():
             if isinstance(child, ManagePartnerSettingsSelect):
@@ -608,7 +608,7 @@ class SetReminderMessageButton(discord.ui.Button):
                     activity_column = strings.ACTIVITIES_COLUMNS[activity]
                     kwargs[f'{activity_column}_message'] = strings.DEFAULT_MESSAGES[activity]
                 await self.view.user_settings.update(**kwargs)
-                await interaction.edit_original_message(
+                await interaction.edit_original_response(
                     content=(
                         f'Changed all messages back to their default message.\n\n'
                         f'Note that running reminders do not update automatically.'
@@ -619,7 +619,7 @@ class SetReminderMessageButton(discord.ui.Button):
                 await interaction.message.edit(embeds=embeds, view=self.view)
                 return
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         elif self.custom_id == 'set_message':
             await interaction.response.send_message(
@@ -628,12 +628,12 @@ class SetReminderMessageButton(discord.ui.Button):
             try:
                 answer = await self.view.bot.wait_for('message', check=check, timeout=60)
             except asyncio.TimeoutError:
-                await interaction.edit_original_message(content=f'**{interaction.user.name}**, you didn\'t answer in time.')
+                await interaction.edit_original_response(content=f'**{interaction.user.name}**, you didn\'t answer in time.')
                 return
             if answer.mentions:
                 for user in answer.mentions:
                     if user != answer.author:
-                        await interaction.delete_original_message(delay=5)
+                        await interaction.delete_original_response(delay=5)
                         followup_message = await interaction.followup.send(
                             content='Aborted. Please don\'t ping other people in your reminders.',
                         )
@@ -641,12 +641,12 @@ class SetReminderMessageButton(discord.ui.Button):
                         return
             new_message = answer.content
             if new_message.lower() in ('abort','cancel','stop'):
-                await interaction.delete_original_message(delay=3)
+                await interaction.delete_original_response(delay=3)
                 followup_message = await interaction.followup.send('Aborted.')
                 await followup_message.delete(delay=3)
                 return
             if len(new_message) > 1024:
-                await interaction.delete_original_message(delay=5)
+                await interaction.delete_original_response(delay=5)
                 followup_message = await interaction.followup.send(
                     'This is a command to set a new message, not to write a novel :thinking:',
                 )
@@ -668,7 +668,7 @@ class SetReminderMessageButton(discord.ui.Button):
                             f'Available placeholders for this message:\n'
                             f'{allowed_placeholders.strip()}'
                         )
-                    await interaction.delete_original_message(delay=3)
+                    await interaction.delete_original_response(delay=3)
                     followup_message = await interaction.followup.send(
                         f'Invalid placeholder found.\n\n'
                         f'{allowed_placeholders}',
@@ -676,7 +676,7 @@ class SetReminderMessageButton(discord.ui.Button):
                     )
                     await followup_message.delete(delay=3)
                     return
-            await interaction.delete_original_message(delay=3)
+            await interaction.delete_original_response(delay=3)
             followup_message = await interaction.followup.send(
                 f'Message updated!\n\n'
                 f'Note that running reminders do not update automatically.'
@@ -869,9 +869,9 @@ class ManageServerSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.guild_settings.update(auto_flex_channel_id=interaction.channel.id)
-                await confirm_interaction.edit_original_message(content='Channel updated.', view=None)
+                await confirm_interaction.edit_original_response(content='Channel updated.', view=None)
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         elif select_value == 'reset_channel':
             if self.view.guild_settings.auto_flex_channel_id is None:
@@ -891,9 +891,9 @@ class ManageServerSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.guild_settings.update(auto_flex_channel_id=None, auto_flex_enabled=False)
-                await confirm_interaction.edit_original_message(content='Channel reset.', view=None)
+                await confirm_interaction.edit_original_response(content='Channel reset.', view=None)
             else:
-                await confirm_interaction.edit_original_message(content='Aborted', view=None)
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         for child in self.view.children.copy():
             if isinstance(child, ManageServerSettingsSelect):

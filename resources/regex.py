@@ -39,6 +39,7 @@ COMMAND_ENCHANT = re.compile(rf"(?:\benchant\b|\brefine\b|\btransmute\b|\btransc
 COMMAND_EPIC_QUEST = re.compile(rf"\bepic\b\s+\bquest\b")
 COMMAND_EVENTS = re.compile(rf"\bevents?\b")
 COMMAND_FARM = re.compile(rf"\bfarm\b")
+COMMAND_FORGE_OMEGA_SWORD = re.compile(rf"\bforge\b\s+\bomega\b\s+\bsword\b")
 COMMAND_FORGE_ULTRAEDGY_ARMOR = re.compile(rf"\bforge\b\s+\bultra-edgy\b\s+\barmor\b")
 COMMAND_FORGE_GODLY_COOKIE = re.compile(rf"\bforge\b\s+\bgodly\b\s+\bcookie\b")
 COMMAND_HAL_BOO = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bboo\b")

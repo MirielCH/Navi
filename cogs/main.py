@@ -140,7 +140,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.reply(
                 f'**{ctx.author.name}**, looks like I don\'t know you yet.\n'
-                f'Use `{ctx.prefix}on` to activate me first.'
+                f'Use {strings.SLASH_COMMANDS_NAVI["on"]} to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):

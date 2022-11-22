@@ -98,7 +98,7 @@ async def command_ready(
             if user_settings.slash_mentions_enabled:
                 command = f"{command} `mode: {user_settings.last_adventure_mode}`"
             else:
-                command = f"{command} `{user_settings.last_hunt_mode}`"
+                command = f"{command} `{user_settings.last_adventure_mode}`"
         elif activity == 'hunt' and user_settings.last_hunt_mode != '':
             if user_settings.slash_mentions_enabled:
                 command = f"{command} `mode: {user_settings.last_hunt_mode}`"

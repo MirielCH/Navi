@@ -180,6 +180,40 @@ class HelperHealCog(commands.Cog):
                 else:
                     await message.channel.send(f'**{user.name}**, {warning}')
 
+        # Heal after crafting omega sword
+        search_strings = [
+            '`omega sword` successfully forged', #English
+            '`omega sword` exitosamente forjado', #Spanish
+            '`omega sword` forjado com sucesso', #Portuguese
+        ]
+        if any(search_string in message_content.lower() for search_string in search_strings):
+            user = await functions.get_interaction_user(message)
+            if user is None:
+                user_command_message = (
+                    await functions.get_message_from_channel_history(
+                        message.channel, regex.COMMAND_FORGE_OMEGA_SWORD
+                    )
+                )
+                if user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find a command for the omega sword heal message.', message)
+                    return
+                user = user_command_message.author
+            try:
+                user_settings: users.User = await users.get_user(user.id)
+            except exceptions.FirstTimeUserError:
+                return
+            if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            action = await functions.get_slash_command(user_settings, 'heal')
+            warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
+            if not user_settings.dnd_mode_enabled:
+                if user_settings.ping_after_message:
+                    await message.channel.send(f'{warning} {user.mention}')
+                else:
+                    await message.channel.send(f'{user.mention} {warning}')
+            else:
+                await message.channel.send(f'**{user.name}**, {warning}')
+
 
 # Initialization
 def setup(bot):
