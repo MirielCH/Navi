@@ -354,7 +354,7 @@ class AutoFlexCog(commands.Cog):
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'coinflip_event',
                                                   description)
 
-            # Update time travel count
+            # Update time travel count from profile
             search_strings = [
                 "— profile", #All languages
                 "— progress", #All languages
@@ -401,6 +401,61 @@ class AutoFlexCog(commands.Cog):
                         await errors.log_error('Time travel count not found in profile or progress message.', message)
                         return
                     time_travel_count = int(tt_match.group(1))
+                await user_settings.update(time_travel_count=time_travel_count)
+
+            # Update time travel count from time travel message
+            search_strings = [
+                "— time travel", #All languages
+                "— super time travel", #All languages
+            ]
+            if any(search_string in embed_autor.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await functions.get_message_from_channel_history(
+                                    message.channel, regex.COMMAND_TIME_TRAVEL,
+                                    user_name=user_name
+                                )
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                search_patterns = [
+                    'this will be your time travel #(.+?)\n', #English
+                    'esta será sua viagem no tempo #(.+?)$', #Spanish, Portuguese
+                ]
+                tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
+                if tt_match:
+                    time_travel_count = int(tt_match.group(1)) - 1
+                if not tt_match:
+                    search_patterns = [
+                        'time travels\*\*: (.+?)\n', #English
+                        'viajes en el tiempo\*\*: (.+?)\n', #Spanish
+                        'viagem no tempo\*\*: (.+?)\n', #Spanish
+                    ]
+                    tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
+                    if tt_match:
+                        time_travel_count = int(tt_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Time travel count not found in time travel message.', message)
+                        return
                 await user_settings.update(time_travel_count=time_travel_count)
 
             # Time travel

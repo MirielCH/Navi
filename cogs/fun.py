@@ -1,6 +1,7 @@
 # fun.py
 """Contains some nonsense"""
 
+import random
 import re
 
 import discord
@@ -54,7 +55,11 @@ class FunCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def bad(self, ctx: commands.Context, *args: str) -> None:
         """Sad"""
-        await ctx.reply('https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif')
+        gifs = [
+            'https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif',
+            'https://media.tenor.com/yfFdPms-9AMAAAAC/zelda-angry.gif'
+        ]
+        await ctx.reply(random.choice(gifs))
 
     @commands.command(aliases=('nice','great','amazing','useful','best','goodbot','bestbot',
                                'greatbot','nicebot','op','smart','love',))
