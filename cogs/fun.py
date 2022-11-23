@@ -73,7 +73,7 @@ class FunCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def kick(self, ctx: commands.Context) -> None:
         """Complain"""
-        await ctx.reply(f'Do I look like a moderation bot {emojis.SUS}')
+        await ctx.reply(f'Do I look like a moderation bot {emojis.ANIME_SUS}')
 
     @commands.command()
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
