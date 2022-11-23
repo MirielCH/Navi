@@ -30,14 +30,72 @@ class FunCog(commands.Cog):
     async def hey(self, ctx: commands.Context) -> None:
         """Hey! Listen!"""
         if ctx.prefix.lower() == 'rpg ': return
-        await ctx.reply('https://tenor.com/view/navi-hey-listen-gif-4837431')
+        await ctx.reply('https://media.tenor.com/LPVxFddvSc0AAAAC/hey-hello.gif')
 
-    @commands.command(aliases=('hold','cuddle','kiss','love','thanks','smile'))
+    @commands.command(aliases=('hold','cuddle','kiss','smile'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
     async def hug(self, ctx: commands.Context) -> None:
         """Aww"""
         if ctx.prefix.lower() == 'rpg ': return
         await ctx.reply('https://www.youtube.com/watch?v=SB4sDPTZPYM')
+
+    @commands.command(aliases=('shutup','shutit','shutup!','shutit!'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def shut(self, ctx: commands.Context, *args: str) -> None:
+        """Sometimes you just have to say it"""
+        if ctx.invoked_with.lower() == 'shut':
+            if args:
+                args = [arg.lower() for arg in args]
+                arg, *_ = args
+                if arg not in ('up','it','up!','it!'): return
+        await ctx.reply('https://media.tenor.com/CQ12y9spOP4AAAAd/link-sassy.gif')
+
+    @commands.command(aliases=('bad!','trash','trash!','badbot','trashbot','badbot!','trashbot!','stupid','dumb',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def bad(self, ctx: commands.Context, *args: str) -> None:
+        """Sad"""
+        await ctx.reply('https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif')
+
+    @commands.command(aliases=('nice','great','amazing','useful','best','goodbot','bestbot',
+                               'greatbot','nicebot','op','smart','love',))
+    @commands.bot_has_permissions(send_messages=True)
+    async def good(self, ctx: commands.Context, *args: str) -> None:
+        """Yay!"""
+        await ctx.reply('https://media.tenor.com/3EBDKiYgw4kAAAAC/zelda-botw.gif')
+
+    @commands.command(aliases=('thank','thanks!','ty','thx'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def thanks(self, ctx: commands.Context, *args: str) -> None:
+        """You're very welcome"""
+        await ctx.reply('https://media.tenor.com/kcMj0Wfo3j8AAAAC/young-link-fly.gif')
+
+    @commands.command(aliases=('ban','mute','warn'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def kick(self, ctx: commands.Context) -> None:
+        """Complain"""
+        await ctx.reply(f'Do I look like a moderation bot {emojis.SUS}')
+
+    @commands.command()
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def blacklist(self, ctx: commands.Context) -> None:
+        """Blacklist"""
+        if not len(ctx.message.mentions) == 1:
+            await ctx.reply(f'The syntax of this very important command is `{ctx.prefix}blacklist [@User]`.')
+            return
+        await ctx.reply(
+            f'**{ctx.message.mentions[0].name}** was banned from EPIC RPG for having too much luck.\n'
+            f'The likes of them are not welcome among the unlucky.\n'
+            f'No appeal.'
+        )
+
+    @commands.command()
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def unblacklist(self, ctx: commands.Context) -> None:
+        """Unblacklist"""
+        if not ctx.message.mentions:
+            await ctx.reply(f'The syntax of this very important command is `{ctx.prefix}unblacklist [@User]`.')
+            return
+        await ctx.reply('I said no appeal.')
 
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
