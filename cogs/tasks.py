@@ -3,13 +3,14 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from humanfriendly import format_timespan
 from typing import List
 
 import discord
 from discord.ext import commands, tasks
 
-from database import clans, errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from database import clans, errors, reminders, tracking, users
+from resources import emojis, exceptions, functions, logs, settings, strings
 
 
 running_tasks = {}
@@ -152,6 +153,7 @@ class TasksCog(commands.Cog):
         self.delete_old_reminders.start()
         self.reset_clans.start()
         self.schedule_tasks.start()
+        self.consolidate_tracking_log.start()
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -265,6 +267,38 @@ class TasksCog(commands.Cog):
                 await clan_channel.send(message)
             # Delete leaderboard
             await clans.delete_clan_leaderboard()
+
+    @tasks.loop(seconds=60)
+    async def consolidate_tracking_log(self) -> None:
+        """Task that consolidates tracking log entries older than 28 days into summaries"""
+        start_time = datetime.utcnow().replace(microsecond=0)
+        if start_time.hour == 0 and start_time.minute == 0:
+            start_time = datetime.utcnow().replace(microsecond=0)
+            log_entry_count = 0
+            try:
+                old_log_entries = await tracking.get_old_log_entries(28)
+            except exceptions.NoDataFoundError:
+                await errors.log_error('Didn\'t find any log entries to consolidate.')
+                return
+            entries = {}
+            for log_entry in old_log_entries:
+                date_time = log_entry.date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
+                key = (log_entry.user_id, log_entry.guild_id, log_entry.command, date_time)
+                amount = entries.get(key, 0)
+                entries[key] = amount + 1
+                log_entry_count += 1
+            for key, amount in entries.items():
+                user_id, guild_id, command, date_time = key
+                summary_log_entry = await tracking.insert_log_summary(user_id, guild_id, command, date_time, amount)
+                date_time_min = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
+                date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
+                await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
+                await asyncio.sleep(0.01)
+            cur = settings.NAVI_DB.cursor()
+            cur.execute('VACUUM')
+            end_time = datetime.utcnow().replace(microsecond=0)
+            time_passed = end_time - start_time
+            logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
 
 # Initialization

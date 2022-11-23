@@ -20,6 +20,7 @@ class LogEntry():
     command: str
     command_count: int
     date_time: datetime
+    entry_type: str
     guild_id: int
     user_id: int
     record_exists: bool = True
@@ -39,20 +40,36 @@ class LogEntry():
             raise exceptions.RecordExistsError(error_message)
 
     async def refresh(self) -> None:
-        """Refreshes clan data from the database.
+        """Refreshes the log entry from the database.
         If the record doesn't exist anymore, "record_exists" will be set to False.
         All other values will stay on their old values before deletion (!).
         """
         try:
-            new_settings = await get_log_entry(self.user_id, self.command, self.date_time)
+            new_settings = await get_log_entry(self.user_id, self.guild_id, self.command, self.date_time)
         except exceptions.NoDataFoundError as error:
             self.record_exists = False
             return
         self.command = new_settings.command
         self.command_count = new_settings.command_count
+        self.entry_type = new_settings.entry_type
         self.date_time = new_settings.date_time
         self.guild_id = new_settings.guild_id
         self.user_id = new_settings.user_id
+
+    async def update(self, **kwargs) -> None:
+        """Updates the log entry record in the database. Also calls refresh().
+
+        Arguments
+        ---------
+        kwargs (column=value):
+            command: str
+            command_count: int
+            date_time: datetime
+            entry_type: Literal['single', 'summary']
+            guild_id: int
+        """
+        await _update_log_entry(self, **kwargs)
+        await self.refresh()
 
 class LogReport(NamedTuple):
     """Object that represents a report based on a certain amount of log entries."""
@@ -183,6 +200,7 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
             command = record['command'],
             command_count = record['command_count'],
             date_time = datetime.fromisoformat(record['date_time']),
+            entry_type = record['type'],
             guild_id = record['guild_id'],
             user_id = record['user_id'],
         )
@@ -237,7 +255,7 @@ async def _dict_to_leaderboard_user(record: dict) -> LogEntry:
 
 
 # Read Data
-async def get_log_entry(user_id: int, command: str, date_time: datetime) -> LogEntry:
+async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: datetime, entry_type: Optional[str] = 'single') -> LogEntry:
     """Gets a specific log entry based on a specific user, command and an EXACT time.
     Since the exact time is usually unknown, this is mostly used for refreshing an object.
 
@@ -254,10 +272,10 @@ async def get_log_entry(user_id: int, command: str, date_time: datetime) -> LogE
     """
     table = 'tracking_log'
     function_name = 'get_log_entry'
-    sql = f'SELECT * FROM {table} WHERE user_id=? AND command=? AND date_time>=?'
+    sql = f'SELECT * FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND date_time=? AND type=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, command, date_time))
+        cur.execute(sql, (user_id, guild_id, command, date_time, entry_type))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -318,6 +336,53 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     if not records:
         error_message = f'No log data found in database for timeframe "{str(timeframe)}".'
         if guild_id is not None: error_message = f'{error_message} Guild: {guild_id}'
+        raise exceptions.NoDataFoundError(error_message)
+    log_entries = []
+    for record in records:
+        log_entry = await _dict_to_log_entry(dict(record))
+        log_entries.append(log_entry)
+
+    return tuple(log_entries)
+
+
+async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
+    """Gets all single log entries older than a certain amount of days.
+
+    Arguments
+    ---------
+    user_id: int
+    days: amount of days that should be kept as single entries
+    guild_id: Optional[int]
+
+    Returns
+    -------
+    Tuple[LogEntry]
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    exceptions.NoDataFoundError if no guild was found.
+    LookupError if something goes wrong reading the dict.
+    Also logs all errors to the database.
+    """
+    table = 'tracking_log'
+    function_name = 'get_old_log_entries'
+    sql = (
+        f'SELECT * FROM {table} WHERE date_time<? AND type=?'
+    )
+    date_time = datetime.utcnow() - timedelta(days=days)
+    date_time = date_time.replace(hour=0, minute=0, second=0)
+    try:
+        cur = settings.NAVI_DB.cursor()
+        cur.execute(sql, (date_time, 'single'))
+        records = cur.fetchall()
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    if not records:
+        error_message = f'No log data found in database older than {days} days".'
         raise exceptions.NoDataFoundError(error_message)
     log_entries = []
     for record in records:
@@ -455,10 +520,11 @@ async def _delete_log_entry(log_entry: LogEntry) -> None:
     """
     table = 'tracking_log'
     function_name = '_delete_log_entry'
-    sql = f'DELETE FROM {table} WHERE user_id=? AND command=? AND date_time=?'
+    sql = f'DELETE FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND date_time=? AND type=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (log_entry.user_id, log_entry.command, log_entry.date_time))
+        cur.execute(sql, (log_entry.user_id, log_entry.guild_id, log_entry.command, log_entry.date_time,
+                          log_entry.entry_type))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -519,9 +585,58 @@ async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser,
         raise
 
 
+async def _update_log_entry(log_entry: LogEntry, **kwargs) -> None:
+    """Updates tracking_log record. Use LogEntry.update() to trigger this function.
+
+    Arguments
+    ---------
+    user_id: int
+    kwargs (column=value):
+        command: str
+        command_count: int
+        date_time: datetime
+        entry_type: Literal['single', 'summary']
+        guild_id: int
+        user_id: int
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    Also logs all errors to the database.
+    """
+    table = 'tracking_log'
+    function_name = '_update_log_entry'
+    if not kwargs:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
+        )
+        raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
+    try:
+        cur = settings.NAVI_DB.cursor()
+        sql = f'UPDATE {table} SET'
+        for kwarg in kwargs:
+            sql = f'{sql} {kwarg} = :{kwarg},'
+        sql = sql.strip(",")
+        kwargs['user_id_old'] = log_entry.user_id
+        kwargs['command_old'] = log_entry.command
+        kwargs['date_time_old'] = log_entry.date_time
+        kwargs['entry_type_old'] = log_entry.entry_type
+        sql = (
+            f'{sql} WHERE user_id = :user_id_old AND type = :entry_type_old AND command = :command_old '
+            f'AND date_time = :date_time_old'
+        )
+        cur.execute(sql, kwargs)
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+
+
 async def insert_log_entry(user_id: int, guild_id: int,
                            command: str, date_time: datetime) -> LogEntry:
-    """Inserts a a record to the table "tracking_log".
+    """Inserts a single record to the table "tracking_log".
 
     Returns
     -------
@@ -545,7 +660,45 @@ async def insert_log_entry(user_id: int, guild_id: int,
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    log_entry = await get_log_entry(user_id, command, date_time)
+    log_entry = await get_log_entry(user_id, guild_id, command, date_time)
+
+    return log_entry
+
+
+async def insert_log_summary(user_id: int, guild_id: int, command: str, date_time: datetime, amount: int) -> LogEntry:
+    """Inserts a summary record to the table "tracking_log". If record already exists, count is increased by one instead.
+
+    Returns
+    -------
+    LogEntry object with the newly created log entry.
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    Also logs all errors to the database.
+    """
+    function_name = 'insert_log_summary'
+    table = 'tracking_log'
+    log_entry = None
+    try:
+        log_entry = await get_log_entry(user_id, guild_id, command, date_time, 'summary')
+    except exceptions.NoDataFoundError:
+        pass
+    if log_entry is not None:
+        await log_entry.update(command_count=log_entry.command_count + amount)
+    else:
+        sql = (
+            f'INSERT INTO {table} (user_id, guild_id, command, command_count, date_time, type) VALUES (?, ?, ?, ?, ?, ?)'
+        )
+        try:
+            cur = settings.NAVI_DB.cursor()
+            cur.execute(sql, (user_id, guild_id, command, amount, date_time, 'summary'))
+        except sqlite3.Error as error:
+            await errors.log_error(
+                strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+            )
+            raise
+        log_entry = await get_log_entry(user_id, guild_id, command, date_time, 'summary')
 
     return log_entry
 
@@ -592,3 +745,26 @@ async def insert_log_leaderboard_user(user_id: int, guild_id: int, command: str,
         log_leaderboard_user = await get_log_leaderboard_user(user_id, guild_id, command)
 
     return log_leaderboard_user
+
+
+async def delete_log_entries(user_id: int, guild_id: int, command: str, date_time_min: datetime,
+                             date_time_max: datetime) -> None:
+    """Deletes all single log entries between two datetimes.
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    Also logs all errors to the database.
+    """
+    table = 'tracking_log'
+    function_name = '_delete_log_entries'
+    sql = f'DELETE FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND type=? AND date_time BETWEEN ? AND ?'
+    try:
+        cur = settings.NAVI_DB.cursor()
+        cur.execute(sql, (user_id, guild_id, command, 'single', date_time_min, date_time_max))
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise

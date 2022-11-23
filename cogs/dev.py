@@ -30,13 +30,6 @@ class DevCog(commands.Cog):
         default_member_permissions=discord.Permissions(administrator=True)
     )
 
-    test = SlashCommandGroup(
-        "test",
-        "Test commands",
-        guild_ids=settings.DEV_GUILDS,
-        default_member_permissions=discord.Permissions(administrator=True)
-    )
-
     # Commands
     @dev.command()
     @commands.is_owner()
@@ -225,94 +218,62 @@ class DevCog(commands.Cog):
 
     @dev.command()
     @commands.is_owner()
-    async def migrate(self, ctx: discord.ApplicationContext):
-        """Migrate user database"""
+    async def consolidate(self, ctx: discord.ApplicationContext):
+        """Consolidate tracking records manually"""
         await ctx.defer()
-        from database import reminders, users
-        all_users = await users.get_all_users()
-        user_count = 0
-        for user in all_users:
-            if user.ping_after_message:
-                alert_adventure_message = f'{user.alert_adventure.message} {{name}}'
-                alert_arena_message = f'{user.alert_arena.message} {{name}}'
-                alert_big_arena_message = f'{user.alert_big_arena.message} {{name}}'
-                alert_daily_message = f'{user.alert_daily.message} {{name}}'
-                alert_duel_message = f'{user.alert_duel.message} {{name}}'
-                alert_dungeon_miniboss_message = f'{user.alert_dungeon_miniboss.message} {{name}}'
-                alert_farm_message = f'{user.alert_farm.message} {{name}}'
-                alert_guild_message = f'{user.alert_guild.message} {{name}}'
-                alert_horse_breed_message = f'{user.alert_horse_breed.message} {{name}}'
-                alert_horse_race_message = f'{user.alert_horse_race.message} {{name}}'
-                alert_hunt_message = f'{user.alert_hunt.message} {{name}}'
-                alert_lootbox_message = f'{user.alert_lootbox.message} {{name}}'
-                alert_lottery_message = f'{user.alert_lottery.message} {{name}}'
-                alert_not_so_mini_boss_message = f'{user.alert_not_so_mini_boss.message} {{name}}'
-                alert_partner_message = f'{user.alert_partner.message.replace("{user}", "{partner}")} {{name}}'
-                alert_pet_tournament_message = f'{user.alert_pet_tournament.message} {{name}}'
-                alert_pets_message = f'{user.alert_pets.message} {{name}}'
-                alert_quest_message = f'{user.alert_quest.message} {{name}}'
-                alert_training_message = f'{user.alert_training.message} {{name}}'
-                alert_vote_message = f'{user.alert_vote.message} {{name}}'
-                alert_weekly_message = f'{user.alert_weekly.message} {{name}}'
-                alert_work_message = f'{user.alert_work.message} {{name}}'
-            else:
-                alert_adventure_message = f'{{name}} {user.alert_adventure.message}'
-                alert_arena_message = f'{{name}} {user.alert_arena.message}'
-                alert_big_arena_message = f'{{name}} {user.alert_big_arena.message}'
-                alert_daily_message = f'{{name}} {user.alert_daily.message}'
-                alert_duel_message = f'{{name}} {user.alert_duel.message}'
-                alert_dungeon_miniboss_message = f'{{name}} {user.alert_dungeon_miniboss.message}'
-                alert_farm_message = f'{{name}} {user.alert_farm.message}'
-                alert_guild_message = f'{{name}} {user.alert_guild.message}'
-                alert_horse_breed_message = f'{{name}} {user.alert_horse_breed.message}'
-                alert_horse_race_message = f'{{name}} {user.alert_horse_race.message}'
-                alert_hunt_message = f'{{name}} {user.alert_hunt.message}'
-                alert_lootbox_message = f'{{name}} {user.alert_lootbox.message}'
-                alert_lottery_message = f'{{name}} {user.alert_lottery.message}'
-                alert_not_so_mini_boss_message = f'{{name}} {user.alert_not_so_mini_boss.message}'
-                alert_partner_message = f'{{name}} {user.alert_partner.message.replace("{user}", "{partner}")}'
-                alert_pet_tournament_message = f'{{name}} {user.alert_pet_tournament.message}'
-                alert_pets_message = f'{{name}} {user.alert_pets.message}'
-                alert_quest_message = f'{{name}} {user.alert_quest.message}'
-                alert_training_message = f'{{name}} {user.alert_training.message}'
-                alert_vote_message = f'{{name}} {user.alert_vote.message}'
-                alert_weekly_message = f'{{name}} {user.alert_weekly.message}'
-                alert_work_message = f'{{name}} {user.alert_work.message}'
-            await user.update(
-                alert_adventure_message = alert_adventure_message,
-                alert_arena_message = alert_arena_message,
-                alert_big_arena_message = alert_big_arena_message,
-                alert_daily_message = alert_daily_message,
-                alert_duel_message = alert_duel_message,
-                alert_dungeon_miniboss_message = alert_dungeon_miniboss_message,
-                alert_farm_message = alert_farm_message,
-                alert_guild_message = alert_guild_message,
-                alert_horse_breed_message = alert_horse_breed_message,
-                alert_horse_race_message = alert_horse_race_message,
-                alert_hunt_message = alert_hunt_message,
-                alert_lootbox_message = alert_lootbox_message,
-                alert_lottery_message = alert_lottery_message,
-                alert_not_so_mini_boss_message = alert_not_so_mini_boss_message,
-                alert_partner_message = alert_partner_message,
-                alert_pet_tournament_message = alert_pet_tournament_message,
-                alert_pets_message = alert_pets_message,
-                alert_quest_message = alert_quest_message,
-                alert_training_message = alert_training_message,
-                alert_vote_message = alert_vote_message,
-                alert_weekly_message = alert_weekly_message,
-                alert_work_message = alert_work_message
-            )
-            user_count += 1
-            try:
-                all_reminders = await reminders.get_active_user_reminders(user.user_id)
-            except exceptions.NoDataFoundError:
-                continue
-            for reminder in all_reminders:
-                if user.ping_after_message:
-                    await reminder.update(message=f'{reminder.message} {{name}}')
-                else:
-                    await reminder.update(message=f'{{name}} {reminder.message}')
-        await ctx.respond(f'Migrated {user_count} users.')
+        from datetime import datetime
+        import asyncio
+        from humanfriendly import format_timespan
+        from database import tracking, users
+        start_time = datetime.utcnow().replace(microsecond=0)
+        log_entry_count = 0
+        try:
+            old_log_entries = await tracking.get_old_log_entries(28)
+        except exceptions.NoDataFoundError:
+            await ctx.respond('Nothing to do.')
+            return
+        entries = {}
+        for log_entry in old_log_entries:
+            date_time = log_entry.date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
+            key = (log_entry.user_id, log_entry.guild_id, log_entry.command, date_time)
+            amount = entries.get(key, 0)
+            entries[key] = amount + 1
+            log_entry_count += 1
+        for key, amount in entries.items():
+            user_id, guild_id, command, date_time = key
+            summary_log_entry = await tracking.insert_log_summary(user_id, guild_id, command, date_time, amount)
+            date_time_min = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
+            date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
+            await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
+            await asyncio.sleep(0.01)
+        cur = settings.NAVI_DB.cursor()
+        cur.execute('VACUUM')
+        end_time = datetime.utcnow().replace(microsecond=0)
+        time_passed = end_time - start_time
+        print(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
+        await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
+
+
+    @dev.command()
+    @commands.is_owner()
+    async def delete_old(self, ctx: discord.ApplicationContext):
+        """Delete single tracking records older than 28 days"""
+        await ctx.defer()
+        from datetime import datetime, timedelta
+        from humanfriendly import format_timespan
+        import sqlite3
+        start_time = datetime.utcnow().replace(microsecond=0)
+        date_time = datetime.utcnow() - timedelta(days=28)
+        date_time = date_time.replace(hour=0, minute=0, second=0)
+        sql = 'DELETE FROM tracking_log WHERE date_time<? AND type=?'
+        try:
+            cur = settings.NAVI_DB.cursor()
+            cur.execute(sql, (date_time, 'single'))
+        except sqlite3.Error as error:
+            raise
+        end_time = datetime.utcnow().replace(microsecond=0)
+        time_passed = end_time - start_time
+        await ctx.respond(f'Completed in {format_timespan(time_passed)}.')
 
 
     @dev.command()
