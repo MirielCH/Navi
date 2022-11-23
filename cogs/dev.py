@@ -9,7 +9,7 @@ from discord.commands import SlashCommandGroup, Option
 from discord.ext import commands
 
 from database import cooldowns
-from resources import emojis, exceptions, functions, settings, strings, views
+from resources import emojis, exceptions, functions, logs, settings, strings, views
 
 
 EVENT_REDUCTION_TYPES = [
@@ -250,7 +250,7 @@ class DevCog(commands.Cog):
         cur.execute('VACUUM')
         end_time = datetime.utcnow().replace(microsecond=0)
         time_passed = end_time - start_time
-        print(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
+        logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
 

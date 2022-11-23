@@ -4,6 +4,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from humanfriendly import format_timespan
+import sqlite3
 from typing import List
 
 import discord
@@ -278,7 +279,7 @@ class TasksCog(commands.Cog):
             try:
                 old_log_entries = await tracking.get_old_log_entries(28)
             except exceptions.NoDataFoundError:
-                await errors.log_error('Didn\'t find any log entries to consolidate.')
+                logs.logger.info('Didn\'t find any log entries to consolidate.')
                 return
             entries = {}
             for log_entry in old_log_entries:
@@ -295,7 +296,14 @@ class TasksCog(commands.Cog):
                 await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
                 await asyncio.sleep(0.01)
             cur = settings.NAVI_DB.cursor()
-            cur.execute('VACUUM')
+            date_time = datetime.utcnow() - timedelta(days=366)
+            date_time = date_time.replace(hour=0, minute=0, second=0)
+            sql = 'DELETE FROM tracking_log WHERE date_time<?'
+            try:
+                cur.execute(sql, (date_time,))
+                cur.execute('VACUUM')
+            except sqlite3.Error as error:
+                raise
             end_time = datetime.utcnow().replace(microsecond=0)
             time_passed = end_time - start_time
             logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
