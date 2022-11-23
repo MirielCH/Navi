@@ -408,37 +408,7 @@ class HuntCog(commands.Cog):
                                     f'Had the following error while trying to send the partner alert:\n{error}',
                                     message
                                 )
-                    """
-                    if (found_together and partner.hardmode_mode_enabled and not event_mob
-                        and not user_settings.hunt_rotation_enabled):
-                        hm_message = (
-                            f'**{partner_discord.name}** is currently **hardmoding**.\n'
-                            f'If you want to hardmode too, please activate hardmode mode and hunt solo.'
-                        )
-                        if user_settings.dnd_mode_enabled:
-                            hm_message = f'**{user.name}**, {hm_message}'
-                        else:
-                            if user_settings.ping_after_message:
-                                hm_message = f'{hm_message} {user.mention}'
-                            else:
-                                hm_message = f'{user.mention} {hm_message}'
-                        await message.channel.send(hm_message)
-                    elif (not found_together and not partner.hardmode_mode_enabled and not event_mob
-                          and not user_settings.hunt_rotation_enabled):
-                        partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
-                        hm_message = (
-                            f'**{partner_discord.name}** is not hardmoding, '
-                            f'feel free to take them hunting.'
-                        )
-                        if user_settings.dnd_mode_enabled:
-                            hm_message = f'**{user.name}**, {hm_message}'
-                        else:
-                            if user_settings.ping_after_message:
-                                hm_message = f'{hm_message} {user.mention}'
-                            else:
-                                hm_message = f'{user.mention} {hm_message}'
-                        await message.channel.send(hm_message)
-                    """
+
                 # Add reactions
                 if user_settings.reactions_enabled:
                     found_stuff = {

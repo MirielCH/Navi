@@ -591,13 +591,17 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
 async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
+    clan_channel = None
     if clan_settings.upgrade_quests_enabled:
         clan_upgrade_quests = f'{emojis.GREENTICK}`Allowed`'
     else:
         clan_upgrade_quests = f'{emojis.REDTICK}`Not allowed`'
     if clan_settings.channel_id is not None:
-        clan_channel = await functions.get_discord_channel(bot, clan_settings.channel_id)
-        clan_channel_name = clan_channel.name
+        try:
+            clan_channel = await functions.get_discord_channel(bot, clan_settings.channel_id)
+        except discord.Forbidden:
+            clan_channel_name = 'Access forbidden'
+        if clan_channel is not None: clan_channel_name = clan_channel.name
     else:
         clan_channel_name = 'N/A'
     if clan_settings.quest_user_id is not None:
@@ -737,15 +741,21 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
 async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
-    user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
-    user_partner_channel_name = partner = partner_hardmode_status = '`N/A`'
+    user_partner_channel_name = partner = '`N/A`'
     partner_partner_channel_name = user_partner_channel_name = '`N/A`'
+    partner_partner_channel = user_partner_channel = None
+    try:
+        user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
+    except discord.Forbidden:
+        user_partner_channel_name = '`Access forbidden`'
     if user_partner_channel is not None:
         user_partner_channel_name = f'`{user_partner_channel.name}`)'
     if partner_settings is not None:
         partner = f'<@{user_settings.partner_id}>'
-        partner_hardmode_status = await functions.bool_to_text(partner_settings.hardmode_mode_enabled)
-        partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
+        try:
+            partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
+        except discord.Forbidden:
+            partner_partner_channel_name = '`Access forbidden`'
         if partner_partner_channel is not None:
             partner_partner_channel_name = f'`{partner_partner_channel.name}`)'
     donor_tier = (
@@ -759,7 +769,6 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
     )
     settings_partner = (
-        f'{emojis.BP} **Hardmode mode**: {partner_hardmode_status}\n'
         f'{emojis.BP} **Partner alert channel**: {partner_partner_channel_name}\n'
     )
     embed = discord.Embed(
@@ -961,8 +970,6 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     behaviour = (
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
         f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
-        #f'{emojis.BP} **Hardmode mode**: {await functions.bool_to_text(user_settings.hardmode_mode_enabled)}\n'
-        #f'{emojis.DETAIL} _Tells your partner to hunt solo if he uses `together`._\n'
         f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash command reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'

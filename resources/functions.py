@@ -103,6 +103,8 @@ async def get_discord_channel(bot: discord.Bot, channel_id: int) -> discord.User
             channel = await bot.fetch_channel(channel_id)
         except discord.NotFound:
             pass
+        except discord.Forbidden:
+            raise
     return channel
 
 

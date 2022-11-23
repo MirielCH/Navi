@@ -335,7 +335,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
         reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
         auto_flex_action = 'Disable' if view.user_settings.auto_flex_enabled else 'Enable'
         dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
-        #hardmode_action = 'Disable' if view.user_settings.hardmode_mode_enabled else 'Enable'
         hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
         mentions_action = 'Disable' if view.user_settings.slash_mentions_enabled else 'Enable'
         tracking_action = 'Disable' if view.user_settings.tracking_enabled else 'Enable'
@@ -345,8 +344,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
                                             value='toggle_auto_flex'))
         options.append(discord.SelectOption(label=f'{dnd_action} DND mode',
                                             value='toggle_dnd'))
-        #options.append(discord.SelectOption(label=f'{hardmode_action} hardmode mode',
-        #                                    value='toggle_hardmode'))
         options.append(discord.SelectOption(label=f'{hunt_action} hunt rotation',
                                             value='toggle_hunt'))
         options.append(discord.SelectOption(label=f'{mentions_action} slash command reminders',
@@ -366,31 +363,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(auto_flex_enabled=not self.view.user_settings.auto_flex_enabled)
         elif select_value == 'toggle_dnd':
             await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
-        elif select_value == 'toggle_hardmode':
-            await self.view.user_settings.update(hardmode_mode_enabled=not self.view.user_settings.hardmode_mode_enabled)
-            if self.view.user_settings.partner_id is not None:
-                partner_discord = await functions.get_discord_user(self.view.bot, self.view.user_settings.partner_id)
-                partner: users.User = await users.get_user(self.view.user_settings.partner_id)
-                if partner.partner_channel_id is not None:
-                    action = 'started' if self.view.user_settings.hardmode_enabled else 'stopped'
-                    if not self.view.user_settings.dnd_mode_enabled:
-                        partner_message = partner_discord.mention
-                    else:
-                        partner_message = f'**{partner_discord.name}**,'
-                    partner_message = f'{partner_message} **{interaction.user.name}** just {action} **hardmoding**.'
-                    if action == 'started':
-                        partner_message = (
-                            f'{partner_message}\n'
-                            f'Please don\'t use `hunt together` until they turn it off. '
-                            f'If you want to hardmode too, please activate hardmode mode as well and hunt solo.'
-                        )
-                    else:
-                        partner_message = (
-                            f'{partner_message}\n'
-                            f'Feel free to use `hunt together` again.'
-                        )
-                    partner_channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
-                    await partner_channel.send(partner_message)
         elif select_value == 'toggle_hunt':
             await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
         elif select_value == 'toggle_mentions':
