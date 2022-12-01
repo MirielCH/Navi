@@ -20,10 +20,12 @@ class UserAlert(NamedTuple):
 @dataclass()
 class User():
     """Object that represents a record from table "user"."""
+    alert_advent: UserAlert
     alert_adventure: UserAlert
     alert_arena: UserAlert
     alert_big_arena: UserAlert
     alert_boo: UserAlert
+    alert_chimney: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
@@ -49,6 +51,7 @@ class User():
     auto_ready_enabled: bool
     bot_enabled: bool
     clan_name: str
+    christmas_area_enabled: bool
     cmd_cd_visible: bool
     cmd_inventory_visible: bool
     cmd_ready_visible: bool
@@ -99,9 +102,11 @@ class User():
     async def refresh(self) -> None:
         """Refreshes user data from the database."""
         new_settings: User = await get_user(self.user_id)
+        self.alert_advent = new_settings.alert_advent
         self.alert_adventure = new_settings.alert_adventure
         self.alert_arena = new_settings.alert_arena
         self.alert_boo = new_settings.alert_boo
+        self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
         self.alert_daily = new_settings.alert_daily
         self.alert_duel = new_settings.alert_duel
@@ -128,6 +133,7 @@ class User():
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.clan_name = new_settings.clan_name
+        self.christmas_area_enabled = new_settings.christmas_area_enabled
         self.cmd_cd_visible = new_settings.cmd_cd_visible
         self.cmd_inventory_visible = new_settings.cmd_inventory_visible
         self.cmd_ready_visible = new_settings.cmd_ready_visible
@@ -181,8 +187,12 @@ class User():
         Arguments
         ---------
         kwargs (column=value):
+            alert_advent_enabled: bool
+            alert_advent_message: str
+            alert_advent_visible: bool
             alert_adventure_enabled: bool
             alert_adventure_message: str
+            alert_adventure_visible: bool
             alert_arena_enabled: bool
             alert_arena_message: str
             alert_arena_visible: bool
@@ -192,6 +202,9 @@ class User():
             alert_boo_enabled: bool
             alert_boo_message: str
             alert_boo_visible: bool
+            alert_chimney_enabled: bool
+            alert_chimney_message: str
+            alert_chimney_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
             alert_daily_visible: bool
@@ -260,6 +273,7 @@ class User():
             cmd_inventory_visible: bool
             cmd_cmd_ready_visible: bool
             cmd_slashboard_visible: bool
+            christmas_area_enabled: bool
             context_helper_enabled: bool
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
@@ -326,6 +340,9 @@ async def _dict_to_user(record: dict) -> User:
     none_date = datetime(1970, 1, 1, 0, 0, 0)
     try:
         user = User(
+            alert_advent = UserAlert(enabled=bool(record['alert_advent_enabled']),
+                                     message=record['alert_advent_message'],
+                                     visible=bool(record['alert_advent_visible'])),
             alert_adventure = UserAlert(enabled=bool(record['alert_adventure_enabled']),
                                         message=record['alert_adventure_message'],
                                         visible=bool(record['alert_adventure_visible'])),
@@ -335,6 +352,9 @@ async def _dict_to_user(record: dict) -> User:
             alert_boo = UserAlert(enabled=bool(record['alert_boo_enabled']),
                                     message=record['alert_boo_message'],
                                     visible=bool(record['alert_boo_visible'])),
+            alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
+                                      message=record['alert_chimney_message'],
+                                      visible=bool(record['alert_chimney_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
                                         visible=bool(record['alert_big_arena_visible'])),
@@ -403,6 +423,7 @@ async def _dict_to_user(record: dict) -> User:
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
             clan_name = record['clan_name'],
+            christmas_area_enabled = bool(record['christmas_area_enabled']),
             cmd_cd_visible = record['cmd_cd_visible'],
             cmd_inventory_visible = record['cmd_inventory_visible'],
             cmd_ready_visible = record['cmd_ready_visible'],
@@ -602,8 +623,12 @@ async def _update_user(user: User, **kwargs) -> None:
     ---------
     user_id: int
     kwargs (column=value):
+        alert_advent_enabled: bool
+        alert_advent_message: str
+        alert_advent_visible: bool
         alert_adventure_enabled: bool
         alert_adventure_message: str
+        alert_adventure_visible: bool
         alert_arena_enabled: bool
         alert_arena_message: str
         alert_arena_visible: bool
@@ -613,6 +638,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boo_enabled: bool
         alert_boo_message: str
         alert_boo_visible: bool
+        alert_chimney_enabled: bool
+        alert_chimney_message: str
+        alert_chimney_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
         alert_daily_visible: bool
@@ -677,6 +705,7 @@ async def _update_user(user: User, **kwargs) -> None:
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
+        christmas_area_enabled: bool
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
         cmd_ready_visible: bool

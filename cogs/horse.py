@@ -53,11 +53,11 @@ class HorseCog(commands.Cog):
                             message.channel, regex.COMMAND_HORSE
                         )
                     )
-                    interaction_user = user_command_message.author
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Interaction user not found in horse cooldown message.', message)
                         return
+                    interaction_user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:

@@ -130,13 +130,14 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
     else:
         field_settings = (
             f'You may want to have a look at my settings. You can also set your EPIC RPG donor tier there.\n'
-            f'Click the button below or use {strings.SLASH_COMMANDS_NAVI["settings user"]}.'
+            f'Click the button below or use {await functions.get_navi_slash_command(bot, "settings user")}.'
         )
         field_tracking = (
             f'I track the amount of some EPIC RPG commands you use. Check '
-            f'{strings.SLASH_COMMANDS_NAVI["stats"]} to see what commands are tracked.\n'
+            f'{await functions.get_navi_slash_command(bot, "stats")} to see what commands are tracked.\n'
             f'**__No personal data is processed or stored in any way!__**\n'
-            f'You can opt-out of command tracking in {strings.SLASH_COMMANDS_NAVI["stats"]} or in your user settings.\n\n'
+            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")} '
+            f'or in your user settings.\n\n'
         )
         field_auto_flex = (
             f'This bot has an auto flex feature. If auto flexing is turned on by the server admin, I will automatically '
@@ -145,7 +146,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         )
         field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
-            f'{strings.SLASH_COMMANDS_NAVI["help"]}.'
+            f'{await functions.get_navi_slash_command(bot, "help")}.'
         )
         img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
         image_url = 'attachment://navi.png'
@@ -153,7 +154,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
             title = f'Hey! {ctx.author.name}! Hello!'.upper(),
             description = (
                 f'I am here to help you with your EPIC RPG commands!\n'
-                f'Have a look at {strings.SLASH_COMMANDS_NAVI["help"]} for a list of my own commands.'
+                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} for a list of my own commands.'
             ),
             color =  settings.EMBED_COLOR,
         )
@@ -164,7 +165,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         embed.set_thumbnail(url=image_url)
         view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
         interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
-        view.interaction = interaction
+        view.interaction_message = interaction
         await view.wait()
         if view.value == 'pressed':
             await functions.edit_interaction(interaction, view=None)
@@ -312,7 +313,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
         except exceptions.FirstTimeUserError:
             await ctx.respond(
                 f'**{new_partner.name}** is not registered with this bot yet. They need to do '
-                f'{strings.SLASH_COMMANDS_NAVI["on"]} first.'
+                f'{await functions.get_navi_slash_command(bot, "on")} first.'
             )
             return
         if user_settings.partner_id is not None:
@@ -364,7 +365,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
                 )
                 view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Partner settings')
                 interaction = await ctx.respond(answer, view=view)
-                view.interaction = interaction
+                view.interaction_message = interaction
                 await view.wait()
                 if view.value == 'pressed':
                     await functions.edit_interaction(interaction, view=None)
@@ -776,7 +777,7 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
         title = f'{ctx.author.name.upper()}\'S PARTNER SETTINGS',
         description = (
             f'_Settings for your partner. To add or change your partner, use '
-            f'{strings.SLASH_COMMANDS_NAVI["settings partner"]} `partner: @partner`._\n'
+            f'{await functions.get_navi_slash_command(bot, "settings partner")} `partner: @partner`._\n'
         )
     )
     embed.add_field(name='EPIC RPG DONOR TIER', value=donor_tier, inline=False)
@@ -815,9 +816,11 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     command_reminders = (
+        f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_advent.visible)}\n'
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
         f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await bool_to_text(user_settings.alert_boo.visible)}\n'
+        f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_chimney.visible)}\n'
         f'{emojis.BP} **Daily**: {await bool_to_text(user_settings.alert_daily.visible)}\n'
         f'{emojis.BP} **Duel**: {await bool_to_text(user_settings.alert_duel.visible)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await bool_to_text(user_settings.alert_dungeon_miniboss.visible)}\n'
@@ -848,16 +851,16 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
         f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
-        f'{emojis.BP} **{strings.SLASH_COMMANDS_NAVI["ready"]} command**: '
+        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "ready")} command**: '
         f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
-        f'{emojis.BP} **{strings.SLASH_COMMANDS_NAVI["slashboard"]} command**: '
+        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "slashboard")} command**: '
         f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
         description = (
-            f'_Settings to toggle visibility of reminders in {strings.SLASH_COMMANDS_NAVI["ready"]}._\n'
+            f'_Settings to toggle visibility of reminders in {await functions.get_navi_slash_command(bot, "ready")}._\n'
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
         )
     )
@@ -873,9 +876,12 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
                                    user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
     command_reminders = (
+        f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
+        f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
+        f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **Duel**: {await functions.bool_to_text(user_settings.alert_duel.enabled)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await functions.bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}\n'
@@ -954,8 +960,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
 
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
-        f'{emojis.DETAIL} _You can toggle this by using {strings.SLASH_COMMANDS_NAVI["on"]} '
-        f'and {strings.SLASH_COMMANDS_NAVI["off"]}._\n'
+        f'{emojis.DETAIL} _You can toggle this by using {await functions.get_navi_slash_command(bot, "on")} '
+        f'and {await functions.get_navi_slash_command(bot, "off")}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
         f'{emojis.BP} **Auto flex alerts**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
         f'{emojis.DETAIL} _Auto flexing only works if it\'s enabled in the server settings._\n'
@@ -974,6 +980,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash command reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
+        f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
+        f'{emojis.DETAIL} _Reduces your reminders by 10%._\n'
     )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'

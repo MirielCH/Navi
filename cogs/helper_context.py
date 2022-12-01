@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 
 from database import users
-from resources import exceptions, functions, settings
+from resources import exceptions, functions, settings, strings
 
 
 class HelperContextCog(commands.Cog):
@@ -49,11 +49,9 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
-                command_pets_fusion = await functions.get_slash_command(user_settings, 'pets fusion')
-                command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                 answer = (
-                    f"➜ {command_pets_fusion}\n"
-                    f"➜ {command_pets_list}\n"
+                    f"➜ {strings.SLASH_COMMANDS['pets fusion']}\n"
+                    f"➜ {strings.SLASH_COMMANDS['pets list']}\n"
                 )
                 await message.reply(answer)
 
@@ -71,9 +69,8 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
-                command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                 answer = (
-                    f"➜ {command_pets_list}\n"
+                    f"➜ {strings.SLASH_COMMANDS['pets list']}\n"
                 )
                 await message.reply(answer)
 
@@ -90,11 +87,9 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
-                command_pets_adv = await functions.get_slash_command(user_settings, 'pets adventure')
-                command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                 answer = (
-                    f"➜ {command_pets_adv}\n"
-                    f"➜ {command_pets_list}\n"
+                    f"➜ {strings.SLASH_COMMANDS['pets adventure']}\n"
+                    f"➜ {strings.SLASH_COMMANDS['pets list']}\n"
                 )
                 await message.reply(answer)
 
@@ -113,7 +108,7 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
-                command_adventure = await functions.get_slash_command(user_settings, 'adventure')
+                command_adventure = strings.SLASH_COMMANDS['adventure']
                 if user_settings.last_adventure_mode != '':
                     command_adventure = f'{command_adventure} `mode: {user_settings.last_adventure_mode}`'
                 answer = (
@@ -150,34 +145,12 @@ class HelperContextCog(commands.Cog):
                     'os seguintes pets voltaram instantaneamente', #Portuguese
                     'voidog fez todos os bichinhos', #Portuguese VOIDog
                 ]
-                if any(search_string in message_content.lower() for search_string in search_strings_tt):
-                    command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
-                    answer = f"➜ {command_pets_claim}"
-                else:
-                    command_pets_adv = await functions.get_slash_command(user_settings, 'pets adventure')
-                    command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
+                if not any(search_string in message_content.lower() for search_string in search_strings_tt):
                     answer = (
-                        f"➜ {command_pets_adv}\n"
-                        f"➜ {command_pets_list}\n"
+                        f"➜ {strings.SLASH_COMMANDS['pets adventure']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['pets list']}\n"
                     )
                 await message.reply(answer)
-
-            # Single pet TT trigger
-            search_strings = [
-                'it came back instantly!!', #English
-                'volvio al instante!!', #Spanish
-                'voltou instantaneamente!!', #Portuguese
-            ]
-            if any(search_string in message_content.lower() for search_string in search_strings):
-                user = await functions.get_interaction_user(message)
-                if user is None: return
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
-                command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
-                await message.reply(f"➜ {command_pets_claim}")
 
             # Quest - Only works with slash
             search_strings = [
@@ -224,47 +197,33 @@ class HelperContextCog(commands.Cog):
                 ]
                 quest_field = quest_message.embeds[0].fields[0].value.lower()
                 if any(search_string in quest_field for search_string in search_strings_gambling):
-                    command_big_dice = await functions.get_slash_command(user_settings, 'big dice')
-                    command_blackjack = await functions.get_slash_command(user_settings, 'blackjack')
-                    command_coinflip = await functions.get_slash_command(user_settings, 'coinflip')
-                    command_cups = await functions.get_slash_command(user_settings, 'cups')
-                    command_dice = await functions.get_slash_command(user_settings, 'dice')
-                    command_multidice = await functions.get_slash_command(user_settings, 'multidice')
-                    command_slots = await functions.get_slash_command(user_settings, 'slots')
-                    command_wheel = await functions.get_slash_command(user_settings, 'wheel')
                     answer = (
-                        f"➜ {command_big_dice}\n"
-                        f"➜ {command_blackjack}\n"
-                        f"➜ {command_coinflip}\n"
-                        f"➜ {command_cups}\n"
-                        f"➜ {command_dice}\n"
-                        f"➜ {command_multidice}\n"
-                        f"➜ {command_slots}\n"
-                        f"➜ {command_wheel}\n"
+                        f"➜ {strings.SLASH_COMMANDS['big dice']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['blackjack']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['coinflip']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['cups']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['dice']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['multidice']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['slots']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['wheel']}\n"
                     )
                 elif any(search_string in quest_field for search_string in search_strings_guild):
-                    command_raid = await functions.get_slash_command(user_settings, 'guild raid')
-                    command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade')
                     answer = (
-                        f"➜ {command_raid}\n"
-                        f"➜ {command_upgrade}\n"
+                        f"➜ {strings.SLASH_COMMANDS['guild raid']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['guild upgrade']}\n"
                     )
                 elif any(search_string in quest_field for search_string in search_strings_crafting):
-                    command_craft = await functions.get_slash_command(user_settings, 'craft')
-                    command_dismantle = await functions.get_slash_command(user_settings, 'dismantle')
                     answer = (
-                        f"➜ {command_craft}\n"
-                        f"➜ {command_dismantle}\n"
+                        f"➜ {strings.SLASH_COMMANDS['craft']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['dismantle']}\n"
                     )
                 elif any(search_string in quest_field for search_string in search_strings_cooking):
-                    command_cook = await functions.get_slash_command(user_settings, 'cook')
                     answer = (
-                        f"➜ {command_cook}\n"
+                        f"➜ {strings.SLASH_COMMANDS['cook']}\n"
                     )
                 elif any(search_string in quest_field for search_string in search_strings_trading):
-                    command_trade = await functions.get_slash_command(user_settings, 'trade items')
                     answer = (
-                        f"➜ {command_trade}\n"
+                        f"➜ {strings.SLASH_COMMANDS['trade items']}\n"
                     )
                 else:
                     return
@@ -283,8 +242,7 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
-                command_jail = await functions.get_slash_command(user_settings, 'jail')
-                await message.reply(f"➜ {command_jail}")
+                await message.reply(f"➜ {strings.SLASH_COMMANDS['jail']}")
 
 
 # Initialization

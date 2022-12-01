@@ -26,9 +26,11 @@ DEFAULT_MESSAGE_EVENT = (
 DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **{message}**!'
 
 DEFAULT_MESSAGES = {
+    'advent': DEFAULT_MESSAGE,
     'adventure': DEFAULT_MESSAGE,
     'arena': DEFAULT_MESSAGE,
     'big-arena': DEFAULT_MESSAGE_EVENT,
+    'chimney': DEFAULT_MESSAGE,
     #'boo': DEFAULT_MESSAGE,
     'daily': DEFAULT_MESSAGE,
     'duel': DEFAULT_MESSAGE,
@@ -77,6 +79,23 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
     #'boo',
+    'chimney',
+    'daily',
+    'duel',
+    'dungeon-miniboss',
+    'farm',
+    'horse',
+    'hunt',
+    'lootbox',
+    'quest',
+    'training',
+    'weekly',
+    'work'
+)
+
+TIME_COOKIE_AFFECTED_ACTIVITIES = (
+    'adventure',
+    'arena',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -91,10 +110,12 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES = (
 )
 
 ACTIVITIES = (
+    'advent-calendar',
     'adventure',
     'arena',
     'big-arena',
     #'boo',
+    'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -122,9 +143,11 @@ ACTIVITIES_ALL.sort()
 ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
+    'advent-calendar',
     'adventure',
     'arena',
     #'boo',
+    'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -151,10 +174,12 @@ ACTIVITIES_EVENTS = (
 
 
 ACTIVITIES_SLASH_COMMANDS = {
+    'advent-calendar': 'xmas calendar',
     'adventure': 'adventure',
     'arena': 'arena',
     'big-arena': 'big arena',
     'boo': 'hal boo',
+    'chimney': 'xmas chimney',
     'daily': 'daily',
     'duel': 'duel',
     'dungeon-miniboss': 'dungeon',
@@ -195,6 +220,7 @@ ACTIVITIES_ALIASES = {
     'bigboat': 'work',
     'dynamite': 'work',
     'greenhouse': 'work',
+    'working commands': 'work',
     'pet': 'pets',
     'tournament': 'pet-tournament',
     'pettournament': 'pet-tournament',
@@ -223,6 +249,7 @@ ACTIVITIES_ALIASES = {
     'horse-breed': 'horse',
     'horsebreeding': 'horse',
     'horse-breeding': 'horse',
+    'horse commands': 'horse',
     'breed': 'horse',
     'breeding': 'horse',
     'dueling': 'duel',
@@ -230,10 +257,12 @@ ACTIVITIES_ALIASES = {
 }
 
 ACTIVITIES_COLUMNS = {
+    'advent-calendar': 'alert_advent',
     'adventure': 'alert_adventure',
     'arena': 'alert_arena',
     'big-arena': 'alert_big_arena',
     'boo': 'alert_boo',
+    'chimney': 'alert_chimney',
     'daily': 'alert_daily',
     'duel': 'alert_duel',
     'dungeon-miniboss': 'alert_dungeon_miniboss',
@@ -260,6 +289,7 @@ ACTIVITIES_WITH_COOLDOWN = (
     'adventure',
     'arena',
     'clan',
+    'chimney',
     'daily',
     'epic',
     'farm',
@@ -335,6 +365,7 @@ MONSTERS_ADVENTURE = (
     '**Void Sphere**',
     '**Dragon**',
     'Krampus',
+    '**Krampus**',
     '**Yeti**',
     '**Hyper Giant Ice Block**',
     '**Bat Slime**',
@@ -412,6 +443,7 @@ MONSTERS_HUNT = (
     '**Christmas Reindeer**',
     '**Snowman**',
     '**Horslime**',
+    '**Christmas Slime**',
 )
 
 MONSTERS_HUNT_TOP = (
@@ -542,6 +574,8 @@ SLASH_COMMANDS = {
     'weekly': '</weekly:956658465185603645>',
     'wheel': '</wheel:959916179525341194>',
     'world status': '</world status:953370104236761108>',
+    'xmas calendar': '</xmas calendar:953370104236761108>',
+    'xmas chimney': '</xmas chimney:953370104236761108>',
 }
 
 RPG_COMMANDS = {
@@ -624,29 +658,8 @@ RPG_COMMANDS = {
     'weekly': 'rpg weekly',
     'wheel': 'rpg wheel',
     'world status': 'rpg world',
-}
-
-SLASH_COMMANDS_NAVI = {
-    'about': '</about:1017853591387656304>',
-    'custom-reminder': '</custom-reminder:1017853591387656305>',
-    'disable': '</disable:1017853591475724348>',
-    'enable': '</enable:1017853591387656311>',
-    'leaderboard guild': '</leaderboard guild:1017853591387656302>',
-    'help': '</help:1017853591387656303>',
-    'list': '</list:1017853591387656306>',
-    'off': '</off:1017853591387656309>',
-    'on': '</on:1017853591387656308>',
-    'ready': '</ready:1017853591387656307>',
-    'settings guild': '</settings guild:1017853591387656310>',
-    'settings helpers': '</settings helpers:1017853591387656310>',
-    'settings messages': '</settings messages:1017853591387656310>',
-    'settings partner': '</settings partner:1017853591387656310>',
-    'settings ready': '</settings ready:1017853591387656310>',
-    'settings reminders': '</settings reminders:1017853591387656310>',
-    'settings server': '</settings server:1017853591387656310>',
-    'settings user': '</settings user:1017853591387656310>',
-    'slashboard': '</slashboard:1026046376527806494>',
-    'stats': '</stats:1017853591475724349>',
+    'xmas calendar': 'rpg xmas calendar',
+    'xmas chimney': 'rpg xmas chimney',
 }
 
 
@@ -915,6 +928,39 @@ FLEX_TITLES_TIME_TRAVEL_100 = [
     'BOW BEFORE ME PEASANTS',
 ]
 
+FLEX_TITLES_XMAS_CHIMNEY = [
+    'Now this is embarassing',
+    'Can we get a live stream?',
+    'Hope noone is making a fire',
+    'Enjoy your break',
+    'Imagine how many hunts you could do in that time',
+    'We are not laughing, I swear',
+]
+
+FLEX_TITLES_XMAS_GODLY = [
+    'Oh thank you Santa!',
+    'Ho ho ho',
+    'You sure you deserve this?',
+    'Someone must have dropped this',
+    'Look at that shiny paper',
+    'WHAT IS IT? WHAT IS IT?',
+]
+
+FLEX_TITLES_XMAS_SNOWBALL = [
+    'Yellow snow? Uh, yeah, you can keep that',
+    'Look, it\'s glowing!',
+    'But can you upgrade it to a MEGA snowball?',
+    'Hope it doesn\'t melt',
+]
+
+FLEX_TITLES_XMAS_VOID = [
+    'Probably bribed Rudolf',
+    'Santa is real!',
+    'Clearly Santa\'s favourite',
+    'And they get this after eating all the cookies?',
+    'I think that one was meant for me',
+]
+
 
 # Auto flex thumbnails
 FLEX_THUMBNAILS_WORK_HYPERLOG = [
@@ -1145,4 +1191,44 @@ FLEX_THUMBNAILS_TIME_TRAVEL_100 = [
     'https://media.tenor.com/J82kuX8dFysAAAAC/blue-spiral.gif',
     'https://media.tenor.com/_Ep8uvjeSHQAAAAC/moon-digibyte.gif',
     'https://media.giphy.com/media/xT39CTrFW4nHLdBPpu/giphy-downsized-large.gif',
+]
+
+FLEX_THUMBNAILS_XMAS_CHIMNEY = [
+    'https://media.tenor.com/RNBD-BUVb3cAAAAi/chimney-santa.gif',
+    'https://media.tenor.com/scEtOL9oeMoAAAAi/sumikko-gurashi-chimney-santa.gif',
+    'https://media.tenor.com/7Hh1I-SmB3cAAAAi/playmobil-christmas.gif',
+    'https://media.tenor.com/54bt7hOcqdsAAAAi/christmas-red.gif',
+    'https://media.tenor.com/MCn_GMSSqAsAAAAd/lol-laughing-hysterically.gif',
+    'https://media.tenor.com/lr8W5AadieAAAAAd/smile-laughing.gif',
+    'https://media.tenor.com/REqgDts8CVgAAAAC/futurenostlgia-laughing.gif',
+]
+
+FLEX_THUMBNAILS_XMAS_GODLY = [
+    'https://media.tenor.com/t7aI5VVWTvwAAAAC/gift-christmas-gift.gif',
+    'https://media.tenor.com/7tB2s3YAN1wAAAAC/santa-christmas-gifts.gif',
+    'https://media.tenor.com/g1xITZea4jQAAAAC/christmas-lights-merry-christmas.gif',
+    'https://media.tenor.com/uClPOG9_S2EAAAAM/simpatico-christmas.gif',
+    'https://media.tenor.com/MhVmARXUBG4AAAAC/nice-happy.gif',
+    'https://media.tenor.com/KQSI-mZGUOUAAAAC/presents-gift-box.gif',
+    'https://media.giphy.com/media/SVYnISz8VwSFTsOX9k/giphy.gif',
+    'https://media.giphy.com/media/kKo2x2QSWMNfW/giphy.gif',
+    'https://media.giphy.com/media/ofxTCKA5z8UiDYIStD/giphy.gif',
+    'https://media.tenor.com/paesy669JUIAAAAC/gift-present.gif',
+    'https://media.tenor.com/OLG-TIqbB5oAAAAi/baby-girl.gif',
+]
+
+FLEX_THUMBNAILS_XMAS_SNOWBALL = [
+    'https://media.tenor.com/3vTclQPPOI8AAAAi/xheistmas-christmas.gif',
+    'https://media.tenor.com/6YSQJKI2ZzMAAAAC/snowman-headstand.gif',
+    'https://media.tenor.com/FTwJeB7qt_wAAAAC/frio-frozen.gif',
+    'https://media.tenor.com/yoFePFtaN6IAAAAC/olafs-frozen-adventure-olaf.gif',
+    'https://media.tenor.com/4q8uuszspWkAAAAC/caught-in-snowball-piu-piu.gif',
+]
+
+FLEX_THUMBNAILS_XMAS_VOID = [
+    'https://media.tenor.com/IOdo6UKRfFEAAAAC/sora-kingdom-of-hearts.gif',
+    'https://media.tenor.com/ZaSWJ7UW2JwAAAAC/ramadan-gift-eid-mubarak.gif',
+    'https://media.tenor.com/ZmjNi_RIGfwAAAAC/black-friday-neon.gif',
+    'https://media.giphy.com/media/rguWB3fUxRu5wMIFWB/giphy.gif',
+    'https://media.tenor.com/Vfo2miCXT9kAAAAd/holiday-holidays.gif',
 ]

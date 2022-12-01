@@ -110,13 +110,13 @@ class SettingsCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_on(self, ctx: commands.Context, *args: str) -> None:
         """Turn on Navi (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["on"]} to activate me.')
+        await ctx.reply(f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "on")} to activate me.')
 
     @commands.command(name='off', aliases=('deactivate','stop'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_off(self, ctx: commands.Context, *args: str) -> None:
         """Turn off Navi (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["off"]} to deactivate me.')
+        await ctx.reply(f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "off")} to deactivate me.')
 
     aliases_settings_user = (
         'slashmentions','donor','donator','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
@@ -127,7 +127,10 @@ class SettingsCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_user(self, ctx: commands.Context, *args: str) -> None:
         """User settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings user"]} to change these settings.')
+        await ctx.reply(
+            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings user")} '
+            f'to change these settings.'
+        )
 
     aliases_settings_helpers = (
         'context-help','contexthelper','contexthelp','pethelper','pethelp','pet-helper','pet-help','heal',
@@ -138,39 +141,51 @@ class SettingsCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_helpers(self, ctx: commands.Context, *args: str) -> None:
         """Helper settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings helpers"]} to change these settings.')
+        await ctx.reply(
+            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings helpers")} '
+            f'to change these settings.'
+        )
 
     @commands.command(name='message', aliases=('messages',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_messages(self, ctx: commands.Context, *args: str) -> None:
         """Message settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings messages"]} to change your messages.')
+        await ctx.reply(
+            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings messages")} '
+            f'to change your messages.'
+        )
 
     @commands.command(name='partner')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_partner(self, ctx: commands.Context, *args: str) -> None:
         """Partner settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings partner"]} to change these settings.')
+        await ctx.reply(
+            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings partner")} '
+            f'to change these settings.'
+        )
 
     @commands.command(name='server')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_server(self, ctx: commands.Context, *args: str) -> None:
         """Server settings (prefix version)"""
-        await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings server"]} to change these settings.')
+        await ctx.reply(
+            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings server")} '
+            f'to change these settings.'
+        )
 
     @commands.command(name='settings', aliases=('me','setting','set'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings(self, ctx: commands.Context, *args: str) -> None:
         """Settings (prefix version)"""
         await ctx.reply(
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings guild"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings helpers"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings messages"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings partner"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings ready"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings reminders"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings server"]}\n'
-            f'➜ {strings.SLASH_COMMANDS_NAVI["settings user"]}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings guild")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings helpers")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings messages")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings partner")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings ready")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings reminders")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings server")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings user")}\n'
         )
 
     # Events

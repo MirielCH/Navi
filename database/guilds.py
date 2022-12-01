@@ -139,7 +139,7 @@ async def get_all_prefixes(bot: commands.Bot, ctx: commands.Context) -> Tuple:
                 prefixes.append(prefix)
         else:
             sql = f'INSERT INTO {table} (guild_id, prefix) VALUES (?, ?)'
-            cur.execute(sql, (guild_id, settings.DEFAULT_PREFIX,))
+            cur.execute(sql, (guild_id, settings.DEFAULT_PREFIX))
             prefix_default_mixed_case = await _get_mixed_case_prefixes(settings.DEFAULT_PREFIX)
             for prefix in prefix_default_mixed_case:
                 prefixes.append(prefix)
@@ -169,18 +169,28 @@ async def get_guild(guild_id: int) -> Guild:
     """
     table = 'guilds'
     function_name = 'get_guild'
-    sql = f'SELECT * FROM {table} WHERE guild_id=?'
+    sql_select = f'SELECT * FROM {table} WHERE guild_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (guild_id,))
+        cur.execute(sql_select, (guild_id,))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql_select)
         )
         raise
     if not record:
-        raise exceptions.NoDataFoundError(f'No guild data found in database for guild "{guild_id}".')
+        sql = f'INSERT INTO {table} (guild_id, prefix) VALUES (?, ?)'
+        try:
+            cur.execute(sql, (guild_id, settings.DEFAULT_PREFIX))
+            sql = sql_select
+            cur.execute(sql, (guild_id,))
+            record = cur.fetchone()
+        except sqlite3.Error as error:
+            await errors.log_error(
+                strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+            )
+            raise
     guild = await _dict_to_guild(dict(record))
 
     return guild

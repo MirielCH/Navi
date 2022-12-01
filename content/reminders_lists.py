@@ -80,12 +80,16 @@ async def command_ready(
             if command is None: command = await functions.get_slash_command(user_settings, 'training', False)
         elif activity == 'work':
             command = await functions.get_slash_command(user_settings, user_settings.last_work_command, False)
-            if command is None: command = 'work command'
+            if command is None: command = '`work command`'
         elif activity == 'pets':
             if user_settings.ready_pets_claim_active:
                 command = await functions.get_slash_command(user_settings, 'pets claim', False)
             else:
                 command = await functions.get_slash_command(user_settings, 'pets adventure', False)
+        elif activity == 'custom':
+            command = '`custom reminder`'
+        elif activity == 'unstuck':
+            command = '`chimney unstuck lol`'
         else:
             command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity], False)
         if activity == 'lootbox':
@@ -187,12 +191,12 @@ async def command_ready(
     if user_settings.cmd_ready_visible:
         field_other = (
             f'{field_other}\n'
-            f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["ready"]}'
+            f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")}'
         )
     if user_settings.cmd_slashboard_visible:
         field_other = (
             f'{field_other}\n'
-            f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["slashboard"]}'
+            f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")}'
         )
     embed = discord.Embed(
         color = int(f'0x{user_settings.ready_embed_color}', 16),
@@ -318,12 +322,13 @@ async def command_ready(
                     f'{emojis.BP} {command} {up_next_time}'
                 )
                 break
-            embed.add_field(name='UP NEXT', value=field_up_next.strip(), inline=False)
-            answer = (
-                f'{answer}\n'
-                f'**UP NEXT**\n'
-                f'{field_up_next.strip()}'
-            )
+            if field_up_next.strip() != '':
+                embed.add_field(name='UP NEXT', value=field_up_next.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**UP NEXT**\n'
+                    f'{field_up_next.strip()}'
+                )
     if auto_ready:
         embed.set_footer(text=f"See '/ready' if you want to disable this message.")
         if user_settings.ready_as_embed:

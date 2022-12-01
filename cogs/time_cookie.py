@@ -1,4 +1,4 @@
-# sleepy_potion.py
+# time_cookie.py
 
 from datetime import timedelta
 
@@ -9,8 +9,8 @@ from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
 
-class SleepyPotionCog(commands.Cog):
-    """Cog that contains the sleepy potion detection commands"""
+class TimeCookieCog(commands.Cog):
+    """Cog that contains the time cookie detection commands"""
     def __init__(self, bot):
         self.bot = bot
 
@@ -30,11 +30,12 @@ class SleepyPotionCog(commands.Cog):
         if message.author.id != settings.EPIC_RPG_ID: return
         if message.embeds: return
         message_content = message.content
-        # Sleepy Potion
+
+        # Time cookie
         search_strings = [
-            'has slept for a day', #English
-            'ha dormido durante un día', #Spanish
-            'dormiu por um dia', #Portuguese
+            'has traveled to the future!', #English
+            'ha viajado al futuro!', #Spanish
+            'viajou para o futuro!', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user_name = user = user_command_message = None
@@ -42,21 +43,21 @@ class SleepyPotionCog(commands.Cog):
             slash_command = True if user is not None else False
             if user is None:
                 search_patterns = [
-                    r'^\*\*(.+?)\*\* drinks', #English
-                    r'^\*\*(.+?)\*\* bebe', #Spanish, Portuguese
+                    r'^\*\*(.+?)\*\* eats', #English
+                    r'^\*\*(.+?)\*\* come', #Spanish, Portuguese
                 ]
                 user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_SLEEPY_POTION,
+                            message.channel, regex.COMMAND_USE_TIME_COOKIE,
                             user_name=user_name
                         )
                     )
                 if not user_name_match or user_command_message is None:
                     await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found for sleepy potion message.', message)
+                    await errors.log_error('User not found for time cookie message.', message)
                     return
                 user = user_command_message.author
             try:
@@ -64,7 +65,16 @@ class SleepyPotionCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            await reminders.reduce_reminder_time(user.id, timedelta(days=1), strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
+            search_patterns = [
+                r'! (.+?) minut[eo]s', #English, Spanish, Portuguese
+            ]
+            time_match = await functions.get_match_from_patterns(search_patterns, message_content)
+            if not time_match:
+                await functions.add_warning_reaction(message)
+                await errors.log_error('Time not found in time cookie message.', message)
+                return
+            minutes = int(time_match.group(1))
+            await reminders.reduce_reminder_time(user.id, timedelta(minutes=minutes), strings.TIME_COOKIE_AFFECTED_ACTIVITIES)
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
             if user_settings.auto_ready_enabled:
                 await functions.call_ready_command(self.bot, message, user)
@@ -72,4 +82,4 @@ class SleepyPotionCog(commands.Cog):
 
 # Initialization
 def setup(bot):
-    bot.add_cog(SleepyPotionCog(bot))
+    bot.add_cog(TimeCookieCog(bot))

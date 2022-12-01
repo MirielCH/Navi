@@ -133,6 +133,17 @@ class WorkCog(commands.Cog):
                 'bien hecho', #Spanish, training
                 'muito bem', #Portuguese, training
                 'suspicious broom', #All languages, hal boo
+                '**minin\'tboss** event', #English minin'tboss
+                '**big arena** event', #English big arena
+                'evento **minin\'tboss**', #Spanish, Portuguese minin't boss
+                'evento de **big arena**', #Spanish, Portuguese big arena
+                'seed in the ground...', #English, farm
+                'en el suelo...', #Spanish, farm
+                'no solo...', #Portuguese, farm
+                'chimney', #English, xmas chimney
+                'the next race is in', #English, horse race
+                'la siguiente carrera es en', #Spanish, horse race
+                'próxima corrida é em', #Portuguese, horse race
             ]
             search_strings = [
                 '** got ', #English
@@ -144,6 +155,12 @@ class WorkCog(commands.Cog):
                 user_name = user_command = last_work_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
+                xmas_search_patterns = [
+                    r'^\*\*(.+?)\*\*\s+got\s+(.+?)\s+(.+? )?(.+?)\s+present$',
+                    r'^\*\*(.+?)\*\*\s+got\s+(.+?)\s+(.+? )?(.+?)\s+snowballs?$'
+                ]
+                xmas_item_match = await functions.get_match_from_patterns(xmas_search_patterns, message_content)
+                if xmas_item_match: return
                 if user is None:
                     search_patterns = [
                         r'[!1] \*\*(.+?)\*\* got', #English 1

@@ -40,7 +40,7 @@ class RemindersCustomCog(commands.Cog):
             await ctx.reply(
                 f'This command lets you add a custom reminder.\n'
                 f'{syntax_add}\n\n'
-                f'You can delete custom reminders in {strings.SLASH_COMMANDS_NAVI["list"]}.\n'
+                f'You can delete custom reminders in {await functions.get_navi_slash_command(self.bot, "list")}.\n'
             )
             return
         args = list(args)

@@ -42,6 +42,10 @@ class HelperHealCog(commands.Cog):
             '** encontr', #Spanish, Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings_hunt_together):
+            event_mobs = [
+                'christmas slime',
+            ]
+            if any(event_mob in message_content.lower() for event_mob in event_mobs): return
             user_name = user_command_message = None
             interaction = await functions.get_interaction(message)
             user = await functions.get_interaction_user(message)
@@ -116,6 +120,7 @@ class HelperHealCog(commands.Cog):
             event_mobs = [
                 'horslime',
                 'bat slime',
+                'christmas slime',
             ]
             if any(event_mob in message_content.lower() for event_mob in event_mobs): return
             user_name = user_command_message = None

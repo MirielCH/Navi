@@ -6,7 +6,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
-from typing import Optional, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 from discord.ext import tasks
 
@@ -780,7 +780,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     return reminder
 
 
-async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, str]) -> None:
+async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, str], activities: List[str]) -> None:
     """Reduces the end time of all user reminders affected by sleepy potions of one user by a certain amount.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -789,6 +789,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
     ---------
     time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
     for half of their remaining amount.
+    activities: List with the affected activities
 
     Raises
     ------
@@ -801,7 +802,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
         return
     current_time = datetime.utcnow()
     for reminder in reminders:
-        if reminder.activity not in strings.SLEEPY_POTION_AFFECTED_ACTIVITIES: continue
+        if reminder.activity not in activities: continue
         if isinstance(time_reduction, str):
             if time_reduction == 'half':
                 remaining_time = reminder.end_time - current_time

@@ -141,6 +141,7 @@ class HuntCog(commands.Cog):
                                             + (partner_cooldown - user_cooldown)
                                             - time_elapsed.total_seconds()
                                             + 1)
+                        if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                         time_left = timedelta(seconds=time_left_seconds)
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 overwrite_message = False if user_settings.hunt_rotation_enabled else True
@@ -191,7 +192,11 @@ class HuntCog(commands.Cog):
                 if any(search_string in message_content.lower() for search_string in search_strings_alone):
                     alone = True
                 old = True if '__**' not in message_content.lower() else False
-                if 'horslime' in message_content.lower():
+                search_strings_event_mobs = [
+                    'horslime',
+                    'christmas slime',
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings_event_mobs):
                     search_strings_together = [
                         'both players', #English
                     ]
@@ -319,6 +324,7 @@ class HuntCog(commands.Cog):
                                                       - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
+                if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                 time_left = timedelta(seconds=time_left_seconds)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
                 if time_left < timedelta(0): return
@@ -350,6 +356,7 @@ class HuntCog(commands.Cog):
                             'ULTRA present': emojis.PRESENT_ULTRA,
                             'OMEGA present': emojis.PRESENT_OMEGA,
                             'GODLY present': emojis.PRESENT_GODLY,
+                            'VOID present': emojis.PRESENT_VOID,
                             'easter lootbox': emojis.LB_EASTER,
                             'EPIC berry': emojis.EPIC_BERRY,
                         }
@@ -514,6 +521,7 @@ class HuntCog(commands.Cog):
                                             - time_elapsed.total_seconds())
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                    if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                     time_left = timedelta(seconds=time_left_seconds)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
@@ -552,7 +560,10 @@ class HuntCog(commands.Cog):
                             last_hunt_mode = f'{user_settings.last_hunt_mode} together'.strip()
                         await user_settings.update(last_hunt_mode=last_hunt_mode)
                     if user_settings.last_hunt_mode != '':
-                        user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
+                        if user_settings.slash_mentions_enabled:
+                            user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                        else:
+                            user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and not user_settings.hunt_rotation_enabled):

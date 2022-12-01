@@ -6,7 +6,7 @@ from discord.commands import SlashCommandGroup
 from discord.ext import commands
 
 from content import leaderboards
-from resources import strings
+from resources import functions
 
 
 class LeaderboardsCog(commands.Cog):
@@ -33,7 +33,10 @@ class LeaderboardsCog(commands.Cog):
         if arg in ('lb','leaderboard'):
             await leaderboards.command_leaderboard_clan(ctx)
         else:
-            await ctx.reply(f'Hey! Please use {strings.SLASH_COMMANDS_NAVI["settings guild"]} to change guild settings.')
+            await ctx.reply(
+                f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings guild")} '
+                f'to change guild settings.'
+            )
 
 
 # Initialization

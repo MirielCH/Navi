@@ -26,10 +26,10 @@ class LinksView(discord.ui.View):
 
 
 # --- Commands ---
-async def command_help(ctx: Union[discord.ApplicationContext, commands.Context, discord.Message]) -> None:
+async def command_help(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context, discord.Message]) -> None:
     """Help command"""
     view = LinksView()
-    embed = await embed_help(ctx)
+    embed = await embed_help(bot, ctx)
     if isinstance(ctx, discord.ApplicationContext):
         await ctx.respond(embed=embed, view=view)
     else:
@@ -48,39 +48,34 @@ async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> No
 
 
 # --- Embeds ---
-async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
+async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> discord.Embed:
     """Main menu embed"""
     reminder_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["list"]} : List active reminders\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["ready"]} : List commands off cooldown\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["custom-reminder"]} : Add a custom reminder\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings messages"]} : Manage reminder messages\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings ready"]} : Manage the ready list\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings reminders"]} : Enable/disable reminders\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "list")} : List active reminders\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")} : List commands off cooldown\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "custom-reminder")} : Add a custom reminder\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings messages")} : Manage reminder messages\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings ready")} : Manage the ready list\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings reminders")} : Enable/disable reminders\n'
     )
     stats = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["stats"]} : Shows your command stats\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "stats")} : Shows your command stats\n'
     )
     user_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["on"]} : Turn on Navi\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["off"]} : Turn off Navi\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings user"]} : Manage your user settings\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "on")} : Turn on Navi\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "off")} : Turn off Navi\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings user")} : Manage your user settings\n'
     )
     helper_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings helpers"]} : Enable/disable helpers\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings helpers")} : Enable/disable helpers\n'
     )
     partner_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings partner"]} : Manage partner settings\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings partner")} : Manage partner settings\n'
     )
     guild_settings = (
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["leaderboard guild"]} : Check the weekly raid leaderboard\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS_NAVI["settings guild"]} : Manage guild channel reminders\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "leaderboard guild")} : Check the weekly raid leaderboard\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings guild")} : Manage guild channel reminders\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS["guild list"]} : Add/update your guild\n'
-    )
-    bug_report = (
-        f'_Please report bugs in one of these channels:_\n'
-        f'{emojis.BP} <#749612892969631796>\n'
-        f'{emojis.BP} <#812687205339365406>\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
@@ -102,7 +97,6 @@ async def embed_help(ctx: discord.ApplicationContext) -> discord.Embed:
     embed.add_field(name='GUILD CHANNEL REMINDERS', value=guild_settings, inline=False)
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
-    embed.add_field(name='HELP I FOUND A BUG!', value=bug_report, inline=False)
     return embed
 
 

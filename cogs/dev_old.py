@@ -342,7 +342,7 @@ class DevOldCog(commands.Cog):
     # Test command
     @dev.command()
     @commands.bot_has_permissions(send_messages=True)
-    async def test(self, ctx: commands.Context) -> None:
+    async def test_guild(self, ctx: commands.Context) -> None:
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
         from database import clans, reminders, users
         from resources import exceptions
@@ -378,6 +378,12 @@ class DevOldCog(commands.Cog):
         except exceptions.NoDataFoundError:
             pass
 
+    # Another test command
+    @dev.command()
+    @commands.bot_has_permissions(send_messages=True)
+    async def test(self, ctx: commands.Context) -> None:
+        if ctx.author.id not in (619879176316649482, 764222910881464350): return
+        pass
 
 def setup(bot):
     bot.add_cog(DevOldCog(bot))

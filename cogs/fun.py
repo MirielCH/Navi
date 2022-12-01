@@ -33,47 +33,6 @@ class FunCog(commands.Cog):
         if ctx.prefix.lower() == 'rpg ': return
         await ctx.reply('https://media.tenor.com/LPVxFddvSc0AAAAC/hey-hello.gif')
 
-    @commands.command(aliases=('hold','cuddle','kiss','smile'))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
-    async def hug(self, ctx: commands.Context) -> None:
-        """Aww"""
-        if ctx.prefix.lower() == 'rpg ': return
-        await ctx.reply('https://www.youtube.com/watch?v=SB4sDPTZPYM')
-
-    @commands.command(aliases=('shutup','shutit','shutup!','shutit!'))
-    @commands.bot_has_permissions(send_messages=True)
-    async def shut(self, ctx: commands.Context, *args: str) -> None:
-        """Sometimes you just have to say it"""
-        if ctx.invoked_with.lower() == 'shut':
-            if args:
-                args = [arg.lower() for arg in args]
-                arg, *_ = args
-                if arg not in ('up','it','up!','it!'): return
-        await ctx.reply('https://media.tenor.com/CQ12y9spOP4AAAAd/link-sassy.gif')
-
-    @commands.command(aliases=('bad!','trash','trash!','badbot','trashbot','badbot!','trashbot!','stupid','dumb',))
-    @commands.bot_has_permissions(send_messages=True)
-    async def bad(self, ctx: commands.Context, *args: str) -> None:
-        """Sad"""
-        gifs = [
-            'https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif',
-            'https://media.tenor.com/yfFdPms-9AMAAAAC/zelda-angry.gif'
-        ]
-        await ctx.reply(random.choice(gifs))
-
-    @commands.command(aliases=('nice','great','amazing','useful','best','goodbot','bestbot',
-                               'greatbot','nicebot','op','smart','love',))
-    @commands.bot_has_permissions(send_messages=True)
-    async def good(self, ctx: commands.Context, *args: str) -> None:
-        """Yay!"""
-        await ctx.reply('https://media.tenor.com/3EBDKiYgw4kAAAAC/zelda-botw.gif')
-
-    @commands.command(aliases=('thank','thanks!','ty','thx'))
-    @commands.bot_has_permissions(send_messages=True)
-    async def thanks(self, ctx: commands.Context, *args: str) -> None:
-        """You're very welcome"""
-        await ctx.reply('https://media.tenor.com/kcMj0Wfo3j8AAAAC/young-link-fly.gif')
-
     @commands.command(aliases=('ban','mute','warn'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def kick(self, ctx: commands.Context) -> None:
@@ -110,6 +69,25 @@ class FunCog(commands.Cog):
             message_content = message.content
             if message_content.lower() == 'navi lit':
                 await message.reply('https://tenor.com/view/betty-white-dab-mood-gif-5044603')
+            if message_content.lower() in ['navi dead', 'navi ded', 'navi down', 'navi offline']:
+                await message.reply('https://media.tenor.com/4CX-pXSoV18AAAAC/oh-really.gif')
+            if message_content.lower() in ['navi thanks', 'navi thanks!', 'navi thank', 'navi ty', 'navi thx']:
+                await message.reply('https://media.tenor.com/kcMj0Wfo3j8AAAAC/young-link-fly.gif')
+            if message_content.lower() in ['navi good', 'navi great', 'navi nice', 'navi amazing', 'navi useful',
+                                           'navi best', 'navi good bot', 'navi best bot', 'navi better',
+                                           'navi nice bot', 'navi pro', 'navi smart', 'navi love', 'navi op']:
+                await message.reply('https://media.tenor.com/3EBDKiYgw4kAAAAC/zelda-botw.gif')
+            if message_content.lower() in ['navi bad', 'navi trash', 'navi bad!', 'navi trash!', 'navi bad bot',
+                                           'navi trash bot', 'navi stupid', 'navi dumb', 'navi useless']:
+                gifs = [
+                    'https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif',
+                    'https://media.tenor.com/yfFdPms-9AMAAAAC/zelda-angry.gif'
+                ]
+                await message.reply(random.choice(gifs))
+            if message_content.lower() in ['navi shut up', 'navi shut it', 'navi shut up!']:
+                await message.reply('https://media.tenor.com/CQ12y9spOP4AAAAd/link-sassy.gif')
+            if message_content.lower() == 'navi zelda':
+                await message.reply('https://www.youtube.com/watch?v=SB4sDPTZPYM')
 
         if not message.embeds and message.author.id == settings.EPIC_RPG_ID:
             message_content = message.content

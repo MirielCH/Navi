@@ -22,6 +22,7 @@ NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
 
 # --- User command detection ---
 COMMAND_ADVENTURE = re.compile(rf"(?:\badv\b|\badventure\b)")
+COMMAND_AREA_MOVE = re.compile(rf"(?:\barea\b|\bmove\b)\s+\b\d\d?\b")
 COMMAND_ARENA = re.compile(rf"\barena\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
 COMMAND_CLAN_RAID = re.compile(rf"\bguild\b\s+\braid\b")
@@ -62,6 +63,7 @@ COMMAND_PETS_ADVENTURE_CANCEL = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b
 COMMAND_PETS_FUSION = re.compile(rf"\bpets?\b\s+\bfusion\b")
 COMMAND_PETS_TOURNAMENT = re.compile(rf"\bpets?\b\s+\btournament\s+\b[a-z]+\b")
 COMMAND_QUEST = re.compile(rf'\bquest\b')
+COMMAND_QUEST_DUEL = re.compile(rf'(?:\bquest\b|\bduel\b)')
 COMMAND_QUEST_EPIC_QUEST = re.compile(rf"(?:\bepic\b\s+\bquest\b|\bquest\b)")
 COMMAND_PETS = re.compile(rf"\bpets?\b")
 COMMAND_PETS_CLAIM = re.compile(rf"\bpets?\b\s+(?:\badventure\b|\badv\b)\s+\bclaim\b")
@@ -85,9 +87,14 @@ COMMAND_USE_EPIC_ITEM = re.compile(
 COMMAND_USE_EPIC_ITEM_ARENA_TOKEN = re.compile(
     rf"use\s+(?:\bepic\b\s+\bseed\b|\bultra\b\s+\bbait\b|\bcoin\b\s+\btrumpet\b|\blegendary\b\s+\btoothbrush\b|\barena\b\s+\btoken\b)"
 )
+COMMAND_USE_TIME_COOKIE = re.compile(rf"use\s+\btime\b\s+\bcookie\b")
 COMMAND_VOTE = re.compile(rf"\bvote\b")
 COMMAND_WEEKLY = re.compile(rf"\bweekly\b")
 COMMAND_WORK = rf"(?:"
 for command in strings.WORK_COMMANDS:
     COMMAND_WORK = fr'{COMMAND_WORK}\b{command}\b|'
 COMMAND_WORK = re.compile(fr'{COMMAND_WORK.strip("|")})')
+COMMAND_XMAS_CALENDAR = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bcalendar\b")
+COMMAND_XMAS_CHIMNEY = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bchimney\b")
+COMMAND_XMAS_CRAFT_COOKIES_AND_MILK = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bcraft\b\s+\bcookies\b\s+\band\b\s+\bmilk\b")
+COMMAND_XMAS_EAT_GINGERBREAD = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+(?:\beat\b|\buse\b)\s+\bgingerbread\b")

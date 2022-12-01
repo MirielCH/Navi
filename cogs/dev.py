@@ -32,13 +32,15 @@ class DevCog(commands.Cog):
 
     # Commands
     @dev.command()
-    @commands.is_owner()
     async def reload(
         self,
         ctx: discord.ApplicationContext,
         modules: Option(str, 'Cogs or modules to reload'),
     ) -> None:
         """Reloads cogs or modules"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
         modules = modules.split(' ')
         actions = []
         for module in modules:
@@ -131,7 +133,6 @@ class DevCog(commands.Cog):
         await ctx.respond(answer)
 
     @dev.command(name='base-cooldown')
-    @commands.is_owner()
     async def base_cooldown(
         self,
         ctx: discord.ApplicationContext,
@@ -139,6 +140,9 @@ class DevCog(commands.Cog):
         base_cooldown: Option(int, 'Base cooldown in seconds', min_value=1, max_value=604_200, default=None),
     ) -> None:
         """Changes the base cooldown for activities"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
         if activity is None and base_cooldown is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
             answer = 'Current base cooldowns:'
@@ -159,7 +163,6 @@ class DevCog(commands.Cog):
         await ctx.respond(answer)
 
     @dev.command(name='post-message')
-    @commands.is_owner()
     async def post_message(
         self,
         ctx: discord.ApplicationContext,
@@ -168,6 +171,9 @@ class DevCog(commands.Cog):
         embed_title: Option(str, 'Title of the embed', max_length=256),
     ) -> None:
         """Sends the content of a message to a channel in an embed"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
         await self.bot.wait_until_ready()
         try:
             message_id = int(message_id)
@@ -215,11 +221,40 @@ class DevCog(commands.Cog):
             await functions.edit_interaction(interaction, view=None)
             await ctx.followup.send('Sending aborted.')
 
+    @dev.command()
+    async def support(self, ctx: discord.ApplicationContext):
+        """Link to the dev support server"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
+        await ctx.respond(
+            f'Got some issues or questions running Navi? Feel free to join the Navi dev support server:\n'
+            f'https://discord.gg/Kz2Vz2K4gy'
+        )
+
+    @dev.command()
+    async def shutdown(self, ctx: discord.ApplicationContext):
+        """Shuts down the bot"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
+                                             view=None)
+        elif view.value == 'confirm':
+            await functions.edit_interaction(interaction, content='Shutting down.', view=None)
+            await self.bot.close()
+        else:
+            await functions.edit_interaction(interaction, content='Shutdown aborted.', view=None)
 
     @dev.command()
     @commands.is_owner()
     async def consolidate(self, ctx: discord.ApplicationContext):
-        """Consolidate tracking records manually"""
+        """Miriel test command. Consolidates tracking records older than 28 days manually"""
         await ctx.defer()
         from datetime import datetime
         import asyncio
@@ -253,11 +288,10 @@ class DevCog(commands.Cog):
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
-
     @dev.command()
     @commands.is_owner()
     async def delete_old(self, ctx: discord.ApplicationContext):
-        """Delete single tracking records older than 28 days"""
+        """Miriel test command. Deletes single tracking records older than 28 days"""
         await ctx.defer()
         from datetime import datetime, timedelta
         from humanfriendly import format_timespan
@@ -278,20 +312,20 @@ class DevCog(commands.Cog):
 
     @dev.command()
     @commands.is_owner()
-    async def shutdown(self, ctx: discord.ApplicationContext):
-        """Shuts down the bot"""
-        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-        interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
-        view.interaction_message = interaction
-        await view.wait()
-        if view.value is None:
-            await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
-                                             view=None)
-        elif view.value == 'confirm':
-            await functions.edit_interaction(interaction, content='Shutting down.', view=None)
-            await self.bot.close()
-        else:
-            await functions.edit_interaction(interaction, content='Shutdown aborted.', view=None)
+    async def pet_commands(self, ctx: discord.ApplicationContext):
+        """Miriel test command. Just ignore"""
+        field = f'FEED FEED PAT PAT'
+        embed1 = discord.Embed(
+            title = 'LOWEST RISK',
+            description = field
+        )
+        embed2 = discord.Embed(
+            title = 'CHANCE AT SKILL',
+            description = field
+        )
+        embed1.set_footer(text='Catch chance: 67.06 - 85.88%')
+        embed2.set_footer(text='Catch chance: 57.65 - 71.76%')
+        await ctx.respond(embeds=[embed1, embed2])
 
 
 def setup(bot):

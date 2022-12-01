@@ -276,9 +276,11 @@ class SettingsReadyView(discord.ui.View):
         self.clan_settings = clan_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
+            'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
+            'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
@@ -358,9 +360,11 @@ class SettingsRemindersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
+            'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
+            'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
@@ -487,8 +491,13 @@ class SettingsMessagesView(discord.ui.View):
                                                               label='Change'))
             self.add_item(components.SetReminderMessageButton(style=discord.ButtonStyle.red, custom_id='reset_message',
                                                               label='Reset'))
-        self.add_item(components.ReminderMessageSelect(self, row=2))
-        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=3))
+        placeholder = 'Choose activity (1)' if len (strings.ACTIVITIES) > 24 else 'Choose activity'
+        self.add_item(components.ReminderMessageSelect(self, strings.ACTIVITIES[:24], placeholder,
+                                                       'select_message_activity_1', row=2))
+        if len(strings.ACTIVITIES) > 24:
+            self.add_item(components.ReminderMessageSelect(self, strings.ACTIVITIES[24:], 'Choose activity (2)',
+                                                           'select_message_activity_2', row=3))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=4))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

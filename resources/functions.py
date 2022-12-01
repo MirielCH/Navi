@@ -165,6 +165,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
                              - time_elapsed.total_seconds())
     else:
         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+    if activity in strings.ACTIVITIES_WITH_COOLDOWN and user_settings.christmas_area_enabled:
+        time_left_seconds *= 0.9
     return timedelta(seconds=time_left_seconds)
 
 
@@ -937,6 +939,16 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
         command = strings.RPG_COMMANDS.get(command_name, None)
         if not include_prefix: command = command.replace('rpg ', '')
         return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
+
+
+async def get_navi_slash_command(bot: discord.Bot, command_name: str) -> None:
+    """Gets a slash command from Navi. If found, returns the slash mention. If not found, just returns /command.
+    Note that slash mentions only work with GLOBAL commands."""
+    main_command, *sub_commands = command_name.lower().split(' ')
+    for command in bot.application_commands:
+        if command.name == main_command:
+            return f'</{command_name}:{command.id}>'
+    return f'`/{command_name}`'
 
 
 def await_coroutine(coro):

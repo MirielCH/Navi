@@ -1,6 +1,7 @@
 # bot.py
 
 from datetime import datetime
+import sqlite3
 import sys
 import traceback
 
@@ -9,12 +10,30 @@ from discord.ext import commands
 
 from database import errors, guilds
 from database import settings as settings_db
+from database.update_database import NAVI_DB_VERSION
 from resources import functions, logs, settings
+
+
+#Check if database is up to date
+try:
+    cur = settings.NAVI_DB.cursor()
+    cur.execute('PRAGMA user_version')
+    record = cur.fetchone()
+    db_version = int(dict(record)['user_version'])
+    if db_version != NAVI_DB_VERSION:
+        print(
+            'Your database structure is outdated. Please run "database/migrate_database.py" first.'
+        )
+        sys.exit()
+except sqlite3.Error as error:
+    print(
+        f'Got an error while trying to determine database version: {error}'
+    )
+    sys.exit()
 
 
 startup_time = datetime.isoformat(datetime.utcnow().replace(microsecond=0), sep=' ')
 functions.await_coroutine(settings_db.update_setting('startup_time', startup_time))
-
 
 intents = discord.Intents.none()
 intents.guilds = True   # for on_guild_join() and all guild objects
@@ -115,11 +134,13 @@ EXTENSIONS = [
         'cogs.slashboard',
         'cogs.sleepy_potion',
         'cogs.tasks',
+        'cogs.time_cookie',
         'cogs.tracking',
         'cogs.training',
         'cogs.vote',
         'cogs.weekly',
         'cogs.work',
+        'cogs.xmas',
         'cogs.dev_old',
     ]
 

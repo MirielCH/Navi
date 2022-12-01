@@ -65,7 +65,7 @@ class TasksCog(commands.Cog):
                     except exceptions.NoDataFoundError:
                         pet_reminders = ()
                         await user_settings.update(ready_pets_claim_active=True)
-                    command_pets_claim = await functions.get_slash_command(user_settings, 'pets claim')
+                    command_pets_claim = strings.SLASH_COMMANDS['pets claim']
                     if not pet_reminders:
                         messages[message_no] = (
                             f'{messages[message_no]}'
@@ -303,6 +303,7 @@ class TasksCog(commands.Cog):
                 cur.execute(sql, (date_time,))
                 cur.execute('VACUUM')
             except sqlite3.Error as error:
+                logs.logger.error(f'Error while consolidating: {error}')
                 raise
             end_time = datetime.utcnow().replace(microsecond=0)
             time_passed = end_time - start_time

@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, regex, settings
+from resources import emojis, exceptions, functions, logs, regex, settings, strings
 
 
 class PetsCog(commands.Cog):
@@ -81,7 +81,9 @@ class PetsCog(commands.Cog):
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
+                    await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
                 if 'voidog' in message.content.lower():
+                    await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
                     if user_settings.reactions_enabled:
                         await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
                         await message.add_reaction(emojis.PET_VOIDOG)
@@ -105,9 +107,9 @@ class PetsCog(commands.Cog):
                         f' to update your pet reminders.'
                     )
                     return
-                user_command_message, _ = (
+                user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, r"^rpg\s+pets?\s+(?:adv\b|adventure\b)\s+cancel\b"
+                            message.channel, regex.COMMAND_PETS_ADVENTURE_CANCEL
                         )
                     )
                 if user_command_message is None:
@@ -190,6 +192,7 @@ class PetsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
+                await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]

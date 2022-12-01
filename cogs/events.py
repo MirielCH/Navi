@@ -7,7 +7,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, settings, strings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class EventsCog(commands.Cog):
@@ -144,8 +144,10 @@ class EventsCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
                 if user is None:
-                    user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^rpg\s+events?\b")
+                    user_command_message = (
+                        await functions.get_message_from_channel_history(
+                            message.channel, regex.COMMAND_EVENTS
+                        )
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

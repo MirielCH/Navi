@@ -109,6 +109,7 @@ class DuelCog(commands.Cog):
                 and any(search_string in message_field0_name.lower() for search_string in search_strings_field)):
                 user_id = user_name = user_command_message = duel_user = None
                 created_reminder = False
+                time_left = None
                 duel_users = []
                 interaction_user = await functions.get_interaction_user(message)
                 duelled_users = message_description.split('\n')
@@ -137,10 +138,10 @@ class DuelCog(commands.Cog):
                     interaction_user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     interaction_user_settings = None
-                time_left = await functions.calculate_time_left_from_cooldown(message, interaction_user_settings,
-                                                                              'duel')
-                if time_left < timedelta(0): return
                 if interaction_user_settings is not None:
+                    time_left = await functions.calculate_time_left_from_cooldown(message, interaction_user_settings,
+                                                                              'duel')
+                    if time_left < timedelta(0): return
                     if interaction_user_settings.bot_enabled and interaction_user_settings.alert_duel.enabled:
                         user_command = await functions.get_slash_command(interaction_user_settings, 'duel')
                         reminder_message = interaction_user_settings.alert_duel.message.replace('{command}', user_command)
@@ -179,6 +180,10 @@ class DuelCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if duel_user_settings.bot_enabled and duel_user_settings.alert_duel.enabled:
+                    if time_left is None:
+                        time_left = await functions.calculate_time_left_from_cooldown(message, duel_user_settings,
+                                                                                      'duel')
+                        if time_left < timedelta(0): return
                     user_command = await functions.get_slash_command(duel_user_settings, 'duel')
                     reminder_message = duel_user_settings.alert_duel.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

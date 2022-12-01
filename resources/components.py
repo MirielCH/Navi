@@ -333,6 +333,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
+        christmas_area_action = 'Disable' if view.user_settings.christmas_area_enabled else 'Enable'
         auto_flex_action = 'Disable' if view.user_settings.auto_flex_enabled else 'Enable'
         dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
         hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
@@ -348,6 +349,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
                                             value='toggle_hunt'))
         options.append(discord.SelectOption(label=f'{mentions_action} slash command reminders',
                                             value='toggle_mentions'))
+        options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
+                                            value='toggle_christmas_area'))
         options.append(discord.SelectOption(label=f'{tracking_action} command tracking',
                                             value='toggle_tracking'))
         options.append(discord.SelectOption(label=f'Change last time travel time',
@@ -367,6 +370,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
         elif select_value == 'toggle_mentions':
             await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
+        elif select_value == 'toggle_christmas_area':
+            await self.view.user_settings.update(christmas_area_enabled=not self.view.user_settings.christmas_area_enabled)
         elif select_value == 'toggle_tracking':
             await self.view.user_settings.update(tracking_enabled=not self.view.user_settings.tracking_enabled)
         elif select_value == 'set_last_tt':
@@ -404,7 +409,8 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             if self.view.user_settings.partner_id is None:
                 await interaction.response.send_message(
                     f'You need to set a partner first.\n'
-                    f'To set a partner use {strings.SLASH_COMMANDS_NAVI["settings partner"]} `partner: @partner`.',
+                    f'To set a partner use {await functions.get_navi_slash_command(self.view.bot, "settings partner")} '
+                    f'`partner: @partner`.',
                     ephemeral=True
                 )
                 return
@@ -516,13 +522,14 @@ class SetDonorTierSelect(discord.ui.Select):
 
 class ReminderMessageSelect(discord.ui.Select):
     """Select to select reminder messages by activity"""
-    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+    def __init__(self, view: discord.ui.View, activities: List[str], placeholder: str, custom_id: str,
+                 row: Optional[int] = None):
         options = []
         options.append(discord.SelectOption(label='All', value='all', emoji=None))
-        for activity in strings.ACTIVITIES:
+        for activity in activities:
             options.append(discord.SelectOption(label=activity.replace('-',' ').capitalize(), value=activity, emoji=None))
-        super().__init__(placeholder='Choose activity', min_values=1, max_values=1, options=options, row=row,
-                         custom_id='select_message_activity')
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id=custom_id)
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]

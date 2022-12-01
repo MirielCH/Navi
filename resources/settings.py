@@ -3,33 +3,81 @@
 
 import os
 import sqlite3
+import sys
 from typing import NamedTuple
 
 from dotenv import load_dotenv
 
 
-load_dotenv()
-TOKEN = os.getenv('DISCORD_TOKEN')
-DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
+ENV_VARIABLE_MISSING = (
+    'Required setting {var} in the .env file is missing. Please check your default.env file and update your .env file '
+    'accordingly.'
+)
 
+# Load .env variables
+load_dotenv()
+
+TOKEN = os.getenv('DISCORD_TOKEN')
+if TOKEN is None:
+    print(ENV_VARIABLE_MISSING.format(var='DISCORD_TOKEN'))
+    sys.exit()
+
+OWNER_ID = os.getenv('OWNER_ID')
+if OWNER_ID is None:
+    print(ENV_VARIABLE_MISSING.format(var='OWNER_ID'))
+    sys.exit()
+try:
+    OWNER_ID = int(OWNER_ID)
+except:
+    print(f'Owner ID "{OWNER_ID}" in the .env variable OWNER_ID is not a number.')
+    sys.exit()
+
+DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
+if DEBUG_MODE is None:
+    print(ENV_VARIABLE_MISSING.format(var='DEBUG_MODE'))
+    sys.exit()
+
+DEV_IDS = os.getenv('DEV_IDS')
+if DEV_IDS is None or DEV_IDS == '':
+    DEV_IDS = []
+else:
+    DEV_IDS = DEV_IDS.split(',')
+    try:
+        DEV_IDS = [int(dev_id.strip()) for dev_id in DEV_IDS]
+    except:
+        print('At least one id in the .env variable DEV_IDS is not a number.')
+        sys.exit()
+DEV_IDS += [OWNER_ID,]
+
+DEV_GUILDS = os.getenv('DEV_GUILDS')
+if DEV_GUILDS is None:
+    print(ENV_VARIABLE_MISSING.format(var='DEV_GUILDS'))
+    sys.exit()
+if DEV_GUILDS == '':
+    print('Variable DEV_GUILDS in the .env file is required. Please set at least one dev guild.')
+    sys.exit()
+else:
+    DEV_GUILDS = DEV_GUILDS.split(',')
+    try:
+        DEV_GUILDS = [int(guild_id.strip()) for guild_id in DEV_GUILDS]
+    except:
+        print('At least one id in the .env variable DEV_GUILDS is not a number.')
+        sys.exit()
+
+
+# Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DB_FILE = os.path.join(BOT_DIR, 'database/navi_db.db')
-
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-
 LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
-
 IMG_NAVI = os.path.join(BOT_DIR, 'images/navi.png')
+
 
 DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65)
 
 EPIC_RPG_ID = 555955826880413696
-
-OWNER_ID = 619879176316649482
 #EPIC_RPG_ID = OWNER_ID
-DEV_IDS = [OWNER_ID,692796548282712074,461315654927253507]
-DEV_GUILDS = [730115558766411857,812650049565753355] # Secret Valley, Charivari
 
 EMBED_COLOR = 0x000000
 
