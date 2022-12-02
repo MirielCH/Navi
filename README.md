@@ -11,14 +11,13 @@ Reminder / Helper for EPIC RPG.
 • Rename `database/default_db.db` to `database/navi_db.db`.  
 • Upload all emojis in `images/emojis` to a private server Navi can see.  
 • Change all emojis in `resources/emojis.py` to the ones you uploaded.  
-• Change `DEV_IDS` and `DEV_GUILDS` in `resources/settings.py` to your liking.  
 • Run `bot.py`.  
 • Invite Navi to your server(s). Note the required permissions below.  
 
 # Updating the bot
 • Replace all `.py` files.  
 • Restart the bot.  
-• If the bot requires database changes, it will not start and tell you so. In that case, turn off the bot, BACKUP YOUR DATABASE and run `database/update_database.py`.  
+• If the bot requires database changes, it will not start and tell you so. In that case, turn off the bot, **BACKUP YOUR DATABASE** and run `database/update_database.py`.  
 
 # Required intents
 • guilds  
