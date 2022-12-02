@@ -311,33 +311,33 @@ class ChristmasCog(commands.Cog):
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_together):
                     together = True
-                if user is None:
-                    if together:
-                        search_patterns = [
-                           r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
-                            r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
-                            r"\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
-                        ]
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                            partner_name = user_name_match.group(2)
-                        else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('User names not found in xmas hunt together message.', message)
-                            return
+                if together:
+                    search_patterns = [
+                        r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
+                        r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
+                        r"\*\*(.+?)\*\* e \*\*(.+?)\*\*", #Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        partner_name = user_name_match.group(2)
                     else:
-                        search_patterns = [
-                            r"\*\*(.+?)\*\* found a", #English
-                            r"\*\*(.+?)\*\* encontr", #Spanish, Portuguese
-                        ]
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                        else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('Couldn\'t find a user name for the xmas hunt/adv message.', message)
-                            return
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User names not found in xmas hunt together message.', message)
+                        return
+                else:
+                    search_patterns = [
+                        r"\*\*(.+?)\*\* found a", #English
+                        r"\*\*(.+?)\*\* encontr", #Spanish, Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user name for the xmas hunt/adv message.', message)
+                        return
+                if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
                             message.channel, regex.COMMAND_HUNT_ADVENTURE,
@@ -348,7 +348,7 @@ class ChristmasCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a user for the xmas hunt/adv change message.', message)
                         return
-                    if user is None: user = user_command_message.author
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

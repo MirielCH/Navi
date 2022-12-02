@@ -770,6 +770,7 @@ class AutoFlexCog(commands.Cog):
                 item_amount = int(match.group(2))
                 item_name = match.group(4)
                 event = item_events[item_name.lower().replace('**','')]
+                if event == 'work_hyperlog' and guild_settings.guild_id == 713541415099170836: return # Remove after toggleable
                 if user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
@@ -831,7 +832,7 @@ class AutoFlexCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
                     r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #English
-                    r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(godly\b|void\b) \bpresent\*\*', #English godly and void present, chimney
+                    r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(\bgodly\b \bpresent\b|\bvoid\b \bpresent\b)\*\*', #English godly and void present, chimney
                     r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
                 ]
                 item_events = {
