@@ -574,8 +574,8 @@ SLASH_COMMANDS = {
     'weekly': '</weekly:956658465185603645>',
     'wheel': '</wheel:959916179525341194>',
     'world status': '</world status:953370104236761108>',
-    'xmas calendar': '</xmas calendar:953370104236761108>',
-    'xmas chimney': '</xmas chimney:953370104236761108>',
+    'xmas calendar': '</xmas calendar:1048310047865852005>',
+    'xmas chimney': '</xmas chimney:1048310047865852005>',
 }
 
 RPG_COMMANDS = {
