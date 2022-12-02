@@ -562,22 +562,24 @@ class AutoFlexCog(commands.Cog):
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)
 
-            # Christmas presents, quest and duel embed
+            # Christmas loot, quest and duel embeds
             search_strings = [
                 'godly present', #All languages, godly present
                 'void present', #All languages, void present
+                'epic snowball', #All languages, epic snowball
             ]
             if (any(search_string in embed_field0_value.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b|\bvoid\b) \bpresent\b', #English godly and void present
-                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (godly\b|void\b) \bpresent', #Spanish/Portuguese godly and void present
+                    r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #English
+                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
                 ]
                 item_events = {
-                    'godly': 'xmas_godly',
-                    'void': 'xmas_void',
+                    'godly present': 'xmas_godly',
+                    'void present': 'xmas_void',
+                    'epic snowball': 'xmas_snowball',
                 }
                 match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
                 if not match: return
@@ -620,6 +622,11 @@ class AutoFlexCog(commands.Cog):
                         f'**{user_name}** just stumbled upon the rarest of gifts!\n'
                         f'Wdym "love, family and friends"? I\'m talking about {item_amount} '
                         f'{emojis.PRESENT_VOID} **VOID present**, duh.'
+                    )
+                elif event == 'xmas_snowball':
+                    description = (
+                        f'**{user_name}** just found {item_amount} {emojis.SNOWBALL_EPIC} **EPIC snowball**!\n'
+                        f'I sense a snowman in their not-so-distant future.'
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
@@ -812,23 +819,25 @@ class AutoFlexCog(commands.Cog):
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
-            # Christmas presents, non-embed
+            # Christmas loot, non-embed
             search_strings = [
                 'godly present', #All languages, godly present
                 'void present', #All languages, void present
+                'epic snowball', #All languages, void present
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b|\bvoid\b) \bpresent\b', #English godly and void present
+                    r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #English
                     r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(godly\b|void\b) \bpresent\*\*', #English godly and void present, chimney
-                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b|\bvoid\b) \bpresent\b', #Spanish/Portuguese godly and void present
+                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
                 ]
                 item_events = {
-                    'godly': 'xmas_godly',
-                    'void': 'xmas_void',
+                    'godly present': 'xmas_godly',
+                    'void present': 'xmas_void',
+                    'epic snowball': 'xmas_snowball',
                 }
                 match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not match: return
@@ -842,7 +851,7 @@ class AutoFlexCog(commands.Cog):
                     if len(guild_users) > 1:
                         await functions.add_warning_reaction(message)
                         await message.reply(
-                            f'Congratulations, you found a shiny present worthy of an auto flex!\n'
+                            f'Congratulations, you found something worthy of an auto flex!\n'
                             f'Sadly I am unable to determine who you are as your username is not unique.\n'
                             f'To resolve this, either change your username (not nickname!) or use slash commands next time.'
                         )
@@ -866,46 +875,12 @@ class AutoFlexCog(commands.Cog):
                         f'Wdym "love, family and friends"? I\'m talking about {item_amount} {emojis.PRESENT_VOID} '
                         f'**VOID present**, duh.'
                     )
+                elif event == 'xmas_snowball':
+                    description = (
+                        f'**{user_name}** just found {item_amount} {emojis.SNOWBALL_EPIC} **EPIC snowball**!\n'
+                        f'I sense a snowman in their not-so-distant future.'
+                    )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
-
-            # EPIC snowball, non-embed
-            search_strings = [
-                'epic snowball', #All languages
-            ]
-            if (any(search_string in message_content.lower() for search_string in search_strings)):
-                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
-                if not guild_settings.auto_flex_enabled: return
-                user = await functions.get_interaction_user(message)
-                search_patterns = [
-                    r'\*\*(.+?)\*\* got (.+?) (.+?) \bepic\b \bsnowball\b', #English
-                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) \bepic\b \bsnowball\b', #Spanish/Portuguese
-                ]
-                match = await functions.get_match_from_patterns(search_patterns, message_content)
-                if not match: return
-                user_name = match.group(1)
-                item_amount = match.group(2)
-                if user is None:
-                    guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if len(guild_users) > 1:
-                        await functions.add_warning_reaction(message)
-                        await message.reply(
-                            f'Congratulations, you found an EPIC snowball worthy of an auto flex!\n'
-                            f'Sadly I am unable to determine who you are as your username is not unique.\n'
-                            f'To resolve this, either change your username (not nickname!) or use slash commands next time.'
-                        )
-                        return
-                    if len(guild_users) == 0: return
-                    user = guild_users[0]
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
-                description = (
-                    f'**{user_name}** just found {item_amount} {emojis.SNOWBALL_EPIC} **EPIC snowball**!\n'
-                    f'I sense a snowman in their not-so-distant future.'
-                )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'xmas_snowball', description)
 
             # Christmas, stuck in chimney
             search_strings = [
