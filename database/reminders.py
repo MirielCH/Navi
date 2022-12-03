@@ -800,7 +800,6 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
         reminders = await get_active_user_reminders(user_id)
     except exceptions.NoDataFoundError:
         return
-    current_time = datetime.utcnow()
     for reminder in reminders:
         if reminder.activity not in activities: continue
         if isinstance(time_reduction, str):
@@ -821,3 +820,71 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
             scheduled_for_tasks[reminder.task_name] = reminder
         else:
             await reminder.update(end_time=new_end_time)
+
+
+async def reduce_reminder_time_percentage(user_id: int, percentage: int, activities: List[str]) -> None:
+    """Reduces the end time of user reminders by a certain percentage.
+    If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
+    If the new end time is in the past, the reminder is deleted.
+
+    Arguments
+    ---------
+    time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
+    for half of their remaining amount.
+    activities: List with the affected activities
+
+    Raises
+    ------
+    ValueError if time_reduction is neither time_delta nor the string 'half'
+    """
+    current_time = datetime.utcnow().replace(microsecond=0)
+    try:
+        reminders = await get_active_user_reminders(user_id)
+    except exceptions.NoDataFoundError:
+        return
+    for reminder in reminders:
+        if reminder.activity not in activities: continue
+        time_left = reminder.end_time - current_time
+        time_left_new_seconds = time_left.total_seconds() * ((100 - percentage) / 100)
+        time_left_new = timedelta(seconds=time_left_new_seconds)
+        new_end_time = current_time + time_left_new
+        if time_left_new_seconds <= 0:
+            reminder.end_time = current_time + timedelta(seconds=1)
+            scheduled_for_tasks[reminder.task_name] = reminder
+            scheduled_for_deletion[reminder.task_name] = reminder
+            await reminder.delete()
+        elif 1 <= time_left.total_seconds() <= 15:
+            await reminder.update(end_time=new_end_time, triggered=True)
+            scheduled_for_tasks[reminder.task_name] = reminder
+        else:
+            await reminder.update(end_time=new_end_time)
+
+
+async def increase_reminder_time_percentage(user_id: int, percentage: int, activities: List[str]) -> None:
+    """Increases the end time of user reminders by a certain percentage.
+    Doesn't affect reminders already scheduled.
+
+    Arguments
+    ---------
+    reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
+    for half of their remaining amount.
+    activities: List with the affected activities
+
+    Raises
+    ------
+    ValueError if time_reduction is neither time_delta nor the string 'half'
+    """
+    current_time = datetime.utcnow().replace(microsecond=0)
+    try:
+        reminders = await get_active_user_reminders(user_id)
+    except exceptions.NoDataFoundError:
+        return
+    for reminder in reminders:
+        if reminder.activity not in activities: continue
+        time_left = reminder.end_time - current_time
+        time_left_new_seconds = time_left.total_seconds() / ((100 - percentage) / 100)
+        time_left_new = timedelta(seconds=time_left_new_seconds)
+        new_end_time = current_time + time_left_new
+        if reminder.triggered:
+            scheduled_for_deletion[reminder.task_name] = reminder
+        await reminder.update(end_time=new_end_time, triggered=False)

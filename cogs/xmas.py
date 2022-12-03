@@ -11,12 +11,10 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 CHRISTMAS_AREA_ENABLED = (
-    'Christmas area mode enabled. This reduces your reminders by 10%.\n'
-    'Note that this does not affect running reminders. Use {cd} to update them.'
+    'Christmas area mode enabled. Reminders are reduced by 10%.\n'
 )
 CHRISTMAS_AREA_DISABLED = (
     'Christmas area mode disabled. Your reminders are back to normal.\n'
-    'Note that this does not affect running reminders. Use {cd} to update them.'
 )
 
 class ChristmasCog(commands.Cog):
@@ -240,6 +238,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if not user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
+                    await reminders.reduce_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -279,6 +278,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
+                    await reminders.increase_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -375,11 +375,13 @@ class ChristmasCog(commands.Cog):
                         break
                 if not user_settings.christmas_area_enabled and christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
+                    await reminders.reduce_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
                 if user_settings.christmas_area_enabled and not christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
+                    await reminders.increase_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
