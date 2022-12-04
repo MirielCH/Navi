@@ -1,16 +1,15 @@
 # reminders.py
 """Provides access to the tables "reminders_users" and "reminders_clans" in the database"""
 
-from argparse import ArgumentError
-import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
 from typing import List, Optional, Tuple, Union
 
+import discord
 from discord.ext import tasks
 
-from database import errors
+from database import cooldowns, errors
 from resources import exceptions, settings, strings
 
 
@@ -822,16 +821,18 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
             await reminder.update(end_time=new_end_time)
 
 
-async def reduce_reminder_time_percentage(user_id: int, percentage: int, activities: List[str]) -> None:
-    """Reduces the end time of user reminders by a certain percentage.
+async def reduce_reminder_time_percentage(user_id: int, percentage: int, activities: List[str], user_settings) -> None:
+    """Reduces the end time of user reminders by a certain percentage of the cooldown.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
+    Note that the percentage is calculated based on the full cooldown.
 
     Arguments
     ---------
     time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
     for half of their remaining amount.
     activities: List with the affected activities
+    user_settings: The user settings
 
     Raises
     ------
@@ -844,8 +845,15 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: int, activit
         return
     for reminder in reminders:
         if reminder.activity not in activities: continue
+        cooldown = await cooldowns.get_cooldown(reminder.activity)
+        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+        if cooldown.donor_affected:
+            cooldown_seconds = (cooldown.actual_cooldown_mention()
+                                * settings.DONOR_COOLDOWNS[user_donor_tier])
+        else:
+            cooldown_seconds = cooldown.actual_cooldown_mention()
         time_left = reminder.end_time - current_time
-        time_left_new_seconds = time_left.total_seconds() * ((100 - percentage) / 100)
+        time_left_new_seconds = time_left.total_seconds() - (cooldown_seconds * ((percentage) / 100))
         time_left_new = timedelta(seconds=time_left_new_seconds)
         new_end_time = current_time + time_left_new
         if time_left_new_seconds <= 0:
@@ -860,15 +868,17 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: int, activit
             await reminder.update(end_time=new_end_time)
 
 
-async def increase_reminder_time_percentage(user_id: int, percentage: int, activities: List[str]) -> None:
-    """Increases the end time of user reminders by a certain percentage.
+async def increase_reminder_time_percentage(user_id: int, percentage: int, activities: List[str], user_settings) -> None:
+    """Increases the end time of user reminders by a certain percentage of the cooldown.
     Doesn't affect reminders already scheduled.
+    Note that the percentage is calculated based on the full cooldown.
 
     Arguments
     ---------
     reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
     for half of their remaining amount.
     activities: List with the affected activities
+    user_settings: The user settings
 
     Raises
     ------
@@ -881,8 +891,15 @@ async def increase_reminder_time_percentage(user_id: int, percentage: int, activ
         return
     for reminder in reminders:
         if reminder.activity not in activities: continue
+        cooldown = await cooldowns.get_cooldown(reminder.activity)
+        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+        if cooldown.donor_affected:
+            cooldown_seconds = (cooldown.actual_cooldown_mention()
+                                * settings.DONOR_COOLDOWNS[user_donor_tier])
+        else:
+            cooldown_seconds = cooldown.actual_cooldown_mention()
         time_left = reminder.end_time - current_time
-        time_left_new_seconds = time_left.total_seconds() / ((100 - percentage) / 100)
+        time_left_new_seconds = time_left.total_seconds() + (cooldown_seconds * ((percentage) / 100))
         time_left_new = timedelta(seconds=time_left_new_seconds)
         new_end_time = current_time + time_left_new
         if reminder.triggered:
