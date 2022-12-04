@@ -324,7 +324,27 @@ class HuntCog(commands.Cog):
                                                       - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
-                if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                monsters_christmas = [
+                    '**Elf**',
+                    '**Christmas Reindeer**',
+                    '**Snowman**',
+                    'Krampus',
+                    '**Krampus**',
+                    '**Yeti**',
+                    '**Hyper Giant Ice Block**',
+                ]
+                if user_settings.christmas_area_enabled:
+                    if not found_together:
+                        time_left_seconds *= 0.9
+                    else:
+                        partner_start_pos = message_content.find(f'**{partner_name}**:')
+                        if partner_start_pos == -1:
+                            partner_start_pos = message_content.find(f'while **{partner_name}**')
+                        message_content_partner = message_content[partner_start_pos:]
+                        for monster in monsters_christmas:
+                            if monster.lower() in message_content_partner.lower():
+                                time_left_seconds *= 0.9
+                                break
                 time_left = timedelta(seconds=time_left_seconds)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
                 if time_left < timedelta(0): return
