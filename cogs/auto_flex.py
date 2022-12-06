@@ -571,7 +571,6 @@ class AutoFlexCog(commands.Cog):
             if (any(search_string in embed_field0_value.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
-                user = await functions.get_interaction_user(message)
                 search_patterns = [
                     r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #English
                     r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
@@ -588,24 +587,17 @@ class AutoFlexCog(commands.Cog):
                 item_name = match.group(4)
                 event = item_events.get(item_name.lower().replace('**',''), None)
                 if event is None: return
-                if user is None:
-                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                        user = await message.guild.fetch_member(user_id)
-                    else:
-                        user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_QUEST_DUEL,
-                                user_name=user_name
-                            )
-                        )
-                        if user_command_message is not None:
-                            user = user_command_message.author
-                        else:
-                            duel_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                            if len(duel_users) != 1: return
-                            user = duel_users[0]
+                guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                if len(guild_users) > 1:
+                    await functions.add_warning_reaction(message)
+                    await message.reply(
+                        f'Congratulations **{user_name}**, you found something worthy of an auto flex!\n'
+                        f'Sadly I am unable to determine who you are as your username is not unique.\n'
+                        f'To resolve this, either change your username (not nickname!) or use slash commands next time.'
+                    )
+                    return
+                if not guild_users: return
+                user = guild_users[0]
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -857,7 +849,7 @@ class AutoFlexCog(commands.Cog):
                             f'To resolve this, either change your username (not nickname!) or use slash commands next time.'
                         )
                         return
-                    if len(guild_users) == 0: return
+                    if not guild_users: return
                     user = guild_users[0]
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -1445,46 +1437,46 @@ class AutoFlexCog(commands.Cog):
                     return
                 if (not user_settings.bot_enabled or not user_settings.auto_flex_enabled
                     or user_settings.time_travel_count is None): return
-                time_travel_count_old = user_settings.time_travel_count
-                await user_settings.update(time_travel_count=time_travel_count_old + 1)
-                if time_travel_count_old < 1 and time_travel_count_new >= 1:
+                time_travel_count_new = user_settings.time_travel_count + 1
+                await user_settings.update(time_travel_count=time_travel_count_new)
+                if time_travel_count_new == 1:
                     event = 'time_travel_1'
                     description = (
                         f'**{user.name}** just reached their very **first** {emojis.TIME_TRAVEL} **time travel**!\n'
                         f'Congratulations, we are expecting great things of you!'
                     )
-                elif time_travel_count_old < 3 and time_travel_count_new >= 3:
+                elif time_travel_count_new == 3:
                     event = 'time_travel_3'
                     description = (
                         f'**{user.name}** did it again (and again) and just reached {emojis.TIME_TRAVEL} **TT 3**!\n'
                         f'I think they\'re getting addicted.'
                     )
-                elif time_travel_count_old < 5 and time_travel_count_new >= 5:
+                elif time_travel_count_new == 5:
                     event = 'time_travel_5'
                     description = (
                         f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
                         f'The boss in D13 can\'t wait to see you.'
                     )
-                elif time_travel_count_old < 10 and time_travel_count_new >= 10:
+                elif time_travel_count_new == 10:
                     event = 'time_travel_10'
                     description = (
                         f'**{user.name}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
                         f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
                     )
-                elif time_travel_count_old < 25 and time_travel_count_new >= 25:
+                elif time_travel_count_new == 25:
                     event = 'time_travel_25'
                     description = (
                         f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
                         f'Good news: Welcome to the endgame!\n'
                         f'Bad news: Hope you like dragon scale farming.'
                     )
-                elif time_travel_count_old < 50 and time_travel_count_new >= 50:
+                elif time_travel_count_new == 50:
                     event = 'time_travel_50'
                     description = (
                         f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 50**!\n'
                         f'Sadly they went blind after seeing the profile background they got as a reward.'
                     )
-                elif time_travel_count_old < 100 and time_travel_count_new >= 100:
+                elif time_travel_count_new == 100:
                     event = 'time_travel_100'
                     description = (
                         f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
