@@ -1,5 +1,6 @@
 # lottery.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -144,9 +145,9 @@ class LotteryCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             search_strings = [
                 'you cannot buy more than 10 tickets per lottery', #English
@@ -183,9 +184,9 @@ class LotteryCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
 # Initialization

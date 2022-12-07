@@ -1,5 +1,6 @@
 # horse_race.py
 
+import asyncio
 from datetime import timedelta
 import re
 
@@ -90,6 +91,8 @@ class HorseRaceCog(commands.Cog):
                 await reminders.insert_user_reminder(user.id, 'horse-race', time_left,
                                                     message.channel.id, reminder_message)
             )
+            if user_settings.auto_ready_enabled:
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
             await functions.add_reminder_reaction(message, reminder, user_settings)
             if reminder.record_exists and user_settings.alert_horse_breed.enabled and not already_registered:
                 command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
@@ -101,8 +104,6 @@ class HorseRaceCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'horse', time_left,
                                                          message.channel.id, reminder_message)
                 )
-            if user_settings.auto_ready_enabled:
-                await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

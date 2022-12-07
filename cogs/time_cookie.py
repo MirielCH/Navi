@@ -1,5 +1,6 @@
 # time_cookie.py
 
+import asyncio
 from datetime import timedelta
 
 import discord
@@ -75,9 +76,9 @@ class TimeCookieCog(commands.Cog):
                 return
             minutes = int(time_match.group(1))
             await reminders.reduce_reminder_time(user.id, timedelta(minutes=minutes), strings.TIME_COOKIE_AFFECTED_ACTIVITIES)
-            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
             if user_settings.auto_ready_enabled:
-                await functions.call_ready_command(self.bot, message, user)
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+            if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

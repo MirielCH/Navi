@@ -64,6 +64,16 @@ else:
         print('At least one id in the .env variable DEV_GUILDS is not a number.')
         sys.exit()
 
+EMBED_COLOR = os.getenv('EMBED_COLOR')
+if EMBED_COLOR is None:
+    EMBED_COLOR = 0x000000
+else:
+    try:
+        EMBED_COLOR = int(EMBED_COLOR.strip('#'), base=16)
+    except:
+        print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
+        sys.exit()
+
 
 # Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -79,7 +89,6 @@ DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65)
 EPIC_RPG_ID = 555955826880413696
 #EPIC_RPG_ID = OWNER_ID
 
-EMBED_COLOR = 0x000000
 
 DEFAULT_PREFIX = 'navi '
 

@@ -1,5 +1,6 @@
 # xmas.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -49,8 +50,8 @@ class ChristmasCog(commands.Cog):
             # Chimney cooldown
             search_strings = [
                 'you have went through a chimney recently', #English
-                'you have went through a chimney recently', #Spanish, MISSING
-                'you have went through a chimney recently', #Portuguese, MISSING
+                'has pasado por una chimenea recientemente', #Spanish
+                'você passou por uma chaminé recentemente', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = user_command_message = None
@@ -155,6 +156,8 @@ class ChristmasCog(commands.Cog):
             # Chimney
             search_strings = [
                 'went through a chimney', #English
+                'se metió por una chimenea', #Spanish
+                'passou por uma chaminé', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -192,9 +195,13 @@ class ChristmasCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'chimney', time_left,
                                                          message.channel.id, reminder_message)
                 )
+                if user_settings.auto_ready_enabled:
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings_stuck = [
                     'now stuck on the chimney', #English
+                    'now stuck on the chimney', #Spanish, MISSING
+                    'now stuck on the chimney', #Portuguese, MISSING
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_stuck):
                     reminder: reminders.Reminder = (
@@ -202,12 +209,12 @@ class ChristmasCog(commands.Cog):
                                                              message.channel.id,
                                                              '{name} Hey! Good news! You got unstuck from that chimney!')
                     )
-                if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
 
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
+                'has teleported to the **christmas area**', #Spanish, not translated in the game (??)
+                'has teleported to the **christmas area**', #Portuguese, MISSING
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -389,8 +396,8 @@ class ChristmasCog(commands.Cog):
             # Cookies and milk
             search_strings = [
                 '`cookies and milk` successfully crafted!', #English
-                '`cookies and milk` successfully crafted!', #Spanish, MISSING
-                '`cookies and milk` successfully crafted!', #Portuguese, MISSING
+                '`cookies and milk` successfully crafted!', #Spanish, not translated in the game
+                '`cookies and milk` successfully crafted!', #Portuguese, not translated in the game
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -429,9 +436,9 @@ class ChristmasCog(commands.Cog):
                     if reminder.record_exists:
                         await functions.add_warning_reaction(message)
                         await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
-                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

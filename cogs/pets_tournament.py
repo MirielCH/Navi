@@ -1,5 +1,6 @@
 # pets_tournament.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -74,9 +75,9 @@ class PetsTournamentCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'pet-tournament', time_left,
                                                         message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]

@@ -383,7 +383,7 @@ class DevOldCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        pass
+        await ctx.message.add_reaction(emojis.PANDA_SURPRISE)
 
 def setup(bot):
     bot.add_cog(DevOldCog(bot))

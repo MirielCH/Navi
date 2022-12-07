@@ -1,5 +1,6 @@
 # work.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -231,9 +232,9 @@ class WorkCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.reactions_enabled:
                     search_strings_chop_proc = [
                         'quite a large leaf', #English
@@ -329,9 +330,9 @@ class WorkCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    await functions.add_reminder_reaction(message, reminder, user_settings)
                     if user_settings.auto_ready_enabled:
-                        await functions.call_ready_command(self.bot, message, user)
+                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Work event slash (all languages)
             if  (':x:' in message_content.lower()
@@ -361,8 +362,9 @@ class WorkCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
+                    if user_settings.auto_ready_enabled:
+                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
-                    if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

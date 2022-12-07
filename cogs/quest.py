@@ -1,5 +1,6 @@
 # quest.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -7,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from database import cooldowns, clans, errors, reminders, users
-from resources import emojis, exceptions, functions, regex, settings, strings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class QuestCog(commands.Cog):
@@ -274,9 +275,9 @@ class QuestCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if not message.embeds:
             message_content = message.content
@@ -374,9 +375,9 @@ class QuestCog(commands.Cog):
                             pass
 
                     await user_settings.update(guild_quest_prompt_active=False)
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Aborted guild quest
             search_strings = [

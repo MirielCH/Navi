@@ -1,5 +1,6 @@
 # training.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -147,9 +148,9 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings = [
                     'better luck next time', #English
                     'próxima vez', #Spanish, Portuguese
@@ -204,9 +205,9 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Training VOID event
             search_strings = [
@@ -239,7 +240,8 @@ class TrainingCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Training reset from ultraining shop
             search_strings = [

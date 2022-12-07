@@ -1,5 +1,6 @@
 # lootbox.py
 
+import asyncio
 from datetime import timedelta
 import re
 
@@ -7,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import exceptions, functions, regex, settings, strings
+from resources import exceptions, functions, regex, settings
 
 
 class BuyCog(commands.Cog):
@@ -146,9 +147,9 @@ class BuyCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'lootbox', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
 # Initialization

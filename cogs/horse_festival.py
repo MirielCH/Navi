@@ -1,14 +1,14 @@
 # horse_festival.py
 # This is outdated, needs to be reworked next year
 
-from datetime import datetime, timedelta
+import asyncio
 import re
 
 import discord
 from discord.ext import commands
 
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, logs, regex, strings
+from resources import emojis, exceptions, functions, regex, strings
 
 
 class HorseFestivalCog(commands.Cog):
@@ -125,11 +125,11 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 await reminders.reduce_reminder_time(user.id, 'half', strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
+                if user_settings.auto_ready_enabled:
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
                     await message.add_reaction(emojis.KIRBY_RUN)
-                if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
 
             # Megarace
             search_strings = [

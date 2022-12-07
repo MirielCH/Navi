@@ -1,5 +1,6 @@
 # adventure.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
@@ -175,9 +176,9 @@ class AdventureCog(commands.Cog):
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if stuff_name in message_content:
                             await message.add_reaction(stuff_emoji)
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled:
-                    await functions.call_ready_command(self.bot, message, user)
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
                 # Add an F if the user died
                 search_strings = [
                     'but lost fighting', #English
