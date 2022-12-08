@@ -937,7 +937,7 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
         return strings.SLASH_COMMANDS.get(command_name, None)
     else:
         command = strings.RPG_COMMANDS.get(command_name, None)
-        if command is None: return f'`{command_name}`'
+        if command is None: return None
         return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
 
 
