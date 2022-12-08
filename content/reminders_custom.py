@@ -32,7 +32,7 @@ async def command_custom_reminder(ctx: Union[discord.ApplicationContext, command
     try:
         time_left = await functions.parse_timestring_to_timedelta(timestring)
     except OverflowError as error:
-        await ctx.respond(error, ephemeral=True)
+        await ctx.reply(error)
         return
     if time_left.total_seconds() > 31_536_000:
             await functions.reply_or_respond(

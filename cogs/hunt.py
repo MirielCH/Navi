@@ -167,8 +167,8 @@ class HuntCog(commands.Cog):
                     or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                 )
             ):
-                user_name = partner_name = last_hunt_mode = user_command_message = None
-                hardmode = together = alone = event_mob = found_together = False
+                user_name = partner_name = last_hunt_mode = user_command_message = partner = None
+                hardmode = together = alone = event_mob = found_together = partner_alerts_enabled = False
                 user = await functions.get_interaction_user(message)
                 slash_command = False if user is None else True
                 search_strings_hardmode = [
@@ -254,54 +254,59 @@ class HuntCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
-                if not user_settings.alert_hunt.enabled: return
-                user_command = await functions.get_slash_command(user_settings, 'hunt')
-                last_hunt_mode = ''
-                if user_settings.hunt_rotation_enabled: together = not found_together
-                if not event_mob:
-                    if hardmode:
-                        last_hunt_mode = f'{last_hunt_mode} hardmode'
-                    if together:
-                        last_hunt_mode = f'{last_hunt_mode} together'
-                    if alone:
-                        last_hunt_mode = f'{last_hunt_mode} alone'
-                    if old and together and slash_command:
-                        last_hunt_mode = f'{last_hunt_mode} old'
-                    last_hunt_mode = last_hunt_mode.strip()
-                    if last_hunt_mode != '':
-                        if user_settings.slash_mentions_enabled:
-                            user_command = f"{user_command} `mode: {last_hunt_mode}`"
-                        else:
-                            user_command = f"{user_command} `{last_hunt_mode}`".replace('` `', ' ')
-                if event_mob:
-                    if user_settings.last_hunt_mode is not None:
-                        if user_settings.slash_mentions_enabled:
-                            user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
-                        else:
-                            user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
-                    else:
-                        user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
-                        user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
-                        user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
-                        user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
-                        if 'hardmode'in user_command_message_content.lower():
-                            hardmode = True
-                        if 'together'in user_command_message_content.lower():
-                            together = True
-                            if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
-                                together = False
-                        if 'alone'in user_command_message_content.lower():
-                            alone = True
-                        if 'old'in user_command_message_content.lower():
-                            old = True
-                        last_hunt_mode = ''
-                        if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
-                        if together: last_hunt_mode = f'{last_hunt_mode} together'
-                        if alone: last_hunt_mode = f'{last_hunt_mode} alone'
-                        if old: last_hunt_mode = f'{last_hunt_mode} old'
+                if user_settings.partner_id is not None:
+                    partner: users.User = await users.get_user(user_settings.partner_id)
+                    if partner.partner_channel_id is not None and partner.alert_partner.enabled and partner.bot_enabled:
+                        partner_alerts_enabled = True
+                if not user_settings.alert_hunt.enabled and not partner_alerts_enabled: return
+                if user_settings.alert_hunt.enabled:
+                    user_command = await functions.get_slash_command(user_settings, 'hunt')
+                    last_hunt_mode = ''
+                    if user_settings.hunt_rotation_enabled: together = not found_together
+                    if not event_mob:
+                        if hardmode:
+                            last_hunt_mode = f'{last_hunt_mode} hardmode'
+                        if together:
+                            last_hunt_mode = f'{last_hunt_mode} together'
+                        if alone:
+                            last_hunt_mode = f'{last_hunt_mode} alone'
+                        if old and together and slash_command:
+                            last_hunt_mode = f'{last_hunt_mode} old'
                         last_hunt_mode = last_hunt_mode.strip()
-                        if last_hunt_mode == '': last_hunt_mode = None
-                await user_settings.update(last_hunt_mode=last_hunt_mode)
+                        if last_hunt_mode != '':
+                            if user_settings.slash_mentions_enabled:
+                                user_command = f"{user_command} `mode: {last_hunt_mode}`"
+                            else:
+                                user_command = f"{user_command} `{last_hunt_mode}`".replace('` `', ' ')
+                    if event_mob:
+                        if user_settings.last_hunt_mode is not None:
+                            if user_settings.slash_mentions_enabled:
+                                user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                            else:
+                                user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
+                        else:
+                            user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
+                            user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
+                            user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
+                            user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
+                            if 'hardmode'in user_command_message_content.lower():
+                                hardmode = True
+                            if 'together'in user_command_message_content.lower():
+                                together = True
+                                if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
+                                    together = False
+                            if 'alone'in user_command_message_content.lower():
+                                alone = True
+                            if 'old'in user_command_message_content.lower():
+                                old = True
+                            last_hunt_mode = ''
+                            if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
+                            if together: last_hunt_mode = f'{last_hunt_mode} together'
+                            if alone: last_hunt_mode = f'{last_hunt_mode} alone'
+                            if old: last_hunt_mode = f'{last_hunt_mode} old'
+                            last_hunt_mode = last_hunt_mode.strip()
+                            if last_hunt_mode == '': last_hunt_mode = None
+                    await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
@@ -321,8 +326,8 @@ class HuntCog(commands.Cog):
                                         * settings.DONOR_COOLDOWNS[donor_tier]
                                         - time_elapsed.total_seconds())
                     time_left_seconds_partner_hunt = (actual_cooldown
-                                                      * settings.DONOR_COOLDOWNS[donor_tier_partner_hunt]
-                                                      - time_elapsed.total_seconds())
+                                                    * settings.DONOR_COOLDOWNS[donor_tier_partner_hunt]
+                                                    - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
                 monsters_christmas = [
@@ -349,17 +354,17 @@ class HuntCog(commands.Cog):
                 time_left = timedelta(seconds=time_left_seconds)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
                 if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'hunt', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                if user_settings.auto_ready_enabled:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
-                await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.alert_hunt.enabled:
+                    reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'hunt', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
+                    if user_settings.auto_ready_enabled:
+                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
-                if user_settings.partner_id is not None:
-                    partner: users.User = await users.get_user(user_settings.partner_id)
+                if partner_alerts_enabled:
                     partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
                     # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                     if found_together:
@@ -419,10 +424,7 @@ class HuntCog(commands.Cog):
                             else:
                                 f'{lootbox_alert}\nAlso: {partner_message}'
                         lootbox_alert = lootbox_alert.strip()
-                        if (partner.partner_channel_id is not None
-                            and partner.alert_partner.enabled
-                            and partner.bot_enabled
-                            and lootbox_alert != ''):
+                        if lootbox_alert != '':
                             try:
                                 if partner.dnd_mode_enabled:
                                     lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.name}**')

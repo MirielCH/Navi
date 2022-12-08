@@ -45,7 +45,11 @@ async def command_stats(
             )
             await functions.reply_or_respond(ctx, msg_error, True)
             return
-        time_left = await functions.parse_timestring_to_timedelta(timestring)
+        try:
+            time_left = await functions.parse_timestring_to_timedelta(timestring)
+        except OverflowError as error:
+            await ctx.reply(error)
+            return
         if time_left.days > 28: time_left = timedelta(days=time_left.days)
         if time_left.days > 365:
             await ctx.reply('The maximum time is 365d, sorry.')

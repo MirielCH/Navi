@@ -103,13 +103,18 @@ class BuyCog(commands.Cog):
                 'lootbox` successfully bought', #English
                 'lootbox` comprado(s)', #Spanish, Portuguese
             ]
+            search_strings_excluded = [
+                'gingerbreads', #Christmas shop
+                'snowflakes', #Christmas shop
+                'guild ring', #Guild shop
+                'smol coin', #Returning shop
+                'horseshoe', #Horse festival shop
+                'coolrency', #Ultraining shop
+                'pumpkins', #Halloween shop
+                'spooky orbs', #Halloween shop
+            ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
-                and not 'guild ring' in message_content.lower()
-                and not 'smol coin' in message_content.lower()
-                and not 'horseshoe' in message_content.lower()
-                and not 'coolrency' in message_content.lower()
-                and not 'pumpkins' in message_content.lower()
-                and not 'spooky orbs' in message_content.lower()):
+                and all(search_string not in message_content.lower() for search_string in search_strings_excluded)):
                 user = await functions.get_interaction_user(message)
                 lootbox_type = user_command_message = None
                 lootbox_name = '[lootbox]'

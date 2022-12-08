@@ -692,7 +692,7 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(.+?)\*\* also got (.+?) (.+?) \*\*EPIC snowball\*\*', #English
+                    r' \*\*(.+?)\*\* also got (.+?) (.+?) \*\*EPIC snowball\*\*', #English
                 ]
                 match = await functions.get_match_from_patterns(search_patterns, embed_description)
                 if not match: return
@@ -741,7 +741,8 @@ class AutoFlexCog(commands.Cog):
                 search_patterns = [
                     r'\?\? \*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTRA log
                     r'!!1 (.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English HYPER log
-                    r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTIMATE log, SUPER fish, watermelon
+                    r' \*\*(.+?)\*\* got (.+?) (.+?) __\*\*(ultimate log)\*\*__', #English ULTIMATE log
+                    r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English SUPER fish, watermelon
                     r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
                     r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
                     r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTIMATE log, SUPER fish, watermelon
