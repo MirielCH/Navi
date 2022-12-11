@@ -29,7 +29,7 @@ class HalloweenCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id not in [settings.EPIC_RPG_ID, settings.OWNER_ID]: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_title = embed_field0_name = embed_field0_value = embed_autor = icon_url = ''

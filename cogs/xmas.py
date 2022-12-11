@@ -37,7 +37,7 @@ class ChristmasCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -56,7 +56,6 @@ class ChristmasCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:

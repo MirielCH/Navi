@@ -29,7 +29,7 @@ class PetsTournamentCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if not message.embeds:
             message_content = message.content
             search_strings = [

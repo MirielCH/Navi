@@ -29,7 +29,7 @@ class HorseRaceCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds: return
         message_content = message.content
         search_strings = [
@@ -91,8 +91,6 @@ class HorseRaceCog(commands.Cog):
                 await reminders.insert_user_reminder(user.id, 'horse-race', time_left,
                                                     message.channel.id, reminder_message)
             )
-            if user_settings.auto_ready_enabled:
-                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
             await functions.add_reminder_reaction(message, reminder, user_settings)
             if reminder.record_exists and user_settings.alert_horse_breed.enabled and not already_registered:
                 command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
@@ -104,6 +102,8 @@ class HorseRaceCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'horse', time_left,
                                                          message.channel.id, reminder_message)
                 )
+            if user_settings.auto_ready_enabled:
+                await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

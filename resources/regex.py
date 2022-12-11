@@ -62,6 +62,9 @@ COMMAND_PETS_ADVENTURE_START = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b)
 COMMAND_PETS_ADVENTURE_CANCEL = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b)\s+\bcancel\b")
 COMMAND_PETS_FUSION = re.compile(rf"\bpets?\b\s+\bfusion\b")
 COMMAND_PETS_TOURNAMENT = re.compile(rf"\bpets?\b\s+\btournament\s+\b[a-z]+\b")
+COMMAND_PROFILE_MENU = re.compile(
+    rf'(?:\bprofile\b|\bp\b|\bprofessions?\b|\bpr\b|\bhorse\b|\bcooldowns?\b|\bcd\b|\bready\b|\brd\b|\bbank\b|\binventory\b|\binv\b|\bi\b)'
+)
 COMMAND_QUEST = re.compile(rf'\bquest\b')
 COMMAND_QUEST_DUEL = re.compile(rf'(?:\bquest\b|\bduel\b)')
 COMMAND_QUEST_EPIC_QUEST = re.compile(rf"(?:\bepic\b\s+\bquest\b|\bquest\b)")

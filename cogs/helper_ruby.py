@@ -27,7 +27,7 @@ class HelperRubyCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -149,7 +149,7 @@ class HelperRubyCog(commands.Cog):
                 if interaction_user is None:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_INVENTORY
+                            message.channel, regex.COMMAND_PROFILE_MENU
                         )
                     )
                     if user_command_message is None:

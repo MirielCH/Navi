@@ -192,7 +192,7 @@ class SettingsCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Fires when a message is edited"""
-        if message_before.author.id == settings.EPIC_RPG_ID:
+        if message_before.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
             search_strings = [
                 'loading the epic guild member list...', #English
                 'cargando la lista épica de miembros...', #Spanish

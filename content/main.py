@@ -4,6 +4,7 @@
 from datetime import datetime
 from humanfriendly import format_timespan
 import psutil
+import random
 import sys
 from typing import Union
 
@@ -119,6 +120,16 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         f'{emojis.BP} System CPU usage: {psutil.cpu_percent()}%\n'
         f'{emojis.BP} System RAM usage: {psutil.virtual_memory()[2]}%\n'
     )
+    thanks_to = [
+        'Swiss cheese',
+        'Black coffee',
+        'Shigeru Miyamoto',
+        'Guido van Rossum',
+        'No Starch Press',
+        'Visual Studio Code',
+        'Herbal tea',
+        'DXRacer',
+    ]
     img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
     image_url = 'attachment://navi.png'
     embed = discord.Embed(
@@ -129,6 +140,6 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
     embed.add_field(name='BOT STATS', value=general, inline=False)
     embed.add_field(name='CREATOR', value=creator, inline=False)
     embed.add_field(name='DEV STUFF', value=dev_stuff, inline=False)
-    embed.add_field(name='SPECIAL THANKS TO', value=f'{emojis.BP} Swiss cheese', inline=False)
+    embed.add_field(name='SPECIAL THANKS TO', value=f'{emojis.BP} {random.choice(thanks_to)}', inline=False)
     embed.set_thumbnail(url=image_url)
     return (img_navi, embed)

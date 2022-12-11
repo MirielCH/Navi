@@ -49,7 +49,7 @@ class EventsCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if not message.embeds:
             message_content = message.content
             """

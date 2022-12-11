@@ -144,7 +144,7 @@ class AutoFlexCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id not in [settings.EPIC_RPG_ID, settings.OWNER_ID]: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID, settings.OWNER_ID]: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_title = embed_field0_name = embed_field0_value = embed_autor = icon_url = ''
@@ -878,7 +878,7 @@ class AutoFlexCog(commands.Cog):
 
             # Christmas, stuck in chimney
             search_strings = [
-                'stuck on the chimney...', #English
+                'stuck in the chimney...', #English
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)

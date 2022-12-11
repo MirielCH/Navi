@@ -29,7 +29,7 @@ class HuntCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -364,11 +364,11 @@ class HuntCog(commands.Cog):
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
-                if partner_alerts_enabled:
-                    partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
-                    # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
-                    if found_together:
-                        await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
+                if found_together:
+                    await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
+                    if partner_alerts_enabled:
+                        partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
+                        # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                         lootboxes = {
                             'common lootbox': emojis.LB_COMMON,
                             'uncommon lootbox': emojis.LB_UNCOMMON,

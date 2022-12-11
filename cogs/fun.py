@@ -92,7 +92,7 @@ class FunCog(commands.Cog):
             if message_content.lower() == 'navi slap':
                 await message.reply('https://media.tenor.com/8gp7ckTUwqgAAAAC/zelda-link.gif')
 
-        if not message.embeds and message.author.id == settings.EPIC_RPG_ID:
+        if not message.embeds and message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
             message_content = message.content
             if 'died fighting the **mysterious man**' in message_content.lower():
                 user_command_message = user_name = None
@@ -306,7 +306,7 @@ class FunCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
                 await message.add_reaction(emojis.PANDA_COOL)
 
-        if message.embeds and message.author.id == settings.EPIC_RPG_ID:
+        if message.embeds and message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
             embed: discord.Embed = message.embeds[0]
 
             if embed.fields:

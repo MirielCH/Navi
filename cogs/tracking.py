@@ -62,7 +62,7 @@ class TrackingCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Fires when a message is sent"""
-        if message.author.id == settings.EPIC_RPG_ID:
+        if message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
             if not message.embeds:
                 message_content = message.content
                 # Epic Guard

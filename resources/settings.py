@@ -87,7 +87,7 @@ IMG_NAVI = os.path.join(BOT_DIR, 'images/navi.png')
 DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65)
 
 EPIC_RPG_ID = 555955826880413696
-#EPIC_RPG_ID = OWNER_ID
+TESTY_ID = 1050765002950332456 # Miriel's test bot to test triggers
 
 
 DEFAULT_PREFIX = 'navi '

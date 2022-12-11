@@ -28,7 +28,7 @@ class HorseCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id != settings.EPIC_RPG_ID: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_title = icon_url = ''
