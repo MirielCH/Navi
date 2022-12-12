@@ -364,7 +364,7 @@ class HuntCog(commands.Cog):
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
-                if found_together:
+                if found_together and partner is not None:
                     await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
                     if partner_alerts_enabled:
                         partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
