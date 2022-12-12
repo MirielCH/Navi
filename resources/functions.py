@@ -3,6 +3,7 @@
 from argparse import ArgumentError
 from datetime import datetime, timedelta
 import re
+import string
 from typing import List, Optional, Union
 
 import discord
@@ -984,3 +985,45 @@ async def reply_or_respond(ctx: Union[discord.ApplicationContext, commands.Conte
         return await ctx.reply(answer)
     else:
         return await ctx.respond(answer, ephemeral=ephemeral)
+
+
+# --- Pet ID conversion ---
+async def convert_pet_id_to_int(pet_id: str) -> int:
+    """Coverts a string pet ID to an integer. IDs start at 1."""
+    pet_id_processed = pet_id = pet_id.lower()
+    pet_id_range = list(string.ascii_lowercase)
+    pet_id_range.append('lmao')
+    if pet_id == '': raise ValueError('Argument pet_id can not be empty.')
+    id = 0
+    id_parts = []
+    pet_id_processed = pet_id
+    while True:
+        id_part = 'lmao' if pet_id_processed.endswith('lmao') else pet_id_processed[-1:]
+        pet_id_processed = pet_id_processed[:-len(id_part)]
+        id_parts.insert(0, id_part)
+        if pet_id_processed == '': break
+    for index, id_part in enumerate(id_parts):
+        value = pet_id_range.index(id_part) + 1
+        if index + 1 == len(id_parts):
+            id += value
+        else:
+            id += len(pet_id_range) ** (index + 1) * value
+    return id
+
+
+async def convert_pet_id_to_str(id: int) -> str:
+    """Coverts a numeric pet ID to a string."""
+    pet_id_range = list(string.ascii_lowercase)
+    pet_id_range.append('lmao')
+    if id < 1: raise ValueError('Argument id has to be 1 or higher.')
+    id_processed = id
+    pet_id = ''
+    last_id_part = ''
+    while id_processed > 0:
+        id_processed, remainder = divmod(id_processed - 1, 27)
+        if last_id_part == '':
+            last_id_part = pet_id_range[remainder].upper()
+        else:
+            pet_id = f'{pet_id}{pet_id_range[remainder].upper()}'
+    pet_id = f'{pet_id}{last_id_part}'
+    return pet_id

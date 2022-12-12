@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands
 
 from database import cooldowns
-from resources import emojis, strings
+from resources import emojis, functions, strings
 
 
 class DevOldCog(commands.Cog):
@@ -384,6 +384,18 @@ class DevOldCog(commands.Cog):
     async def test(self, ctx: commands.Context) -> None:
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
         await ctx.message.add_reaction(emojis.PANDA_SURPRISE)
+
+    # Pet ID conversion test
+    @dev.command()
+    @commands.bot_has_permissions(send_messages=True)
+    async def pet_id(self, ctx: commands.Context, pet_id: str) -> None:
+        if ctx.author.id not in (619879176316649482, 764222910881464350): return
+        id = await functions.convert_pet_id_to_id(pet_id)
+        pet_id_calculated = await functions.convert_id_to_pet_id(id)
+        await ctx.reply(
+            f'Pet ID `{pet_id.upper()}` converts to ID `{id}`\n'
+            f'ID `{id}` converts to pet ID `{pet_id_calculated}`'
+        )
 
 def setup(bot):
     bot.add_cog(DevOldCog(bot))

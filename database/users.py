@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from datetime import datetime
 import sqlite3
-from typing import NamedTuple, Tuple
+from typing import List, NamedTuple, Tuple
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -70,6 +70,7 @@ class User():
     last_training_command: str
     last_tt: datetime
     last_work_command: str
+    outdated_pet_pages: List[int]
     partner_channel_id: int
     partner_donor_tier: int
     partner_hunt_end_time: datetime
@@ -152,6 +153,7 @@ class User():
         self.last_training_command = new_settings.last_training_command
         self.last_tt = new_settings.last_tt
         self.last_work_command = new_settings.last_work_command
+        self.outdated_pet_pages = new_settings.outdated_pet_pages
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_hunt_end_time = new_settings.partner_hunt_end_time
@@ -289,6 +291,7 @@ class User():
             last_training_command: str
             last_tt: datetime UTC
             last_workt_command: str
+            outdated_pet_pages: List[int]
             partner_channel_id: int
             partner_donor_tier: int
             partner_hunt_end_time: datetime
@@ -339,6 +342,10 @@ async def _dict_to_user(record: dict) -> User:
     function_name = '_dict_to_user'
     none_date = datetime(1970, 1, 1, 0, 0, 0)
     try:
+        if record['outdated_pet_pages'] is not None:
+            outdated_pet_pages = record['outdated_pet_pages'].split(';')
+        else:
+            outdated_pet_pages = []
         user = User(
             alert_advent = UserAlert(enabled=bool(record['alert_advent_enabled']),
                                      message=record['alert_advent_message'],
@@ -443,6 +450,7 @@ async def _dict_to_user(record: dict) -> User:
             last_training_command = record['last_training_command'],
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
+            outdated_pet_pages = outdated_pet_pages,
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
             partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
@@ -724,6 +732,7 @@ async def _update_user(user: User, **kwargs) -> None:
         last_training_command: str
         last_tt: datetime UTC (iso format with separator ' ')
         last_work_command: str
+        outdated_pet_pages: List[int]
         partner_channel_id: int
         partner_donor_tier: int
         partner_hunt_end_time: datetime
@@ -761,6 +770,8 @@ async def _update_user(user: User, **kwargs) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
+    if 'outdated_pet_pages' in kwargs:
+        kwargs['outdated_pet_pages'] = ';'.join(kwargs['outdated_pet_pages'])
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'

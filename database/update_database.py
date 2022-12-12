@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 1
+NAVI_DB_VERSION = 2
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -234,8 +234,7 @@ if __name__ == '__main__':
                     (activity, cooldown_time, donor_affected)
                 )
 
-    # Update database with new stuff added in later versions.
-    if db_version < NAVI_DB_VERSION:
+    if db_version < 1:
         sqls = [
             'ALTER TABLE guilds ADD auto_flex_enabled BOOLEAN NOT NULL DEFAULT (0)',
             "ALTER TABLE tracking_log ADD type TEXT NOT NULL DEFAULT ('single')",
@@ -248,7 +247,42 @@ if __name__ == '__main__':
                     continue
                 else:
                     raise
-        cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
+
+    if db_version < 2:
+        cur.execute('PRAGMA table_info(pets)')
+        columns = cur.fetchall()
+        if not columns:
+            sql = (
+                "CREATE TABLE pets "
+                "(user_id INTEGER UNIQUE PRIMARY KEY NOT NULL, "
+                "last_update DATETIME DEFAULT ('1970-01-01 00:00:00') NOT NULL, "
+                "pet_id INTEGER NOT NULL, "
+                "skill_clever INTEGER NOT NULL DEFAULT (0), "
+                "skill_digger INTEGER NOT NULL DEFAULT (0), "
+                "skill_epic INTEGER NOT NULL DEFAULT (0), "
+                "skill_happy INTEGER NOT NULL DEFAULT (0), "
+                "skill_fast INTEGER NOT NULL DEFAULT (0), "
+                "skill_faster INTEGER NOT NULL DEFAULT (0), "
+                "skill_lucky INTEGER NOT NULL DEFAULT (0), "
+                "skill_tt INTEGER NOT NULL DEFAULT (0), "
+                "tier INTEGER NOT NULL)"
+            )
+            cur.execute(sql)
+            sql = "CREATE UNIQUE INDEX user_pet_id_unique ON pets (user_id, pet_id)"
+            cur.execute(sql)
+        sqls = [
+            'ALTER TABLE users ADD outdated_pet_pages TEXT',
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
     db_version = get_user_version()
     print(
         f'Updated database to version {db_version}.\n\n'
