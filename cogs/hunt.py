@@ -127,6 +127,8 @@ class HuntCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
+                    if user_settings.christmas_area_enabled:
+                        time_left = timedelta(seconds=time_left.total_seconds()*0.9)
                 else:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
