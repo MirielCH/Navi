@@ -58,8 +58,7 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
     """
     if regex is None and user is None and user_name is None:
         raise ArgumentError('At least one of these arguments has to be defined: regex, user, user_name.')
-    message_history = await channel.history(limit=limit).flatten()
-    for message in message_history:
+    async for message in channel.history(limit=limit):
         if message.content is not None:
             if message.author.bot: continue
             correct_mention = False

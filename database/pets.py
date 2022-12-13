@@ -17,6 +17,8 @@ class Pet():
     last_update: datetime
     pet_id: int
     pet_id_str: str
+    pet_tier: int
+    pet_type: str
     skill_clever: int
     skill_digger: int
     skill_epic: int
@@ -26,7 +28,6 @@ class Pet():
     skill_lucky: int
     skill_tt: int
     user_id: int
-    tier: int
 
     async def refresh(self) -> None:
         """Refreshes pets data from the database.
@@ -40,6 +41,8 @@ class Pet():
         self.last_update = new_pet.last_update
         self.pet_id = new_pet.pet_id
         self.pet_id_str = new_pet.pet_id_str
+        self.pet_tier = new_pet.pet_tier
+        self.pet_type = new_pet.pet_type
         self.skill_clever = new_pet.skill_clever
         self.skill_digger = new_pet.skill_digger
         self.skill_epic = new_pet.skill_epic
@@ -49,10 +52,9 @@ class Pet():
         self.skill_lucky = new_pet.skill_lucky
         self.skill_tt = new_pet.skill_tt
         self.user_id = new_pet.user_id
-        self.tier = new_pet.tier
 
-    def get_reminder_time(self, id: int) -> int:
-        """Returns the time a pet takes on an adventure based on its fast skill"""
+    def get_reminder_time(self) -> timedelta:
+        """Returns the time the pet spends on an adventure, based on its fast(er) skill"""
         reminder_time = timedelta(hours=4)
         fast_reduction = None
         if self.skill_fast > 0:
@@ -71,6 +73,8 @@ class Pet():
         kwargs (column=value):
             last_update: datetime
             pet_id: int
+            pet_tier: int
+            pet_type: str
             skill_clever: int
             skill_digger: int
             skill_epic: int
@@ -80,7 +84,6 @@ class Pet():
             skill_lucky: int
             skill_tt: int
             user_id: int
-            tier: int
         """
         await _update_pet(self, **kwargs)
         await self.refresh()
@@ -108,6 +111,8 @@ async def _dict_to_pets(record: dict) -> Pet:
             last_update = datetime.fromisoformat(record['last_update']),
             pet_id = record['pet_id'],
             pet_id_str = await functions.convert_pet_id_to_str(record['pet_id']),
+            pet_tier = record['pet_tier'],
+            pet_type = record['pet_type'],
             skill_clever = record['skill_clever'],
             skill_digger = record['skill_digger'],
             skill_epic = record['skill_epic'],
@@ -117,7 +122,6 @@ async def _dict_to_pets(record: dict) -> Pet:
             skill_lucky = record['skill_lucky'],
             skill_tt = record['skill_tt'],
             user_id = record['user_id'],
-            tier = record['tier'],
         )
     except Exception as error:
         await errors.log_error(
@@ -168,15 +172,18 @@ async def get_pet(user_id: int, pet_id: int) -> Pet:
     return pet
 
 
-async def get_pets(user_id: int, **kwargs) -> Pet:
+async def get_pets(user_id: int, page: Optional[int] = None, **kwargs) -> Pet:
     """Gets pets of a user. To return all pets of a user, omit all kwargs.
 
     Arguments
     ---------
     user_id: int
+    page: Optional[int] - limits pets looked up to one page
     kwargs (column=value):
         last_update: datetime
         pet_id: int
+        pet_tier: int
+        pet_type: int
         skill_clever: int
         skill_digger: int
         skill_epic: int
@@ -186,7 +193,6 @@ async def get_pets(user_id: int, **kwargs) -> Pet:
         skill_lucky: int
         skill_tt: int
         user_id: int
-        tier: int
 
     Returns
     -------
@@ -203,6 +209,8 @@ async def get_pets(user_id: int, **kwargs) -> Pet:
     function_name = 'get_pets'
     kwargs['user_id'] = user_id
     sql = f'SELECT * FROM {table} WHERE user_id = :user_id'
+    if page is not None:
+        sql = f'{sql} AND pet_id > {(page-1)*6} and pet_id <= {page*6}'
     for kwarg in kwargs:
         sql = f'{sql} AND {kwarg} = :{kwarg}'
     try:
@@ -236,6 +244,8 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
     kwargs (column=value):
         last_update: datetime
         pet_id: int
+        pet_tier: int
+        pet_type: int
         skill_clever: int
         skill_digger: int
         skill_epic: int
@@ -245,7 +255,6 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
         skill_lucky: int
         skill_tt: int
         user_id: int
-        tier: int
 
     Raises
     ------
@@ -290,7 +299,7 @@ async def insert_pet(user_id: int, pet_id: int, tier: int, skill_clever: Optiona
 
     Returns
     -------
-    Pets object with the existing or newly created record for the user.
+    Pet object with the existing or newly created record for the user.
 
     Raises
     ------
@@ -307,8 +316,9 @@ async def insert_pet(user_id: int, pet_id: int, tier: int, skill_clever: Optiona
     if pets_data is None:
         current_time = datetime.utcnow().replace(microsecond=0)
         sql = (
-            f'INSERT INTO {table} (user_id, last_update, pet_id, skill_clever, skill_digger, skill_epic, skill_fast, '
-            f'skill_faster, skill_happy, skill_lucky, skill_tt, tier) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+            f'INSERT INTO {table} (user_id, last_update, pet_id, pet_tier, pet_type, skill_clever, skill_digger, '
+            f'skill_epic, skill_fast, skill_faster, skill_happy, skill_lucky, skill_tt) '
+            f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         try:
             cur.execute(

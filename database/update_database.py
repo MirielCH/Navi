@@ -257,6 +257,8 @@ if __name__ == '__main__':
                 "(user_id INTEGER UNIQUE PRIMARY KEY NOT NULL, "
                 "last_update DATETIME DEFAULT ('1970-01-01 00:00:00') NOT NULL, "
                 "pet_id INTEGER NOT NULL, "
+                "pet_tier INTEGER NOT NULL, "
+                "pet_type TEXT NOT NULL, "
                 "skill_clever INTEGER NOT NULL DEFAULT (0), "
                 "skill_digger INTEGER NOT NULL DEFAULT (0), "
                 "skill_epic INTEGER NOT NULL DEFAULT (0), "
@@ -264,8 +266,7 @@ if __name__ == '__main__':
                 "skill_fast INTEGER NOT NULL DEFAULT (0), "
                 "skill_faster INTEGER NOT NULL DEFAULT (0), "
                 "skill_lucky INTEGER NOT NULL DEFAULT (0), "
-                "skill_tt INTEGER NOT NULL DEFAULT (0), "
-                "tier INTEGER NOT NULL)"
+                "skill_tt INTEGER NOT NULL DEFAULT (0))"
             )
             cur.execute(sql)
             sql = "CREATE UNIQUE INDEX user_pet_id_unique ON pets (user_id, pet_id)"
