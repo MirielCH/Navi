@@ -453,8 +453,6 @@ class ChristmasCog(commands.Cog):
                     if reminder.record_exists:
                         await functions.add_warning_reaction(message)
                         await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
-                if user_settings.auto_ready_enabled:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 

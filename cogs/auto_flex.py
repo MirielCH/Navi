@@ -702,7 +702,7 @@ class AutoFlexCog(commands.Cog):
                     user_command_message = (
                         await functions.get_message_from_channel_history(
                             message.channel, r'(?:\bsummon\b|\bfight\b|\bsleep\b)',
-                            user_name=user_name
+                            user_name=user_name, no_prefix=True
                         )
                     )
                     if user_command_message is None:

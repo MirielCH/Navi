@@ -31,8 +31,10 @@ async def get_interaction_user(message: discord.Message) -> discord.User:
     return interaction.user if interaction is not None else None
 
 
-async def get_message_from_channel_history(channel: discord.channel, regex: Union[str, re.Pattern] = None, limit: int  = 50,
-                                           user: discord.User = None, user_name: str = None) -> discord.Message:
+async def get_message_from_channel_history(channel: discord.channel, regex: Union[str, re.Pattern] = None,
+                                           limit: int  = 50,
+                                           user: Optional[discord.User] = None, user_name: Optional[str] = None,
+                                           no_prefix: Optional[bool] = False) -> discord.Message:
     """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns
     both the message and the matched string. If user is defined, only messages from that user are returned.
 
@@ -45,6 +47,7 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
     user: User object the message author has to match.
     user_name: User name the message author has to match. If user is also defined, this is ignored.
     If both user and user_name are None, this function returns the first message that matches the regex is not from a bot.
+    no_prefix: Set to True if the message you want to pick up does not include the rpg prefix or the bot mention
 
     Returns
     -------
@@ -62,14 +65,17 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
         if message.content is not None:
             if message.author.bot: continue
             correct_mention = False
-            if not message.content.lower().startswith('rpg ') and not message.content.lower().startswith('testy '):
+            if (not no_prefix and not message.content.lower().startswith('rpg ')
+                and not message.content.lower().startswith('testy ')):
                 if not message.mentions: continue
                 for mentioned_user in message.mentions:
                     if mentioned_user.id == settings.EPIC_RPG_ID:
                         correct_mention = True
                         break
                 if not correct_mention: continue
-            if not message.content.lower().startswith('rpg ') and not correct_mention: continue
+            if (not no_prefix and not message.content.lower().startswith('rpg ')
+                and not message.content.lower().startswith('testy ') and not correct_mention):
+                    continue
             if user is not None and message.author != user: continue
             if user_name is not None and await encode_text(user_name) != await encode_text(message.author.name): continue
             if regex is None:
