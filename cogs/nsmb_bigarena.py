@@ -197,8 +197,6 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, event, time_left,
                                                         message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 if reminder.record_exists and not already_registered:
                     if event == 'minintboss' and user_settings.alert_dungeon_miniboss.enabled:
@@ -219,6 +217,8 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                             await reminders.insert_user_reminder(user.id, 'arena', time_left,
                                                                 message.channel.id, reminder_message)
                         )
+                if user_settings.auto_ready_enabled:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
 # Initialization

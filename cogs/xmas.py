@@ -215,7 +215,7 @@ class ChristmasCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings_stuck = [
                     'now stuck on the chimney', #English
-                    'now stuck on the chimney', #Spanish, MISSING
+                    'atascó en la chimenea', #Spanish
                     'now stuck on the chimney', #Portuguese, MISSING
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_stuck):
@@ -228,8 +228,8 @@ class ChristmasCog(commands.Cog):
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
-                'has teleported to the **christmas area**', #Spanish, not translated in the game (??)
-                'has teleported to the **christmas area**', #Portuguese, MISSING
+                'se ha teletransportado al **área de navidad**', #Spanish
+                'se teletransportou para a **zona de natal**', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -411,8 +411,8 @@ class ChristmasCog(commands.Cog):
             # Cookies and milk
             search_strings = [
                 '`cookies and milk` successfully crafted!', #English
-                '`cookies and milk` successfully crafted!', #Spanish, not translated in the game
-                '`cookies and milk` successfully crafted!', #Portuguese, not translated in the game
+                '`cookies and milk` crafteado con éxito!', #Spanish
+                '`cookies and milk` craftado com sucesso!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -432,7 +432,9 @@ class ChristmasCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 search_patterns = [
-                    f'reset: (.+?)$', #English
+                    r'reset: (.+?)$', #English
+                    r'cooldown\(s\): (.+?)$', #Spanish
+                    r'resetados: (.+?)$', #Portuguese
                 ]
                 activites_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not activites_match:

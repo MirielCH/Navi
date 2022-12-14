@@ -11,7 +11,7 @@ from typing import Union
 import discord
 from discord.ext import commands
 
-from database import users
+from database import guilds, users
 from database import settings as settings_db
 from resources import emojis, functions, settings, strings
 
@@ -51,16 +51,21 @@ async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> No
 # --- Embeds ---
 async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> discord.Embed:
     """Main menu embed"""
+    prefix = await guilds.get_prefix(ctx)
     reminder_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "list")} : List active reminders\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")} : List commands off cooldown\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "list")} : Your active reminders\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}list`, `{prefix}cd`_\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")} : Your ready commands\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}ready`, `{prefix}rd`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "custom-reminder")} : Add a custom reminder\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}reminder`, `{prefix}rm`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings messages")} : Manage reminder messages\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings ready")} : Manage the ready list\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings reminders")} : Enable/disable reminders\n'
     )
     stats = (
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "stats")} : Shows your command stats\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}stats`, `{prefix}st`_\n'
     )
     user_settings = (
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "on")} : Turn on Navi\n'
@@ -75,8 +80,19 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
     )
     guild_settings = (
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "leaderboard guild")} : Check the weekly raid leaderboard\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}guild leaderboard`, `{prefix}guild lb`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings guild")} : Manage guild channel reminders\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS["guild list"]} : Add/update your guild\n'
+    )
+    misc_settings = (
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "enable")} & '
+        f'{await functions.get_navi_slash_command(bot, "disable")} : Speed enable settings\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}enable` & `{prefix}disable`_\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")} : List of some EPIC RPG slash commands\n'
+    )
+    server_settings = (
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings server")} : Server settings\n'
+        f'{emojis.DETAIL} _Requires `Manage server` permission._\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
@@ -88,7 +104,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         title = 'NAVI',
         description =   (
             f'_Hey! **{ctx.author.name}**! Hello!_\n'
-            f'_Here are some settings you can change._'
+            f'_May I interest you in some settings?_'
         )
     )
     embed.add_field(name='USER', value=user_settings, inline=False)
@@ -97,6 +113,8 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
     embed.add_field(name='HELPERS', value=helper_settings, inline=False)
     embed.add_field(name='GUILD CHANNEL REMINDERS', value=guild_settings, inline=False)
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
+    embed.add_field(name='MISC', value=misc_settings, inline=False)
+    embed.add_field(name='SERVER', value=server_settings, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
     return embed
 

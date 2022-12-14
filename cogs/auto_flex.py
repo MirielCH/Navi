@@ -879,6 +879,8 @@ class AutoFlexCog(commands.Cog):
             # Christmas, stuck in chimney
             search_strings = [
                 'stuck in the chimney...', #English
+                'atascó en la chimenea...', #Spanish
+                'atascó en la chimenea...', #Portuguese, MISSING
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
