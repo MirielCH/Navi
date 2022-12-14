@@ -58,7 +58,9 @@ COMMAND_NSMB_BIGARENA = re.compile(rf"(?:\bbig\b\s+\barena\b|\bminintboss\b)")
 COMMAND_OMEGA_HORSE_TOKEN = re.compile(rf"\buse\b\s+\bomega\b\s+\bhorse\b\s+\btoken\b")
 COMMAND_OPEN = re.compile(rf"\bopen\b")
 COMMAND_PETS_ADVENTURE_CLAIM = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b)\s+\bclaim\b")
-COMMAND_PETS_ADVENTURE_START = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b)\s+(?:\bfind\b|\blearn\b|\bdrill\b)")
+COMMAND_PETS_ADVENTURE_START = re.compile(
+    rf"\bpets?\s+(?:\badv\b|\badventure\b)\s+(?:\bfind\b|\blearn\b|\bdrill\b)"
+)
 COMMAND_PETS_ADVENTURE_CANCEL = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b)\s+\bcancel\b")
 COMMAND_PETS_FUSION = re.compile(rf"\bpets?\b\s+\bfusion\b")
 COMMAND_PETS_TOURNAMENT = re.compile(rf"\bpets?\b\s+\btournament\s+\b[a-z]+\b")

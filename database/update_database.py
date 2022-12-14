@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 2
+NAVI_DB_VERSION = 2 # Don't forget to update this
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""

@@ -1,13 +1,22 @@
 # pets.py
 
+import asyncio
 from datetime import datetime, timedelta
 import re
 
 import discord
 from discord.ext import commands
 
-from database import errors, reminders, users
+from database import errors, pets, reminders, users
 from resources import emojis, exceptions, functions, logs, regex, settings, strings
+
+
+MSG_PETS_UNCLEAR = (
+    'Uh oh, I either don\'t know your pets or my list is outdated.\n'
+    'Please use {command_pets_list} `sort: status` or `rpg pets status` to create reminders.\n\n'
+    'To prevent this, please flip through all your pet pages to register your '
+    'pets and then use only `rpg` commands when sending and fusing pets.'
+)
 
 
 class PetsCog(commands.Cog):
@@ -44,7 +53,9 @@ class PetsCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
-                if user is None:
+                returned_pet_ids = []
+                slash_command = True if user is not None else False
+                if not slash_command:
                     user_command_message = (
                         await functions.get_message_from_channel_history(
                             message.channel, regex.COMMAND_PETS_ADVENTURE_START
@@ -60,33 +71,65 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                if not user_settings.pet_tip_read:
+                if slash_command and not user_settings.pet_tip_read:
                     command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     pet_message = (
-                        f"**{user.name}**, please use {command_pets_list} "
-                        f'or `rpg pets` to create pet reminders.'
+                        f"**{user.name}**, please use {command_pets_list} `sort: status` "
+                        f'or `rpg pets status` to create pet reminders when using slash commands.\n\n'
+                        f'If you don\'t want to do this, please flip through all pet pages to register your '
+                        f'pets and then use only `rpg` commands for sending and fusing pets.'
                     )
-                    pet_message = (
-                        f'{pet_message}\n\n'
-                        f'Tip: This is done fastest by sorting pets by their status:\n'
-                        f"➜ {command_pets_list} `sort: status` "
-                        f'(click through all pages with active pets)\n'
-                    ) # Message split up like this because I'm unsure if I want to always send the first part
                     await user_settings.update(pet_tip_read=True)
                     await message.reply(pet_message)
+
                 search_strings = [
                     'the following pets are back instantly', #English
                     'las siguientes mascotas están de vuelta instantaneamente', #Spanish
                     'os seguintes pets voltaram instantaneamente', #Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings):
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
+                    if user_settings.reactions_enabled:
+                        asyncio.ensure_future(message.add_reaction(emojis.SKILL_TIME_TRAVELER))
+                        returned_pet_ids_match = re.search(r'instantly: (.+?)$')
+                        if not returned_pet_ids_match:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find pet ids if returned pets in pet adv message.', message)
+                            return
+                        returned_pet_ids = returned_pet_ids_match.group(1).replace('`', '').split(', ')
                     await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
                 if 'voidog' in message.content.lower():
                     await message.reply(f"➜ {strings.SLASH_COMMANDS['pets claim']}")
                     if user_settings.reactions_enabled:
-                        await message.add_reaction(emojis.SKILL_TIME_TRAVELER)
-                        await message.add_reaction(emojis.PET_VOIDOG)
+                        asyncio.ensure_future(message.add_reaction(emojis.SKILL_TIME_TRAVELER))
+                        asyncio.ensure_future(message.add_reaction(emojis.PET_VOIDOG))
+
+                if not slash_command:
+                    sent_pet_ids_match = re.search(
+                        r'\bpets?\s+(?:\badv\b|\badventure\b)\s+(?:\bfind\b|\blearn\b|\bdrill\b)\s+(.+?)$',
+                        user_command_message.content.lower()
+                    )
+                    if not sent_pet_ids_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find sent pet ids in the pet adv user command message.', message)
+                        return
+                    sent_pet_ids = re.split(r'\s+', sent_pet_ids_match.group(1))
+                    for pet_id in returned_pet_ids:
+                        if pet_id in sent_pet_ids: sent_pet_ids.remove(pet_id)
+                    if 'epic' in sent_pet_ids:
+                        if user_settings.outdated_pet_pages is not None:
+                            await message.reply(MSG_PETS_UNCLEAR.format(command_pets_list=command_pets_list))
+                            return
+                        user_pets = await pets.get_pets(user.id, skills=['epic',])
+                        for pet in user_pets:
+                            if pet.pet_id_str not in returned_pet_ids:
+                                reminder: reminders.Reminder = (
+                                    await reminders.insert_user_reminder(user.id, f'pets-{pet.pet_id_str}',
+                                                                         pet.get_reminder_time(), message.channel.id,
+                                                                         reminder_message)
+                                )
+                        # I was here
+
+
 
             search_strings = [
                 'pet adventure(s) cancelled', #English

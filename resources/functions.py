@@ -69,7 +69,9 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
                         correct_mention = True
                         break
                 if not correct_mention: continue
-            if not message.content.lower().startswith('rpg ') and not correct_mention: continue
+            if (not message.content.lower().startswith('rpg ') and not message.content.lower().startswith('testy ')
+                and not correct_mention):
+                continue
             if user is not None and message.author != user: continue
             if user_name is not None and await encode_text(user_name) != await encode_text(message.author.name): continue
             if regex is None:

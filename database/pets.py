@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
-from typing import Optional
+from typing import List, Optional
 
 from database import errors
 from resources import exceptions, functions, settings, strings
@@ -26,7 +26,7 @@ class Pet():
     skill_faster: int
     skill_happy: int
     skill_lucky: int
-    skill_tt: int
+    skill_traveler: int
     user_id: int
 
     async def refresh(self) -> None:
@@ -50,7 +50,7 @@ class Pet():
         self.skill_faster = new_pet.skill_faster
         self.skill_happy = new_pet.skill_happy
         self.skill_lucky = new_pet.skill_lucky
-        self.skill_tt = new_pet.skill_tt
+        self.skill_traveler = new_pet.skill_traveler
         self.user_id = new_pet.user_id
 
     def get_reminder_time(self) -> timedelta:
@@ -82,7 +82,7 @@ class Pet():
             skill_faster: int
             skill_happy: int
             skill_lucky: int
-            skill_tt: int
+            skill_traveler: int
             user_id: int
         """
         await _update_pet(self, **kwargs)
@@ -120,7 +120,7 @@ async def _dict_to_pets(record: dict) -> Pet:
             skill_faster = record['skill_faster'],
             skill_happy = record['skill_happy'],
             skill_lucky = record['skill_lucky'],
-            skill_tt = record['skill_tt'],
+            skill_traveler = record['skill_traveler'],
             user_id = record['user_id'],
         )
     except Exception as error:
@@ -172,27 +172,24 @@ async def get_pet(user_id: int, pet_id: int) -> Pet:
     return pet
 
 
-async def get_pets(user_id: int, page: Optional[int] = None, **kwargs) -> Pet:
+async def get_pets(user_id: int, page: Optional[int] = None, skills: Optional[List[str]] = None) -> Pet:
     """Gets pets of a user. To return all pets of a user, omit all kwargs.
 
     Arguments
     ---------
     user_id: int
     page: Optional[int] - limits pets looked up to one page
-    kwargs (column=value):
-        last_update: datetime
-        pet_id: int
-        pet_tier: int
-        pet_type: int
-        skill_clever: int
-        skill_digger: int
-        skill_epic: int
-        skill_fast: int
-        skill_faster: int
-        skill_happy: int
-        skill_lucky: int
-        skill_tt: int
-        user_id: int
+    skills: Optional[List[str]] - only returns pets that have these skills. This is an AND operation, so it will only
+    return pets that have ALL of the defined skills.
+    Possible skills:
+        clever
+        digger
+        epic
+        fast
+        faster
+        happy
+        lucky
+        traveler
 
     Returns
     -------
@@ -207,15 +204,14 @@ async def get_pets(user_id: int, page: Optional[int] = None, **kwargs) -> Pet:
     """
     table = 'pets'
     function_name = 'get_pets'
-    kwargs['user_id'] = user_id
-    sql = f'SELECT * FROM {table} WHERE user_id = :user_id'
+    sql = f'SELECT * FROM {table} WHERE user_id = {user_id}'
     if page is not None:
-        sql = f'{sql} AND pet_id > {(page-1)*6} and pet_id <= {page*6}'
-    for kwarg in kwargs:
-        sql = f'{sql} AND {kwarg} = :{kwarg}'
+        sql = f'{sql} AND pet_id > {(page - 1) * 6} and pet_id <= {page * 6}'
+    for skill in skills:
+        sql = f'{sql} AND skill_{skill} > 0'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, kwargs)
+        cur.execute(sql, (user_id,))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -224,7 +220,10 @@ async def get_pets(user_id: int, page: Optional[int] = None, **kwargs) -> Pet:
         raise
     if not records:
         raise exceptions.NoDataFoundError(
-            f'No pets found in database with the following arguments: {kwargs}.'
+            f'No pets found in database with the following arguments:\n'
+            f'User ID: {user_id}\n'
+            f'Page: {page}\n'
+            f'Skills: {skills}'
         )
     pets = []
     for record in records:
@@ -253,7 +252,7 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
         skill_faster: int
         skill_happy: int
         skill_lucky: int
-        skill_tt: int
+        skill_traveler: int
         user_id: int
 
     Raises
@@ -287,9 +286,9 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
         raise
 
 
-async def insert_pet(user_id: int, pet_id: int, tier: int, skill_clever: Optional[int] = 0, skill_digger: Optional[int] = 0,
+async def insert_pet(user_id: int, pet_id: int, pet_tier: int, skill_clever: Optional[int] = 0, skill_digger: Optional[int] = 0,
                      skill_epic: Optional[int] = 0, skill_fast: Optional[int] = 0, skill_faster: Optional[int] = 0,
-                     skill_happy: Optional[int] = 0, skill_lucky: Optional[int] = 0, skill_tt: Optional[int] = 0) -> Pet:
+                     skill_happy: Optional[int] = 0, skill_lucky: Optional[int] = 0, skill_traveler: Optional[int] = 0) -> Pet:
     """Inserts a pet record.
     This function first checks if a pet record exists. If yes, no new record is inserted.
 
@@ -317,15 +316,15 @@ async def insert_pet(user_id: int, pet_id: int, tier: int, skill_clever: Optiona
         current_time = datetime.utcnow().replace(microsecond=0)
         sql = (
             f'INSERT INTO {table} (user_id, last_update, pet_id, pet_tier, pet_type, skill_clever, skill_digger, '
-            f'skill_epic, skill_fast, skill_faster, skill_happy, skill_lucky, skill_tt) '
+            f'skill_epic, skill_fast, skill_faster, skill_happy, skill_lucky, skill_traveler) '
             f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
         )
         try:
             cur.execute(
                 sql,
                 (
-                    user_id, current_time.isoformat(sep=' '), pet_id, skill_clever, skill_digger, skill_epic,
-                    skill_fast, skill_faster, skill_happy, skill_lucky, skill_tt, tier
+                    user_id, current_time.isoformat(sep=' '), pet_id, pet_tier, skill_clever, skill_digger, skill_epic,
+                    skill_fast, skill_faster, skill_happy, skill_lucky, skill_traveler
                 )
             )
         except sqlite3.Error as error:
