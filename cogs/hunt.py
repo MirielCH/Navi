@@ -127,6 +127,8 @@ class HuntCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
+                    if user_settings.christmas_area_enabled:
+                        time_left = timedelta(seconds=time_left.total_seconds()*0.9)
                 else:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
@@ -169,6 +171,7 @@ class HuntCog(commands.Cog):
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
                 hardmode = together = alone = event_mob = found_together = partner_alerts_enabled = False
+                partner_christmas_area = False
                 user = await functions.get_interaction_user(message)
                 slash_command = False if user is None else True
                 search_strings_hardmode = [
@@ -310,6 +313,24 @@ class HuntCog(commands.Cog):
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 time_elapsed = current_time - bot_answer_time
+                if found_together:
+                    monsters_christmas = [
+                        '**Elf**',
+                        '**Christmas Reindeer**',
+                        '**Snowman**',
+                        'Krampus',
+                        '**Krampus**',
+                        '**Yeti**',
+                        '**Hyper Giant Ice Block**',
+                    ]
+                    partner_start_pos = message_content.find(f'**{partner_name}**:')
+                    if partner_start_pos == -1:
+                        partner_start_pos = message_content.find(f'while **{partner_name}**')
+                    message_content_partner = message_content[partner_start_pos:]
+                    for monster in monsters_christmas:
+                        if monster.lower() in message_content_partner.lower():
+                            partner_christmas_area = True
+                            break
                 if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier):
                     donor_tier_partner_hunt = user_settings.partner_donor_tier
                     if not user_settings.hunt_rotation_enabled:
@@ -330,27 +351,16 @@ class HuntCog(commands.Cog):
                                                     - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
-                monsters_christmas = [
-                    '**Elf**',
-                    '**Christmas Reindeer**',
-                    '**Snowman**',
-                    'Krampus',
-                    '**Krampus**',
-                    '**Yeti**',
-                    '**Hyper Giant Ice Block**',
-                ]
-                if user_settings.christmas_area_enabled:
-                    if not found_together:
-                        time_left_seconds *= 0.9
-                    else:
-                        partner_start_pos = message_content.find(f'**{partner_name}**:')
-                        if partner_start_pos == -1:
-                            partner_start_pos = message_content.find(f'while **{partner_name}**')
-                        message_content_partner = message_content[partner_start_pos:]
-                        for monster in monsters_christmas:
-                            if monster.lower() in message_content_partner.lower():
-                                time_left_seconds *= 0.9
-                                break
+                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
+                    and user_settings.partner_donor_tier < 3 and partner_christmas_area):
+                    time_left_seconds *= 0.9
+                elif user_settings.christmas_area_enabled and not found_together:
+                    time_left_seconds *= 0.9
+                elif (user_settings.christmas_area_enabled and not partner_christmas_area
+                      and user_settings.hunt_rotation_enabled and found_together):
+                    time_left_seconds *= 0.9
+                elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
+                    time_left_seconds *= 0.9
                 time_left = timedelta(seconds=time_left_seconds)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
                 if time_left < timedelta(0): return
@@ -364,7 +374,7 @@ class HuntCog(commands.Cog):
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
-                if found_together:
+                if found_together and partner is not None:
                     await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
                     if partner_alerts_enabled:
                         partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)

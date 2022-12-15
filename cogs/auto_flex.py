@@ -702,7 +702,7 @@ class AutoFlexCog(commands.Cog):
                     user_command_message = (
                         await functions.get_message_from_channel_history(
                             message.channel, r'(?:\bsummon\b|\bfight\b|\bsleep\b)',
-                            user_name=user_name
+                            user_name=user_name, no_prefix=True
                         )
                     )
                     if user_command_message is None:
@@ -879,6 +879,8 @@ class AutoFlexCog(commands.Cog):
             # Christmas, stuck in chimney
             search_strings = [
                 'stuck in the chimney...', #English
+                'atascó en la chimenea...', #Spanish
+                'atascó en la chimenea...', #Portuguese, MISSING
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)

@@ -18,6 +18,22 @@ CHRISTMAS_AREA_DISABLED = (
     'Christmas area mode disabled. Your reminders are back to normal.\n'
 )
 
+ACTIVITIES_AFFECTED_BY_A0 = (
+    'adventure',
+    'arena',
+    'clan',
+    'chimney',
+    'epic',
+    'farm',
+    'horse',
+    'hunt',
+    'lootbox',
+    'dungeon-miniboss',
+    'quest',
+    'training',
+    'work',
+)
+
 class ChristmasCog(commands.Cog):
     """Cog that contains the horse festival detection commands"""
     def __init__(self, bot):
@@ -199,7 +215,7 @@ class ChristmasCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings_stuck = [
                     'now stuck on the chimney', #English
-                    'now stuck on the chimney', #Spanish, MISSING
+                    'atascó en la chimenea', #Spanish
                     'now stuck on the chimney', #Portuguese, MISSING
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_stuck):
@@ -212,8 +228,8 @@ class ChristmasCog(commands.Cog):
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
-                'has teleported to the **christmas area**', #Spanish, not translated in the game (??)
-                'has teleported to the **christmas area**', #Portuguese, MISSING
+                'se ha teletransportado al **área de navidad**', #Spanish
+                'se teletransportou para a **zona de natal**', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -244,7 +260,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if not user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
-                    await reminders.reduce_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN, user_settings)
+                    await reminders.reduce_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -284,7 +300,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
-                    await reminders.increase_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN, user_settings)
+                    await reminders.increase_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -381,13 +397,13 @@ class ChristmasCog(commands.Cog):
                         break
                 if not user_settings.christmas_area_enabled and christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
-                    await reminders.reduce_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN, user_settings)
+                    await reminders.reduce_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
                 if user_settings.christmas_area_enabled and not christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
-                    await reminders.increase_reminder_time_percentage(user.id, 10, strings.ACTIVITIES_WITH_COOLDOWN, user_settings)
+                    await reminders.increase_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -395,8 +411,8 @@ class ChristmasCog(commands.Cog):
             # Cookies and milk
             search_strings = [
                 '`cookies and milk` successfully crafted!', #English
-                '`cookies and milk` successfully crafted!', #Spanish, not translated in the game
-                '`cookies and milk` successfully crafted!', #Portuguese, not translated in the game
+                '`cookies and milk` crafteado con éxito!', #Spanish
+                '`cookies and milk` craftado com sucesso!', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -416,7 +432,9 @@ class ChristmasCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 search_patterns = [
-                    f'reset: (.+?)$', #English
+                    r'reset: (.+?)$', #English
+                    r'cooldown\(s\): (.+?)$', #Spanish
+                    r'resetados: (.+?)$', #Portuguese
                 ]
                 activites_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not activites_match:
@@ -435,8 +453,6 @@ class ChristmasCog(commands.Cog):
                     if reminder.record_exists:
                         await functions.add_warning_reaction(message)
                         await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
-                if user_settings.auto_ready_enabled:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 

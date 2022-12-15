@@ -65,6 +65,7 @@ SETTINGS_HELPER_COLUMNS = {
 }
 
 SETTINGS_USER = [
+    'auto-ready',
     'dnd-mode',
     'hardmode-mode',
     'hunt-rotation',
@@ -90,6 +91,10 @@ SETTINGS_USER_ALIASES = {
     'mentions': 'slash-mentions',
     'slashmention': 'slash-mentions',
     'slashmentions': 'slash-mentions',
+    'slash-commands': 'slash-mentions',
+    'slash-command': 'slash-mentions',
+    'slashcommand': 'slash-mentions',
+    'slashcommands': 'slash-mentions',
     'track': 'tracking',
     'commandtrack': 'tracking',
     'commandtracking': 'tracking',
@@ -99,9 +104,13 @@ SETTINGS_USER_ALIASES = {
     'cmd-tracking': 'tracking',
     'cmdtrack': 'tracking',
     'cmdtracking': 'tracking',
+    'rd': 'auto-ready',
+    'ready': 'auto-ready',
+    'autoready': 'auto-ready',
 }
 
 SETTINGS_USER_COLUMNS = {
+    'auto-ready': 'auto_ready',
     'dnd-mode': 'dnd_mode',
     'hardmode-mode': 'hardmode_mode',
     'hunt-rotation': 'hunt_rotation',
@@ -470,10 +479,10 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
     for activity in strings.ACTIVITIES_ALL:
         possible_reminders = f'{possible_reminders}\n{emojis.BP} `{activity}`'
     possible_helpers = 'Helpers:'
-    for helper in SETTINGS_HELPERS:
+    for helper in sorted(SETTINGS_HELPERS):
         possible_helpers = f'{possible_helpers}\n{emojis.BP} `{helper}`'
     possible_user = 'User settings:'
-    for setting in SETTINGS_USER:
+    for setting in sorted(SETTINGS_USER):
         possible_user = f'{possible_user}\n{emojis.BP} `{setting}`'
 
     if not settings:

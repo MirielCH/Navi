@@ -18,7 +18,7 @@ COMMANDS_SETTINGS = {
     'Ready list': settings_cmd.command_settings_ready,
     'Reminders': settings_cmd.command_settings_reminders,
     'Reminder messages': settings_cmd.command_settings_messages,
-    'User settings': settings_cmd.command_settings_user,
+    'User': settings_cmd.command_settings_user,
 }
 
 class AutoReadyView(discord.ui.View):

@@ -383,7 +383,11 @@ class DevOldCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        await ctx.message.add_reaction(emojis.PANDA_SURPRISE)
+        from resources import functions
+        user_command_message = await functions.get_message_from_channel_history(
+            ctx.channel, r'(?:\bsummon\b|\bfight\b|\bsleep\b)', user_name='Miriel', no_prefix=True
+        )
+        pass
 
     # Pet ID conversion test
     @dev.command()
