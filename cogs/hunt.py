@@ -352,11 +352,14 @@ class HuntCog(commands.Cog):
                 else:
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
                 if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                    and partner_christmas_area):
+                    and user_settings.partner_donor_tier < 3 and partner_christmas_area):
                     time_left_seconds *= 0.9
-                if user_settings.christmas_area_enabled and not found_together:
+                elif user_settings.christmas_area_enabled and not found_together:
                     time_left_seconds *= 0.9
-                if user_settings.christmas_area_enabled and partner_christmas_area and found_together:
+                elif (user_settings.christmas_area_enabled and not partner_christmas_area
+                      and user_settings.hunt_rotation_enabled and found_together):
+                    time_left_seconds *= 0.9
+                elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
                     time_left_seconds *= 0.9
                 time_left = timedelta(seconds=time_left_seconds)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
