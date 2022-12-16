@@ -1,11 +1,13 @@
 # settings_clan.py
 """Contains clan settings commands"""
 
+from datetime import datetime, timedelta
 import re
 from typing import List, Optional, Union
 
 import discord
 from discord.ext import commands
+from humanfriendly import format_timespan
 
 from content import settings as settings_cmd
 from database import clans, guilds, reminders, users
@@ -471,9 +473,10 @@ async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContex
 
 
 async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context],
-                                 action: str, settings: List[str]) -> None:
+                                 action: str, settings_list: List[str]) -> None:
     """Enables/disables specific settings"""
     user_settings: users.User = await users.get_user(ctx.author.id)
+    bucket_full = False
     enabled = True if action == 'enable' else False
     possible_reminders = 'Reminders:'
     for activity in strings.ACTIVITIES_ALL:
@@ -485,7 +488,7 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
     for setting in sorted(SETTINGS_USER):
         possible_user = f'{possible_user}\n{emojis.BP} `{setting}`'
 
-    if not settings:
+    if not settings_list:
         await functions.reply_or_respond(
             ctx,
             f'This command can be used to quickly enable or disable certain settings.\n'
@@ -497,12 +500,12 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
         )
         return
 
-    for index, setting in enumerate(settings):
-        if setting in strings.ACTIVITIES_ALIASES: settings[index] = strings.ACTIVITIES_ALIASES[setting]
-        if setting in SETTINGS_HELPER_ALIASES: settings[index] = SETTINGS_HELPER_ALIASES[setting]
-        if setting in SETTINGS_USER_ALIASES: settings[index] = SETTINGS_USER_ALIASES[setting]
+    for index, setting in enumerate(settings_list):
+        if setting in strings.ACTIVITIES_ALIASES: settings_list[index] = strings.ACTIVITIES_ALIASES[setting]
+        if setting in SETTINGS_HELPER_ALIASES: settings_list[index] = SETTINGS_HELPER_ALIASES[setting]
+        if setting in SETTINGS_USER_ALIASES: settings_list[index] = SETTINGS_USER_ALIASES[setting]
 
-    if 'all' in settings:
+    if 'all' in settings_list:
         if not enabled:
             answer_delete = (
                 f'**{ctx.author.name}**, this will turn off all reminders which will also delete all of your active '
@@ -526,19 +529,19 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
                 else:
                     await interaction_message.edit(content='Aborted', view=None)
                 return
-        for setting in settings.copy():
+        for setting in settings_list.copy():
             if setting in strings.ACTIVITIES:
-                settings.remove(setting)
-        settings += strings.ACTIVITIES
-        settings.remove('all')
+                settings_list.remove(setting)
+        settings_list += strings.ACTIVITIES
+        settings_list.remove('all')
 
     updated_reminders = []
     updated_helpers = []
     updated_user = []
     ignored_settings = []
     answer_reminders = answer_helpers = answer_user = answer_ignored = ''
-    settings = list(dict.fromkeys(settings))
-    for setting in settings:
+    settings_list = list(dict.fromkeys(settings_list))
+    for setting in settings_list:
         if setting in strings.ACTIVITIES: updated_reminders.append(setting)
         elif setting in SETTINGS_HELPERS: updated_helpers.append(setting)
         elif setting in SETTINGS_USER: updated_user.append(setting)
@@ -565,34 +568,59 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
                     pass
 
     if updated_helpers:
-        answer_helpers = f'{action.capitalize()}d the following helpers:'
         for helper in updated_helpers:
             kwargs[f'{SETTINGS_HELPER_COLUMNS[helper]}_enabled'] = enabled
-            answer_helpers = f'{answer_helpers}\n{emojis.BP}`{helper}`'
+            answer_helpers = f'{answer_helpers}\n{emojis.BP}`{helper}`'.strip()
 
     if updated_user:
-        answer_user = f'{action.capitalize()}d the following user settings:'
-        for setting in updated_user:
+        for setting in updated_user.copy():
+            if setting == 'auto-ready' and enabled:
+                bucket_full = await functions.check_bucket_cooldown_reset(user_settings, ctx.guild.id)
+                if bucket_full:
+                    updated_user.remove(setting)
+                    continue
             kwargs[f'{SETTINGS_USER_COLUMNS[setting]}_enabled'] = enabled
-            answer_user = f'{answer_user}\n{emojis.BP}`{setting}`'
+            answer_user = f'{answer_user}\n{emojis.BP}`{setting}`'.strip()
 
     if updated_reminders or updated_helpers or updated_user:
         await user_settings.update(**kwargs)
 
     if ignored_settings:
-        answer_ignored = f'Couldn\'t find the following settings:'
         for setting in ignored_settings:
-            answer_ignored = f'{answer_ignored}\n{emojis.BP}`{setting}`'
+            answer_ignored = f'{answer_ignored}\n{emojis.BP}`{setting}`'.strip()
 
     answer = ''
     if answer_reminders != '':
         answer = answer_reminders
     if answer_helpers != '':
-        answer = f'{answer}\n\n{answer_helpers}'
+        answer = (
+            f'{answer}\n\n'
+            f'**{action.capitalize()}d the following helpers:**'
+            f'{answer_helpers}'
+        ).strip()
     if answer_user != '':
-        answer = f'{answer}\n\n{answer_user}'
+        answer = (
+            f'{answer}\n\n'
+            f'**{action.capitalize()}d the following user settings:**\n'
+            f'{answer_user}'
+        ).strip()
     if answer_ignored != '':
+        answer = (
+            f'{answer}\n\n'
+            f'**Couldn\'t find the following settings:**'
+            f'{answer_ignored}'
+        ).strip()
         answer = f'{answer}\n\n{answer_ignored}'
+
+    if bucket_full:
+        current_time = datetime.utcnow().replace(microsecond=0)
+        bucket_last_time, _ = users.bucket_cooldown_reset[user_settings.user_id]
+        command_ready_in = (bucket_last_time + timedelta(minutes=settings.BUCKET_CD_RESET_TIMESPAN)) - current_time
+        answer = (
+            f'{answer}\n\n'
+            f'**Settings on cooldown:**\n'
+            f'{emojis.BP}`auto-ready` (available in {format_timespan(command_ready_in)})'
+        )
 
     await functions.reply_or_respond(ctx, answer.strip())
 

@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands
 from discord.utils import MISSING
 
-from database import cooldowns, errors, reminders, users
+from database import cooldowns, errors, guilds, reminders, users
 from database import settings as settings_db
 from resources import emojis, exceptions, settings, strings
 
@@ -1032,3 +1032,55 @@ async def convert_pet_id_to_str(id: int) -> str:
             pet_id = f'{pet_id}{pet_id_range[remainder].upper()}'
     pet_id = f'{pet_id}{last_id_part}'
     return pet_id
+
+
+async def update_bucket_cooldown_reset(user_settings: users.User, message: discord.Message) -> None:
+    """Updates the cooldown reset bucket and disables auto-ready if necessary"""
+    current_time = datetime.utcnow().replace(microsecond=0)
+    bucket = users.bucket_cooldown_reset.get(user_settings.user_id, None)
+    if bucket is not None:
+        bucket_last_time, bucket_amount = bucket
+        bucket_amount += 1 if bucket_last_time > (current_time - timedelta(minutes=settings.BUCKET_CD_RESET_TIMESPAN)) else 1
+    else:
+        bucket_amount = 1
+    users.bucket_cooldown_reset[user_settings.user_id] = (current_time, bucket_amount)
+    if bucket_amount > settings.BUCKET_CD_RESET_AMOUNT:
+        await user_settings.update(auto_ready_enabled=False)
+        guild = await guilds.get_guild(message.guild.id)
+        embed = discord.Embed(title=f'Hey! Woah!')
+        embed.add_field(
+            name='Auto-ready is now disabled',
+            value=(
+                f'For rate limit reasons, I only allow a maximum of **{settings.BUCKET_CD_RESET_AMOUNT}** '
+                f'cooldown reset items within **{settings.BUCKET_CD_RESET_TIMESPAN}** minutes while having auto-ready active.'
+            ),
+            inline=False
+        )
+        embed.add_field(
+            name='Now what?',
+            value=(
+                f'You can turn auto-ready back on in {settings.BUCKET_CD_RESET_TIMESPAN} minutes.\n'
+                f'Note that this will happen again if you\'re not done, so finish using your cooldown resets first.'
+            ),
+            inline=False
+        )
+        embed.set_footer(text=f'Tip: You can enable auto-ready quickly by using "{guild.prefix}enable rd".')
+        await message.reply(embed=embed, mention_author=True)
+
+
+async def check_bucket_cooldown_reset(user_settings: users.User, guild_id: int) -> bool:
+    """Checks if the cooldown reset bucket is currently full
+
+    Returns
+    -------
+    True if the bucket is full
+    False if the user can keep spamming
+    """
+    bucket_cooldown_resets = users.bucket_cooldown_reset.get(user_settings.user_id, None)
+    if bucket_cooldown_resets is not None:
+        current_time = datetime.utcnow().replace(microsecond=0)
+        bucket_last_time, bucket_amount = bucket_cooldown_resets
+        if (bucket_amount > settings.BUCKET_CD_RESET_AMOUNT
+            and bucket_last_time > (current_time - timedelta(minutes=settings.BUCKET_CD_RESET_TIMESPAN))):
+            return True
+    return False

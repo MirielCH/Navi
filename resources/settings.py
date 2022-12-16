@@ -14,7 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
-# Load .env variables
+# Load .env variables. If missing or set wrong in your .env, check default.env for details.
 load_dotenv()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -72,6 +72,32 @@ else:
         EMBED_COLOR = int(EMBED_COLOR.strip('#'), base=16)
     except:
         print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
+        sys.exit()
+
+BUCKET_CD_RESET_AMOUNT = os.getenv('BUCKET_CD_RESET_AMOUNT')
+if BUCKET_CD_RESET_AMOUNT is None:
+    BUCKET_CD_RESET_AMOUNT = 10
+else:
+    try:
+        BUCKET_CD_RESET_AMOUNT = int(BUCKET_CD_RESET_AMOUNT)
+    except:
+        print(
+            f'Can\'t convert value "{BUCKET_CD_RESET_AMOUNT}" of variable BUCKET_CD_RESET_AMOUNT in the .env file '
+            f'to an integer.'
+        )
+        sys.exit()
+
+BUCKET_CD_RESET_TIMESPAN = os.getenv('BUCKET_CD_RESET_TIMESPAN')
+if BUCKET_CD_RESET_TIMESPAN is None:
+    BUCKET_CD_RESET_TIMESPAN = 5
+else:
+    try:
+        BUCKET_CD_RESET_TIMESPAN = int(BUCKET_CD_RESET_TIMESPAN)
+    except:
+        print(
+            f'Can\'t convert value "{BUCKET_CD_RESET_TIMESPAN}" of variable BUCKET_CD_RESET_TIMESPAN in the .env file '
+            f'to an integer.'
+        )
         sys.exit()
 
 

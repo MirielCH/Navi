@@ -10,6 +10,9 @@ from database import errors
 from resources import exceptions, settings, strings
 
 
+bucket_cooldown_reset = {}
+
+
 # Containers
 class UserAlert(NamedTuple):
     """Object that summarizes all user settings for a specific alert"""

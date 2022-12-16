@@ -2,13 +2,15 @@
 """Contains global interaction components"""
 
 import asyncio
+from datetime import datetime, timedelta
 import re
 from typing import Dict, List, Optional
 
 import discord
+from humanfriendly import format_timespan
 
-from database import reminders, users
-from resources import emojis, functions, modals, strings, views
+from database import guilds, reminders, users
+from resources import emojis, functions, modals, settings, strings, views
 
 
 class ToggleAutoReadyButton(discord.ui.Button):
@@ -26,6 +28,18 @@ class ToggleAutoReadyButton(discord.ui.Button):
         else:
             enabled = False
             response = 'Done. I will now stop showing your ready commands automatically.'
+        if enabled:
+            bucket_full = await functions.check_bucket_cooldown_reset(self.view.user_settings, self.view.ctx.guild.id)
+            if bucket_full:
+                current_time = datetime.utcnow().replace(microsecond=0)
+                bucket_last_time, _ = users.bucket_cooldown_reset[self.view.user_settings.user_id]
+                command_ready_in = (bucket_last_time + timedelta(minutes=settings.BUCKET_CD_RESET_TIMESPAN)) - current_time
+                await interaction.response.send_message(
+                    f'This setting is currently on cooldown and will be available again in '
+                    f'{format_timespan(command_ready_in)}.',
+                    ephemeral=True
+                )
+                return
         await self.view.user_settings.update(auto_ready_enabled=enabled)
         self.view.value = self.custom_id
         await self.view.user_settings.refresh()
@@ -281,7 +295,21 @@ class ManageReadySettingsSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
         if select_value == 'toggle_auto_ready':
-            await self.view.user_settings.update(auto_ready_enabled=not self.view.user_settings.auto_ready_enabled)
+            if not self.view.user_settings.auto_ready_enabled:
+                bucket_full = await functions.check_bucket_cooldown_reset(self.view.user_settings, self.view.ctx.guild.id)
+                if bucket_full:
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    bucket_last_time, _ = users.bucket_cooldown_reset[self.view.user_settings.user_id]
+                    command_ready_in = (
+                        (bucket_last_time + timedelta(minutes=settings.BUCKET_CD_RESET_TIMESPAN)) - current_time
+                    )
+                    await interaction.response.send_message(
+                        f'This setting is currently on cooldown and will be available again in '
+                        f'{format_timespan(command_ready_in)}.',
+                        ephemeral=True
+                    )
+                else:
+                    await self.view.user_settings.update(auto_ready_enabled=not self.view.user_settings.auto_ready_enabled)
         elif select_value == 'toggle_alert':
             await self.view.clan_settings.update(alert_visible=not self.view.clan_settings.alert_visible)
         elif select_value == 'toggle_message_style':
