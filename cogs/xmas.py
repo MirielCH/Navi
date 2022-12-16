@@ -265,11 +265,14 @@ class ChristmasCog(commands.Cog):
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
 
-            # Turn off christmas area mode, changing area
+            # Turn off christmas area mode when changing area or using a candy cane
             search_strings = [
-                'has moved to the area #', #English
-                'se movio al área #', #Spanish
-                'foi movido para a área #', #Portuguese
+                'has moved to the area #', #English, area change
+                'starts to fly and travels to the next area!', #English, candy cane
+                'se movio al área #', #Spanish, area change
+                'se movio al área #', #Spanish, candy cane, MISSING
+                'foi movido para a área #', #Portuguese, area change
+                'foi movido para a área #', #Portuguese, candy cane, MISSING
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -280,17 +283,19 @@ class ChristmasCog(commands.Cog):
                         user_name = user_name_match.group(1)
                     else:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user for the xmas area change message.', message)
+                        await errors.log_error('Couldn\'t find a user for the xmas area change / candy cane message.',
+                                               message)
                         return
                     user_command_message = (
                         await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_AREA_MOVE,
+                            message.channel, regex.COMMAND_AREA_MOVE_CANDY_CANE,
                             user_name=user_name
                         )
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the xmas area change message.', message)
+                        await errors.log_error('Couldn\'t find a command for the xmas area change / candy cane message.',
+                                               message)
                         return
                     if user is None: user = user_command_message.author
                 try:
