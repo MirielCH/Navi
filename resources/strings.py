@@ -1299,3 +1299,6 @@ FLEX_THUMBNAILS_XMAS_VOID = [
     'https://media.giphy.com/media/rguWB3fUxRu5wMIFWB/giphy.gif',
     'https://media.tenor.com/Vfo2miCXT9kAAAAd/holiday-holidays.gif',
 ]
+
+
+PET_SKILL_RANKS = ['f','e','d','c','b','a','s','ss','ss+']

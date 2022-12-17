@@ -345,8 +345,9 @@ async def _dict_to_user(record: dict) -> User:
     function_name = '_dict_to_user'
     none_date = datetime(1970, 1, 1, 0, 0, 0)
     try:
-        if record['outdated_pet_pages'] is not None:
+        if record['outdated_pet_pages'] != '0':
             outdated_pet_pages = record['outdated_pet_pages'].split(';')
+            outdated_pet_pages = [int(page) for page in outdated_pet_pages]
         else:
             outdated_pet_pages = []
         user = User(
@@ -774,7 +775,7 @@ async def _update_user(user: User, **kwargs) -> None:
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     if 'outdated_pet_pages' in kwargs:
-        kwargs['outdated_pet_pages'] = ';'.join(kwargs['outdated_pet_pages'])
+        kwargs['outdated_pet_pages'] = ';'.join(map(str, kwargs['outdated_pet_pages']))
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'

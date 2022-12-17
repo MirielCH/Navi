@@ -254,8 +254,7 @@ if __name__ == '__main__':
         if not columns:
             sql = (
                 "CREATE TABLE pets "
-                "(user_id INTEGER UNIQUE PRIMARY KEY NOT NULL, "
-                "last_update DATETIME DEFAULT ('1970-01-01 00:00:00') NOT NULL, "
+                "(user_id INTEGER NOT NULL, "
                 "pet_id INTEGER NOT NULL, "
                 "pet_tier INTEGER NOT NULL, "
                 "pet_type TEXT NOT NULL, "
@@ -266,14 +265,13 @@ if __name__ == '__main__':
                 "skill_fast INTEGER NOT NULL DEFAULT (0), "
                 "skill_faster INTEGER NOT NULL DEFAULT (0), "
                 "skill_lucky INTEGER NOT NULL DEFAULT (0), "
-                "skill_tt INTEGER NOT NULL DEFAULT (0))"
+                "skill_traveler INTEGER NOT NULL DEFAULT (0))"
             )
             cur.execute(sql)
             sql = "CREATE UNIQUE INDEX user_pet_id_unique ON pets (user_id, pet_id)"
             cur.execute(sql)
         sqls = [
-            'ALTER TABLE users ADD outdated_pet_pages TEXT',
-            'ALTER TABLE guilds ADD bucket_cooldown_reset_amount INTEGER NOT NULL DEFAULT (10)',
+            "ALTER TABLE users ADD outdated_pet_pages TEXT NOT NULL DEFAULT ('-1')",
         ]
         for sql in sqls:
             try:

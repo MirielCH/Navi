@@ -2,3 +2,4 @@ humanfriendly>=10.0
 psutil>=5.9.4
 py-cord~=2.3.2
 python-dotenv>=0.21.0
+roman>=3.3

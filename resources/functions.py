@@ -992,7 +992,7 @@ async def reply_or_respond(ctx: Union[discord.ApplicationContext, commands.Conte
         return await ctx.respond(answer, ephemeral=ephemeral)
 
 
-# --- Pet ID conversion ---
+# --- Pet management ---
 async def convert_pet_id_to_int(pet_id: str) -> int:
     """Coverts a string pet ID to an integer. IDs start at 1."""
     pet_id_processed = pet_id = pet_id.lower()
@@ -1034,6 +1034,51 @@ async def convert_pet_id_to_str(id: int) -> str:
     return pet_id
 
 
+async def convert_outdated_pet_pages_to_string(outdated_pet_pages: List[int]) -> str:
+    """Returns a string with all outdated pet pages in a compact format using ranges"""
+    pages = ''
+    if -1 in outdated_pet_pages:
+        pages = 'All'
+    else:
+        combined_pages = []
+        sequence = []
+        last_page = 0
+        for index, page in enumerate(outdated_pet_pages):
+            if last_page + 1 == page or index == 0:
+                sequence.append(page)
+                last_page = page
+            else:
+                if len(sequence) > 1:
+                    combined_pages.append(f'{sequence[0]}-{sequence[len(sequence) - 1]}')
+                else:
+                    combined_pages.append(sequence[0])
+                sequence = []
+                sequence.append(page)
+                last_page = page
+
+        if index == len(outdated_pet_pages) - 1:
+            if len(sequence) > 1:
+                combined_pages.append(f'{sequence[0]}-{sequence[len(sequence) - 1]}')
+            else:
+                combined_pages.append(sequence[0])
+        for page_range in combined_pages:
+            pages = f'{pages}, `{page_range}`'
+        pages = pages.strip(', ')
+    return pages
+
+
+async def send_outdated_pet_pages_message(user_settings: users.User, message: discord.Message) -> None:
+    """Send a warning that pets are outdated which lists all outdated pages"""
+    command_pets_list = await get_slash_command(user_settings, 'pets list')
+    pages = await convert_outdated_pet_pages_to_string(user_settings.outdated_pet_pages)
+    answer = (
+        f'{emojis.WARNING} My list of your pets is outdated.\n'
+        f'Please use {command_pets_list} or `rpg pets` and show me the following pages:\n'
+        f'{emojis.BP} {pages}'
+    )
+    await message.reply(answer)
+
+# --- Bucket handling ---
 async def update_bucket_cooldown_reset(user_settings: users.User, message: discord.Message) -> None:
     """Updates the cooldown reset bucket and disables auto-ready if necessary"""
     current_time = datetime.utcnow().replace(microsecond=0)

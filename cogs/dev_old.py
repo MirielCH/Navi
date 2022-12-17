@@ -383,11 +383,30 @@ class DevOldCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.author.id not in (619879176316649482, 764222910881464350): return
-        from resources import functions
-        user_command_message = await functions.get_message_from_channel_history(
-            ctx.channel, r'(?:\bsummon\b|\bfight\b|\bsleep\b)', user_name='Miriel', no_prefix=True
-        )
+        outdated_pet_pages = [1, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 17, 18]
+        combined_pages = []
+        sequence = []
+        last_page = 0
+        for index, page in enumerate(outdated_pet_pages):
+            if last_page + 1 == page or index == 0:
+                sequence.append(page)
+                last_page = page
+            else:
+                if len(sequence) > 1:
+                    combined_pages.append(f'{sequence[0]}-{sequence[len(sequence) - 1]}')
+                else:
+                    combined_pages.append(sequence[0])
+                sequence = []
+                sequence.append(page)
+                last_page = page
+
+        if index == len(outdated_pet_pages) - 1:
+            if len(sequence) > 1:
+                combined_pages.append(f'{sequence[0]}-{sequence[len(sequence) - 1]}')
+            else:
+                combined_pages.append(sequence[0])
         pass
+
 
     # Pet ID conversion test
     @dev.command()

@@ -2,7 +2,9 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from math import ceil
 import re
+import roman
 
 import discord
 from discord.ext import commands
@@ -11,12 +13,8 @@ from database import errors, pets, reminders, users
 from resources import emojis, exceptions, functions, logs, regex, settings, strings
 
 
-MSG_PETS_UNCLEAR = (
-    'Uh oh, I either don\'t know your pets or my list is outdated.\n'
-    'Please use {command_pets_list} `sort: status` or `rpg pets status` to create reminders.\n\n'
-    'To prevent this, please flip through all your pet pages to register your '
-    'pets and then use only `rpg` commands when sending and fusing pets.'
-)
+# User ID: (Message ID of epic pets list, message ID of corresponding Navi message showing pages)
+pets_list_update_messages_ids = {}
 
 
 class PetsCog(commands.Cog):
@@ -71,15 +69,19 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                if slash_command and not user_settings.pet_tip_read:
-                    command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
+                if slash_command:
                     pet_message = (
                         f"**{user.name}**, please use {command_pets_list} `sort: status` "
-                        f'or `rpg pets status` to create pet reminders when using slash commands.\n\n'
-                        f'If you don\'t want to do this, please flip through all pet pages to register your '
-                        f'pets and then use only `rpg` commands for sending and fusing pets.'
+                        f'or `rpg pets status` to create pet reminders when using slash commands.'
                     )
-                    await user_settings.update(pet_tip_read=True)
+                    if not user_settings.pet_tip_read:
+                        command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
+                        pet_message = (
+                            f"{pet_message}\n\n"
+                            f'If you don\'t want to do this, please flip through all pet pages to register your '
+                            f'pets and then use **only** `rpg` commands in the future for sending and fusing pets.'
+                        )
+                        await user_settings.update(pet_tip_read=True)
                     await message.reply(pet_message)
 
                 search_strings = [
@@ -104,6 +106,9 @@ class PetsCog(commands.Cog):
                         asyncio.ensure_future(message.add_reaction(emojis.PET_VOIDOG))
 
                 if not slash_command:
+                    if -1 in user_settings.outdated_pet_pages:
+                        await functions.send_outdated_pet_pages_message(user_settings, message)
+                        return
                     sent_pet_ids_match = re.search(
                         r'\bpets?\s+(?:\badv\b|\badventure\b)\s+(?:\bfind\b|\blearn\b|\bdrill\b)\s+(.+?)$',
                         user_command_message.content.lower()
@@ -115,21 +120,44 @@ class PetsCog(commands.Cog):
                     sent_pet_ids = re.split(r'\s+', sent_pet_ids_match.group(1))
                     for pet_id in returned_pet_ids:
                         if pet_id in sent_pet_ids: sent_pet_ids.remove(pet_id)
-                    if 'epic' in sent_pet_ids:
-                        if user_settings.outdated_pet_pages is not None:
-                            await message.reply(MSG_PETS_UNCLEAR.format(command_pets_list=command_pets_list))
-                            return
-                        user_pets = await pets.get_pets(user.id, skills=['epic',])
-                        for pet in user_pets:
+                    if sent_pet_ids[0] == 'epic':
+                        epic_pets = await pets.get_pets(user.id, skills=['epic',])
+                        for pet in epic_pets:
+                            page = ceil(pet.pet_id / 6)
+                            if page in user_settings.outdated_pet_pages:
+                                await functions.send_outdated_pet_pages_message(user_settings, message)
+                                return
+                        for pet in epic_pets:
                             if pet.pet_id_str not in returned_pet_ids:
-                                reminder: reminders.Reminder = (
-                                    await reminders.insert_user_reminder(user.id, f'pets-{pet.pet_id_str}',
-                                                                         pet.get_reminder_time(), message.channel.id,
-                                                                         reminder_message)
-                                )
-                        # I was here
-
-
+                                try:
+                                    reminder: reminders.Reminder = await reminders.get_user_reminder(
+                                        user.id, f'pets-{pet.pet_id_str}'
+                                    )
+                                except exceptions.NoDataFoundError:
+                                    reminder: reminders.Reminder = (
+                                        await reminders.insert_user_reminder(user.id, f'pets-{pet.pet_id_str}',
+                                                                            pet.get_reminder_time(), message.channel.id,
+                                                                            reminder_message)
+                                    )
+                    else:
+                        for pet_id in sent_pet_ids:
+                            pet_id = await functions.convert_pet_id_to_int(pet_id)
+                            page = ceil(pet_id / 6)
+                            if page in user_settings.outdated_pet_pages:
+                                await functions.send_outdated_pet_pages_message(user_settings, message)
+                                return
+                        for pet_id in sent_pet_ids:
+                            try:
+                                pet: pets.Pet = await pets.get_pet(user.id, await functions.convert_pet_id_to_int(pet_id))
+                            except exceptions.NoDataFoundError:
+                                await user_settings.update(outdated_pet_pages=[-1,])
+                                await functions.send_outdated_pet_pages_message(user_settings, message)
+                                return
+                            reminder: reminders.Reminder = (
+                                await reminders.insert_user_reminder(user.id, f'pets-{pet.pet_id}',
+                                                                     pet.get_reminder_time(), message.channel.id,
+                                                                     reminder_message)
+                            )
 
             search_strings = [
                 'pet adventure(s) cancelled', #English
@@ -165,29 +193,29 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                arguments = user_command_message.content.split()
-                pet_ids = []
-                for arg in arguments:
-                    if arg not in ('rpg','pets','pet','adventure','adv','cancel'): pet_ids.append(arg.upper())
-                if not pet_ids:
+                pet_ids_match = re.search(
+                        r'\bpets?\s+(?:\badv\b|\badventure\b)\s+\bcancel\b\s+(.+?)$',
+                        user_command_message.content.lower()
+                    )
+                if not pet_ids_match:
                     await functions.add_warning_reaction(message)
-                    await errors.log_error('Couldn\'t find a pet ID for pet cancel message.', message)
+                    await errors.log_error('Couldn\'t find pet ids in the pet adv cancel user command message.', message)
                     return
+                pet_ids = re.split(r'\s+', sent_pet_ids_match.group(1))
                 for pet_id in pet_ids:
-                    activity = f'pets-{pet_id}'
                     try:
-                        reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, activity)
+                        reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, f'pets-{pet_id}')
                     except exceptions.NoDataFoundError:
                         continue
                     await reminder.delete()
                     if reminder.record_exists:
                         logs.logger.error(
                             f'{datetime.utcnow()}: Had an error deleting the pet reminder with activity '
-                            f'{activity}.'
+                            f'pets-{pet_id}.'
                         )
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
-            # Pets claim when no pets are on adventures
+            # Pets claim when no pets are on adventures, for ready list
             search_strings = [
                 'there are no pet adventure rewards to claim', #English
                 'no hay recompensas de pet adventure para reclamar', #Spanish
@@ -246,7 +274,7 @@ class PetsCog(commands.Cog):
             if embed.description: message_description = str(embed.description)
             if embed.title: message_title = embed.title
 
-            # Pet list
+            # Pets list, updates pets and pet reminders
             search_strings = [
                 'pets can collect items and coins, more information', #English
                 'las mascotas puedes recoger items y coins, más información', #Spanish
@@ -268,7 +296,8 @@ class PetsCog(commands.Cog):
                     'snowman': emojis.PET_SNOWBALL,
                     'penguin': emojis.PET_PENGUIN,
                 }
-                user_id = user_name = user_command_message = None
+                user_id = user_name = user_command_message = pet_type = None
+                unexpected_changes_found = False
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
@@ -295,17 +324,96 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                reminder_created = False
+                pet_amount_match = re.search(f'pets__\*\*: \d+/(\d+?)\n', message_description.lower())
+                pages_match = re.search(f'page__\*\*: (\d+?)/(\d+?)$', message_description.lower())
+                if not pages_match or not pet_amount_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error(
+                        f'Couldn\'t find pages or pet amount in the pet list message.\n'
+                        f'Pages match: {pages_match}\n',
+                        f'Pet amount match: {pet_amount_match}\n',
+                        message
+                    )
+                    return
+                current_page = int(pages_match.group(1))
+                max_page = int(pages_match.group(2))
+                max_pets = int(pet_amount_match.group(1))
+                try:
+                    user_pets = await pets.get_pets(user.id)
+                except exceptions.NoDataFoundError:
+                    user_pets = []
+                if len(user_pets) != max_pets or ceil(len(max_pets) / 6) != max_page:
+                    outdated_pet_pages = list(range(1, max_page + 1))
+                    await user_settings.update(outdated_pet_pages=outdated_pet_pages)
                 for field in embed.fields:
-                    pet_id_match = re.search(r'`ID: (.+?)`', field.name)
+                    if 'pets commands' in field.name.lower(): continue
+                    pet_id_match = re.search(r'`id: (.+?)`', field.name.lower())
+                    pet_tier_match = re.search(r'tier (.+?)$', field.name.lower())
+                    if not pet_id_match or not pet_tier_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error(
+                            f'Couldn\'t find pet ID or tier in field "{field.name}" in the pets list message.\n'
+                            f'Pet ID match: {pet_id_match}'
+                            f'Pet tier match: {pet_tier_match}',
+                            message
+                        )
+                        return
+                    for pet_name in pet_names_emojis.keys():
+                        if pet_name in field.name.lower():
+                            pet_type = pet_name
+                            break
+                    if pet_type is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error(
+                            f'Couldn\'t find pet type in field "{field.name}" in the pets list message.\n',
+                            message
+                        )
+                        return
+                    pet_id = pet_id_match.group(1)
+                    pet_tier = roman.fromRoman(pet_tier_match.group(1).upper())
+                    normal_pet_skills = [
+                        'clever',
+                        'digger',
+                        'epic',
+                        'fast',
+                        'happy',
+                        'lucky',
+                        'traveler',
+                    ]
+                    special_pet_skills = [
+                        'faster',
+                    ]
+                    pet_skills_found = {}
+                    for pet_skill in normal_pet_skills:
+                        if pet_skill in field.value.lower():
+                            pet_skill_match = re.search(rf'{pet_skill}\*\* \[(.+?)\]', field.value.lower())
+                            if not pet_skill_match:
+                                await functions.add_warning_reaction(message)
+                                await errors.log_error(
+                                    f'Couldn\'t find skill rank for skill {pet_skill} in the pets list message.',
+                                    message
+                                )
+                                return
+                            pet_skill_rank = strings.PET_SKILL_RANKS.index(pet_skill_match.group(1).lower()) + 1
+                            pet_skills_found[pet_skill] = pet_skill_rank
+                    for pet_skill in special_pet_skills:
+                        if pet_skill in field.value.lower(): pet_skills_found[pet_skill] = 1
+                    pet_id_int = await functions.convert_pet_id_to_int(pet_id)
+                    try:
+                        existing_pet: pets.Pet = await pets.get_pet(user.id, pet_id_int)
+                    except exceptions.NoDataFoundError:
+                        existing_pet = None
+                    updated_pet = await pets.insert_pet(user.id, pet_id_int, pet_tier, pet_type, pet_skills_found)
+                    if existing_pet is not None and updated_pet != existing_pet:
+                        unexpected_changes_found = True
+                        outdated_pet_pages = list(range(1, max_page + 1))
+                        await user_settings.update(outdated_pet_pages=outdated_pet_pages)
                     pet_emoji = ''
                     for pet, emoji in pet_names_emojis.items():
                         if pet in field.name.lower():
                             pet_emoji = emoji
                             break
                     pet_action_timestring_match = re.search(r'Status__:\*\* (.+?) \| \*\*(.+?)\*\*', field.value)
-                    if not pet_id_match: continue
-                    pet_id = pet_id_match.group(1)
                     if not pet_action_timestring_match:
                         try:
                             reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, f'pets-{pet_id}')
@@ -325,17 +433,45 @@ class PetsCog(commands.Cog):
                         'aprendendo',
                         'perfuração',
                     ]
-                    if pet_action not in pet_actions: continue
-                    pet_timestring = pet_action_timestring_match.group(2)
-                    time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
-                    if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
-                    reminder_created = True
-                    reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
-                    reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
-                                                             message.channel.id, reminder_message)
+                    if pet_action in pet_actions:
+                        pet_timestring = pet_action_timestring_match.group(2)
+                        time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
+                        if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
+                        reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
+                        reminder: reminders.Reminder = (
+                            await reminders.insert_user_reminder(user.id, f'pets-{pet_id}', time_left,
+                                                                message.channel.id, reminder_message)
+                        )
+                if user_settings.outdated_pet_pages:
+                    if current_page in user_settings.outdated_pet_pages:
+                        outdated_pet_pages = user_settings.outdated_pet_pages
+                        outdated_pet_pages.remove(current_page)
+                        if not outdated_pet_pages: outdated_pet_pages = [0,]
+                        await user_settings.update(outdated_pet_pages=outdated_pet_pages)
+                    pages = await functions.convert_outdated_pet_pages_to_string(user_settings.outdated_pet_pages)
+                    answer = (
+                        f'Pets page `{current_page}` updated.\n'
+                        f'Remaining pet pages:\n'
+                        f'{emojis.BP} {pages}'
                     )
-                if reminder_created and user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    if unexpected_changes_found:
+                        answer = (
+                            f'{emojis.WARNING} Unexpected pet discrepancy found. Please show all pet pages.\n\n'
+                            f'{answer}'
+                        )
+                    pets_list_update_message_ids = pets_list_update_messages_ids.get(user.id, None)
+                    if pets_list_update_message_ids is None:
+                        update_message = await message.reply(content=answer)
+                        pets_list_update_messages_ids[user.id] = (message.id, update_message.id)
+                    else:
+                        pets_list_message_id , pets_list_update_message_id = pets_list_update_message_ids
+                        if pets_list_message_id == message.id:
+                            pets_list_update_message = message.channel.get_partial_message(pets_list_update_message_id)
+                            await pets_list_update_message.edit(content=answer)
+                        else:
+                            update_message = await message.reply(content=answer)
+                            pets_list_update_messages_ids[user.id] = (message.id, update_message.id)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
             # Pets claim
             search_strings = [

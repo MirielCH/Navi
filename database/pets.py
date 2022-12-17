@@ -4,17 +4,28 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import sqlite3
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from database import errors
 from resources import exceptions, functions, settings, strings
+
+
+STORED_PET_SKILLS = [
+    'clever',
+    'digger',
+    'epic',
+    'fast',
+    'faster',
+    'happy',
+    'lucky',
+    'traveler',
+]
 
 
 # Containers
 @dataclass()
 class Pet():
     """Object that represents a record from the table "pets"."""
-    last_update: datetime
     pet_id: int
     pet_id_str: str
     pet_tier: int
@@ -38,7 +49,6 @@ class Pet():
             new_pet = await get_pet(self.user_id, self.pet_id)
         except exceptions.NoDataFoundError as error:
             return
-        self.last_update = new_pet.last_update
         self.pet_id = new_pet.pet_id
         self.pet_id_str = new_pet.pet_id_str
         self.pet_tier = new_pet.pet_tier
@@ -71,7 +81,6 @@ class Pet():
         Arguments
         ---------
         kwargs (column=value):
-            last_update: datetime
             pet_id: int
             pet_tier: int
             pet_type: str
@@ -108,7 +117,6 @@ async def _dict_to_pets(record: dict) -> Pet:
     function_name = '_dict_to_pets'
     try:
         pet = Pet(
-            last_update = datetime.fromisoformat(record['last_update']),
             pet_id = record['pet_id'],
             pet_id_str = await functions.convert_pet_id_to_str(record['pet_id']),
             pet_tier = record['pet_tier'],
@@ -172,7 +180,7 @@ async def get_pet(user_id: int, pet_id: int) -> Pet:
     return pet
 
 
-async def get_pets(user_id: int, page: Optional[int] = None, skills: Optional[List[str]] = None) -> Pet:
+async def get_pets(user_id: int, page: Optional[int] = None, skills: Optional[List[str]] = []) -> Pet:
     """Gets pets of a user. To return all pets of a user, omit all kwargs.
 
     Arguments
@@ -204,7 +212,7 @@ async def get_pets(user_id: int, page: Optional[int] = None, skills: Optional[Li
     """
     table = 'pets'
     function_name = 'get_pets'
-    sql = f'SELECT * FROM {table} WHERE user_id = {user_id}'
+    sql = f'SELECT * FROM {table} WHERE user_id = ?'
     if page is not None:
         sql = f'{sql} AND pet_id > {(page - 1) * 6} and pet_id <= {page * 6}'
     for skill in skills:
@@ -241,10 +249,9 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
     ---------
     pet: Pet object
     kwargs (column=value):
-        last_update: datetime
         pet_id: int
         pet_tier: int
-        pet_type: int
+        pet_type: str
         skill_clever: int
         skill_digger: int
         skill_epic: int
@@ -268,16 +275,19 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    current_time = datetime.utcnow().replace(microsecond=0)
+    for pet_skill in STORED_PET_SKILLS:
+        if pet_skill in kwargs:
+            kwargs[f'skill_{pet_skill}'] = kwargs[pet_skill]
+            del kwargs[pet_skill]
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'
         sql = sql.strip(",")
-        kwargs['last_update'] = current_time.isoformat(sep=' ')
-        kwargs['user_id_old'] = pet.user_id
-        sql = f'{sql} AND user_id = :user_id_old'
+        kwargs['user_id'] = pet.user_id
+        kwargs['pet_id'] = pet.pet_id
+        sql = f'{sql} WHERE user_id = :user_id AND pet_id = :pet_id'
         cur.execute(sql, kwargs)
     except sqlite3.Error as error:
         await errors.log_error(
@@ -286,15 +296,16 @@ async def _update_pet(pet: Pet, **kwargs) -> None:
         raise
 
 
-async def insert_pet(user_id: int, pet_id: int, pet_tier: int, skill_clever: Optional[int] = 0, skill_digger: Optional[int] = 0,
-                     skill_epic: Optional[int] = 0, skill_fast: Optional[int] = 0, skill_faster: Optional[int] = 0,
-                     skill_happy: Optional[int] = 0, skill_lucky: Optional[int] = 0, skill_traveler: Optional[int] = 0) -> Pet:
+async def insert_pet(user_id: int, pet_id: int, pet_tier: int, pet_type: str, pet_skills: Dict[str, int]) -> Pet:
     """Inserts a pet record.
-    This function first checks if a pet record exists. If yes, no new record is inserted.
+    This function first checks if a pet record exists. If yes, existing record is updated instead.
 
     Arguments
     ---------
     user_id: int
+    pet_id: int
+    pet_tier: int
+    pet_skills: dict with all skills the pet has (skill name: rank as integer)
 
     Returns
     -------
@@ -311,27 +322,34 @@ async def insert_pet(user_id: int, pet_id: int, pet_tier: int, skill_clever: Opt
     try:
         pet = await get_pet(user_id, pet_id)
     except exceptions.NoDataFoundError:
-        pets_data = None
-    if pets_data is None:
-        current_time = datetime.utcnow().replace(microsecond=0)
-        sql = (
-            f'INSERT INTO {table} (user_id, last_update, pet_id, pet_tier, pet_type, skill_clever, skill_digger, '
-            f'skill_epic, skill_fast, skill_faster, skill_happy, skill_lucky, skill_traveler) '
-            f'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
-        )
+        pet = None
+    kwargs = {}
+    kwargs['user_id'] = user_id
+    kwargs['pet_id'] = pet_id
+    kwargs['pet_tier'] = pet_tier
+    kwargs['pet_type'] = pet_type
+    skill_values = ''
+    if pet is None:
+        sql = f'INSERT INTO {table} (user_id, pet_id, pet_tier, pet_type'
+        for skill_name, skill_rank in pet_skills.items():
+            sql = f'{sql}, skill_{skill_name}'
+            skill_values = f'{skill_values}, :{skill_name}'
+            kwargs[skill_name] = skill_rank
+        sql = f'{sql}) VALUES (:user_id, :pet_id, :pet_tier, :pet_type{skill_values})'
         try:
-            cur.execute(
-                sql,
-                (
-                    user_id, current_time.isoformat(sep=' '), pet_id, pet_tier, skill_clever, skill_digger, skill_epic,
-                    skill_fast, skill_faster, skill_happy, skill_lucky, skill_traveler
-                )
-            )
+            cur.execute(sql, kwargs)
         except sqlite3.Error as error:
             await errors.log_error(
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
             )
             raise
-        pet = await get_pet(user_id, pet_id)
-
+    else:
+        kwargs = {}
+        for pet_skill in STORED_PET_SKILLS:
+            if pet_skill not in pet_skills:
+                kwargs[f'skill_{pet_skill}'] = 0
+            else:
+                kwargs[f'skill_{pet_skill}'] = pet_skills[pet_skill]
+        await pet.update(pet_tier=pet_tier, pet_type=pet_type, **kwargs)
+    pet = await get_pet(user_id, pet_id)
     return pet
