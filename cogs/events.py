@@ -6,6 +6,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -145,9 +146,7 @@ class EventsCog(commands.Cog):
                 user_command_message = None
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_EVENTS
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_EVENTS)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

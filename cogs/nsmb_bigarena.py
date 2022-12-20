@@ -7,6 +7,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings
 
@@ -64,9 +65,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                         return
                 else:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_NSMB_BIGARENA
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_NSMB_BIGARENA)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -142,10 +141,8 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                             await errors.log_error('User name not found in big-arena or minin\'tboss message.', message)
                             return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_NSMB_BIGARENA,
-                            user=user, user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_NSMB_BIGARENA,
+                                                    user=user, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

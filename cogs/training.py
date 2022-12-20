@@ -7,6 +7,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, tracking, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -65,10 +66,8 @@ class TrainingCog(commands.Cog):
                             await errors.log_error('User name not found in training cooldown message.', message)
                             return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_TRAINING_ULTRAINING,
-                            user=user, user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_TRAINING_ULTRAINING,
+                                                    user=user, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -120,10 +119,8 @@ class TrainingCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_ULTRAINING,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -177,10 +174,8 @@ class TrainingCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TRAINING,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -224,10 +219,8 @@ class TrainingCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TRAINING,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -254,9 +247,7 @@ class TrainingCog(commands.Cog):
                 slash_command = True if user is not None else False
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_ULTRAINING_BUY_TRAINING_RESET
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING_BUY_TRAINING_RESET)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

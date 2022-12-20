@@ -6,8 +6,9 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, regex, settings
+from resources import exceptions, functions, regex, settings
 
 
 class DuelCog(commands.Cog):
@@ -53,7 +54,7 @@ class DuelCog(commands.Cog):
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(message.channel, regex.COMMAND_DUEL)
+                        await messages.find_message(message.channel.id, regex.COMMAND_DUEL)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -122,8 +123,8 @@ class DuelCog(commands.Cog):
                         await errors.log_error(f'Interaction user {interaction_user_name} is not unique.', message)
                         return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(message.channel, regex.COMMAND_DUEL,
-                                                                         user_name=interaction_user_name)
+                        await messages.find_message(message.channel.id, regex.COMMAND_DUEL,
+                                                    user_name=interaction_user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

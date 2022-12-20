@@ -7,6 +7,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings
 
@@ -65,10 +66,8 @@ class HalloweenCog(commands.Cog):
                             await errors.log_error('Couldn\'t find a command for the hal boo cooldown message.', message)
                             return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_HAL_BOO,
-                            user=user, user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_HAL_BOO,
+                                                    user=user, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -115,10 +114,8 @@ class HalloweenCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         if user_name.lower() == 'the pumpkin bat': user_name = user_name_match.group(2)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_HAL_CRAFT_SPOOKY_SCROLL,
-                                user_name=user_name, limit=100
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_HAL_CRAFT_SPOOKY_SCROLL,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -181,10 +178,8 @@ class HalloweenCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_HAL_BOO,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_HAL_BOO,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)

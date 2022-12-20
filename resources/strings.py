@@ -1201,6 +1201,7 @@ FLEX_THUMBNAILS_XMAS_CHIMNEY = [
     'https://media.tenor.com/MCn_GMSSqAsAAAAd/lol-laughing-hysterically.gif',
     'https://media.tenor.com/lr8W5AadieAAAAAd/smile-laughing.gif',
     'https://media.tenor.com/REqgDts8CVgAAAAC/futurenostlgia-laughing.gif',
+    'https://media.tenor.com/Lot4htkwha8AAAAd/adventures-of-oliver-twist-stuck.gif',
 ]
 
 FLEX_THUMBNAILS_XMAS_GODLY = [

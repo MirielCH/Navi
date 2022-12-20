@@ -5,6 +5,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, users
 from resources import emojis, exceptions, functions, regex, settings, strings, views
 
@@ -54,10 +55,8 @@ class HelperRubyCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         if user_name in strings.EPIC_NPC_NAMES: user_name = user_name_match.group(2)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TRADE_RUBY,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_TRADE_RUBY,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -107,10 +106,8 @@ class HelperRubyCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_OPEN,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_OPEN,
+                                                            user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -148,9 +145,7 @@ class HelperRubyCog(commands.Cog):
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_PROFILE_MENU
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_MENU)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -205,10 +200,8 @@ class HelperRubyCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TRAINING,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -261,9 +254,7 @@ class HelperRubyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_SELL_RUBY
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_SELL_RUBY)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -308,10 +299,8 @@ class HelperRubyCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_WORK,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_WORK,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -351,9 +340,7 @@ class HelperRubyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_CRAFT_RUBY_SWORD
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_CRAFT_RUBY_SWORD)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -381,9 +368,7 @@ class HelperRubyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_CRAFT_RUBY_ARMOR
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_CRAFT_RUBY_ARMOR)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -411,9 +396,7 @@ class HelperRubyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_CRAFT_COIN_SWORD
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_CRAFT_COIN_SWORD)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -441,9 +424,7 @@ class HelperRubyCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_FORGE_ULTRAEDGY_ARMOR
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_FORGE_ULTRAEDGY_ARMOR)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

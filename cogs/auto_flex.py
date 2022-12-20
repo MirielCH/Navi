@@ -6,6 +6,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, guilds, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -187,10 +188,7 @@ class AutoFlexCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_OPEN,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_OPEN, user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -254,10 +252,8 @@ class AutoFlexCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_PROFESSIONS_ASCEND,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_PROFESSIONS_ASCEND,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -300,10 +296,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = pet_data_match.group(2)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_TRAINING,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -350,10 +344,8 @@ class AutoFlexCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_COINFLIP,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_COINFLIP,
+                                                            user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -391,10 +383,8 @@ class AutoFlexCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_PROFILE_PROGRESS,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS,
+                                                            user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -440,10 +430,8 @@ class AutoFlexCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_TIME_TRAVEL,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_TIME_TRAVEL,
+                                                            user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -491,10 +479,8 @@ class AutoFlexCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TIME_TRAVEL,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_TIME_TRAVEL,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -653,10 +639,8 @@ class AutoFlexCog(commands.Cog):
                         user = await message.guild.fetch_member(user_id)
                     else:
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_ULTRAINING,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING,
+                                                        user_name=user_name)
                         )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -766,10 +750,8 @@ class AutoFlexCog(commands.Cog):
                 if event == 'work_hyperlog' and guild_settings.guild_id == 713541415099170836: return # Remove after toggleable
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_WORK,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_WORK,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -894,10 +876,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_XMAS_CHIMNEY,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_CHIMNEY,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -934,10 +914,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_FORGE_GODLY_COOKIE,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_FORGE_GODLY_COOKIE,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1024,10 +1002,8 @@ class AutoFlexCog(commands.Cog):
                     user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_HUNT_ADVENTURE,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_HUNT_ADVENTURE,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1207,10 +1183,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_OPEN,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_OPEN,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1250,10 +1224,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_ENCHANT,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_ENCHANT,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1292,10 +1264,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_FARM,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_FARM,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1335,10 +1305,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_HEAL,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_HEAL,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1377,10 +1345,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_TRAINING,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -1424,10 +1390,8 @@ class AutoFlexCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_TIME_CAPSULE,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_TIME_CAPSULE,
+                                                    user_name=user_name)
                         )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -1517,10 +1481,8 @@ class AutoFlexCog(commands.Cog):
                 user_name = user_name_match.group(1)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_HAL_BOO,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_HAL_BOO,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

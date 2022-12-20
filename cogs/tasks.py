@@ -10,6 +10,7 @@ from typing import List
 import discord
 from discord.ext import commands, tasks
 
+from cache import messages
 from database import clans, errors, reminders, tracking, users
 from resources import emojis, exceptions, functions, logs, settings, strings
 
@@ -94,6 +95,8 @@ class TasksCog(commands.Cog):
                         await channel.send(message.strip(), allowed_mentions=allowed_mentions)
                 except asyncio.CancelledError:
                     return
+                except discord.errors.Forbidden:
+                    return
 
             if first_reminder.reminder_type == 'clan':
                 clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
@@ -129,7 +132,11 @@ class TasksCog(commands.Cog):
                     await channel.send(f'It\'s time for {first_reminder.message}!\n\n{message_mentions}')
                 except asyncio.CancelledError:
                     return
+                except discord.errors.Forbidden:
+                    return
             running_tasks.pop(first_reminder.task_name, None)
+        except discord.errors.Forbidden:
+            return
         except Exception as error:
             await errors.log_error(error)
 
@@ -155,6 +162,7 @@ class TasksCog(commands.Cog):
         self.reset_clans.start()
         self.schedule_tasks.start()
         self.consolidate_tracking_log.start()
+        self.delete_old_messages_from_cache.start()
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -309,6 +317,12 @@ class TasksCog(commands.Cog):
             time_passed = end_time - start_time
             logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
+    @tasks.loop(minutes=1)
+    async def delete_old_messages_from_cache(self) -> None:
+        """Task that deletes messages from the message cache that are older than 1 minute"""
+        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=1))
+        if settings.DEBUG_MODE:
+            logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
 
 # Initialization
 def setup(bot):

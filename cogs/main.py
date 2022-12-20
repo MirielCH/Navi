@@ -100,6 +100,8 @@ class MainCog(commands.Cog):
                 ephemeral=True
             )
             await errors.log_error(error, ctx)
+        elif isinstance(error, discord.errors.Forbidden):
+            return
         else:
             await errors.log_error(error, ctx)
             if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()
@@ -154,6 +156,8 @@ class MainCog(commands.Cog):
                 await ctx.respond('As you might have guessed, you are not allowed to use this command.',
                 ephemeral=True)
             )
+        elif isinstance(error, discord.errors.Forbidden):
+            return
         else:
             await errors.log_error(error, ctx)
             if settings.DEBUG_MODE or ctx.guild.id in settings.DEV_GUILDS: await send_error()

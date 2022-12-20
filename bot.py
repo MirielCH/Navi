@@ -64,6 +64,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         if message.channel.type.name == 'private': return
         embed = discord.Embed(title='An error occured')
         error = sys.exc_info()
+        if isinstance(error, discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
         print(traceback_message)
@@ -79,6 +80,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
             return
         embed = discord.Embed(title='An error occured')
         error = sys.exc_info()
+        if isinstance(error, discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
         print(traceback_message)
@@ -101,6 +103,7 @@ EXTENSIONS = [
         'cogs.arena',
         'cogs.auto_flex',
         'cogs.cooldowns',
+        'cogs.cache',
         'cogs.clan',
         'cogs.daily',
         'cogs.dev',

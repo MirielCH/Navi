@@ -1,11 +1,11 @@
 # time_cookie.py
 
-import asyncio
 from datetime import timedelta
 
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -51,10 +51,8 @@ class TimeCookieCog(commands.Cog):
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_USE_TIME_COOKIE,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_USE_TIME_COOKIE,
+                                                    user_name=user_name)
                     )
                 if not user_name_match or user_command_message is None:
                     await functions.add_warning_reaction(message)

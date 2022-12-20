@@ -6,6 +6,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings
 
@@ -50,9 +51,7 @@ class DungeonMinibossCog(commands.Cog):
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_DUNGEON_MINIBOSS_MININTBOSS
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_DUNGEON_MINIBOSS_MININTBOSS)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -110,9 +109,7 @@ class DungeonMinibossCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_RETURNING_BUY_DUNGEON_RESET
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_RETURNING_BUY_DUNGEON_RESET)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

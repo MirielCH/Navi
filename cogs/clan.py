@@ -8,6 +8,7 @@ import discord
 from discord.ext import commands
 from datetime import datetime, timedelta
 
+from cache import messages
 from database import clans, errors, cooldowns, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -67,10 +68,8 @@ class ClanCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_CLAN_RAID_UPGRADE,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_CLAN_RAID_UPGRADE,
+                                                            user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -143,9 +142,7 @@ class ClanCog(commands.Cog):
                 if message.mentions: return # Yes that also disables it if you ping yourself but who does that
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_CLAN
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_CLAN)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -236,9 +233,7 @@ class ClanCog(commands.Cog):
                 slash_command = True if user is not None else False
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_CLAN_UPGRADE
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_CLAN_UPGRADE)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -336,10 +331,8 @@ class ClanCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_CLAN_RAID,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_CLAN_RAID,
+                                                    user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)

@@ -10,7 +10,7 @@ import discord
 from discord.ext import commands
 
 from database import cooldowns
-from resources import emojis, strings
+from resources import emojis, settings, strings
 
 
 class DevOldCog(commands.Cog):
@@ -19,11 +19,11 @@ class DevOldCog(commands.Cog):
         self.bot = bot
 
     @commands.group(invoke_without_command=True, case_insensitive=True)
-    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def dev(self, ctx: commands.Context) -> None:
         """Dev command group"""
         if ctx.prefix.lower() == 'rpg ': return
+        if ctx.author.id not in settings.DEV_IDS: return
         subcommands = ''
         for command in self.bot.walk_commands():
             if isinstance(command, commands.Group):
@@ -38,11 +38,11 @@ class DevOldCog(commands.Cog):
 
     @dev.group(name='event-reduction', aliases=('er',), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True)
-    @commands.is_owner()
     async def dev_event_reduction(self, ctx: commands.Context, *args: str) -> None:
         """Sets event reductions of activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
+        if ctx.author.id not in settings.DEV_IDS: return
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [reduction in %]')
@@ -101,11 +101,11 @@ class DevOldCog(commands.Cog):
 
     @dev.group(name='post-message', aliases=('pm',), invoke_without_command=True)
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    @commands.is_owner()
     async def post_message(self, ctx: commands.Context, message_id: int, channel_id: int, *embed_title: str) -> None:
         """Post an embed to a channel"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
+        if ctx.author.id not in settings.DEV_IDS: return
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(
@@ -159,12 +159,12 @@ class DevOldCog(commands.Cog):
         await ctx.send('Message sent.')
 
     @dev_event_reduction.command(name='reset')
-    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def dev_event_reduction_reset(self, ctx: commands.Context) -> None:
         """Resets event reductions of all activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
+        if ctx.author.id not in settings.DEV_IDS: return
         if ctx.prefix.lower() == 'rpg ': return
         await ctx.reply(
             f'**{ctx.author.name}**, this will change **all** event reductions to **0.0%**. Continue? [`yes/no`]'
@@ -182,13 +182,12 @@ class DevOldCog(commands.Cog):
         await ctx.reply(f'All event reductions have been reset.')
 
     @dev.command(name='cooldown-setup', aliases=('cd-setup',))
-    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def cooldown_setup(self, ctx: commands.Context, *args: str) -> None:
         """Sets base cooldowns of all activities"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
-
+        if ctx.author.id not in settings.DEV_IDS: return
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         syntax = strings.MSG_SYNTAX.format(syntax=f'{ctx.prefix}{ctx.command.qualified_name} [activity] [seconds]')
@@ -238,12 +237,12 @@ class DevOldCog(commands.Cog):
             await ctx.reply(strings.MSG_ERROR)
 
     @dev.command()
-    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def shutdown(self, ctx: commands.Context) -> None:
         """Shut down the bot"""
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
+        if ctx.author.id not in settings.DEV_IDS: return
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
         await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
@@ -258,10 +257,10 @@ class DevOldCog(commands.Cog):
             await ctx.send('Phew, was afraid there for a second.')
 
     @dev.command(aliases=('unload','reload',))
-    @commands.is_owner()
     @commands.bot_has_permissions(send_messages=True)
     async def load(self, ctx: commands.Context, *args: str) -> None:
         """Loads/unloads cogs and reloads cogs or modules"""
+        if ctx.author.id not in settings.DEV_IDS: return
         action = ctx.invoked_with
         message_syntax = f'The syntax is `{ctx.prefix}dev {action} [name(s)]`'
         if ctx.prefix.lower() == 'rpg ': return
@@ -306,44 +305,11 @@ class DevOldCog(commands.Cog):
             message = f'{message}\n{action}'
         await ctx.send(f'```diff\n{message}\n```')
 
-    # Enable/disable commands
-    @dev.command(aliases=('disable',))
-    @commands.is_owner()
-    @commands.bot_has_permissions(send_messages=True)
-    async def enable(self, ctx: commands.Context, *args: str) -> None:
-        if ctx.prefix.lower() == 'rpg ': return
-        action = ctx.invoked_with
-        if args:
-            command = ''
-            for arg in args:
-                command = f'{command} {arg}'
-            command = self.bot.get_command(command)
-            if command is None:
-                await ctx.reply(
-                    'No command with that name found.'
-                    )
-            elif ctx.command == command:
-                await ctx.reply(
-                    f'You can not {action} this command.'
-                    )
-            else:
-                if action == 'enable':
-                    command.enabled = True
-                else:
-                    command.enabled = False
-                await ctx.reply(
-                    f'Command {command.qualified_name} {action}d.'
-                    )
-        else:
-            await ctx.reply(
-                f'Syntax is `{ctx.prefix}{ctx.command} [command]`'
-                )
-
     # Test command
     @dev.command()
     @commands.bot_has_permissions(send_messages=True)
     async def test_guild(self, ctx: commands.Context) -> None:
-        if ctx.author.id not in (619879176316649482, 764222910881464350): return
+        if ctx.author.id not in settings.DEV_IDS: return
         from database import clans, reminders, users
         from resources import exceptions
         current_time = datetime.utcnow().replace(microsecond=0)
@@ -382,12 +348,34 @@ class DevOldCog(commands.Cog):
     @dev.command()
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
-        if ctx.author.id not in (619879176316649482, 764222910881464350): return
+        if ctx.author.id not in settings.DEV_IDS: return
         from resources import functions
-        user_command_message = await functions.get_message_from_channel_history(
-            ctx.channel, r'(?:\bsummon\b|\bfight\b|\bsleep\b)', user_name='Miriel', no_prefix=True
-        )
+        test_list = []
+        for x in range(1,60):
+            test_list.append(x)
+        if len(test_list) > 50:
+            test_list = test_list[-50:]
         pass
+
+    # Check cache size
+    @dev.command()
+    @commands.bot_has_permissions(send_messages=True)
+    async def cache(self, ctx: commands.Context) -> None:
+        if ctx.author.id not in settings.DEV_IDS: return
+        from cache import messages
+        cache_size = sys.getsizeof(messages._MESSAGE_CACHE)
+        channel_count = len(messages._MESSAGE_CACHE)
+        message_count = 0
+        for channel_messages in messages._MESSAGE_CACHE.values():
+            message_count += len(channel_messages)
+            cache_size += sys.getsizeof(channel_messages)
+            for message in channel_messages:
+                cache_size += sys.getsizeof(message)
+        await ctx.reply(
+            f'Cache size: {cache_size / 1024:,.2f} KB\n'
+            f'Channel count: {channel_count:,}\n'
+            f'Message count: {message_count:,}\n'
+        )
 
 def setup(bot):
     bot.add_cog(DevOldCog(bot))

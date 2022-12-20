@@ -6,6 +6,7 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, logs, regex, settings, strings
 
@@ -46,9 +47,7 @@ class PetsCog(commands.Cog):
                 user_command_message = None
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_PETS_ADVENTURE_START
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_PETS_ADVENTURE_START)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -108,9 +107,7 @@ class PetsCog(commands.Cog):
                     )
                     return
                 user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_PETS_ADVENTURE_CANCEL
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_PETS_ADVENTURE_CANCEL)
                     )
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)
@@ -177,9 +174,7 @@ class PetsCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_PETS_ADVENTURE_START
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_PETS_ADVENTURE_START)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -237,10 +232,8 @@ class PetsCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_PETS,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_PETS,
+                                                        user_name=user_name)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
@@ -312,10 +305,7 @@ class PetsCog(commands.Cog):
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (
-                                await functions.get_message_from_channel_history(
-                                    message.channel, regex.COMMAND_PETS_CLAIM,
-                                    user_name=user_name
-                                )
+                                await messages.find_message(message.channel.id, regex.COMMAND_PETS_CLAIM)
                             )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)

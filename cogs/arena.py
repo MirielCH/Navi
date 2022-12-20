@@ -6,8 +6,9 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
-from resources import exceptions, functions, regex, settings, strings
+from resources import exceptions, functions, regex, settings
 
 
 class ArenaCog(commands.Cog):
@@ -49,7 +50,7 @@ class ArenaCog(commands.Cog):
             interaction_user = await functions.get_interaction_user(message)
             if interaction_user is None:
                 user_command_message = (
-                    await functions.get_message_from_channel_history(message.channel, regex.COMMAND_ARENA)
+                    await messages.find_message(message.channel.id, regex.COMMAND_ARENA)
                 )
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)

@@ -7,6 +7,7 @@ import discord
 from discord.ext import commands
 from datetime import timedelta
 
+from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -52,9 +53,7 @@ class CooldownsCog(commands.Cog):
             interaction_user = await functions.get_interaction_user(message)
             if interaction_user is None:
                 user_command_message = (
-                    await functions.get_message_from_channel_history(
-                        message.channel, regex.COMMAND_PROFILE_MENU
-                    )
+                    await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_MENU)
                 )
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)
@@ -297,9 +296,7 @@ class CooldownsCog(commands.Cog):
             interaction_user = await functions.get_interaction_user(message)
             if interaction_user is None:
                 user_command_message = (
-                    await functions.get_message_from_channel_history(
-                        message.channel, regex.COMMAND_PROFILE_MENU
-                    )
+                    await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_MENU)
                 )
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)

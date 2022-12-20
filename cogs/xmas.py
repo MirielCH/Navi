@@ -2,11 +2,13 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import random
 import re
 
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -86,10 +88,8 @@ class ChristmasCog(commands.Cog):
                             await errors.log_error('Couldn\'t find a command for the xmas chimney cooldown message.', message)
                             return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_XMAS_CHIMNEY,
-                            user=user, user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_CHIMNEY,
+                                                    user=user, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -138,10 +138,8 @@ class ChristmasCog(commands.Cog):
                             await errors.log_error('Couldn\'t find a user for the advent calendar message.', message)
                             return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_XMAS_CALENDAR,
-                            user=user, user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_CALENDAR,
+                                                    user=user, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -155,7 +153,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_advent.enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                end_time = midnight_today + timedelta(days=1, minutes=5)
+                end_time = midnight_today + timedelta(days=1, seconds=random.randint(60, 300))
                 time_left = end_time - current_time
                 user_command = await functions.get_slash_command(user_settings, 'xmas calendar')
                 reminder_message = user_settings.alert_advent.message.replace('{command}', user_command)
@@ -186,10 +184,8 @@ class ChristmasCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a user for the xmas chimney message.', message)
                         return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_XMAS_CHIMNEY,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_CHIMNEY,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -243,10 +239,8 @@ class ChristmasCog(commands.Cog):
                         await errors.log_error('Couldn\'t find a user for the xmas gingerbread message.', message)
                         return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_XMAS_EAT_GINGERBREAD,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_EAT_GINGERBREAD,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -287,10 +281,8 @@ class ChristmasCog(commands.Cog):
                                                message)
                         return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_AREA_MOVE_CANDY_CANE,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_AREA_MOVE_CANDY_CANE,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -366,10 +358,8 @@ class ChristmasCog(commands.Cog):
                         return
                 if user is None:
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_HUNT_ADVENTURE,
-                            user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_HUNT_ADVENTURE,
+                                                    user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -423,8 +413,8 @@ class ChristmasCog(commands.Cog):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    user_command_message = await functions.get_message_from_channel_history(
-                        message.channel, regex.COMMAND_XMAS_CRAFT_COOKIES_AND_MILK
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_CRAFT_COOKIES_AND_MILK)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)

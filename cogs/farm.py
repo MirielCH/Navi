@@ -7,8 +7,9 @@ import re
 import discord
 from discord.ext import commands
 
+from cache import messages
 from database import errors, reminders, tracking, users
-from resources import emojis, exceptions, functions, regex, settings, strings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class FarmCog(commands.Cog):
@@ -63,10 +64,8 @@ class FarmCog(commands.Cog):
                             await errors.log_error('User not found in farm cooldown message.', message)
                             return
                     user_command_message = (
-                        await functions.get_message_from_channel_history(
-                            message.channel, regex.COMMAND_FARM,
-                            user=user, user_name=user_name
-                        )
+                        await messages.find_message(message.channel.id, regex.COMMAND_FARM,
+                                                    user=user, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -129,10 +128,8 @@ class FarmCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_FARM,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_FARM,
+                                                    user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -199,10 +196,8 @@ class FarmCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                            await functions.get_message_from_channel_history(
-                                message.channel, regex.COMMAND_FARM,
-                                user_name=user_name
-                            )
+                            await messages.find_message(message.channel.id, regex.COMMAND_FARM,
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
