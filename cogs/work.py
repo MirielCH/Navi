@@ -150,17 +150,28 @@ class WorkCog(commands.Cog):
                 '** consiguió ', #Spanish
                 '** conseguiu ', #Portuguese
             ]
+            search_strings_work_items = [
+                'wooden log',
+                'epic log',
+                'super log',
+                '**mega** log',
+                '**hyper** log',
+                'ultimate log',
+                'ultra log',
+                'normie fish',
+                'golden fish',
+                'epic fish',
+                'super fish',
+                'apple',
+                'banana',
+                'watermelon',
+            ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
-                and all(search_string not in message_content.lower() for search_string in excluded_strings)):
+                and all(search_string not in message_content.lower() for search_string in excluded_strings)
+                and any(search_string in message_content.lower() for search_string in search_strings_work_items)):
                 user_name = user_command = last_work_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
-                xmas_search_patterns = [
-                    r'^\*\*(.+?)\*\*\s+got\s+(.+?)\s+(.+? )?(.+?)\s+present$',
-                    r'^\*\*(.+?)\*\*\s+got\s+(.+?)\s+(.+? )?(.+?)\s+snowballs?$'
-                ]
-                xmas_item_match = await functions.get_match_from_patterns(xmas_search_patterns, message_content)
-                if xmas_item_match: return
                 if user is None:
                     search_patterns = [
                         r'[!1] \*\*(.+?)\*\* got', #English 1

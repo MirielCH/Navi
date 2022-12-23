@@ -58,7 +58,9 @@ async def command_ready(
     user: Optional[discord.User] = None
 ) -> None:
     """Lists all commands that are ready to use"""
-
+    channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
+    if not channel_permissions.view_channel or not channel_permissions.send_messages or not channel_permissions.embed_links:
+        return
     async def get_command_from_activity(activity:str) -> str:
         if activity == 'dungeon-miniboss':
             command_dungeon = await functions.get_slash_command(user_settings, 'dungeon', False)

@@ -69,9 +69,9 @@ class LotteryCog(commands.Cog):
                 if reminder.triggered: return
                 user_command = await functions.get_slash_command(user_settings, 'lottery')
                 if user_settings.slash_mentions_enabled:
-                    user_command = f"{user_command} `amount: [1-10]`"
+                    user_command = f"{user_command} `amount: [1-200]`"
                 else:
-                    user_command = f"{user_command} `buy [1-10]`".replace('` `', ' ')
+                    user_command = f"{user_command} `buy [1-200]`".replace('` `', ' ')
                 search_patterns = [
                     r'next draw\*\*: (.+?)$', #English
                     r'siguiente ronda\*\*: (.+?)$', #Spanish
@@ -123,9 +123,9 @@ class LotteryCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'lottery')
                 if user_settings.slash_mentions_enabled:
-                    user_command = f"{user_command} `amount: [1-10]`"
+                    user_command = f"{user_command} `amount: [1-200]`"
                 else:
-                    user_command = f"{user_command} `buy [1-10]`".replace('` `', ' ')
+                    user_command = f"{user_command} `buy [1-200]`".replace('` `', ' ')
                 search_patterns = [
                     r'the winner in \*\*(.+?)\*\*', #English
                     r'el ganador en \*\*(.+?)\*\*', #Spanish
@@ -165,9 +165,9 @@ class LotteryCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'lottery')
                 if user_settings.slash_mentions_enabled:
-                    user_command = f"{user_command} `amount: [1-10]`"
+                    user_command = f"{user_command} `amount: [1-200]`"
                 else:
-                    user_command = f"{user_command} `buy [1-10]`".replace('` `', ' ')
+                    user_command = f"{user_command} `buy [1-200]`".replace('` `', ' ')
                 current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
                 today_12pm = datetime.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
                 today_12am = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
