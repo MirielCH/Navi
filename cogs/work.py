@@ -165,6 +165,8 @@ class WorkCog(commands.Cog):
                 'apple',
                 'banana',
                 'watermelon',
+                'ruby',
+                'coins',
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in excluded_strings)
