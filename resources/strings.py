@@ -26,7 +26,7 @@ DEFAULT_MESSAGE_EVENT = (
 DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **{message}**!'
 
 DEFAULT_MESSAGES = {
-    'advent': DEFAULT_MESSAGE,
+    'advent-calendar': DEFAULT_MESSAGE,
     'adventure': DEFAULT_MESSAGE,
     'arena': DEFAULT_MESSAGE,
     'big-arena': DEFAULT_MESSAGE_EVENT,
