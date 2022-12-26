@@ -110,7 +110,7 @@ TIME_COOKIE_AFFECTED_ACTIVITIES = (
 )
 
 ACTIVITIES = (
-    'advent-calendar',
+    #'advent-calendar',
     'adventure',
     'arena',
     'big-arena',
@@ -143,7 +143,7 @@ ACTIVITIES_ALL.sort()
 ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
-    'advent-calendar',
+    #'advent-calendar',
     'adventure',
     'arena',
     #'boo',

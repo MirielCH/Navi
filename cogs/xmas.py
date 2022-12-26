@@ -122,6 +122,9 @@ class ChristmasCog(commands.Cog):
                 '— advent calendar', #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
+                current_time = datetime.utcnow().replace(microsecond=0)
+                christmas_day = datetime(year=current_time.year, month=12, day=25, hour=0, minute=0, second=0)
+                if current_time >= christmas_day: return
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:

@@ -825,7 +825,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     command_reminders = (
-        f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_advent.visible)}\n'
+        #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_advent.visible)}\n'
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
         f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await bool_to_text(user_settings.alert_boo.visible)}\n'
@@ -885,8 +885,8 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
                                    user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
     command_reminders = (
-        f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
-        f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
+        #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
+        #f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'

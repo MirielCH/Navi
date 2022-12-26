@@ -276,7 +276,7 @@ class SettingsReadyView(discord.ui.View):
         self.clan_settings = clan_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            'Advent calendar': 'alert_advent',
+            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
@@ -360,7 +360,7 @@ class SettingsRemindersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            'Advent calendar': 'alert_advent',
+            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
