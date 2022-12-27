@@ -217,7 +217,7 @@ class PetsCog(commands.Cog):
                     'snowball': emojis.PET_SNOWBALL,
                     'pony': emojis.PET_PONY,
                     'panda': emojis.PET_PANDA,
-                    'snowman': emojis.PET_SNOWBALL,
+                    'snowman': emojis.PET_SNOWMAN,
                     'penguin': emojis.PET_PENGUIN,
                 }
                 user_id = user_name = user_command_message = None
