@@ -109,6 +109,22 @@ TIME_COOKIE_AFFECTED_ACTIVITIES = (
     'work'
 )
 
+XMAS_AREA_AFFECTED_ACTIVITIES = (
+    'adventure',
+    'arena',
+    'clan',
+    'chimney',
+    'epic',
+    'farm',
+    'horse',
+    'hunt',
+    'lootbox',
+    'dungeon-miniboss',
+    'quest',
+    'training',
+    'work',
+)
+
 ACTIVITIES = (
     #'advent-calendar',
     'adventure',
