@@ -213,9 +213,9 @@ class ChristmasCog(commands.Cog):
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings_stuck = [
-                    'now stuck on the chimney', #English
+                    'now stuck in the chimney', #English
                     'atascó en la chimenea', #Spanish
-                    'now stuck on the chimney', #Portuguese, MISSING
+                    'now stuck in the chimney', #Portuguese, MISSING
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_stuck):
                     reminder: reminders.Reminder = (
@@ -261,6 +261,7 @@ class ChristmasCog(commands.Cog):
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
+                if user_settings.current_area != 0: await user_settings.update(current_area=0)
 
             # Turn off christmas area mode when changing area or using a candy cane
             search_strings = [
@@ -317,9 +318,7 @@ class ChristmasCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and (
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
-                    or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                     or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)
-                    or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
                 )
             ):
                 if 'christmas slime' in message_content.lower(): return

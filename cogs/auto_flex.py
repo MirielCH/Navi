@@ -44,7 +44,10 @@ FLEX_TITLES = {
     'time_travel_10': strings.FLEX_TITLES_TIME_TRAVEL_10,
     'time_travel_25': strings.FLEX_TITLES_TIME_TRAVEL_25,
     'time_travel_50': strings.FLEX_TITLES_TIME_TRAVEL_50,
-    'time_travel_100': strings.FLEX_TITLES_TIME_TRAVEL_100,
+    'time_travel_100': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_150': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_200': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_300': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'xmas_chimney': strings.FLEX_TITLES_XMAS_CHIMNEY,
     'xmas_godly': strings.FLEX_TITLES_XMAS_GODLY,
     'xmas_snowball': strings.FLEX_TITLES_XMAS_SNOWBALL,
@@ -84,7 +87,10 @@ FLEX_THUMBNAILS = {
     'time_travel_10': strings.FLEX_THUMBNAILS_TIME_TRAVEL_10,
     'time_travel_25': strings.FLEX_THUMBNAILS_TIME_TRAVEL_25,
     'time_travel_50': strings.FLEX_THUMBNAILS_TIME_TRAVEL_50,
-    'time_travel_100': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100,
+    'time_travel_100': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_150': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_200': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_300': strings.FLEX_THUMBNAILS_TIME_TRAVEL_300,
     'xmas_chimney': strings.FLEX_THUMBNAILS_XMAS_CHIMNEY,
     'xmas_godly': strings.FLEX_THUMBNAILS_XMAS_GODLY,
     'xmas_snowball': strings.FLEX_THUMBNAILS_XMAS_SNOWBALL,
@@ -540,8 +546,26 @@ class AutoFlexCog(commands.Cog):
                     event = 'time_travel_100'
                     description = (
                         f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
-                        f'Damn, you must really like this game. I just hope you don\'t expect any more flexes after this.\n'
-                        f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
+                        f'Damn, you must really like this game. Enjoy your new high quality background!\n'
+                        f'Don\'t forget your sunglasses.'
+                    )
+                elif time_travel_count_old < 150 and time_travel_count_new >= 150:
+                    event = 'time_travel_150'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 150**!\n'
+                        f'I\'m starting to question your life choices.\n'
+                        f'You can stop playing now btw, there will be no more backgrounds.\n'
+                    )
+                elif time_travel_count_old < 200 and time_travel_count_new >= 200:
+                    event = 'time_travel_200'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 200**!\n'
+                        f'What on earth made you do this 200 times? You mad?\n'
+                    )
+                elif time_travel_count_old < 300 and time_travel_count_new >= 300:
+                    event = 'time_travel_300'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **SPARTA**!\n'
                     )
                 else:
                     return
@@ -949,9 +973,7 @@ class AutoFlexCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and (
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
-                    or any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                     or any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)
-                    or any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
                 )
                 and any(search_string in message_content.lower() for search_string in search_strings_lootboxes)
             ):

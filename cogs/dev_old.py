@@ -349,7 +349,6 @@ class DevOldCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def test(self, ctx: commands.Context) -> None:
         if ctx.author.id not in settings.DEV_IDS: return
-        from resources import functions
         test_list = []
         for x in range(1,60):
             test_list.append(x)
@@ -357,10 +356,10 @@ class DevOldCog(commands.Cog):
             test_list = test_list[-50:]
         pass
 
-    # Check cache size
     @dev.command()
     @commands.bot_has_permissions(send_messages=True)
     async def cache(self, ctx: commands.Context) -> None:
+        """Shows cache size"""
         if ctx.author.id not in settings.DEV_IDS: return
         from cache import messages
         cache_size = sys.getsizeof(messages._MESSAGE_CACHE)
@@ -376,6 +375,18 @@ class DevOldCog(commands.Cog):
             f'Channel count: {channel_count:,}\n'
             f'Message count: {message_count:,}\n'
         )
+
+    @dev.command()
+    @commands.bot_has_permissions(send_messages=True)
+    async def migrate_messages(self, ctx: commands.Context) -> None:
+        """Migrates the hunt message of all users to include drop_emoji IF they didn't change it"""
+        if ctx.author.id not in settings.DEV_IDS: return
+        from database import users
+        all_user_settings = await users.get_all_users()
+        for user_settings in all_user_settings:
+            if user_settings.alert_hunt.message == strings.DEFAULT_MESSAGE:
+                await user_settings.update(alert_hunt_message=strings.DEFAULT_MESSAGES['hunt'])
+        await ctx.reply('Done')
 
 def setup(bot):
     bot.add_cog(DevOldCog(bot))

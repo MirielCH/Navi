@@ -734,11 +734,15 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
             title = title if embed_no < 2 else None
         )
         allowed_placeholders = ''
-        for placeholder in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
+        for placeholder_match in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
+            placeholder = placeholder_match.group(1)
+            placeholder_description = strings.PLACEHOLDER_DESCRIPTIONS.get(placeholder, '')
             allowed_placeholders = (
                 f'{allowed_placeholders}\n'
-                f'{emojis.BP} {{{placeholder.group(1)}}}'
+                f'{emojis.BP} **{{{placeholder}}}**'
             )
+            if placeholder_description != '':
+                allowed_placeholders = f'{allowed_placeholders}\n{emojis.DETAIL}_{placeholder_description}_'
         if allowed_placeholders == '':
             allowed_placeholders = f'_There are no placeholders available for this message._'
         embed.add_field(name='CURRENT MESSAGE', value=f'{emojis.BP} {alert.message}', inline=False)
@@ -920,6 +924,21 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Minin\'tboss**: {await functions.bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}\n'
         f'{emojis.BP} **Pet tournament**: {await functions.bool_to_text(user_settings.alert_pet_tournament.enabled)}\n'
     )
+    multipliers = (
+        f'_Multipliers can be used to add custom reminder reductions (e.g. for area 18)._\n'
+        f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
+        f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: `{user_settings.alert_chimney.multiplier}`\n'
+        f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
+        f'{emojis.BP} **Duel**: `{user_settings.alert_duel.multiplier}`\n'
+        f'{emojis.BP} **EPIC items**: `{user_settings.alert_epic.multiplier}`\n'
+        f'{emojis.BP} **Farm**: `{user_settings.alert_farm.multiplier}`\n'
+        f'{emojis.BP} **Hunt**: `{user_settings.alert_hunt.multiplier}`\n'
+        f'{emojis.BP} **Lootbox**: `{user_settings.alert_lootbox.multiplier}`\n'
+        f'{emojis.BP} **Quest**: `{user_settings.alert_quest.multiplier}`\n'
+        f'{emojis.BP} **Training**: `{user_settings.alert_training.multiplier}`\n'
+        f'{emojis.BP} **Weekly**: `{user_settings.alert_weekly.multiplier}`\n'
+        f'{emojis.BP} **Work**: `{user_settings.alert_work.multiplier}`\n'
+    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S REMINDER SETTINGS',
@@ -931,6 +950,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
     return embed
 
 
@@ -966,6 +986,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         tt_timestamp = int(user_settings.last_tt.timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
+    ascension = 'Ascended' if user_settings.ascended else 'Not ascended'
 
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
@@ -977,10 +998,12 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
     donor_tier = (
-        f'{emojis.BP} **You**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'
-        f'{emojis.BP} **Your partner**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.BP} **Your donor tier**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'
+        f'{emojis.BP} **Your partner\'s donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
         f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
-        f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._'
+        f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._\n'
+        f'{emojis.BP} **Ascension**: `{ascension}`\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} to update this setting._\n'
     )
     behaviour = (
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
@@ -1005,7 +1028,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         )
     )
     embed.add_field(name='MAIN', value=bot, inline=False)
-    embed.add_field(name='EPIC RPG DONOR TIERS', value=donor_tier, inline=False)
+    embed.add_field(name='EPIC RPG RELATED', value=donor_tier, inline=False)
     embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
     embed.add_field(name='TRACKING', value=tracking, inline=False)
     return embed

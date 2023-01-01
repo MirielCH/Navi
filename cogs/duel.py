@@ -141,7 +141,7 @@ class DuelCog(commands.Cog):
                     interaction_user_settings = None
                 if interaction_user_settings is not None:
                     time_left = await functions.calculate_time_left_from_cooldown(message, interaction_user_settings,
-                                                                              'duel')
+                                                                                  'duel')
                     if time_left < timedelta(0): return
                     if interaction_user_settings.bot_enabled and interaction_user_settings.alert_duel.enabled:
                         user_command = await functions.get_slash_command(interaction_user_settings, 'duel')

@@ -173,7 +173,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
     if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
         time_left_seconds *= 0.9
-    return timedelta(seconds=time_left_seconds)
+    alert_settings = getattr(user_settings, f'alert_{activity.replace("-","_")}')
+    return timedelta(seconds=time_left_seconds * alert_settings.multiplier)
 
 
 async def calculate_time_left_from_timestring(message: discord.Message, timestring: str) -> timedelta:
@@ -955,6 +956,15 @@ async def get_navi_slash_command(bot: discord.Bot, command_name: str) -> None:
         if command.name == main_command:
             return f'</{command_name}:{command.id}>'
     return f'`/{command_name}`'
+
+
+async def get_area(mob_name: str) -> None:
+    """Gets the area from a mob name"""
+    for area, monsters in strings.MONSTERS_AREA.items():
+        monsters = [monster.lower() for monster in monsters]
+        if mob_name.lower() in monsters:
+            return area
+    return None
 
 
 def await_coroutine(coro):

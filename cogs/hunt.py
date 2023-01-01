@@ -128,8 +128,10 @@ class HuntCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
+                    time_left_seconds = time_left.total_seconds()
                     if user_settings.christmas_area_enabled:
-                        time_left = timedelta(seconds=time_left.total_seconds()*0.9)
+                        time_left_seconds *= 0.9
+                    time_left_seconds *= user_settings.alert_hunt.multiplier
                 else:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
@@ -138,7 +140,8 @@ class HuntCog(commands.Cog):
                     partner_cooldown = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[partner_donor_tier])
                     user_cooldown = (actual_cooldown
-                                    * settings.DONOR_COOLDOWNS[user_donor_tier])
+                                    * settings.DONOR_COOLDOWNS[user_donor_tier]
+                                    * user_settings.alert_hunt.multiplier)
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user in embed_users):
                         time_left_seconds = (time_left.total_seconds()
@@ -146,7 +149,7 @@ class HuntCog(commands.Cog):
                                             - time_elapsed.total_seconds()
                                             + 1)
                         if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
-                        time_left = timedelta(seconds=time_left_seconds)
+                time_left = timedelta(seconds=time_left_seconds)
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 overwrite_message = False if user_settings.hunt_rotation_enabled else True
                 reminder: reminders.Reminder = (
@@ -167,7 +170,6 @@ class HuntCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and (
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
-                    or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                 )
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
@@ -359,7 +361,7 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= 0.9
                 elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
                     time_left_seconds *= 0.9
-                time_left = timedelta(seconds=time_left_seconds)
+                time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
                 if time_left < timedelta(0): return
                 if user_settings.alert_hunt.enabled:
@@ -550,7 +552,7 @@ class HuntCog(commands.Cog):
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
-                    time_left = timedelta(seconds=time_left_seconds)
+                    time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
@@ -605,7 +607,7 @@ class HuntCog(commands.Cog):
                                             - time_elapsed.total_seconds())
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                    time_left = timedelta(seconds=time_left_seconds)
+                    time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

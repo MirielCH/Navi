@@ -15,6 +15,7 @@ class UserAlert(NamedTuple):
     """Object that summarizes all user settings for a specific alert"""
     enabled: bool
     message: str
+    multiplier: float
     visible: bool
 
 @dataclass()
@@ -46,6 +47,7 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
+    ascended: bool
     auto_flex_enabled: bool
     auto_flex_tip_read: bool
     auto_ready_enabled: bool
@@ -57,6 +59,7 @@ class User():
     cmd_ready_visible: bool
     cmd_slashboard_visible: bool
     context_helper_enabled: bool
+    current_area: int
     dnd_mode_enabled: bool
     halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
@@ -128,6 +131,7 @@ class User():
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
         self.alert_work = new_settings.alert_work
+        self.ascended = new_settings.ascended
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_tip_read = new_settings.auto_flex_tip_read
         self.auto_ready_enabled = new_settings.auto_ready_enabled
@@ -139,6 +143,7 @@ class User():
         self.cmd_ready_visible = new_settings.cmd_ready_visible
         self.cmd_slashboard_visible = new_settings.cmd_slashboard_visible
         self.context_helper_enabled = new_settings.context_helper_enabled
+        self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
@@ -192,6 +197,7 @@ class User():
             alert_advent_visible: bool
             alert_adventure_enabled: bool
             alert_adventure_message: str
+            alert_adventure_multiplier: float
             alert_adventure_visible: bool
             alert_arena_enabled: bool
             alert_arena_message: str
@@ -204,21 +210,26 @@ class User():
             alert_boo_visible: bool
             alert_chimney_enabled: bool
             alert_chimney_message: str
+            alert_chimney_multiplier: float
             alert_chimney_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
+            alert_daily_multiplier: float
             alert_daily_visible: bool
             alert_duel_enabled: bool
             alert_duel_message: str
+            alert_duel_multiplier: float
             alert_duel_visible: bool
             alert_dungeon_miniboss_enabled: bool
             alert_dungeon_miniboss_message: str
             alert_dungeon_miniboss_visible: bool
             alert_epic_enabled: bool
             alert_epic_message: str
+            alert_epic_multiplier: float
             alert_epic_visible: bool
             alert_farm_enabled: bool
             alert_farm_message: str
+            alert_farm_multiplier: float
             alert_farm_visible: bool
             alert_guild_enabled: bool
             alert_guild_message: str
@@ -231,9 +242,11 @@ class User():
             alert_horse_race_visible: bool
             alert_hunt_enabled: bool
             alert_hunt_message: str
+            alert_hunt_multiplier: float
             alert_hunt_visible: bool
             alert_lootbox_enabled: bool
             alert_lootbox_message: str
+            alert_lootbox_multiplier: float
             alert_lootbox_visible: bool
             alert_lottery_enabled: bool
             alert_lottery_message: str
@@ -251,19 +264,24 @@ class User():
             alert_pets_visible: bool
             alert_quest_enabled: bool
             alert_quest_message: str
+            alert_quest_multiplier: float
             alert_quest_visible: bool
             alert_training_enabled: bool
             alert_training_message: str
+            alert_training_multiplier: float
             alert_training_visible: bool
             alert_vote_enabled: bool
             alert_vote_message: str
             alert_vote_visible: bool
             alert_weekly_enabled: bool
             alert_weekly_message: str
+            alert_weekly_multiplier: float
             alert_weekly_visible: bool
             alert_work_enabled: bool
             alert_work_message: str
+            alert_work_multiplier: float
             alert_work_visible: bool
+            ascended: bool
             auto_flex_enabled: bool
             auto_flex_tip_read: bool
             auto_ready_enabled: bool
@@ -275,6 +293,7 @@ class User():
             cmd_slashboard_visible: bool
             christmas_area_enabled: bool
             context_helper_enabled: bool
+            current_area: int
             dnd_mode_enabled: bool
             guild_quest_prompt_active: bool
             halloween_helper_enabled: bool
@@ -342,82 +361,109 @@ async def _dict_to_user(record: dict) -> User:
         user = User(
             alert_advent = UserAlert(enabled=bool(record['alert_advent_enabled']),
                                      message=record['alert_advent_message'],
+                                     multiplier=1.0,
                                      visible=bool(record['alert_advent_visible'])),
             alert_adventure = UserAlert(enabled=bool(record['alert_adventure_enabled']),
                                         message=record['alert_adventure_message'],
+                                        multiplier=float(record['alert_adventure_multiplier']),
                                         visible=bool(record['alert_adventure_visible'])),
             alert_arena = UserAlert(enabled=bool(record['alert_arena_enabled']),
                                     message=record['alert_arena_message'],
+                                    multiplier=1.0,
                                     visible=bool(record['alert_arena_visible'])),
             alert_boo = UserAlert(enabled=bool(record['alert_boo_enabled']),
                                     message=record['alert_boo_message'],
+                                    multiplier=1.0,
                                     visible=bool(record['alert_boo_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
+                                      multiplier=float(record['alert_chimney_multiplier']),
                                       visible=bool(record['alert_chimney_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
+                                        multiplier=1.0,
                                         visible=bool(record['alert_big_arena_visible'])),
             alert_daily = UserAlert(enabled=bool(record['alert_daily_enabled']),
                                     message=record['alert_daily_message'],
+                                    multiplier=float(record['alert_daily_multiplier']),
                                     visible=bool(record['alert_daily_visible'])),
             alert_duel = UserAlert(enabled=bool(record['alert_duel_enabled']),
                                    message=record['alert_duel_message'],
+                                   multiplier=float(record['alert_duel_multiplier']),
                                    visible=bool(record['alert_duel_visible'])),
             alert_dungeon_miniboss = UserAlert(enabled=bool(record['alert_dungeon_miniboss_enabled']),
                                                message=record['alert_dungeon_miniboss_message'],
+                                               multiplier=1.0,
                                                visible=bool(record['alert_dungeon_miniboss_visible'])),
             alert_epic = UserAlert(enabled=bool(record['alert_epic_enabled']),
                                                message=record['alert_epic_message'],
+                                               multiplier=float(record['alert_epic_multiplier']),
                                                visible=bool(record['alert_epic_visible'])),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
                                    message=record['alert_farm_message'],
+                                   multiplier=float(record['alert_farm_multiplier']),
                                    visible=bool(record['alert_farm_visible'])),
             alert_guild = UserAlert(enabled=bool(record['alert_guild_enabled']),
                                    message=record['alert_guild_message'],
+                                   multiplier=1.0,
                                    visible=bool(record['alert_guild_visible'])),
             alert_horse_breed = UserAlert(enabled=bool(record['alert_horse_breed_enabled']),
                                           message=record['alert_horse_breed_message'],
+                                          multiplier=1.0,
                                           visible=bool(record['alert_horse_breed_visible'])),
             alert_horse_race = UserAlert(enabled=bool(record['alert_horse_race_enabled']),
                                          message=record['alert_horse_race_message'],
+                                         multiplier=1.0,
                                          visible=bool(record['alert_horse_race_visible'])),
             alert_hunt = UserAlert(enabled=bool(record['alert_hunt_enabled']),
                                    message=record['alert_hunt_message'],
+                                   multiplier=float(record['alert_hunt_multiplier']),
                                    visible=bool(record['alert_hunt_visible'])),
             alert_lootbox = UserAlert(enabled=bool(record['alert_lootbox_enabled']),
                                       message=record['alert_lootbox_message'],
+                                      multiplier=float(record['alert_lootbox_multiplier']),
                                       visible=bool(record['alert_lootbox_visible'])),
             alert_lottery = UserAlert(enabled=bool(record['alert_lottery_enabled']),
                                       message=record['alert_lottery_message'],
+                                      multiplier=1.0,
                                       visible=bool(record['alert_lottery_visible'])),
             alert_not_so_mini_boss = UserAlert(enabled=bool(record['alert_not_so_mini_boss_enabled']),
                                                message=record['alert_not_so_mini_boss_message'],
+                                               multiplier=1.0,
                                                visible=bool(record['alert_not_so_mini_boss_visible'])),
             alert_partner = UserAlert(enabled=bool(record['alert_partner_enabled']),
                                       message=record['alert_partner_message'],
+                                      multiplier=1.0,
                                       visible=True),
             alert_pet_tournament = UserAlert(enabled=bool(record['alert_pet_tournament_enabled']),
                                              message=record['alert_pet_tournament_message'],
+                                             multiplier=1.0,
                                              visible=bool(record['alert_pet_tournament_visible'])),
             alert_pets = UserAlert(enabled=bool(record['alert_pets_enabled']),
                                    message=record['alert_pets_message'],
+                                   multiplier=1.0,
                                    visible=record['alert_pets_visible']),
             alert_quest = UserAlert(enabled=bool(record['alert_quest_enabled']),
                                     message=record['alert_quest_message'],
+                                    multiplier=float(record['alert_quest_multiplier']),
                                     visible=bool(record['alert_quest_visible'])),
             alert_training = UserAlert(enabled=bool(record['alert_training_enabled']),
                                        message=record['alert_training_message'],
+                                       multiplier=float(record['alert_training_multiplier']),
                                        visible=bool(record['alert_training_visible'])),
             alert_vote = UserAlert(enabled=bool(record['alert_vote_enabled']),
                                    message=record['alert_vote_message'],
+                                   multiplier=1.0,
                                    visible=bool(record['alert_vote_visible'])),
             alert_weekly = UserAlert(enabled=bool(record['alert_weekly_enabled']),
                                     message=record['alert_weekly_message'],
+                                    multiplier=float(record['alert_weekly_multiplier']),
                                     visible=bool(record['alert_weekly_visible'])),
             alert_work = UserAlert(enabled=bool(record['alert_work_enabled']),
                                    message=record['alert_work_message'],
+                                   multiplier=float(record['alert_work_multiplier']),
                                    visible=bool(record['alert_work_visible'])),
+            ascended = bool(record['ascended']),
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
@@ -429,6 +475,7 @@ async def _dict_to_user(record: dict) -> User:
             cmd_ready_visible = record['cmd_ready_visible'],
             cmd_slashboard_visible = record['cmd_slashboard_visible'],
             context_helper_enabled = bool(record['context_helper_enabled']),
+            current_area = -1 if record['current_area'] is None else record['current_area'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
@@ -628,6 +675,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_advent_visible: bool
         alert_adventure_enabled: bool
         alert_adventure_message: str
+        alert_adventure_multiplier: float
         alert_adventure_visible: bool
         alert_arena_enabled: bool
         alert_arena_message: str
@@ -640,21 +688,26 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boo_visible: bool
         alert_chimney_enabled: bool
         alert_chimney_message: str
+        alert_chimney_multiplier: float
         alert_chimney_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
+        alert_daily_multiplier: float
         alert_daily_visible: bool
         alert_duel_enabled: bool
         alert_duel_message: str
+        alert_duel_multiplier: float
         alert_duel_visible: bool
         alert_dungeon_miniboss_enabled: bool
         alert_dungeon_miniboss_message: str
         alert_dungeon_miniboss_visible: bool
         alert_epic_enabled: bool
         alert_epic_message: str
+        alert_epic_multiplier: float
         alert_epic_visible: bool
         alert_farm_enabled: bool
         alert_farm_message: str
+        alert_farm_multiplier: float
         alert_farm_visible: bool
         alert_guild_enabled: bool
         alert_guild_message: str
@@ -667,9 +720,11 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_horse_race_visible: bool
         alert_hunt_enabled: bool
         alert_hunt_message: str
+        alert_hunt_multiplier: float
         alert_hunt_visible: bool
         alert_lootbox_enabled: bool
         alert_lootbox_message: str
+        alert_lootbox_multiplier: float
         alert_lootbox_visible: bool
         alert_lottery_enabled: bool
         alert_lottery_message: str
@@ -687,31 +742,38 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_pets_visible: bool
         alert_quest_enabled: bool
         alert_quest_message: str
+        alert_quest_multiplier: float
         alert_quest_visible: bool
         alert_training_enabled: bool
         alert_training_message: str
+        alert_training_multiplier: float
         alert_training_visible: bool
         alert_vote_enabled: bool
         alert_vote_message: str
         alert_vote_visible: bool
         alert_weekly_enabled: bool
         alert_weekly_message: str
+        alert_weekly_multiplier: float
         alert_weekly_visible: bool
         alert_work_enabled: bool
         alert_work_message: str
+        alert_work_multiplier: float
         alert_work_visible: bool
+        ascended: bool
         auto_flex_enabled: bool
         auto_flex_tip_read: bool
         auto_ready_enabled: bool
         bot_enabled: bool
         clan_name: str
-        christmas_area_enabled: bool
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
-        cmd_ready_visible: bool
+        cmd_cmd_ready_visible: bool
         cmd_slashboard_visible: bool
+        christmas_area_enabled: bool
         context_helper_enabled: bool
+        current_area: int
         dnd_mode_enabled: bool
+        guild_quest_prompt_active: bool
         halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
@@ -722,8 +784,8 @@ async def _update_user(user: User, **kwargs) -> None:
         last_lootbox: str
         last_quest_command: str
         last_training_command: str
-        last_tt: datetime UTC (iso format with separator ' ')
-        last_work_command: str
+        last_tt: datetime UTC
+        last_workt_command: str
         partner_channel_id: int
         partner_donor_tier: int
         partner_hunt_end_time: datetime
@@ -731,6 +793,9 @@ async def _update_user(user: User, **kwargs) -> None:
         partner_name: str
         pet_helper_enabled: bool
         pet_helper_icon_mode: bool
+        pet_tip_read: bool
+        ping_after_message: bool
+        reactions_enabled: bool
         ready_as_embed: bool
         ready_embed_color: str
         ready_pets_claim_active: bool

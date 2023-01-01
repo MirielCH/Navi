@@ -170,6 +170,10 @@ async def command_ready(
     current_time = datetime.utcnow().replace(microsecond=0)
     if 'hunt' in ready_command_activities and user_settings.partner_hunt_end_time > current_time:
         ready_command_activities.remove('hunt')
+    if 'farm' in ready_command_activities and not user_settings.ascended and user_settings.current_area in [1,2,3]:
+        ready_command_activities.remove('farm')
+    if 'training' in ready_command_activities and not user_settings.ascended and user_settings.current_area == 1:
+        ready_command_activities.remove('training')
     for activity in ready_command_activities.copy():
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:

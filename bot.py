@@ -22,7 +22,7 @@ try:
     db_version = int(dict(record)['user_version'])
     if db_version != NAVI_DB_VERSION:
         print(
-            'Your database structure is outdated. Please run "database/migrate_database.py" first.'
+            'Your database structure is outdated. Please run "database/update_database.py" first.'
         )
         sys.exit()
 except sqlite3.Error as error:
@@ -101,10 +101,12 @@ async def on_error(event: str, *args, **kwargs) -> None:
 EXTENSIONS = [
         'cogs.adventure',
         'cogs.arena',
+        'cogs.ascension',
         'cogs.auto_flex',
         'cogs.cooldowns',
         'cogs.cache',
         'cogs.clan',
+        'cogs.current_area',
         'cogs.daily',
         'cogs.dev',
         'cogs.duel',

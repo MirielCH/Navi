@@ -53,6 +53,8 @@ class TasksCog(commands.Cog):
                             message = f'{reminder_message.replace("{name}", f"**{user.name}**")}\n'
                         else:
                             message = f'{reminder_message.replace("{name}", user.mention)}\n'
+                        mob_drop_emoji = emojis.MONSTER_DROP_AREAS_EMOJIS.get(user_settings.current_area, '')
+                        message = message.replace('{drop_emoji}', mob_drop_emoji).strip()
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''

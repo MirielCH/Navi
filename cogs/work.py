@@ -295,6 +295,7 @@ class WorkCog(commands.Cog):
                 'it seems like the dragon just had 1 point of life',
                 'the dragon did not move an inch',
                 'you slept well and the items respawned',
+                '**EPIC NPC** came here to gave you',
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction(message)
@@ -344,9 +345,13 @@ class WorkCog(commands.Cog):
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Work event slash (all languages)
-            if  (':x:' in message_content.lower()
-                 or ':crossed_swords:' in message_content.lower()
-                 or ':zzz:' in message_content.lower()):
+            search_strings = [
+                ':x:',
+                ':crossed_swords:',
+                ':zzz:',
+                ':sweat_drops:',
+            ]
+            if  any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command = None
                 interaction = await functions.get_interaction(message)
                 if interaction is not None:

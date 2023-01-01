@@ -133,3 +133,39 @@ class SetPrefixModal(Modal):
         await self.view.guild_settings.update(prefix=new_prefix)
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+
+class SetMultiplierModal(Modal):
+    def __init__(self, view: discord.ui.View, activity: str) -> None:
+        super().__init__(title='Change command multiplier')
+        self.view = view
+        self.activity = activity
+        self.add_item(
+            InputText(
+                label='New multiplier (0.01 - 2.00):',
+                placeholder="Enter multiplier ...",
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        new_multiplier = self.children[0].value
+        try:
+            new_multiplier = float(new_multiplier)
+        except ValueError:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('That is not a valid number.', ephemeral=True)
+            return
+        if not 0.01 <= new_multiplier <= 2.0:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('The multiplier needs to be between 0.01 and 2.00', ephemeral=True)
+            return
+        kwargs = {}
+        if self.activity == 'all':
+            for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+                kwargs[f'alert_{activity}_multiplier'] = new_multiplier
+        else:
+            kwargs[f'alert_{self.activity}_multiplier'] = new_multiplier
+        await self.view.user_settings.update(**kwargs)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)

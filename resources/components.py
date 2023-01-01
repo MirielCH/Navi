@@ -884,3 +884,21 @@ class ManageServerSettingsSelect(discord.ui.Select):
             await interaction.message.edit(embed=embed, view=self.view)
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class ManageMultipliersSelect(discord.ui.Select):
+    """Select to change multipliers"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        options.append(discord.SelectOption(label=f'All',
+                                            value='all'))
+        for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+            options.append(discord.SelectOption(label=activity.capitalize(),
+                                                value=activity))
+        super().__init__(placeholder='Change multipliers', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_multipliers')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        modal = modals.SetMultiplierModal(self.view, select_value)
+        await interaction.response.send_modal(modal)

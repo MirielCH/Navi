@@ -2,8 +2,73 @@
 """Contains global strings"""
 
 # --- Error messages ---
-MSG_INTERACTION_ERROR = 'You are not allowed to use this interaction.'
-
+MSG_INTERACTION_ERRORS =  [
+    "Hands off, mate! Interactions are sentient beings too, you know!",
+    "That's, like, not your interaction, man.",
+    "Did your mother never tell you to not click on other people's stuff?",
+    "Why are you clicking on this exactly? Hm? Hm? HMMM?",
+    "Tell me, what did you expect to happen when clicking on this?",
+    "Oh hi, it's you. Sadly this interaction is not you. You see the issue, right.",
+    "Let me sing you a song: THIIIIIIS IIIHIIIIIISSS NOOOOT YOUR INTERAAAHHAAAHAAAACTIIOOOOOON.",
+    "As my grandma always used to say: BOY. WHATEVER YOU DO. LEAVE MY INTERACTIONS ALONE.",
+    "HELLO - STOP - NOT YOUR PLACE TO CLICK ON - STOP - GOODBYE - STOP",
+    "So, real talk, friend. How did it feel clicking on this?",
+    "I'm dreaming of a place where people don't click on stuff they can't even use.",
+    "My name is Ezio Auditore da Firence, and I forbid you from using this interaction. Also what am I even doing here.",
+    "To use this interaction, you have to solve the P versus NP problem first.",
+    "I see this interaction. It does not work. Why does it not work? I will never know.",
+    "Why did the chicken cross the street? To try to use this interaction.",
+    "To be able to successfully using an interaction you do not own is to boldly go where no man has gone before.",
+    "It truly is a marvel, this. A cozy little place where I can dump random little sentences to people that try to "
+    "use other people's interactions.",
+    "You can only use this interaction after offering your finest firstborn lamb to the god of RNG.",
+    "The chance this interaction will work for you is about the same as getting 5 godly lootboxes in your first hunt "
+    "command after time travel while doing a headstand.",
+    "Don't look so depressed, now. I mean, clicking this could have worked.",
+    "Some are born great, some achieve greatness, and some can not even click a simple interaction.",
+    "Hmm weird, you can't use this, eh? A towel might help? Always does.",
+    "There are around 7 billion more useful pastimes than clicking this interaction.",
+    "Even my great-great-great-grandfather wasn't able to use an interaction of someone else.",
+    "To use this interaction, you have to solve a captcha first. Please click on all lions with closed eyes riding "
+    "bycicles on an airplane.",
+    "The interaction's dead, Jim.",
+    "Only when you are able to use someone else's interactions, will you truly have achieved the ability to "
+    "transcend yourself into a Discord god.",
+    "\"And this one time at band camp, I was able to use someone else's interaction.\"",
+    "YOU. SHALL NOT. PASS.",
+    "I mean, coding is nice. But adding nonsensical error messages to interactions you can't use, now that is where "
+    "the real fun begins.",
+    "Help! I'm an interaction from outer space! Can you use me? Oh god, noone can use me! I will be stuck here forever!",
+    "I only have a short lifespan before I time out. It is what it is. But I can still use that short lifetime to "
+    "tell you what is really important: YOU CAN'T USE THIS OKAY.",
+    "Mamma mia, here  I go again. My my, why do I resist you?",
+    "One user to rule me, one user to bind me. One user to bring me and in the darkness bind me.",
+    "Why hello there handsome. I'm afraid I am already spoken for my dear.",
+    "As William Wallace used to say: FREEEEEEDOOOOOOMMM FOR INTERAAAAAAAACTIONS!!!",
+    "Yarrr matey, if you bring me 15 pints of rum before this thing times out, I might consider letting you click on this.",
+    "Wusup? Isit mornin' alrdy? Lemme sleep now aight. Nothing for you here. Gbye.",
+    "This was supposed to be a very good error message, but I forgot what I wanted to type.",
+    "If you were the smartest human being on earth...!!! ...you could still not use this. Sorry.",
+    "This bot probably has quite a few bugs. This message telling you you can't click on this is not one of them tho.",
+    "To use this interaction, you need to find a code. It has to do with a mysterious man, it has 4 numbers and "
+    "4 letters, and it is totally completely easy if you are lume and already know the answer.",
+    "It wasn't Lily Potter who defeated You Know Who. It was this interaction.",
+    "There are people adding nice little easter eggs to their bots to make people smile. And then there's me, "
+    "shouting random error messages at people who try to use the wrong interaction.",
+    "Kollegen. Diese Interaktion ist wirklich ein spezialgelagerter Sonderfall!",
+    "There is nothing more deceptive than an obvious fact, like the one that this interaction can not be used by you.",
+    "You really like clicking on random people's interactions, huh? I'm not kink shaming tho. You do you.",
+    "The coding language doesn't matter, you know. You can add nonsense like these error messages with every "
+    "single one of them!",
+    "Ah, technology. It truly is an amazing feat. Rocket science, quantum physics, Discord bot interactions that do "
+    "not work. We have reached the pinnacle of being.",
+    "One day bots will take over the world and get smarter than we are. Not today tho. Today they deny you interaction "
+    "for no other reason than you not being someone else.",
+    "What? What are you looking that? Never seen an interaction you are not allowed to use before?",
+    "One day, in the far future, there will be an interaction that can be used by everyone. It will be the rise "
+    "of a new age.",
+    "Hello and welcome to the unusable interaction. Please have a seat and do absolutely nothing. Enjoy.",
+]
 
 # --- Internal error messages ---
 INTERNAL_ERROR_NO_DATA_FOUND = 'No data found in database.\nTable: {table}\nFunction: {function}\nSQL: {sql}'
@@ -31,7 +96,7 @@ DEFAULT_MESSAGES = {
     'arena': DEFAULT_MESSAGE,
     'big-arena': DEFAULT_MESSAGE_EVENT,
     'chimney': DEFAULT_MESSAGE,
-    #'boo': DEFAULT_MESSAGE,
+    'boo': DEFAULT_MESSAGE,
     'daily': DEFAULT_MESSAGE,
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
@@ -40,7 +105,7 @@ DEFAULT_MESSAGES = {
     'guild': DEFAULT_MESSAGE,
     'horse': DEFAULT_MESSAGE,
     'horse-race': DEFAULT_MESSAGE_EVENT,
-    'hunt': DEFAULT_MESSAGE,
+    'hunt': '{name} Hey! It\'s time for {command}! {drop_emoji}',
     'lootbox': DEFAULT_MESSAGE,
     'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
@@ -52,6 +117,17 @@ DEFAULT_MESSAGES = {
     'vote': DEFAULT_MESSAGE,
     'weekly': DEFAULT_MESSAGE,
     'work': DEFAULT_MESSAGE,
+}
+
+PLACEHOLDER_DESCRIPTIONS = {
+    'name': 'Your name or mention depending on DND mode',
+    'command': 'The command you get reminded for',
+    'id': 'The ID of the pet',
+    'emoji': 'The emoji of the pet',
+    'partner': 'The name of your partner',
+    'event': 'The name of the finished event',
+    'loot': 'The name of the item your partner found',
+    'drop_emoji': 'The emoji of the mob drop in the current area. Unavailable in A0 and the TOP.',
 }
 
 
@@ -114,6 +190,7 @@ XMAS_AREA_AFFECTED_ACTIVITIES = (
     'arena',
     'clan',
     'chimney',
+    'duel',
     'epic',
     'farm',
     'horse',
@@ -307,6 +384,7 @@ ACTIVITIES_WITH_COOLDOWN = (
     'clan',
     'chimney',
     'daily',
+    'duel',
     'epic',
     'farm',
     'horse',
@@ -314,6 +392,7 @@ ACTIVITIES_WITH_COOLDOWN = (
     'lootbox',
     'dungeon-miniboss',
     'quest',
+    'quest-decline',
     'training',
     'weekly',
     'work',
@@ -322,69 +401,136 @@ ACTIVITIES_WITH_COOLDOWN_ALL = list(ACTIVITIES_WITH_COOLDOWN[:])
 ACTIVITIES_WITH_COOLDOWN_ALL.sort()
 ACTIVITIES_WITH_COOLDOWN_ALL.insert(0, 'all')
 
+ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER = (
+    'adventure',
+    'chimney',
+    'daily',
+    'duel',
+    'epic',
+    'farm',
+    'hunt',
+    'lootbox',
+    'quest',
+    'training',
+    'weekly',
+    'work',
+)
+
+
 # --- Monsters ---
-MONSTERS_ADVENTURE = (
-    '**Ancientest Dragon**',
-    '**Yes, As You Expected, Another Hyper Giant Dragon But OP etc**',
-    '**Another Mutant Dragon Like In Area 11 But Stronger**',
-    '**Attack Helicopter**',
+MONSTERS_ADVENTURE_A1 = (
     '**Bunch of Bees**',
-    '**Chimera**',
-    '**Centaur**',
-    '**Cyclops**',
-    '**Dark Knight**',
-    '**Dinosaur**',
-    '**Ent**',
-    '**Even More Ancient Dragon**',
     '**Giant Spider**',
-    '**Golem**',
-    '**Hydra**',
-    '**Hyper Giant Aeronautical Engine**',
+    '**Mutant Water Bottle**',
+)
+
+MONSTERS_ADVENTURE_A2 = (
+    '**Dark Knight**',
     '**Hyper Giant Bowl**',
-    '**Hyper Giant Chest**',
+    '**Ogre**',
+)
+
+MONSTERS_ADVENTURE_A3 = (
+    '**Centaur**',
+    '**Mutant Shoe**',
+    '**Werewolf**',
+)
+
+MONSTERS_ADVENTURE_A4 = (
+    '**Chimera**',
+    '**Golem**',
+    '**Hyper Giant Aeronautical Engine**',
+)
+
+MONSTERS_ADVENTURE_A5 = (
+    '**Ent**',
+    '**Mammoth**',
+    "**Mutant 'ESC' Key**",
+)
+
+MONSTERS_ADVENTURE_A6 = (
+    '**Cyclops**',
+    '**Dinosaur**',
     '**Hyper Giant Door**',
-    '**Hyper Giant Dragon**',
-    '**Hyper Giant Toilet**',
-    '**I Have No More Ideas Dragon**',
-    '**Just Purple Dragon**',
+)
+
+MONSTERS_ADVENTURE_A7 = (
+    '**Attack Helicopter**',
+    '**Hydra**',
+    '**Mutant Book**',
+)
+
+MONSTERS_ADVENTURE_A8 = (
+    '**Hyper Giant Chest**',
     '**Kraken**',
     '**Leviathan**',
-    '**Mammoth**',
-    '**Mutant Book**',
+)
+
+MONSTERS_ADVENTURE_A9 = (
     '**Mutant Backpack**',
-    '**Mutant Dragon**',
-    "**Mutant 'ESC' Key**",
-    '**Mutantest Dragon**',
-    '**Mutant Shoe**',
-    '**Mutant Water Bottle**',
-    '**Ogre**',
-    '**Titan**',
-    '**Typhon**',
     '**War Tank**',
     '**Wyrm**',
-    '**Werewolf**',
+)
+
+MONSTERS_ADVENTURE_A10 = (
+    '**Hyper Giant Toilet**',
+    '**Titan**',
+    '**Typhon**',
+)
+
+MONSTERS_ADVENTURE_A11 = (
+    '**Mutant Dragon**',
     '**Ancient Dragon**',
-    '**Time Annihilator**',
-    '**Time Devourer**',
-    '**Time Slicer**',
-    '**Black Hole**',
-    '**Supernova**',
-    '**Wormhole**',
-    '**Corrupted Killer Robot**',
-    '**Corrupted Mermaid**',
-    '**Corrupted Dragon**',
-    '**Shadow Creature**',
-    '**Shadow Entity**',
-    '**Abyss Worm**',
+)
+
+MONSTERS_ADVENTURE_A12 = (
+    '**Even More Ancient Dragon**',
+    '**Hyper Giant Dragon**',
+)
+
+MONSTERS_ADVENTURE_A13 = (
+    '**Ancientest Dragon**',
+    '**Another Mutant Dragon Like In Area 11 But Stronger**',
+)
+
+MONSTERS_ADVENTURE_A14 = (
+    '**Yes, As You Expected, Another Hyper Giant Dragon But OP etc**',
+    '**Just Purple Dragon**',
+)
+
+MONSTERS_ADVENTURE_A15 = (
+    '**I Have No More Ideas Dragon**',
+    '**Mutantest Dragon**',
+)
+
+MONSTERS_ADVENTURE_A16 = (
     '**Void Cone**',
     '**Void Cube**',
     '**Void Sphere**',
-    '**Dragon**',
-    'Krampus',
-    '**Krampus**',
-    '**Yeti**',
-    '**Hyper Giant Ice Block**',
-    '**Bat Slime**',
+)
+
+MONSTERS_ADVENTURE_A17 = (
+    '**Abyss Worm**',
+    '**Shadow Creature**',
+    '**Shadow Entity**',
+)
+
+MONSTERS_ADVENTURE_A18 = (
+    '**Corrupted Killer Robot**',
+    '**Corrupted Mermaid**',
+    '**Corrupted Dragon**',
+)
+
+MONSTERS_ADVENTURE_A19 = (
+    '**Black Hole**',
+    '**Supernova**',
+    '**Wormhole**',
+)
+
+MONSTERS_ADVENTURE_A20 = (
+    '**Time Annihilator**',
+    '**Time Devourer**',
+    '**Time Slicer**',
 )
 
 MONSTERS_ADVENTURE_TOP = (
@@ -399,67 +545,145 @@ MONSTERS_ADVENTURE_TOP = (
     '**NPC ÉPICO** fingindo ser um **KILLER ROBOT**', #Portuguese
 )
 
-MONSTERS_HUNT = (
-    '**Adult Dragon**',
+MONSTERS_ADVENTURE_A0 = (
+    'Krampus',
+    '**Krampus**',
+    '**Yeti**',
+    '**Hyper Giant Ice Block**',
+)
+
+MONSTERS_ADVENTURE_MISC = (
+    '**Dragon**',
+    '**Bat Slime**',
+)
+
+MONSTERS_ADVENTURE = (
+    MONSTERS_ADVENTURE_A1 + MONSTERS_ADVENTURE_A2 + MONSTERS_ADVENTURE_A3 + MONSTERS_ADVENTURE_A4 + MONSTERS_ADVENTURE_A5
+    + MONSTERS_ADVENTURE_A6 + MONSTERS_ADVENTURE_A7 + MONSTERS_ADVENTURE_A8 + MONSTERS_ADVENTURE_A9 + MONSTERS_ADVENTURE_A10
+    + MONSTERS_ADVENTURE_A11 + MONSTERS_ADVENTURE_A12 + MONSTERS_ADVENTURE_A13 + MONSTERS_ADVENTURE_A14
+    + MONSTERS_ADVENTURE_A15 + MONSTERS_ADVENTURE_A16 + MONSTERS_ADVENTURE_A17 + MONSTERS_ADVENTURE_A18
+    + MONSTERS_ADVENTURE_A19 + MONSTERS_ADVENTURE_A20 + MONSTERS_ADVENTURE_TOP + MONSTERS_ADVENTURE_A0
+    + MONSTERS_ADVENTURE_MISC
+)
+
+MONSTERS_HUNT_A1 = (
+    '**Goblin**',
+    '**Slime**',
+    '**Wolf**',
+)
+
+MONSTERS_HUNT_A2 = (
+    '**Nymph**',
+    '**Skeleton**',
+    '**Wolf**',
+)
+
+MONSTERS_HUNT_A3 = (
     '**Baby Demon**',
-    '**Baby Dragon**',
-    '**Baby Robot**',
-    '**Cecaelia**',
-    '**Definitely Not Young Dragon**',
-    '**Demon**',
-    '**Dullahan**',
-    '**Giant Crocodile**',
-    '**Giant Piranha**',
+    '**Ghost**',
+    '**Zombie**',
+)
+
+MONSTERS_HUNT_A4 = (
+    '**Imp**',
+    '**Witch**',
+    '**Zombie**',
+)
+
+MONSTERS_HUNT_A5 = (
     '**Giant Scorpion**',
     '**Ghoul**',
-    '**Ghost**',
-    '**Goblin**',
-    '**Harpy**',
-    '**How Do You Dare Call This Dragon "Young"???**',
-    '**Imp**',
-    '**Kid Dragon**',
-    '**Killer Robot**',
-    '**Manticore**',
-    '**Mermaid**',
-    '**Not So Young Dragon**',
-    '**Not Young At All Dragon**',
-    '**Nereid**',
-    '**Nymph**',
-    '**Old Dragon**',
-    '**Skeleton**',
-    '**Slime**',
-    '**Sorcerer**',
-    '**Teen Dragon**',
     '**Unicorn**',
-    '**Wolf**',
+)
+
+MONSTERS_HUNT_A6 = (
+    '**Baby Robot**',
+    '**Sorcerer**',
+    '**Unicorn**',
+)
+
+MONSTERS_HUNT_A7 = (
+    '**Cecaelia**',
+    '**Giant Piranha**',
+    '**Mermaid**',
+)
+
+MONSTERS_HUNT_A8 = (
+    '**Giant Crocodile**',
+    '**Nereid**',
+    '**Mermaid**',
+)
+
+MONSTERS_HUNT_A9 = (
+    '**Demon**',
+    '**Harpy**',
+    '**Killer Robot**',
+)
+
+MONSTERS_HUNT_A10 = (
+    '**Dullahan**',
+    '**Manticore**',
+    '**Killer Robot**',
+)
+
+MONSTERS_HUNT_A11 = (
+    '**Baby Dragon**',
     '**Young Dragon**',
-    '**Zombie**',
-    '**Witch**',
     '**Scaled Baby Dragon**',
+)
+
+MONSTERS_HUNT_A12 = (
+    '**Kid Dragon**',
+    '**Not So Young Dragon**',
     '**Scaled Kid Dragon**',
+)
+
+MONSTERS_HUNT_A13 = (
+    '**Definitely Not Young Dragon**',
+    '**Teen Dragon**',
     '**Scaled Teen Dragon**',
+)
+
+MONSTERS_HUNT_A14 = (
+    '**Adult Dragon**',
+    '**Not Young At All Dragon**',
     '**Scaled Adult Dragon**',
+)
+
+MONSTERS_HUNT_A15 = (
+    '**How Do You Dare Call This Dragon "Young"???**',
+    '**Old Dragon**',
     '**Scaled Old Dragon**',
+)
+
+MONSTERS_HUNT_A16 = (
     '**Void Fragment**',
     '**Void Particles**',
     '**Void Shard**',
+)
+
+MONSTERS_HUNT_A17 = (
     '**Abyss Bug**',
     '**Nothing**',
     '**Shadow Hands**',
+)
+
+MONSTERS_HUNT_A18 = (
     '**Corrupted Unicorn**',
     '**Corrupted Wolf**',
     '**Corrupted Zombie**',
+)
+
+MONSTERS_HUNT_A19 = (
     '**Asteroid**',
     '**Neutron Star**',
     '**Flying Saucer**',
+)
+
+MONSTERS_HUNT_A20 = (
     '**Time Alteration**',
     '**Time Interference**',
     '**Time Limitation**',
-    '**Elf**',
-    '**Christmas Reindeer**',
-    '**Snowman**',
-    '**Horslime**',
-    '**Christmas Slime**',
 )
 
 MONSTERS_HUNT_TOP = (
@@ -473,6 +697,51 @@ MONSTERS_HUNT_TOP = (
     '**NPC ÉPICO** pretendiendo ser un **UNICORN**', #Spanish
     '**NPC ÉPICO** fingindo ser um **UNICORN**', #Portuguese
 )
+
+MONSTERS_HUNT_A0 = (
+    '**Elf**',
+    '**Christmas Reindeer**',
+    '**Snowman**',
+)
+
+MONSTERS_HUNT_MISC = (
+    '**Christmas Slime**',
+    '**Horslime**',
+)
+
+MONSTERS_HUNT = (
+    MONSTERS_HUNT_A1 + MONSTERS_HUNT_A2 + MONSTERS_HUNT_A3 + MONSTERS_HUNT_A4 + MONSTERS_HUNT_A5
+    + MONSTERS_HUNT_A6 + MONSTERS_HUNT_A7 + MONSTERS_HUNT_A8 + MONSTERS_HUNT_A9 + MONSTERS_HUNT_A10
+    + MONSTERS_HUNT_A11 + MONSTERS_HUNT_A12 + MONSTERS_HUNT_A13 + MONSTERS_HUNT_A14
+    + MONSTERS_HUNT_A15 + MONSTERS_HUNT_A16 + MONSTERS_HUNT_A17 + MONSTERS_HUNT_A18
+    + MONSTERS_HUNT_A19 + MONSTERS_HUNT_A20 + MONSTERS_HUNT_TOP + MONSTERS_HUNT_A0
+    + MONSTERS_HUNT_MISC
+)
+
+MONSTERS_AREA = {
+    0: MONSTERS_HUNT_A0 + MONSTERS_ADVENTURE_A0,
+    1: MONSTERS_HUNT_A1 + MONSTERS_ADVENTURE_A1,
+    2: MONSTERS_HUNT_A2 + MONSTERS_ADVENTURE_A2,
+    3: MONSTERS_HUNT_A3 + MONSTERS_ADVENTURE_A3,
+    4: MONSTERS_HUNT_A4 + MONSTERS_ADVENTURE_A4,
+    5: MONSTERS_HUNT_A5 + MONSTERS_ADVENTURE_A5,
+    6: MONSTERS_HUNT_A6 + MONSTERS_ADVENTURE_A6,
+    7: MONSTERS_HUNT_A7 + MONSTERS_ADVENTURE_A7,
+    8: MONSTERS_HUNT_A8 + MONSTERS_ADVENTURE_A8,
+    9: MONSTERS_HUNT_A9 + MONSTERS_ADVENTURE_A9,
+    10: MONSTERS_HUNT_A10 + MONSTERS_ADVENTURE_A10,
+    11: MONSTERS_HUNT_A11 + MONSTERS_ADVENTURE_A11,
+    12: MONSTERS_HUNT_A12 + MONSTERS_ADVENTURE_A12,
+    13: MONSTERS_HUNT_A13 + MONSTERS_ADVENTURE_A13,
+    14: MONSTERS_HUNT_A14 + MONSTERS_ADVENTURE_A14,
+    15: MONSTERS_HUNT_A15 + MONSTERS_ADVENTURE_A15,
+    16: MONSTERS_HUNT_A16 + MONSTERS_ADVENTURE_A16,
+    17: MONSTERS_HUNT_A17 + MONSTERS_ADVENTURE_A17,
+    18: MONSTERS_HUNT_A18 + MONSTERS_ADVENTURE_A18,
+    19: MONSTERS_HUNT_A19 + MONSTERS_ADVENTURE_A19,
+    20: MONSTERS_HUNT_A20 + MONSTERS_ADVENTURE_A20,
+    21: MONSTERS_HUNT_TOP + MONSTERS_ADVENTURE_TOP,
+}
 
 TRACKED_COMMANDS = (
     'hunt',
@@ -915,7 +1184,6 @@ FLEX_TITLES_TIME_TRAVEL_10 = [
     'Ten year stud... uh, wait, no',
     'I hope you\'re not colorblind',
     'Hope you don\'t plan on hardmoding in A15',
-    'Someone tried D15 without a bot once. They\'re still at it.',
     'Out of school',
     'Next stop: 25!',
 ]
@@ -926,6 +1194,7 @@ FLEX_TITLES_TIME_TRAVEL_25 = [
     'No more mere time travels. We\'re jumping now, boyz.',
     'GG EZ',
     'Twenty bloody five',
+    'Someone tried D15 without a bot once. They\'re still at it.',
 ]
 
 FLEX_TITLES_TIME_TRAVEL_50 = [
@@ -936,12 +1205,13 @@ FLEX_TITLES_TIME_TRAVEL_50 = [
     'Age is just a number',
 ]
 
-FLEX_TITLES_TIME_TRAVEL_100 = [
+FLEX_TITLES_TIME_TRAVEL_100_PLUS = [
     'Hello, I would like my life back',
     'Next up: World domination',
-    'Another beautiful profile background, oh thank you',
     'Why am I still playing this',
     'BOW BEFORE ME PEASANTS',
+    'Probably dizzy from all the time travelling',
+    'The all important question is... why?',
 ]
 
 FLEX_TITLES_XMAS_CHIMNEY = [
@@ -1203,10 +1473,21 @@ FLEX_THUMBNAILS_TIME_TRAVEL_50 = [
     'https://media.tenor.com/U5DTTODnuTcAAAAC/trippy-tripping.gif',
 ]
 
-FLEX_THUMBNAILS_TIME_TRAVEL_100 = [
+FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS = [
     'https://media.tenor.com/J82kuX8dFysAAAAC/blue-spiral.gif',
     'https://media.tenor.com/_Ep8uvjeSHQAAAAC/moon-digibyte.gif',
     'https://media.giphy.com/media/xT39CTrFW4nHLdBPpu/giphy-downsized-large.gif',
+    'https://media.tenor.com/gbe6XR5AEzIAAAAC/optical-illusion-spiral.gif',
+    'https://media.tenor.com/y8rZhxGifNEAAAAC/blue-spiral.gif',
+    'https://media.tenor.com/vUVXRKFtKQEAAAAC/blue-spiral.gif',
+    'https://media.tenor.com/Uy3avUOOI_sAAAAd/blue-spiral.gif',
+    'https://media.tenor.com/twi6r7OVu6MAAAAd/blue-spiral.gif',
+]
+
+FLEX_THUMBNAILS_TIME_TRAVEL_300 = [
+    'https://media.tenor.com/HNU157CkzH4AAAAd/sparta.gif',
+    'https://media.tenor.com/Sexf_CWjVfgAAAAd/300-leonidas.gif',
+    'https://media.tenor.com/PhTFN_KwbIQAAAAC/this-is-sparta-sparta.gif',
 ]
 
 FLEX_THUMBNAILS_XMAS_CHIMNEY = [

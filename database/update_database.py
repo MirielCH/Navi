@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 1
+NAVI_DB_VERSION = 2
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -239,6 +239,20 @@ if __name__ == '__main__':
         sqls = [
             'ALTER TABLE guilds ADD auto_flex_enabled BOOLEAN NOT NULL DEFAULT (0)',
             "ALTER TABLE tracking_log ADD type TEXT NOT NULL DEFAULT ('single')",
+            "ALTER TABLE users ADD alert_adventure_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_chimney_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_daily_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_duel_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_epic_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_farm_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_hunt_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_lootbox_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_quest_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_training_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_weekly_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_work_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD ascended BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD current_area INTEGER",
         ]
         for sql in sqls:
             try:

@@ -122,6 +122,7 @@ class TrackingCog(commands.Cog):
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
                         return
+                    if not user_settings.bot_enabled: return
                     tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
                     await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
                     if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:

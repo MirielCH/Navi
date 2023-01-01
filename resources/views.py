@@ -1,6 +1,7 @@
 # views.py
 """Contains global interaction views"""
 
+import random
 from typing import List, Optional, Union
 
 import discord
@@ -53,7 +54,7 @@ class AutoReadyView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -122,7 +123,7 @@ class ConfirmMarriageView(discord.ui.View):
                                               label='Forever alone'))
     async def interaction_check(self, interaction: discord.Interaction):
         if interaction.user != self.new_partner:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -184,7 +185,7 @@ class SettingsClanView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -235,7 +236,7 @@ class SettingsHelpersView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -322,7 +323,7 @@ class SettingsReadyView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -394,11 +395,12 @@ class SettingsRemindersView(discord.ui.View):
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
+        self.add_item(components.ManageMultipliersSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -443,7 +445,7 @@ class SettingsUserView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -501,7 +503,7 @@ class SettingsMessagesView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -548,7 +550,7 @@ class SettingsPartnerView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -580,7 +582,7 @@ class OneButtonView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -624,7 +626,7 @@ class RemindersListView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -670,7 +672,7 @@ class StatsView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
@@ -716,7 +718,7 @@ class SettingsServerView(discord.ui.View):
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
-            await interaction.response.send_message(strings.MSG_INTERACTION_ERROR, ephemeral=True)
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
 
