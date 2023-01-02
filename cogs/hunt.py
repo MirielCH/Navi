@@ -122,13 +122,13 @@ class HuntCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                time_left_seconds = time_left.total_seconds()
                 if time_left < timedelta(0): return
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
-                    time_left_seconds = time_left.total_seconds()
                     if user_settings.christmas_area_enabled:
                         time_left_seconds *= 0.9
                     time_left_seconds *= user_settings.alert_hunt.multiplier
@@ -144,7 +144,7 @@ class HuntCog(commands.Cog):
                                     * user_settings.alert_hunt.multiplier)
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user in embed_users):
-                        time_left_seconds = (time_left.total_seconds()
+                        time_left_seconds = (time_left_seconds
                                             + (partner_cooldown - user_cooldown)
                                             - time_elapsed.total_seconds()
                                             + 1)
