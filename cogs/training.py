@@ -234,7 +234,7 @@ class TrainingCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if user_settings.auto_ready_enabled:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
-                await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
             # Training reset from ultraining shop
             search_strings = [

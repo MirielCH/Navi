@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from cache import messages
 from database import errors, users
-from resources import emojis, functions, exceptions, regex, settings
+from resources import emojis, functions, exceptions, regex, settings, strings
 
 
 class HelperHealCog(commands.Cog):
@@ -121,7 +121,12 @@ class HelperHealCog(commands.Cog):
                 'bat slime',
                 'christmas slime',
             ]
-            if any(event_mob in message_content.lower() for event_mob in event_mobs): return
+            if (
+                any(event_mob in message_content.lower() for event_mob in event_mobs)
+                or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
+                or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
+            ):
+                return
             user_name = user_command_message = None
             interaction = await functions.get_interaction(message)
             user = await functions.get_interaction_user(message)

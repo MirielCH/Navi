@@ -106,7 +106,11 @@ class CurrentAreaCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Area not found in current area profile or progress message.', message)
                     return
-                current_area = int(area_match.group(1))
+                current_area = area_match.group(1)
+                if current_area == 'top':
+                    current_area = 21
+                else:
+                    current_area = int(current_area)
                 if user_settings.current_area != current_area:
                     await user_settings.update(current_area=current_area)
 
@@ -120,7 +124,13 @@ class CurrentAreaCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and (
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
+                    or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                     or any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)
+                    or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
+                )
+                and (
+                    all(monster.lower() not in message_content.lower() for monster in strings.MONSTERS_HUNT_MISC)
+                    and all(monster.lower() not in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_MISC)
                 )
             ):
                 user = await functions.get_interaction_user(message)
@@ -171,10 +181,10 @@ class CurrentAreaCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 search_patterns_mob_name = [
-                    r"found and killed an? (.+?) \*\*(.+?)\*\*", #English
+                    r"found and killed (.+?) \*\*(.+?)\*\*", #English
                     r"found an? (.+?) \*\*(.+?)\*\*", #English
-                    r"encontró y mató un (.+?) \*\*(.+?)\*\*", #Spanish
-                    r"encontrou e matou um (.+?) \*\*(.+?)\*\*", #Portuguese
+                    r"encontró y mató (.+?) \*\*(.+?)\*\*", #Spanish
+                    r"encontrou e matou (.+?) \*\*(.+?)\*\*", #Portuguese
                 ]
                 mob_name_match = await functions.get_match_from_patterns(search_patterns_mob_name, message_content)
                 if not mob_name_match:

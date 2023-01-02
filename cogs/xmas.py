@@ -318,7 +318,9 @@ class ChristmasCog(commands.Cog):
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and (
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
-                    or any(f'{monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)
+                    or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
+                    or any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_ADVENTURE)
+                    or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
                 )
             ):
                 if 'christmas slime' in message_content.lower(): return
