@@ -81,12 +81,13 @@ class DevCog(commands.Cog):
         if ctx.author.id not in settings.DEV_IDS:
             await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
             return
+        attribute_name = 'event_reduction_slash' if 'slash' in command_type.lower() else 'event_reduction_mention'
         activities = activities.split()
         if not activities and event_reduction is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
             answer = f'Current event reductions for {command_type.lower()}:'
             for cooldown in all_cooldowns:
-                event_reduction = getattr(cooldown, f'event_reduction_{command_type.lower()}')
+                event_reduction = getattr(cooldown, attribute_name)
                 actual_cooldown = cooldown.actual_cooldown_mention() if command_type == 'Mention' else cooldown.actual_cooldown_slash()
                 cooldown_message = (
                     f'{emojis.BP} {cooldown.activity}: {event_reduction}% '
@@ -122,7 +123,7 @@ class DevCog(commands.Cog):
             for activity in updated_activities:
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
                 kwarg = {
-                    f'event_reduction_{command_type.lower()}': event_reduction,
+                    attribute_name: event_reduction,
                 }
                 await cooldown.update(**kwarg)
                 answer = f'{answer}\n{emojis.BP} `{cooldown.activity}` to **{event_reduction}%**'
