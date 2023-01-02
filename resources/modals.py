@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import re
+from typing import Literal
 
 import discord
 from discord.ui import InputText, Modal
@@ -135,7 +136,6 @@ class SetPrefixModal(Modal):
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
-
 class SetMultiplierModal(Modal):
     def __init__(self, view: discord.ui.View, activity: str) -> None:
         super().__init__(title='Change command multiplier')
@@ -168,4 +168,58 @@ class SetMultiplierModal(Modal):
             kwargs[f'alert_{self.activity}_multiplier'] = new_multiplier
         await self.view.user_settings.update(**kwargs)
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class SetEventReductionModal(Modal):
+    def __init__(self, view: discord.ui.View, activity: str, cd_type: Literal['slash', 'text']) -> None:
+        titles = {
+            'slash': 'Change slash event reduction',
+            'text': 'Change text event reduction',
+        }
+        labels = {
+            'slash': 'Event reduction in percent:',
+            'text': 'Event reduction in percent:',
+        }
+        placeholders = {
+            'slash': 'Enter event reduction...',
+            'text': 'Enter event reduction...',
+        }
+        super().__init__(title=titles[cd_type])
+        self.view = view
+        self.activity = activity
+        self.cd_type = cd_type
+        self.add_item(
+            InputText(
+                label=labels[cd_type],
+                placeholder=placeholders[cd_type],
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        new_value = self.children[0].value
+        try:
+            new_value = float(new_value)
+        except ValueError:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('That is not a valid number.', ephemeral=True)
+            return
+        if not 0 <= new_value <= 100:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('The reduction needs to be between 0 and 100 percent.', ephemeral=True)
+            return
+        if self.activity == 'all':
+            for cooldown in self.view.all_cooldowns:
+                if self.cd_type == 'slash':
+                    await cooldown.update(event_reduction_slash=new_value)
+                else:
+                    await cooldown.update(event_reduction_mention=new_value)
+        else:
+            for cooldown in self.view.all_cooldowns:
+                if cooldown.activity == self.activity:
+                    if self.cd_type == 'slash':
+                        await cooldown.update(event_reduction_slash=new_value)
+                    else:
+                        await cooldown.update(event_reduction_mention=new_value)
+        embed = await self.view.embed_function(self.view.all_cooldowns)
         await interaction.response.edit_message(embed=embed, view=self.view)

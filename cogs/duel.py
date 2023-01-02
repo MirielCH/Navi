@@ -181,16 +181,15 @@ class DuelCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if duel_user_settings.bot_enabled and duel_user_settings.alert_duel.enabled:
-                    if time_left is None:
-                        time_left = await functions.calculate_time_left_from_cooldown(message, duel_user_settings,
-                                                                                      'duel')
-                        if time_left < timedelta(0): return
+                    time_left = await functions.calculate_time_left_from_cooldown(message, duel_user_settings,
+                                                                                    'duel')
+                    if time_left < timedelta(0): return
                     user_command = await functions.get_slash_command(duel_user_settings, 'duel')
                     reminder_message = duel_user_settings.alert_duel.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(duel_user.id, 'duel', time_left,
-                                                         message.channel.id, reminder_message)
-                            )
+                        await reminders.insert_user_reminder(duel_user.id, 'duel', time_left,
+                                                             message.channel.id, reminder_message)
+                    )
                     if not created_reminder:
                         await functions.add_reminder_reaction(message, reminder, duel_user_settings)
 

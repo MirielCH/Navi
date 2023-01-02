@@ -3,11 +3,11 @@
 
 import asyncio
 import re
-from typing import Dict, List, Optional
+from typing import Dict, List, Literal, Optional
 
 import discord
 
-from database import reminders, users
+from database import cooldowns, reminders, users
 from resources import emojis, functions, modals, strings, views
 
 
@@ -901,4 +901,30 @@ class ManageMultipliersSelect(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
         modal = modals.SetMultiplierModal(self.view, select_value)
+        await interaction.response.send_modal(modal)
+
+
+class ManageEventReductionsSelect(discord.ui.Select):
+    """Select to manage cooldowns"""
+    def __init__(self, view: discord.ui.View, all_cooldowns: List[cooldowns.Cooldown],
+                 cd_type: Literal['slash', 'text'], row: Optional[int] = None):
+        self.all_cooldowns = all_cooldowns
+        self.cd_type = cd_type
+        options = []
+        options.append(discord.SelectOption(label=f'All',
+                                            value='all'))
+        for cooldown in all_cooldowns:
+            options.append(discord.SelectOption(label=cooldown.activity.capitalize(),
+                                                value=cooldown.activity))
+            cooldown.update()
+        placeholders = {
+            'slash': 'Change slash event reductions',
+            'text': 'Change text event reductions',
+        }
+        super().__init__(placeholder=placeholders[cd_type], min_values=1, max_values=1, options=options, row=row,
+                         custom_id=f'manage_{cd_type}')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        modal = modals.SetEventReductionModal(self.view, select_value, self.cd_type)
         await interaction.response.send_modal(modal)

@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, guilds, reminders, users
+from database import clans, cooldowns, guilds, reminders, users
 from resources import components, functions, settings, strings
 
 COMMANDS_SETTINGS = {
@@ -715,6 +715,47 @@ class SettingsServerView(discord.ui.View):
         self.user = ctx.author
         self.guild_settings = guild_settings
         self.add_item(components.ManageServerSettingsSelect(self))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
+class DevEventReductionsView(discord.ui.View):
+    """View with a all components to manage cooldown settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, all_cooldowns: List[cooldowns.Cooldown],
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.bot = bot
+        self.ctx = ctx
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.all_cooldowns = all_cooldowns
+        self.embed_function = embed_function
+        self.add_item(components.ManageEventReductionsSelect(self, all_cooldowns, 'slash'))
+        self.add_item(components.ManageEventReductionsSelect(self, all_cooldowns, 'text'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

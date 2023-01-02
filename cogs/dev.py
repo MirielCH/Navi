@@ -3,6 +3,7 @@
 
 import importlib
 import sys
+from typing import List
 
 import discord
 from discord.commands import SlashCommandGroup, Option
@@ -69,99 +70,15 @@ class DevCog(commands.Cog):
             message = f'{message}\n{action}'
         await ctx.respond(f'```diff\n{message}\n```')
 
-    @dev.command(name='event-reduction')
-    async def event_reduction(
-        self,
-        ctx: discord.ApplicationContext,
-        command_type: Option(str, 'Reduction type', choices=EVENT_REDUCTION_TYPES),
-        activities: Option(str, 'Activities to update', default=''),
-        event_reduction: Option(float, 'Event reduction in percent', min_value=0, max_value=99, default=None),
-    ) -> None:
-        """Changes the event reduction for activities"""
-        if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
-            return
-        attribute_name = 'event_reduction_slash' if 'slash' in command_type.lower() else 'event_reduction_mention'
-        activities = activities.split()
-        if not activities and event_reduction is None:
-            all_cooldowns = await cooldowns.get_all_cooldowns()
-            answer = f'Current event reductions for {command_type.lower()}:'
-            for cooldown in all_cooldowns:
-                event_reduction = getattr(cooldown, attribute_name)
-                actual_cooldown = cooldown.actual_cooldown_mention() if command_type == 'Mention' else cooldown.actual_cooldown_slash()
-                cooldown_message = (
-                    f'{emojis.BP} {cooldown.activity}: {event_reduction}% '
-                    f'({actual_cooldown:,}s)'
-                )
-                answer = f'{answer}\n**{cooldown_message}**' if event_reduction > 0 else f'{answer}\n{cooldown_message}'
-            await ctx.respond(answer)
-            return
-        if not activities or event_reduction is None:
-            await ctx.respond(
-                f'You need to set both activity _and_ event_reduction. If you want to see the current reductions, '
-                f'leave both options empty.',
-                ephemeral=True
-            )
-            return
-        for index, activity in enumerate(activities):
-            if activity in strings.ACTIVITIES_ALIASES: activities[index] = strings.ACTIVITIES_ALIASES[activity]
-
-        if 'all' in activities:
-            activities += strings.ACTIVITIES_WITH_COOLDOWN
-            activities.remove('all')
-        updated_activities = []
-        ignored_activities = []
-        for activity in activities:
-            if activity in strings.ACTIVITIES_WITH_COOLDOWN:
-                updated_activities.append(activity)
-            else:
-                ignored_activities.append(activity)
-        all_cooldowns = await cooldowns.get_all_cooldowns()
-        answer = ''
-        if updated_activities:
-            answer = f'Updated event reductions for {command_type.lower()} commands as follows:'
-            for activity in updated_activities:
-                cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-                kwarg = {
-                    attribute_name: event_reduction,
-                }
-                await cooldown.update(**kwarg)
-                answer = f'{answer}\n{emojis.BP} `{cooldown.activity}` to **{event_reduction}%**'
-        if ignored_activities:
-            answer = f'{answer}\n\nDidn\'t find the following activities:'
-            for ignored_activity in ignored_activities:
-                answer = f'{answer}\n{emojis.BP} `{ignored_activity}`'
-        await ctx.respond(answer)
-
-    @dev.command(name='base-cooldown')
-    async def base_cooldown(
-        self,
-        ctx: discord.ApplicationContext,
-        activity: Option(str, 'Activity to update', choices=strings.ACTIVITIES_WITH_COOLDOWN, default=None),
-        base_cooldown: Option(int, 'Base cooldown in seconds', min_value=1, max_value=604_200, default=None),
-    ) -> None:
-        """Changes the base cooldown for activities"""
-        if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
-            return
-        if activity is None and base_cooldown is None:
-            all_cooldowns = await cooldowns.get_all_cooldowns()
-            answer = 'Current base cooldowns:'
-            for cooldown in all_cooldowns:
-                answer = f'{answer}\n{emojis.BP} {cooldown.activity}: {cooldown.base_cooldown}s'
-            await ctx.respond(answer)
-            return
-        if activity is None or base_cooldown is None:
-            await ctx.resond(
-                'You need to set both options. If you want to see the current cooldowns, leave both options empty.',
-                ephemeral=True
-            )
-            return
-        cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-        await cooldown.update(cooldown=base_cooldown)
-        if cooldown.base_cooldown == base_cooldown:
-            answer =  f'Changed base cooldown for activity `{cooldown.activity}` to **{cooldown.base_cooldown}s**.'
-        await ctx.respond(answer)
+    @dev.command(name='event-reductions')
+    async def dev_event_reductions(self, ctx: discord.ApplicationContext) -> None:
+        """Change event reductions"""
+        if ctx.author.id not in settings.DEV_IDS: return
+        all_cooldowns = list(await cooldowns.get_all_cooldowns())
+        view = views.DevEventReductionsView(ctx, self.bot, all_cooldowns, embed_dev_event_reductions)
+        embed = await embed_dev_event_reductions(all_cooldowns)
+        interaction = await ctx.respond(embed=embed, view=view)
+        view.interaction = interaction
 
     @dev.command(name='post-message')
     async def post_message(
@@ -331,3 +248,27 @@ class DevCog(commands.Cog):
 
 def setup(bot):
     bot.add_cog(DevCog(bot))
+
+
+# --- Embeds ---
+async def embed_dev_event_reductions(all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+    """Event reductions embed"""
+    reductions_slash = reductions_text = ''
+    for cooldown in all_cooldowns:
+        if cooldown.event_reduction_slash > 0:
+            event_reduction_slash = f'**`{cooldown.event_reduction_slash}`**%'
+        else:
+            event_reduction_slash = f'`{cooldown.event_reduction_slash}`%'
+        reductions_slash = f'{reductions_slash}\n{emojis.BP} {cooldown.activity}: {event_reduction_slash}'
+        if cooldown.event_reduction_mention > 0:
+            event_reduction_text = f'**`{cooldown.event_reduction_mention}`**%'
+        else:
+            event_reduction_text = f'`{cooldown.event_reduction_mention}`%'
+        reductions_text = f'{reductions_text}\n{emojis.BP} {cooldown.activity}: {event_reduction_text}'
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'EVENT REDUCTION SETTINGS',
+    )
+    embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
+    embed.add_field(name='TEXT & MENTION COMMANDS', value=reductions_text, inline=False)
+    return embed
