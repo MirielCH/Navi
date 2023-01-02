@@ -13,8 +13,8 @@ from resources import emojis, exceptions, functions, logs, settings, strings, vi
 
 
 EVENT_REDUCTION_TYPES = [
-    'Mention',
-    'Slash',
+    'Text commands',
+    'Slash commands',
 ]
 
 
@@ -84,7 +84,7 @@ class DevCog(commands.Cog):
         activities = activities.split()
         if not activities and event_reduction is None:
             all_cooldowns = await cooldowns.get_all_cooldowns()
-            answer = f'Current event reductions for {command_type.lower()} commands:'
+            answer = f'Current event reductions for {command_type.lower()}:'
             for cooldown in all_cooldowns:
                 event_reduction = getattr(cooldown, f'event_reduction_{command_type.lower()}')
                 actual_cooldown = cooldown.actual_cooldown_mention() if command_type == 'Mention' else cooldown.actual_cooldown_slash()
