@@ -1087,6 +1087,14 @@ FLEX_TITLES_GODLY_TT = [
     'WE ARE ALL HAPPY FOR YOU AND NOT AT ALL JEALOUS',
 ]
 
+FLEX_TITLES_PARTY_POPPER = [
+    'Party hard!',
+    'What is that doing in there?',
+    'Pop up your life ',
+    '"A handheld pyrotechnic device" [Wikipedia]',
+    'If you use this thing in my house, you\'re in trouble',
+]
+
 FLEX_TITLES_PETS_CATCH_EPIC = [
     'EPIC pet incoming!',
     'What a nice kitty!',
@@ -1373,6 +1381,15 @@ FLEX_THUMBNAILS_OMEGA_ULTRA = [
 FLEX_THUMBNAILS_GODLY_TT = [
     'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
     'https://media.giphy.com/media/jltuIcAMViLHYaz9bN/giphy.gif',
+]
+
+FLEX_THUMBNAILS_PARTY_POPPER = [
+    'https://media.tenor.com/daIqywAK47AAAAAd/marialina-amigos-improvaveis.gif',
+    'https://media.tenor.com/6f3xkQD8TtIAAAAd/party-poppers-nicole-brown.gif',
+    'https://media.tenor.com/UyEOw10aB9UAAAAC/party-confetti.gif',
+    'https://media.tenor.com/6rCdZsiBT8oAAAAC/glee-jane-lynch.gif',
+    'https://media.tenor.com/4eSQIwrsGXIAAAAd/celebrate-awesome.gif',
+    'https://media.tenor.com/dZHod7wU9pIAAAAC/zomerkampzwijndrecht-zomerkamp.gif',
 ]
 
 FLEX_THUMBNAILS_PETS_CATCH_EPIC = [

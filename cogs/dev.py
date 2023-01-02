@@ -40,7 +40,7 @@ class DevCog(commands.Cog):
     ) -> None:
         """Reloads cogs or modules"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            await ctx.respond('You\'re not allowed to use this command, sorry.', ephemeral=True)
             return
         modules = modules.split(' ')
         actions = []
@@ -73,7 +73,9 @@ class DevCog(commands.Cog):
     @dev.command(name='event-reductions')
     async def dev_event_reductions(self, ctx: discord.ApplicationContext) -> None:
         """Change event reductions"""
-        if ctx.author.id not in settings.DEV_IDS: return
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond('You\'re not allowed to use this command, sorry.', ephemeral=True)
+            return
         all_cooldowns = list(await cooldowns.get_all_cooldowns())
         view = views.DevEventReductionsView(ctx, self.bot, all_cooldowns, embed_dev_event_reductions)
         embed = await embed_dev_event_reductions(all_cooldowns)

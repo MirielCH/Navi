@@ -29,6 +29,7 @@ FLEX_TITLES = {
     'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
     'lb_omega_ultra': strings.FLEX_TITLES_OMEGA_ULTRA,
     'lb_godly_tt': strings.FLEX_TITLES_GODLY_TT,
+    'lb_party_popper': strings.FLEX_TITLES_PARTY_POPPER,
     'pets_catch_epic': strings.FLEX_TITLES_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_TITLES_PETS_CATCH_TT,
     'pr_ascension': strings.FLEX_TITLES_PR_ASCENSION,
@@ -72,6 +73,7 @@ FLEX_THUMBNAILS = {
     'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
     'lb_omega_ultra': strings.FLEX_THUMBNAILS_OMEGA_ULTRA,
     'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_TT,
+    'lb_party_popper': strings.FLEX_THUMBNAILS_PARTY_POPPER,
     'pets_catch_epic': strings.FLEX_THUMBNAILS_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_THUMBNAILS_PETS_CATCH_TT,
     'pr_ascension': strings.FLEX_THUMBNAILS_PR_ASCENSION,
@@ -179,6 +181,8 @@ class AutoFlexCog(commands.Cog):
                     event = 'lb_omega_ultra'
                 elif 'godly lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
                     event = 'lb_godly_tt'
+                elif '<:partypopper' in embed_field0_value.lower():
+                    event = 'lb_party_popper'
                 else:
                     return
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
@@ -240,8 +244,19 @@ class AutoFlexCog(commands.Cog):
                     amount = match.group(1)
                     description = (
                         f'So.\n**{user.name}** opened a {emojis.LB_GODLY} GODLY lootbox. I mean that\'s cool.\n'
-                        f'__BUT__. For some reason they found {amount} {emojis.TIME_CAPSULE} **time capsule** in there.\n'
-                        f'This hasn\'t happened often yet, so expect to get blacklisted from the game.\n'
+                        f'__BUT__. For some reason they found **{amount}** {emojis.TIME_CAPSULE} **time capsule** in there.\n'
+                        f'This hasn\'t happened often yet, so expect to get blacklisted from the game.'
+                    )
+                elif event == 'lb_party_popper':
+                    match = re.search(r'\+(.+?) (.+?) party popper', embed_field0_value.lower())
+                    if not match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Party popper amount not found in auto flex godly lootbox message.', message)
+                        return
+                    amount = match.group(1)
+                    description = (
+                        f'**{user.name}** opened a lootbox and found **{amount}**, uh... {emojis.PARTY_POPPER} **party popper**?\n'
+                        f'I\'m not exactly sure what this is doing in a lootbox, but I hear it\'s rare, so GG I guess?'
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
