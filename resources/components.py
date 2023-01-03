@@ -928,3 +928,23 @@ class ManageEventReductionsSelect(discord.ui.Select):
         select_value = self.values[0]
         modal = modals.SetEventReductionModal(self.view, select_value, self.cd_type)
         await interaction.response.send_modal(modal)
+
+
+class CopyEventReductionsButton(discord.ui.Button):
+    """Button to toggle the auto-ready feature"""
+    def __init__(self, style: Optional[discord.ButtonStyle], custom_id: str, label: str,
+                 disabled: bool = False, emoji: Optional[discord.PartialEmoji] = None):
+        super().__init__(style=style, custom_id=custom_id, label=label, emoji=emoji,
+                         disabled=disabled)
+
+    async def callback(self, interaction: discord.Interaction) -> None:
+        for cooldown in self.view.all_cooldowns:
+            if self.custom_id == 'copy_slash_text':
+                await cooldown.update(event_reduction_mention=cooldown.event_reduction_slash)
+            else:
+                await cooldown.update(event_reduction_slash=cooldown.event_reduction_mention)
+        embed = await self.view.embed_function(self.view.all_cooldowns)
+        if not interaction.response.is_done():
+            await interaction.response.edit_message(embed=embed, view=self.view)
+        else:
+            await self.view.message.edit(embed=embed, view=self.view)

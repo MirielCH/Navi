@@ -756,6 +756,10 @@ class DevEventReductionsView(discord.ui.View):
         self.embed_function = embed_function
         self.add_item(components.ManageEventReductionsSelect(self, all_cooldowns, 'slash'))
         self.add_item(components.ManageEventReductionsSelect(self, all_cooldowns, 'text'))
+        self.add_item(components.CopyEventReductionsButton(discord.ButtonStyle.grey, 'copy_slash_text',
+                                                           'Copy slash > text'))
+        self.add_item(components.CopyEventReductionsButton(discord.ButtonStyle.grey, 'copy_text_slash',
+                                                           'Copy text > slash'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
