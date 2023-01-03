@@ -72,6 +72,10 @@ async def command_ready(
             command_use = await functions.get_slash_command(user_settings, 'use', False)
             command_options = 'item: <EPIC item>' if user_settings.slash_mentions_enabled else '<EPIC item>'
             command = f"{command_use} `{command_options}`"
+        elif activity == 'party-popper':
+            command_use = await functions.get_slash_command(user_settings, 'use', False)
+            command_options = 'item: party popper' if user_settings.slash_mentions_enabled else 'party popper'
+            command = f"{command_use} `{command_options}`"
         elif activity == 'guild':
             command = clan_command
         elif activity == 'quest':

@@ -103,6 +103,7 @@ EXTENSIONS = [
         'cogs.arena',
         'cogs.ascension',
         'cogs.auto_flex',
+        'cogs.boosts',
         'cogs.cooldowns',
         'cogs.cache',
         'cogs.clan',

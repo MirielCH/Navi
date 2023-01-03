@@ -845,6 +845,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
+        f'{emojis.BP} **Party popper**: {await bool_to_text(user_settings.alert_party_popper.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
@@ -910,6 +911,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
+        f'{emojis.BP} **Party popper**: {await functions.bool_to_text(user_settings.alert_party_popper.enabled)}\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'

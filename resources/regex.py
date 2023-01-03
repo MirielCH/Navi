@@ -27,6 +27,7 @@ COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
     rf"(?:(?:\barea\b|\bmove\b)\s+\b\d\d?\b|(?:\bxmas\b\s+|\bchristmas\b\s+)(?:\buse\b|\beat\b)\s+\bcandy\b\s+\bcane\b)"
 )
 COMMAND_ARENA = re.compile(rf"\barena\b")
+COMMAND_BOOSTS = re.compile(rf"\bboosts?\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
 COMMAND_CLAN_RAID = re.compile(rf"\bguild\b\s+\braid\b")
 COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"\bguild\b\s+(?:\braid\b|\bupgrade\b)")
@@ -93,6 +94,7 @@ COMMAND_USE_EPIC_ITEM = re.compile(
 COMMAND_USE_EPIC_ITEM_ARENA_TOKEN = re.compile(
     rf"use\s+(?:\bepic\b\s+\bseed\b|\bultra\b\s+\bbait\b|\bcoin\b\s+\btrumpet\b|\blegendary\b\s+\btoothbrush\b|\barena\b\s+\btoken\b)"
 )
+COMMAND_USE_PARTY_POPPER = re.compile(rf"use\s+\bparty\b\s+\bpopper\b")
 COMMAND_USE_TIME_COOKIE = re.compile(rf"use\s+\btime\b\s+\bcookie\b")
 COMMAND_VOTE = re.compile(rf"\bvote\b")
 COMMAND_WEEKLY = re.compile(rf"\bweekly\b")

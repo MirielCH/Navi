@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 2
+NAVI_DB_VERSION = 3
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -253,6 +253,9 @@ if __name__ == '__main__':
             "ALTER TABLE users ADD alert_work_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD ascended BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD current_area INTEGER",
+            "ALTER TABLE users ADD alert_party_popper_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_party_popper_message TEXT NOT NULL DEFAULT ('{name} Hey! Your party popper just ran out!')",
+            "ALTER TABLE users ADD alert_party_popper_visible BOOLEAN NOT NULL DEFAULT (0)",
         ]
         for sql in sqls:
             try:
