@@ -43,7 +43,7 @@ class BoostsCog(commands.Cog):
             if embed.fields:
                 embed_field0_name = embed.fields[0].name
                 embed_field0_value = embed.fields[0].value
-                if len(embed.fields) > 0:
+                if len(embed.fields) > 1:
                     embed_field1_name = embed.fields[1].name
                     embed_field1_value = embed.fields[1].value
 
