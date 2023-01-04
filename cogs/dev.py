@@ -18,6 +18,7 @@ EVENT_REDUCTION_TYPES = [
     'Slash commands',
 ]
 
+MSG_NOT_DEV = 'You are not allowed to use this command.'
 
 class DevCog(commands.Cog):
     """Cog class containing internal dev commands"""
@@ -40,7 +41,7 @@ class DevCog(commands.Cog):
     ) -> None:
         """Reloads cogs or modules"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('You\'re not allowed to use this command, sorry.', ephemeral=True)
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         modules = modules.split(' ')
         actions = []
@@ -74,7 +75,7 @@ class DevCog(commands.Cog):
     async def dev_event_reductions(self, ctx: discord.ApplicationContext) -> None:
         """Change event reductions"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('You\'re not allowed to use this command, sorry.', ephemeral=True)
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         all_cooldowns = list(await cooldowns.get_all_cooldowns())
         view = views.DevEventReductionsView(ctx, self.bot, all_cooldowns, embed_dev_event_reductions)
@@ -92,7 +93,7 @@ class DevCog(commands.Cog):
     ) -> None:
         """Sends the content of a message to a channel in an embed"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await self.bot.wait_until_ready()
         try:
@@ -145,7 +146,7 @@ class DevCog(commands.Cog):
     async def support(self, ctx: discord.ApplicationContext):
         """Link to the dev support server"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         await ctx.respond(
             f'Got some issues or questions running Navi? Feel free to join the Navi dev support server:\n'
@@ -156,7 +157,7 @@ class DevCog(commands.Cog):
     async def shutdown(self, ctx: discord.ApplicationContext):
         """Shuts down the bot"""
         if ctx.author.id not in settings.DEV_IDS:
-            await ctx.respond('Looks like you\'re not allowed to use this command, sorry.', ephemeral=True)
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
@@ -172,9 +173,31 @@ class DevCog(commands.Cog):
             await functions.edit_interaction(interaction, content='Shutdown aborted.', view=None)
 
     @dev.command()
-    @commands.is_owner()
+    async def cache(self, ctx: discord.ApplicationContext):
+        """Shows cache size"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        from cache import messages
+        cache_size = sys.getsizeof(messages._MESSAGE_CACHE)
+        channel_count = len(messages._MESSAGE_CACHE)
+        message_count = 0
+        for channel_messages in messages._MESSAGE_CACHE.values():
+            message_count += len(channel_messages)
+            cache_size += sys.getsizeof(channel_messages)
+            for message in channel_messages:
+                cache_size += sys.getsizeof(message)
+        await ctx.respond(
+            f'Cache size: {cache_size / 1024:,.2f} KB\n'
+            f'Channel count: {channel_count:,}\n'
+            f'Message count: {message_count:,}\n'
+        )
+    @dev.command()
     async def consolidate(self, ctx: discord.ApplicationContext):
         """Miriel test command. Consolidates tracking records older than 28 days manually"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
         await ctx.defer()
         from datetime import datetime
         import asyncio
@@ -207,45 +230,6 @@ class DevCog(commands.Cog):
         time_passed = end_time - start_time
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
-
-    @dev.command()
-    @commands.is_owner()
-    async def delete_old(self, ctx: discord.ApplicationContext):
-        """Miriel test command. Deletes single tracking records older than 28 days"""
-        await ctx.defer()
-        from datetime import datetime, timedelta
-        from humanfriendly import format_timespan
-        import sqlite3
-        start_time = datetime.utcnow().replace(microsecond=0)
-        date_time = datetime.utcnow() - timedelta(days=28)
-        date_time = date_time.replace(hour=0, minute=0, second=0)
-        sql = 'DELETE FROM tracking_log WHERE date_time<? AND type=?'
-        try:
-            cur = settings.NAVI_DB.cursor()
-            cur.execute(sql, (date_time, 'single'))
-        except sqlite3.Error as error:
-            raise
-        end_time = datetime.utcnow().replace(microsecond=0)
-        time_passed = end_time - start_time
-        await ctx.respond(f'Completed in {format_timespan(time_passed)}.')
-
-
-    @dev.command()
-    @commands.is_owner()
-    async def pet_commands(self, ctx: discord.ApplicationContext):
-        """Miriel test command. Just ignore"""
-        field = f'FEED FEED PAT PAT'
-        embed1 = discord.Embed(
-            title = 'LOWEST RISK',
-            description = field
-        )
-        embed2 = discord.Embed(
-            title = 'CHANCE AT SKILL',
-            description = field
-        )
-        embed1.set_footer(text='Catch chance: 67.06 - 85.88%')
-        embed2.set_footer(text='Catch chance: 57.65 - 71.76%')
-        await ctx.respond(embeds=[embed1, embed2])
 
 
 def setup(bot):

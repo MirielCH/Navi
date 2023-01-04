@@ -927,7 +927,8 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Pet tournament**: {await functions.bool_to_text(user_settings.alert_pet_tournament.enabled)}\n'
     )
     multipliers = (
-        f'_Multipliers can be used to add custom reminder reductions (e.g. for area 18)._\n'
+        f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
+        f'_These are **not** for global event reductions. Ask your Navi admin to set those._\n'
         f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
         f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: `{user_settings.alert_chimney.multiplier}`\n'
         f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
