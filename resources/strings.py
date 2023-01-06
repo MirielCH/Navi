@@ -922,7 +922,7 @@ RPG_COMMANDS = {
     'net': 'rpg net',
     'open': 'rpg open',
     'pets adventure': 'rpg pets adventure',
-    'pets claim': 'rpg pets adventure claim',
+    'pets claim': 'rpg pets claim',
     'pets fusion': 'rpg pets fusion',
     'pets list': 'rpg pets',
     'pets tournament': 'rpg pets tournament',
