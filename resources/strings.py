@@ -109,7 +109,7 @@ DEFAULT_MESSAGES = {
     'lootbox': DEFAULT_MESSAGE,
     'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
-    'partner': '{name} **{partner}** found {loot} for you!',
+    'partner': '{name} Hey! **{partner}** found {loot} for you!',
     'party-popper': '{name} Hey! Your party popper just ran out!',
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
