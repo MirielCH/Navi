@@ -1015,8 +1015,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
-        f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
-        f'{emojis.DETAIL} _Reduces your reminders by 10%._\n'
+        #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
+        #f'{emojis.DETAIL} _Reduces your reminders by 10%._\n'
     )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'
