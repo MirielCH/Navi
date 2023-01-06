@@ -295,7 +295,7 @@ class WorkCog(commands.Cog):
                 'it seems like the dragon just had 1 point of life',
                 'the dragon did not move an inch',
                 'you slept well and the items respawned',
-                '**EPIC NPC** came here to gave you',
+                '**epic npc** came here to gave you',
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 interaction = await functions.get_interaction(message)
