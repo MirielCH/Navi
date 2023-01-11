@@ -197,6 +197,9 @@ class PetsCog(commands.Cog):
                 icon_url = embed.author.icon_url
             if embed.description: message_description = str(embed.description)
             if embed.title: message_title = embed.title
+            if len(embed.fields) > 1:
+                message_field_1_name = embed.fields[1].name
+                message_field_1_value = embed.fields[1].value
 
             # Pet list
             search_strings = [
@@ -246,6 +249,10 @@ class PetsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 reminder_created = False
+                try:
+                    summary_reminder = await reminders.get_user_reminder(user_id=user.id, activity='pets-?')
+                except exceptions.NoDataFoundError:
+                    summary_reminder = None
                 for field in embed.fields:
                     pet_id_match = re.search(r'`ID: (.+?)`', field.name)
                     pet_emoji = ''
@@ -277,8 +284,14 @@ class PetsCog(commands.Cog):
                     ]
                     if pet_action not in pet_actions: continue
                     pet_timestring = pet_action_timestring_match.group(2)
+                    current_time = datetime.utcnow().replace(microsecond=0)
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
+                    end_time = current_time + time_left
                     if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
+                    if summary_reminder is not None:
+                        if end_time - timedelta(seconds=2) <= summary_reminder.end_time <= end_time + timedelta(seconds=2):
+                            await summary_reminder.delete()
+                            summary_reminder = None
                     reminder_created = True
                     reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
                     reminder: reminders.Reminder = (
@@ -320,6 +333,72 @@ class PetsCog(commands.Cog):
                 if user_settings.ready_pets_claim_active:
                     await user_settings.update(ready_pets_claim_active=False)
 
+            # Pets summary
+            search_strings = [
+                'this is a summary of your pets', #English
+                'este es un sumario de tus mascotas', #Spanish
+                'este é um resumo dos seus pets', #Portuguese
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
+                user_id = user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_PETS_SUMMARY)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in pet summary message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
+                search_patterns = [
+                    r'min time left\*\*: (.+?)\n', #English
+                    r'tiempo mínimo restante\*\*: (.+?)\n', #Spanish
+                    r'tempo restante\*\*: (.+?)\n', #Portuguese
+                ]
+                timestring_match = await functions.get_match_from_patterns(search_patterns, message_field_1_value)
+                if not timestring_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Timestring not found in pet summary message.', message)
+                    return
+                timestring = timestring_match.group(1)
+                if timestring == '--': return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                end_time = current_time + time_left
+                if time_left < timedelta(0): return
+                try:
+                    pet_reminders = (
+                        await reminders.get_active_user_reminders(user_id=user.id, activity='pets',
+                                                                  end_time=end_time - timedelta(seconds=1))
+                    )
+                except exceptions.NoDataFoundError:
+                    pet_reminders = ()
+                reminder_exists = False
+                for reminder in pet_reminders:
+                    if reminder.activity == 'pets-?': continue
+                    if end_time - timedelta(seconds=2) <= reminder.end_time <= end_time + timedelta(seconds=2):
+                        reminder_exists = True
+                if not reminder_exists:
+                    reminder_message = user_settings.alert_pets.message.replace('{id}', '?').replace('{emoji}','').strip()
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, f'pets-?', time_left,
+                                                                message.channel.id, reminder_message)
+                    )
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 # Initialization
 def setup(bot):

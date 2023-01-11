@@ -871,10 +871,18 @@ async def insert_user(user_id: int) -> User:
     """
     function_name = 'insert_user'
     table = 'users'
-    sql = f'INSERT INTO {table} (user_id) VALUES (?)'
+    columns = ''
+    values = [user_id,]
+    for activity, default_message in strings.DEFAULT_MESSAGES.items():
+        columns = f'{columns},{strings.ACTIVITIES_COLUMNS[activity]}_message'
+        values.append(default_message)
+    sql = f'INSERT INTO {table} (user_id{columns}) VALUES ('
+    for value in values:
+        sql = f'{sql}?,'
+    sql = f'{sql.strip(",")})'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id,))
+        cur.execute(sql, values)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

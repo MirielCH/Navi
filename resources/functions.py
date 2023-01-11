@@ -171,8 +171,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
                              - time_elapsed.total_seconds())
     else:
         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-    if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
-        time_left_seconds *= 0.9
+    #if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
+    #    time_left_seconds *= 0.9
     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
     return timedelta(seconds=time_left_seconds * alert_settings.multiplier)
 

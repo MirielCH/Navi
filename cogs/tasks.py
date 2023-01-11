@@ -35,6 +35,7 @@ class TasksCog(commands.Cog):
 
         try:
             channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
+            if channel is None: return
             if first_reminder.reminder_type == 'user':
                 user = await functions.get_discord_user(self.bot, first_reminder.user_id)
                 user_settings = await users.get_user(user.id)
@@ -72,7 +73,7 @@ class TasksCog(commands.Cog):
                     if not pet_reminders:
                         messages[message_no] = (
                             f'{messages[message_no]}'
-                            f"➜ {command_pets_claim} - No more pets on adventures."
+                            f"➜ {command_pets_claim} - No more pets found."
                         )
                     else:
                         next_pet_reminder = pet_reminders[0]
@@ -322,7 +323,7 @@ class TasksCog(commands.Cog):
     @tasks.loop(minutes=1)
     async def delete_old_messages_from_cache(self) -> None:
         """Task that deletes messages from the message cache that are older than 1 minute"""
-        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=1))
+        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=2))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
 

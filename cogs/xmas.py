@@ -223,7 +223,7 @@ class ChristmasCog(commands.Cog):
                                                              message.channel.id,
                                                              '{name} Hey! Good news! You got unstuck from that chimney!')
                     )
-
+            """
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
@@ -406,7 +406,7 @@ class ChristmasCog(commands.Cog):
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
-
+            """
             # Cookies and milk
             search_strings = [
                 '`cookies and milk` successfully crafted!', #English

@@ -333,7 +333,7 @@ class ManageUserSettingsSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
-        christmas_area_action = 'Disable' if view.user_settings.christmas_area_enabled else 'Enable'
+        #christmas_area_action = 'Disable' if view.user_settings.christmas_area_enabled else 'Enable'
         auto_flex_action = 'Disable' if view.user_settings.auto_flex_enabled else 'Enable'
         dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
         hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
@@ -349,8 +349,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
                                             value='toggle_hunt'))
         options.append(discord.SelectOption(label=f'{mentions_action} slash command reminders',
                                             value='toggle_mentions'))
-        options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
-                                            value='toggle_christmas_area'))
+        #options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
+        #                                    value='toggle_christmas_area'))
         options.append(discord.SelectOption(label=f'{tracking_action} command tracking',
                                             value='toggle_tracking'))
         options.append(discord.SelectOption(label=f'Change last time travel time',
