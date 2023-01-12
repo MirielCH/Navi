@@ -586,7 +586,7 @@ class HuntCog(commands.Cog):
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
                     if user_settings.hunt_rotation_enabled:
                         if 'together' in user_settings.last_hunt_mode:
-                            last_hunt_mode = user_settings.last_hunt_mode.replace('together','',' ','')
+                            last_hunt_mode = user_settings.last_hunt_mode.replace('together','').replace(' ','')
                         else:
                             last_hunt_mode = f'{user_settings.last_hunt_mode} together'.strip()
                         await user_settings.update(last_hunt_mode=last_hunt_mode)

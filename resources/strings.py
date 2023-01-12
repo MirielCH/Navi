@@ -1116,6 +1116,14 @@ FLEX_TITLES_PETS_CATCH_TT = [
     'Always close your phone box door',
 ]
 
+FLEX_TITLES_PETS_CLAIM_OMEGA = [
+    'Anything for the OMEGAs it seems',
+    'This is against the Geneva Conventions',
+    'Chance too high, lume pls fix',
+    'SAVE THE SNOWMANS',
+    'Bill Watterson might have inspired this flex',
+]
+
 FLEX_TITLES_PR_ASCENSION = [
     'Up up and away',
     'Goodbye peasants!',
@@ -1409,6 +1417,14 @@ FLEX_THUMBNAILS_PETS_CATCH_TT = [
     'https://media.giphy.com/media/3qsCqrKYjq5DkANgBE/giphy.gif',
     'https://media.giphy.com/media/5E7vDOIamcWlzg97TG/giphy.gif',
     'https://media.giphy.com/media/U7JM6ChJMrFnXfFHvE/giphy.gif',
+]
+
+FLEX_THUMBNAILS_PETS_CLAIM_OMEGA = [
+    'https://media.tenor.com/sQVkHE1_BgcAAAAC/ahh-scared.gif',
+    'https://media.tenor.com/eFNKOmp6hSsAAAAC/olaf-disney.gif',
+    'https://media.tenor.com/gZcSvrfQPXgAAAAC/snowman-melting.gif',
+    'https://media.tenor.com/l5BcI5CzQV0AAAAC/elmo-fire-elmo-snowman.gif',
+    'https://media.tenor.com/nzD-S3_ZC-8AAAAd/snowgolem-minecraft.gif',
 ]
 
 FLEX_THUMBNAILS_PR_ASCENSION = [

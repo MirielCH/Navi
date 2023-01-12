@@ -1,7 +1,7 @@
 # nsmb_bigarena.py
 
-import asyncio
 from datetime import timedelta
+import random
 import re
 
 import discord
@@ -97,6 +97,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, event, time_left,
                                                         message.channel.id, reminder_message)
@@ -190,6 +191,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, event, time_left,
                                                         message.channel.id, reminder_message)

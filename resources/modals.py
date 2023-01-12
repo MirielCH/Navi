@@ -67,7 +67,7 @@ class SetStealthThresholdModal(Modal):
             await reminder.update(message=new_message)
         except exceptions.NoDataFoundError:
             pass
-        embed = await self.view.embed_function(self.view.bot, self.view.clan_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.clan_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 

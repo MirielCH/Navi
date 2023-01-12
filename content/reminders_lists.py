@@ -318,6 +318,8 @@ async def command_ready(
             current_time = datetime.utcnow().replace(microsecond=0)
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
+                alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
+                if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:
                     local_time_difference = datetime.now().replace(microsecond=0) - current_time
                     end_time = reminder.end_time + local_time_difference

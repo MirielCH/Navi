@@ -1,6 +1,5 @@
 # horse_race.py
 
-import asyncio
 from datetime import timedelta
 import re
 
@@ -50,7 +49,6 @@ class HorseRaceCog(commands.Cog):
                 already_registered = False
             user_name = user_command_message = None
             user = await functions.get_interaction_user(message)
-            slash_command = True if user is not None else False
             if user is None:
                 if message.mentions:
                     user = message.mentions[0]
