@@ -192,6 +192,28 @@ class DevCog(commands.Cog):
             f'Channel count: {channel_count:,}\n'
             f'Message count: {message_count:,}\n'
         )
+
+    @dev.command(name='server-list')
+    async def server_list(self, ctx: discord.ApplicationContext):
+        """Lists the servers the bot is in by name"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        description = ''
+        guilds = sorted(self.bot.guilds, key=lambda guild: guild.name)
+        for guild in guilds:
+            if len(description) > 4000:
+                description = f'{description}\n{emojis.BP} ... and more'
+                break
+            else:
+                description = f'{description}\n{emojis.BP} {guild.name}'
+
+        embed = discord.Embed(
+            title = 'SERVER LIST',
+            description = description.strip(),
+        )
+        await ctx.respond(embed=embed)
+
     @dev.command()
     async def consolidate(self, ctx: discord.ApplicationContext):
         """Miriel test command. Consolidates tracking records older than 28 days manually"""
