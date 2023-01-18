@@ -7,8 +7,8 @@ from typing import Literal
 import discord
 from discord.ui import InputText, Modal
 
-from database import reminders
-from resources import emojis, exceptions, strings
+from database import portals, reminders
+from resources import emojis, exceptions, functions, strings
 
 
 class SetEmbedColorModal(Modal):
@@ -222,4 +222,69 @@ class SetEventReductionModal(Modal):
                     else:
                         await cooldown.update(event_reduction_mention=new_value)
         embed = await self.view.embed_function(self.view.all_cooldowns)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class AddPortalModal(Modal):
+    def __init__(self, view: discord.ui.View, component: discord.ui.Select) -> None:
+        super().__init__(title='Add portal')
+        self.view = view
+        self.component = component
+        self.add_item(
+            InputText(
+                label='New portal (channel ID):',
+                placeholder="Enter channel ID ...",
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        channel_id = self.children[0].value
+        try:
+            channel_id = int(channel_id)
+        except ValueError:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('That is not an ID.', ephemeral=True)
+            return
+        for portal in self.view.user_portals:
+            if portal.channel_id == channel_id:
+                await interaction.response.edit_message(view=self.view)
+                await interaction.followup.send('You have already added this portal.', ephemeral=True)
+                return
+        new_portal = await portals.insert_portal(self.view.user_settings.user_id, channel_id)
+        self.view.user_portals.append(new_portal)
+        for child in self.view.children.copy():
+            if isinstance(child, self.component):
+                self.view.remove_item(child)
+                self.view.add_item(self.component(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.user_portals)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class AddCommandChannelModal(Modal):
+    def __init__(self, view: discord.ui.View, activity: str) -> None:
+        super().__init__(title=f'Add {activity} channel')
+        self.view = view
+        self.activity = activity
+        self.add_item(
+            InputText(
+                label=f'{activity.capitalize()} channel channel ID:',
+                placeholder="Enter channel ID ...",
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        channel_id = self.children[0].value
+        try:
+            channel_id = int(channel_id)
+        except ValueError:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('That is not an ID.', ephemeral=True)
+            return
+        kwargs = {f'ready_channel_{self.activity}': channel_id}
+        await self.view.user_settings.update(**kwargs)
+
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.clan_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)

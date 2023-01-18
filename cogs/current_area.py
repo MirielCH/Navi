@@ -77,7 +77,8 @@ class CurrentAreaCog(commands.Cog):
                 "— profile", #All languages
                 "— progress", #All languages
             ]
-            if any(search_string in embed_author.lower() for search_string in search_strings):
+            if (any(search_string in embed_author.lower() for search_string in search_strings)
+                and not 'epic npc' in embed_author.lower()):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)

@@ -438,7 +438,8 @@ class AutoFlexCog(commands.Cog):
                 "— profile", #All languages
                 "— progress", #All languages
             ]
-            if any(search_string in embed_autor.lower() for search_string in search_strings):
+            if (any(search_string in embed_autor.lower() for search_string in search_strings)
+                and not 'epic npc' in embed_autor.lower()):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)

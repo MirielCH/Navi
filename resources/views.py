@@ -2,19 +2,20 @@
 """Contains global interaction views"""
 
 import random
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, cooldowns, guilds, reminders, users
+from database import clans, cooldowns, guilds, portals, reminders, users
 from resources import components, functions, settings, strings
 
 COMMANDS_SETTINGS = {
     'Guild channel': settings_cmd.command_settings_clan,
     'Helpers': settings_cmd.command_settings_helpers,
     'Partner': settings_cmd.command_settings_partner,
+    'Portals': settings_cmd.command_settings_portals,
     'Ready list': settings_cmd.command_settings_ready,
     'Reminders': settings_cmd.command_settings_reminders,
     'Reminder messages': settings_cmd.command_settings_messages,
@@ -193,7 +194,6 @@ class SettingsClanView(discord.ui.View):
         await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
-
 class SettingsHelpersView(discord.ui.View):
     """View with a all components to manage helper settings.
     Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
@@ -245,8 +245,109 @@ class SettingsHelpersView(discord.ui.View):
         self.stop()
 
 
+class SettingsPortalsView(discord.ui.View):
+    """View with a all components to manage portal settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: user object with the settings of the user.
+    user_portals: Dict[channel_id: discord.TextChannel object]
+    embed_function: Functino that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - ctx: Context
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 user_portals: List[portals.Portal], embed_function: callable,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.embed_function = embed_function
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.user_portals = user_portals
+        self.add_item(components.ManagePortalsSelect(self))
+        self.add_item(components.ManagePortalSettingsSelect(self))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
 class SettingsReadyView(discord.ui.View):
     """View with a all components to manage ready settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    clan_settings: Clan object with the settings of the clan.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 clan_settings: clans.Clan, embed_function: callable,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.clan_settings = clan_settings
+        self.embed_function = embed_function
+        toggled_settings_other = {
+            '/cd': 'cmd_cd_visible',
+            '/inventory': 'cmd_inventory_visible',
+            '/ready': 'cmd_ready_visible',
+            '/slashboard': 'cmd_slashboard_visible',
+        }
+        self.add_item(components.ManageReadySettingsSelect(self))
+        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_other, 'Toggle other commands',
+                                                           'toggle_other_commands'))
+        self.add_item(components.SwitchToReadyRemindersSelect(self))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
+class SettingsReadyRemindersView(discord.ui.View):
+    """View with a all components to manage ready setting reminders.
     Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
 
     Arguments
@@ -307,20 +408,22 @@ class SettingsReadyView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
-        toggled_settings_other = {
-            '/cd': 'cmd_cd_visible',
-            '/inventory': 'cmd_inventory_visible',
-            '/ready': 'cmd_ready_visible',
-            '/slashboard': 'cmd_slashboard_visible',
-        }
-        self.add_item(components.ManageReadySettingsSelect(self))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
-        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_other, 'Toggle other commands',
-                                                          'toggle_other_commands'))
-        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+        self.add_item(components.ManageReadyReminderChannelsSelect(self))
+
+    @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=3)
+    async def confirm_callback(
+        self, button: discord.ui.Button, interaction: discord.Interaction
+    ):
+        view = SettingsReadyView(self.ctx, self.bot, self.user_settings, self.clan_settings,
+                                 settings_cmd.embed_settings_ready)
+        embed = await settings_cmd.embed_settings_ready(self.bot, self.ctx, self.user_settings, self.clan_settings)
+        await interaction.response.edit_message(embed=embed, view=view)
+        view.interaction = interaction
+        self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

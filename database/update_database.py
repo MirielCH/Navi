@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 3
+NAVI_DB_VERSION = 4
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -235,10 +235,22 @@ if __name__ == '__main__':
                 )
 
     # Update database with new stuff added in later versions.
-    if db_version < NAVI_DB_VERSION:
+    if db_version < 1:
         sqls = [
             'ALTER TABLE guilds ADD auto_flex_enabled BOOLEAN NOT NULL DEFAULT (0)',
             "ALTER TABLE tracking_log ADD type TEXT NOT NULL DEFAULT ('single')",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    if db_version < 2:
+        sqls = [
             "ALTER TABLE users ADD alert_adventure_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_chimney_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_daily_multiplier REAL NOT NULL DEFAULT (1)",
@@ -253,6 +265,18 @@ if __name__ == '__main__':
             "ALTER TABLE users ADD alert_work_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD ascended BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD current_area INTEGER",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    if db_version < 3:
+        sqls = [
             "ALTER TABLE users ADD alert_party_popper_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_party_popper_message TEXT NOT NULL DEFAULT ('{name} Hey! Your party popper just ran out!')",
             "ALTER TABLE users ADD alert_party_popper_visible BOOLEAN NOT NULL DEFAULT (0)",
@@ -265,7 +289,31 @@ if __name__ == '__main__':
                     continue
                 else:
                     raise
-        cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
+
+    if db_version < 4:
+        sqls = [
+            "CREATE TABLE users_portals (sort_index INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+            "user_id INTEGER NOT NULL, channel_id INTEGER NOT NULL)",
+            "CREATE UNIQUE INDEX user_channel ON users_portals (user_id, channel_id)",
+            "ALTER TABLE users ADD portals_as_embed BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD portals_spacing_enabled BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD ready_up_next_show_hidden_reminders BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD ready_channel_arena INTEGER",
+            "ALTER TABLE users ADD ready_channel_duel INTEGER",
+            "ALTER TABLE users ADD ready_channel_dungeon INTEGER",
+            "ALTER TABLE users ADD ready_channel_horse INTEGER",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    # Set DB version, vaccum, integrity check
+    cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
     db_version = get_user_version()
     print(
         f'Updated database to version {db_version}.\n\n'

@@ -209,6 +209,7 @@ class DevCog(commands.Cog):
                 description = f'{description}\n{emojis.BP} {guild.name}'
 
         embed = discord.Embed(
+            color = settings.EMBED_COLOR,
             title = 'SERVER LIST',
             description = description.strip(),
         )

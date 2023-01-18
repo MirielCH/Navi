@@ -83,14 +83,21 @@ class User():
     pet_helper_icon_mode: bool
     pet_tip_read: bool
     ping_after_message: bool
+    portals_as_embed: bool
+    portals_spacing_enabled: bool
     guild_quest_prompt_active: bool
     reactions_enabled: bool
     ready_as_embed: bool
+    ready_channel_arena: int
+    ready_channel_duel: int
+    ready_channel_dungeon: int
+    ready_channel_horse: int
     ready_embed_color: str
     ready_pets_claim_active: bool
     ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
     ready_up_next_as_timestamp: bool
+    ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
     rubies: int
     ruby_counter_button_mode: bool
@@ -168,14 +175,21 @@ class User():
         self.pet_helper_icon_mode = new_settings.pet_helper_icon_mode
         self.pet_tip_read = new_settings.pet_tip_read
         self.ping_after_message = new_settings.ping_after_message
+        self.portals_as_embed = new_settings.portals_as_embed
+        self.portals_spacing_enabled = new_settings.portals_spacing_enabled
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_as_embed = new_settings.ready_as_embed
+        self.ready_channel_arena = new_settings.ready_channel_arena
+        self.ready_channel_duel = new_settings.ready_channel_duel
+        self.ready_channel_dungeon = new_settings.ready_channel_dungeon
+        self.ready_channel_horse = new_settings.ready_channel_horse
         self.ready_embed_color = new_settings.ready_embed_color
         self.ready_pets_claim_active = new_settings.ready_pets_claim_active
         self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
+        self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
         self.rubies = new_settings.rubies
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
@@ -322,13 +336,20 @@ class User():
             pet_helper_icon_mode: bool
             pet_tip_read: bool
             ping_after_message: bool
+            portals_as_embed: bool
+            portals_spacing_enabled: bool
             reactions_enabled: bool
             ready_as_embed: bool
+            ready_channel_arena: int
+            ready_channel_duel: int
+            ready_channel_dungeon: int
+            ready_channel_horse: int
             ready_embed_color: str
             ready_pets_claim_active: bool
             ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
             ready_up_next_as_timestamp: bool
+            ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
             rubies: int
             ruby_counter_button_mode: bool
@@ -508,13 +529,20 @@ async def _dict_to_user(record: dict) -> User:
             pet_helper_icon_mode = bool(record['pet_helper_icon_mode']),
             pet_tip_read = bool(record['pet_tip_read']),
             ping_after_message = bool(record['ping_after_message']),
+            portals_as_embed = bool(record['portals_as_embed']),
+            portals_spacing_enabled = bool(record['portals_spacing_enabled']),
             reactions_enabled = bool(record['reactions_enabled']),
             ready_as_embed = bool(record['ready_as_embed']),
+            ready_channel_arena = record['ready_channel_arena'],
+            ready_channel_duel = record['ready_channel_duel'],
+            ready_channel_dungeon = record['ready_channel_dungeon'],
+            ready_channel_horse = record['ready_channel_horse'],
             ready_embed_color = record['ready_embed_color'],
             ready_other_on_top = bool(record['ready_other_on_top']),
             ready_pets_claim_active = bool(record['ready_pets_claim_active']),
             ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
+            ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
             rubies = record['rubies'],
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
@@ -807,13 +835,20 @@ async def _update_user(user: User, **kwargs) -> None:
         pet_helper_icon_mode: bool
         pet_tip_read: bool
         ping_after_message: bool
+        portals_as_embed: bool
+        portals_spacing_enabled: bool
         reactions_enabled: bool
         ready_as_embed: bool
+        ready_channel_arena: int
+        ready_channel_duel: int
+        ready_channel_dungeon: int
+        ready_channel_horse: int
         ready_embed_color: str
         ready_pets_claim_active: bool
         ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool
         ready_up_next_as_timestamp: bool
+        ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
         rubies: int
         ruby_counter_button_mode: bool

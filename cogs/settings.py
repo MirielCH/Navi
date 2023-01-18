@@ -4,6 +4,7 @@
 import discord
 from discord.commands import SlashCommandGroup, slash_command, Option
 from discord.ext import commands
+import re
 
 from database import clans, errors, reminders, users
 from content import settings as settings_cmd
@@ -40,6 +41,11 @@ class SettingsCog(commands.Cog):
     async def helpers(self, ctx: discord.ApplicationContext) -> None:
         """Manage helper settings"""
         await settings_cmd.command_settings_helpers(self.bot, ctx)
+
+    @cmd_settings.command()
+    async def portals(self, ctx: discord.ApplicationContext) -> None:
+        """Manage portals"""
+        await settings_cmd.command_settings_portals(self.bot, ctx)
 
     @cmd_settings.command()
     async def messages(self, ctx: discord.ApplicationContext) -> None:
@@ -224,23 +230,35 @@ class SettingsCog(commands.Cog):
                     await functions.add_warning_reaction(message_after)
                     await errors.log_error('Clan owner not found in guild list message: {message_clan_leader}', message_after)
                     return
-                clan_members = message_clan_members.replace('ID: ','').replace('**','')
-                clan_members = clan_members.split('\n')
+                clan_members = message_clan_members.split('\n')
                 clan_member_ids = []
                 if clan_leader.isnumeric():
                     clan_leader_id = int(clan_leader)
                 else:
-                    username = clan_leader[:clan_leader.find('#')]
-                    discriminator = clan_leader[clan_leader.find('#')+1:]
+                    user_name_match = re.search(r'^(.+?)#(\d+?)$', clan_leader)
+                    if not user_name_match:
+                        await functions.add_warning_reaction(message_after)
+                        await errors.log_error(f'Couldn\'t find user ID or name for guild list owner "{clan_leader}".',
+                                                message_after)
+                        return
+                    username = user_name_match.group(1)
+                    discriminator = user_name_match.group(2)
                     clan_leader = discord.utils.get(message_before.guild.members,
                                                     name=username, discriminator=discriminator)
                     clan_leader_id = clan_leader.id
                 for member in clan_members:
-                    if member.isnumeric():
-                        member_id = int(member)
+                    user_id_match = re.search(r'^ID: \*\*(\d+?)\*\*$', member)
+                    if user_id_match:
+                        member_id = int(user_id_match.group(1))
                     else:
-                        username = member[:member.find('#')]
-                        discriminator = member[member.find('#') + 1:]
+                        user_name_match = re.search(r'^\*\*(.+?)#(\d+?)\*\*$', member)
+                        if not user_name_match:
+                            await functions.add_warning_reaction(message_after)
+                            await errors.log_error(f'Couldn\'t find user ID or name for guild list member "{member}".',
+                                                   message_after)
+                            return
+                        username = user_name_match.group(1)
+                        discriminator = user_name_match.group(2)
                         member = discord.utils.get(message_before.guild.members,
                                                    name=username, discriminator=discriminator)
                         member_id = member.id

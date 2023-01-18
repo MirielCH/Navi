@@ -753,8 +753,9 @@ TRACKED_COMMANDS = (
     'work',
     'farm',
     'training',
+    'ultraining',
     'adventure',
-    'epic guard'
+    'epic guard',
 ) # Sorted by cooldown length
 
 

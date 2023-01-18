@@ -14,6 +14,17 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
+
+# Files and directories
+BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_FILE = os.path.join(BOT_DIR, 'database/navi_db.db')
+NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
+NAVI_DB.row_factory = sqlite3.Row
+LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
+IMG_NAVI = os.path.join(BOT_DIR, 'images/navi.png')
+VERSION_FILE = os.path.join(BOT_DIR, 'VERSION')
+
+
 # Load .env variables
 load_dotenv()
 
@@ -75,13 +86,10 @@ else:
         sys.exit()
 
 
-# Files and directories
-BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FILE = os.path.join(BOT_DIR, 'database/navi_db.db')
-NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
-NAVI_DB.row_factory = sqlite3.Row
-LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
-IMG_NAVI = os.path.join(BOT_DIR, 'images/navi.png')
+# Read bot version
+_version_file = open(VERSION_FILE, 'r')
+VERSION = _version_file.readline().rstrip('\n')
+_version_file.close()
 
 
 DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65)

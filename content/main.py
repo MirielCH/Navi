@@ -86,8 +86,11 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
     )
     misc_settings = (
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "enable")} & '
-        f'{await functions.get_navi_slash_command(bot, "disable")} : Speed enable settings\n'
+        f'{await functions.get_navi_slash_command(bot, "disable")} : Speed enable/disable settings\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}enable` & `{prefix}disable`_\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "portals")} : Customizable list of channel links\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}portals`, `{prefix}pt`_\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings portals")} : Manage your portals\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")} : List of some EPIC RPG slash commands\n'
     )
     server_settings = (
@@ -133,6 +136,7 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
     )
     creator = f'{emojis.BP} Miriel#0001'
     dev_stuff = (
+        f'{emojis.BP} Version: {settings.VERSION}\n'
         f'{emojis.BP} Language: Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}\n'
         f'{emojis.BP} Library: Pycord {discord.__version__}\n'
         f'{emojis.BP} System CPU usage: {psutil.cpu_percent()}%\n'

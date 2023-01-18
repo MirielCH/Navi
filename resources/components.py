@@ -7,7 +7,8 @@ from typing import Dict, List, Literal, Optional
 
 import discord
 
-from database import cooldowns, reminders, users
+from content import settings as settings_cmd
+from database import cooldowns, portals, reminders, users
 from resources import emojis, functions, modals, strings, views
 
 
@@ -255,6 +256,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
             pets_claim_type = 'when all pets are back'
         else:
             pets_claim_type = 'after every pet'
+        if view.user_settings.ready_up_next_show_hidden_reminders:
+            up_next_hidden_reminders = 'Hide'
+        else:
+            up_next_hidden_reminders = 'Show'
         auto_ready_action = 'Disable' if view.user_settings.auto_ready_enabled else 'Enable'
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'{auto_ready_action} auto-ready',
@@ -267,6 +272,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
                                                 value='toggle_up_next'))
         options.append(discord.SelectOption(label=f'Show "up next" reminder with {up_next_style}',
                                                 value='toggle_up_next_timestamp'))
+        options.append(discord.SelectOption(label=f'{up_next_hidden_reminders} hidden reminders in "up next"',
+                                                value='toggle_up_next_hidden_reminders'))
         options.append(discord.SelectOption(label=f'Show "/pets claim" {pets_claim_type}',
                                                 value='toggle_pets_claim'))
         if view.clan_settings is not None:
@@ -293,7 +300,13 @@ class ManageReadySettingsSelect(discord.ui.Select):
         elif select_value == 'toggle_up_next':
             await self.view.user_settings.update(ready_up_next_visible=not self.view.user_settings.ready_up_next_visible)
         elif select_value == 'toggle_up_next_timestamp':
-            await self.view.user_settings.update(ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp)
+            await self.view.user_settings.update(
+                ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp
+            )
+        elif select_value == 'toggle_up_next_hidden_reminders':
+            await self.view.user_settings.update(
+                ready_up_next_show_hidden_reminders=not self.view.user_settings.ready_up_next_show_hidden_reminders
+            )
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
         elif select_value == 'toggle_pets_claim':
@@ -948,3 +961,138 @@ class CopyEventReductionsButton(discord.ui.Button):
             await interaction.response.edit_message(embed=embed, view=self.view)
         else:
             await self.view.message.edit(embed=embed, view=self.view)
+
+
+class ManagePortalsSelect(discord.ui.Select):
+    """Select to change portal settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        if len(view.user_portals) < 20:
+            options.append(discord.SelectOption(label=f'Add portal',
+                                                value='add_portal'))
+        for index, portal in enumerate(view.user_portals):
+            options.append(discord.SelectOption(label=f'Remove portal {index + 1} ({portal.channel_id})',
+                                                value=f'remove_{portal.channel_id}'))
+        super().__init__(placeholder='Manage portals', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_portals')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'add_portal':
+            modal = modals.AddPortalModal(self.view, ManagePortalsSelect)
+            await interaction.response.send_modal(modal)
+        else:
+            channel_id = int(select_value.replace('remove_', ''))
+            portal = await portals.get_portal(self.view.user_settings.user_id, channel_id)
+            await portal.delete()
+            self.view.user_portals.remove(portal)
+
+        for child in self.view.children.copy():
+            if isinstance(child, ManagePortalsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManagePortalsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.user_portals)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class SwitchToReadyRemindersSelect(discord.ui.Select):
+    """Select to switch to ready reminder settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        options.append(discord.SelectOption(label=f'Manage command / event reminders',
+                                            value='switch_to_ready_reminders'))
+        super().__init__(placeholder='Manage command / event reminders', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='switch_to_ready_reminders')
+
+    async def callback(self, interaction: discord.Interaction):
+        view = views.SettingsReadyRemindersView(self.view.ctx, self.view.bot, self.view.user_settings,
+                                                self.view.clan_settings, settings_cmd.embed_settings_ready_reminders)
+        embed = await settings_cmd.embed_settings_ready_reminders(self.view.bot, self.view.ctx, self.view.user_settings,
+                                                                  self.view.clan_settings)
+        await interaction.response.edit_message(embed=embed, view=view)
+        view.interaction = interaction
+        self.view.stop()
+
+
+class ManageReadyReminderChannelsSelect(discord.ui.Select):
+    """Select to manage ready reminder channel settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        options.append(discord.SelectOption(label=f'Change arena channel',
+                                            value='change_channel_arena'))
+        options.append(discord.SelectOption(label=f'Change duel channel',
+                                            value='change_channel_duel'))
+        options.append(discord.SelectOption(label=f'Change dungeon channel',
+                                            value='change_channel_dungeon'))
+        options.append(discord.SelectOption(label=f'Change horse breed channel',
+                                            value='change_channel_horse'))
+        options.append(discord.SelectOption(label=f'Reset arena channel',
+                                            value='reset_channel_arena'))
+        options.append(discord.SelectOption(label=f'Reset duel channel',
+                                            value='reset_channel_duel'))
+        options.append(discord.SelectOption(label=f'Reset dungeon channel',
+                                            value='reset_channel_dungeon'))
+        options.append(discord.SelectOption(label=f'Reset horse breed channel',
+                                            value='reset_channel_horse'))
+        super().__init__(placeholder='Manage command channels', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_command_channels')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'reset_channel_arena':
+            await self.view.user_settings.update(ready_channel_arena=None)
+        elif select_value == 'reset_channel_duel':
+            await self.view.user_settings.update(ready_channel_duel=None)
+        elif select_value == 'reset_channel_dungeon':
+            await self.view.user_settings.update(ready_channel_dungeon=None)
+        elif select_value == 'reset_channel_horse':
+            await self.view.user_settings.update(ready_channel_horse=None)
+        else:
+            modal = modals.AddCommandChannelModal(self.view, select_value.replace('change_channel_',''))
+            await interaction.response.send_modal(modal)
+            return
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.clan_settings)
+        if not interaction.response.is_done():
+            await interaction.response.edit_message(embed=embed, view=self.view)
+        else:
+            await self.view.message.edit(embed=embed, view=self.view)
+
+
+class ManagePortalSettingsSelect(discord.ui.Select):
+    """Select to change portal settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        message_style = 'normal message' if view.user_settings.portals_as_embed else 'embed'
+        spacing_mode = 'Disable' if view.user_settings.portals_spacing_enabled else 'Enable'
+        options.append(discord.SelectOption(label=f'Show portal list as {message_style}',
+                                            value='toggle_message_style', emoji=None))
+        options.append(discord.SelectOption(label=f'{spacing_mode} mobile spacing',
+                                            value='toggle_mobile_spacing'))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_portal_settings')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'toggle_mobile_spacing':
+            await self.view.user_settings.update(
+                portals_spacing_enabled=not self.view.user_settings.portals_spacing_enabled
+            )
+        elif select_value == 'toggle_message_style':
+            await self.view.user_settings.update(portals_as_embed=not self.view.user_settings.portals_as_embed)
+        for child in self.view.children.copy():
+            if isinstance(child, ManagePortalSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManagePortalSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.user_portals)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)

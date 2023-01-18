@@ -134,7 +134,7 @@ class TrainingCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'ultraining', current_time)
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'ultraining')
                 await user_settings.update(last_training_command='ultraining')

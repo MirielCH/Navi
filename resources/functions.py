@@ -11,7 +11,7 @@ from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
-from resources import emojis, exceptions, settings, strings
+from resources import emojis, exceptions, logs, settings, strings
 
 
 # --- Get discord data ---

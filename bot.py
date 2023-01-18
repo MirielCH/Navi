@@ -130,6 +130,7 @@ EXTENSIONS = [
         'cogs.pets_tournament',
         'cogs.helper_pets',
         'cogs.pets',
+        'cogs.portals',
         'cogs.quest',
         'cogs.reminders_custom',
         'cogs.reminders_lists',

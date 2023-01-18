@@ -239,6 +239,26 @@ async def command_ready(
                     f'{field_ready_commands}\n'
                     f'{emojis.DETAIL} _Use {command_pets_list} to update reminders._'
                 )
+            elif 'arena' in command and user_settings.ready_channel_arena is not None:
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} <#{user_settings.ready_channel_arena}>'
+                )
+            elif 'duel' in command and user_settings.ready_channel_duel is not None:
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} <#{user_settings.ready_channel_duel}>'
+                )
+            elif 'dungeon' in command and user_settings.ready_channel_dungeon is not None:
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} <#{user_settings.ready_channel_dungeon}>'
+                )
+            elif 'horse breed' in command and user_settings.ready_channel_horse is not None:
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} <#{user_settings.ready_channel_horse}>'
+                )
         if field_ready_commands != '':
             answer = (
                 f'{answer}\n'
@@ -318,8 +338,9 @@ async def command_ready(
             current_time = datetime.utcnow().replace(microsecond=0)
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
-                alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
-                if not alert_settings.visible: continue
+                if not user_settings.ready_up_next_show_hidden_reminders:
+                    alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
+                    if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:
                     local_time_difference = datetime.now().replace(microsecond=0) - current_time
                     end_time = reminder.end_time + local_time_difference

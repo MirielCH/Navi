@@ -2,13 +2,13 @@
 """Contains clan settings commands"""
 
 import re
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, guilds, reminders, users
+from database import clans, guilds, portals, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
@@ -261,6 +261,30 @@ async def command_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationCon
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsHelpersView(ctx, bot, user_settings, embed_settings_helpers)
     embed = await embed_settings_helpers(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                   switch_view: Optional[discord.ui.View] = None) -> None:
+    """Portals settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    try:
+        user_portals = list(await portals.get_portals(ctx.author.id))
+    except exceptions.NoDataFoundError:
+        user_portals = []
+    view = views.SettingsPortalsView(ctx, bot, user_settings, user_portals, embed_settings_portals)
+    embed = await embed_settings_portals(bot, ctx, user_settings, user_portals)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -601,19 +625,14 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
 async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
-    clan_channel = None
     if clan_settings.upgrade_quests_enabled:
         clan_upgrade_quests = f'{emojis.GREENTICK}`Allowed`'
     else:
         clan_upgrade_quests = f'{emojis.REDTICK}`Not allowed`'
     if clan_settings.channel_id is not None:
-        try:
-            clan_channel = await functions.get_discord_channel(bot, clan_settings.channel_id)
-        except discord.Forbidden:
-            clan_channel_name = 'Access forbidden'
-        if clan_channel is not None: clan_channel_name = clan_channel.name
+        clan_channel = f'<#{clan_settings.channel_id}>'
     else:
-        clan_channel_name = 'N/A'
+        clan_channel = '`N/A`'
     if clan_settings.quest_user_id is not None:
         quest_user = f'<@{clan_settings.quest_user_id}>'
     else:
@@ -624,7 +643,7 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.BP} **Owner**: <@{clan_settings.leader_id}>\n'
     )
     reminder = (
-        f'{emojis.BP} **Guild channel**: `{clan_channel_name}`\n'
+        f'{emojis.BP} **Guild channel**: {clan_channel}\n'
         f'{emojis.DETAIL} _Reminders will always be sent to this channel._\n'
         f'{emojis.BP} **Reminder**: {reminder_enabled}\n'
         f'{emojis.BP} **Stealth threshold**: `{clan_settings.stealth_threshold}`\n'
@@ -696,6 +715,27 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
     embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     return embed
 
+async def embed_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+                                 user_portals: List[portals.Portal]) -> discord.Embed:
+    """Portals settings embed"""
+    message_style = 'Embed' if user_settings.portals_as_embed else 'Normal message'
+    portal_list = ''
+    for index, portal in enumerate(user_portals):
+        portal_list = f'{portal_list}\n{emojis.BP} {index + 1}: <#{portal.channel_id}> ({portal.channel_id})'
+    if not portal_list: portal_list = f'{emojis.BP} _No portals set._'
+    portal_settings = (
+        f'{emojis.BP} **Message style**: `{message_style}`\n'
+        f'{emojis.BP} **Mobile spacing**: {await functions.bool_to_text(user_settings.portals_spacing_enabled)}'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name.upper()}\'S PORTAL SETTINGS',
+        description = '_Portals will take you to another channel. You can add up to 20 portals._'
+    )
+    embed.add_field(name='PORTALS', value=portal_list, inline=False)
+    embed.add_field(name='SETTINGS', value=portal_settings, inline=False)
+    return embed
+
 
 async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationContext,
                                   user_settings: users.User, activity: str) -> List[discord.Embed]:
@@ -755,23 +795,13 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
 async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
-    user_partner_channel_name = partner = '`N/A`'
-    partner_partner_channel_name = user_partner_channel_name = '`N/A`'
-    partner_partner_channel = user_partner_channel = None
-    try:
-        user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
-    except discord.Forbidden:
-        user_partner_channel_name = '`Access forbidden`'
-    if user_partner_channel is not None:
-        user_partner_channel_name = f'`{user_partner_channel.name}`)'
+    partner = partner_partner_channel = user_partner_channel = '`N/A`'
+    if user_settings.partner_channel_id is not None:
+        user_partner_channel = f'<#{user_settings.partner_channel_id}>'
     if partner_settings is not None:
         partner = f'<@{user_settings.partner_id}>'
-        try:
-            partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
-        except discord.Forbidden:
-            partner_partner_channel_name = '`Access forbidden`'
-        if partner_partner_channel is not None:
-            partner_partner_channel_name = f'`{partner_partner_channel.name}`)'
+        if partner_settings.partner_channel_id is not None:
+            partner_partner_channel = f'<#{partner_settings.partner_channel_id}>'
     donor_tier = (
         f'{emojis.BP} **Partner donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
         f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
@@ -779,11 +809,11 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
     )
     settings_user = (
         f'{emojis.BP} **Partner**: {partner}\n'
-        f'{emojis.BP} **Partner alert channel**: {user_partner_channel_name}\n'
+        f'{emojis.BP} **Partner alert channel**: {user_partner_channel}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
     )
     settings_partner = (
-        f'{emojis.BP} **Partner alert channel**: {partner_partner_channel_name}\n'
+        f'{emojis.BP} **Partner alert channel**: {partner_partner_channel}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -812,6 +842,10 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     auto_ready_enabled = f'{emojis.GREENTICK}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.REDTICK}`Disabled`'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
+    if user_settings.ready_up_next_show_hidden_reminders:
+        up_next_hidden_reminders = f'{emojis.GREENTICK}`Enabled`'
+    else:
+        up_next_hidden_reminders = f'{emojis.REDTICK}`Disabled`'
     other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
     if user_settings.ready_pets_claim_after_every_pet:
         pets_claim_type = 'After every pet'
@@ -822,12 +856,66 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Message style**: `{message_style}`\n'
         f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
-        f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
-        f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
-        f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["pets claim"]} type**: `{pets_claim_type}`\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
+    up_next_reminder = (
+        f'{emojis.BP} **Reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
+        f'{emojis.BP} **Style**: `{up_next_tyle}`\n'
+        f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
+        f'{emojis.BP} **Also show hidden reminders**: {up_next_hidden_reminders}\n'
+    )
+    other_commands = (
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["cd"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
+        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "ready")} command**: '
+        f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
+        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "slashboard")} command**: '
+        f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
+    )
+    command_event_reminders = (
+        f'{emojis.BP} _Choose "Manage command / event reminders" below to manage reminders and command channels._'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
+        description = (
+            f'_General settings for the {await functions.get_navi_slash_command(bot, "ready")} list._\n'
+            f'_To show or hide reminders or change command channels, choose "Manage command / event reminders" below._'
+        )
+    )
+    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+    embed.add_field(name='UP NEXT REMINDER', value=up_next_reminder, inline=False)
+    embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
+    embed.add_field(name='COMMAND & EVENT REMINDERS', value=command_event_reminders, inline=False)
+    return embed
+
+
+async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+                                         clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
+    """Ready reminders settings embed"""
+    async def bool_to_text(boolean: bool) -> str:
+        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Hidden`'
+
+    if user_settings.ready_channel_arena is not None:
+        channel_arena = f'<#{user_settings.ready_channel_arena}>'
+    else:
+        channel_arena = '`N/A`'
+    if user_settings.ready_channel_duel is not None:
+        channel_duel = f'<#{user_settings.ready_channel_duel}>'
+    else:
+        channel_duel = '`N/A`'
+    if user_settings.ready_channel_dungeon is not None:
+        channel_dungeon = f'<#{user_settings.ready_channel_dungeon}>'
+    else:
+        channel_dungeon = '`N/A`'
+    if user_settings.ready_channel_horse is not None:
+        channel_horse = f'<#{user_settings.ready_channel_horse}>'
+    else:
+        channel_horse = '`N/A`'
+
     command_reminders = (
         #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_advent.visible)}\n'
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
@@ -860,29 +948,25 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
     )
-    other_commands = (
-        f'{emojis.BP} **{strings.SLASH_COMMANDS["cd"]} command**: '
-        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
-        f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
-        f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
-        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "ready")} command**: '
-        f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
-        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "slashboard")} command**: '
-        f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
+    command_channels = (
+        f'_Command channels are shown below the corresponding ready command._\n'
+        f'{emojis.BP} **Arena channel**: {channel_arena}\n'
+        f'{emojis.BP} **Duel channel**: {channel_duel}\n'
+        f'{emojis.BP} **Dungeon channel**: {channel_dungeon}\n'
+        f'{emojis.BP} **Horse breed channel**: {channel_horse}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S READY LIST REMINDER SETTINGS',
         description = (
             f'_Settings to toggle visibility of reminders in {await functions.get_navi_slash_command(bot, "ready")}._\n'
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
         )
     )
-    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
+    embed.add_field(name='COMMAND CHANNELS', value=command_channels, inline=False)
     return embed
 
 
@@ -960,14 +1044,16 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
 async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext,
                                 guild_settings: guilds.Guild) -> discord.Embed:
     """Server settings embed"""
-    auto_flex_channel = await functions.get_discord_channel(bot, guild_settings.auto_flex_channel_id)
-    auto_flex_channel_name = f'`{auto_flex_channel.name}`' if auto_flex_channel is not None else '`N/A`'
+    if guild_settings.auto_flex_channel_id is not None:
+        auto_flex_channel = f'<#{guild_settings.auto_flex_channel_id}>'
+    else:
+        auto_flex_channel = '`N/A`'
     prefix = (
         f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
     )
     auto_flex = (
         f'{emojis.BP} **Alerts**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
-        f'{emojis.BP} **Channel**: {auto_flex_channel_name}\n'
+        f'{emojis.BP} **Channel**: {auto_flex_channel}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
