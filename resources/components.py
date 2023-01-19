@@ -158,12 +158,12 @@ class ManageClanSettingsSelect(discord.ui.Select):
         options = []
         reminder_emoji = emojis.ENABLED if view.clan_settings.alert_enabled else emojis.DISABLED
         quest_emoji = emojis.ENABLED if view.clan_settings.upgrade_quests_enabled else emojis.DISABLED
-        options.append(discord.SelectOption(label=f'Reminder', emoji=reminder_emoji,
-                                            value='toggle_reminder'))
+        options.append(discord.SelectOption(label=f'Reminder',
+                                            value='toggle_reminder', emoji=reminder_emoji))
         options.append(discord.SelectOption(label=f'Quests below stealth threshold',
-                                            value='toggle_quest'))
+                                            value='toggle_quest', emoji=quest_emoji))
         options.append(discord.SelectOption(label='Change stealth threshold',
-                                            value='set_threshold', emoji=quest_emoji))
+                                            value='set_threshold'))
         options.append(discord.SelectOption(label='Add this channel as guild channel',
                                             value='set_channel', emoji=emojis.ADD))
         options.append(discord.SelectOption(label='Remove guild channel',
