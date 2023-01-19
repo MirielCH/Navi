@@ -29,7 +29,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
     function_name = 'log_error'
     sql = f'INSERT INTO {table} (date_time, message_content, error, user_settings, jump_url) VALUES (?, ?, ?, ?, ?)'
     if hasattr(error, 'message'):
-        error_message = error.message
+        error_message = f'Error: {error.message}'
     else:
         error_message = str(error)
     try:

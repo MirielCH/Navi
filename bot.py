@@ -69,7 +69,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         traceback_message = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Event', value=f'`{event}`', inline=False)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
-        await errors.log_error(f'- Event: {event}:\n- Error: {error[1]}\n- Traceback:\n{traceback_str}', message)
+        await errors.log_error(f'- Event: {event}\n- Error: {error[1]}\n- Traceback:\n{traceback_str}', message)
         if settings.DEBUG_MODE: await message.channel.send(embed=embed)
     else:
         try:
@@ -82,7 +82,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
-        await errors.log_error(f'Got an error:\nError: {error[1]}\nTraceback: {traceback_str}', message)
+        await errors.log_error(f'- Event: {event}\n- Error: {error[1]}\n- Traceback:\n{traceback_str}', message)
         if settings.DEBUG_MODE: await message.channel.send(embed=embed)
         if event == 'on_reaction_add':
             reaction, user = args
