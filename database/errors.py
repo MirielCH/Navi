@@ -35,17 +35,20 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
     try:
         module = error.__class__.__module__
         if module is None or module == str.__class__.__module__:
-            error_message = f'{error_message}\n{error.__class__.__name__}'
+            error_message = f'{error_message.strip()}\n- Module: {error.__class__.__name__}'
         if hasattr(error, '__traceback__'):
             traceback_str = "".join(traceback.format_tb(error.__traceback__))
         else:
             traceback_str = 'N/A'
+        if isinstance(error, Exception):
+            error_message = (
+                f'{error_message}\n'
+                f'- Traceback:\n'
+                f'{traceback_str}'
+            )
         error_message = (
-            f'{error_message}\n\n'
-            f'Exception type:\n'
-            f'{module}.{error.__class__.__name__}\n\n'
-            f'Traceback:\n'
-            f'{traceback_str}'
+            f'{error_message}\n'
+            f'- Exception type: {module}.{error.__class__.__name__}'
         )
     except Exception as error:
         error_message = f'{error_message}\n\nGot the following error while trying to get type and traceback:\n{error}'
@@ -87,10 +90,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (date_time, message_content, error_message, user_settings, jump_url))
-        logs.logger.error(
-            f'Time: {date_time}. Message content: {message_content}. Error: {error_message}. User settings: {user_settings}. '
-            f'Jump URL: {jump_url}'
-        )
+        logs.logger.error(f'\n{error_message}\n>> Check table "errors" in the database for more details.')
     except sqlite3.Error as error:
         if ctx is not None:
             logs.logger.error(
