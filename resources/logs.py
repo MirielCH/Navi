@@ -4,6 +4,7 @@
 import logging
 import logging.handlers
 import os
+import sys
 
 from resources import settings
 
@@ -24,3 +25,7 @@ else:
 handler = logging.handlers.TimedRotatingFileHandler(filename=settings.LOG_FILE,when='D',interval=1, encoding='utf-8', utc=True)
 handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
 logger.addHandler(handler)
+if "--log-to-stdout" in sys.argv:
+    stream_handler = logging.StreamHandler(sys.stdout)
+    stream_handler.setFormatter(logging.Formatter('%(asctime)s:%(levelname)s:%(name)s: %(message)s'))
+    logger.addHandler(stream_handler)
