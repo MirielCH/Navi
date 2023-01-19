@@ -11,7 +11,7 @@ from discord.ext import commands
 from database import errors, guilds
 from database import settings as settings_db
 from database.update_database import NAVI_DB_VERSION
-from resources import functions, logs, settings
+from resources import functions, settings
 
 
 #Check if database is up to date
@@ -67,7 +67,6 @@ async def on_error(event: str, *args, **kwargs) -> None:
         if isinstance(error, discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
-        print(traceback_message)
         embed.add_field(name='Event', value=f'`{event}`', inline=False)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
         await errors.log_error(f'Got an error in event {event}:\nError: {error[1]}\nTraceback: {traceback_str}', message)
@@ -82,7 +81,6 @@ async def on_error(event: str, *args, **kwargs) -> None:
         if isinstance(error, discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
-        print(traceback_message)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
         await errors.log_error(f'Got an error:\nError: {error[1]}\nTraceback: {traceback_str}', message)
         if settings.DEBUG_MODE: await message.channel.send(embed=embed)
