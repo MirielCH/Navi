@@ -990,7 +990,7 @@ async def edit_interaction(interaction: Union[discord.Interaction, discord.Webho
 
 
 async def bool_to_text(boolean: bool) -> str:
-        return f'{emojis.GREENTICK}`Enabled`' if boolean else f'{emojis.REDTICK}`Disabled`'
+        return f'{emojis.ENABLED}`Enabled`' if boolean else f'{emojis.DISABLED}`Disabled`'
 
 
 async def reply_or_respond(ctx: Union[discord.ApplicationContext, commands.Context], answer: str,

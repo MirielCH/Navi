@@ -1,6 +1,8 @@
 # strings.py
 """Contains global strings"""
 
+from resources import emojis
+
 # --- Error messages ---
 MSG_INTERACTION_ERRORS =  [
     "Hands off, mate! Interactions are sentient beings too, you know!",
@@ -149,6 +151,17 @@ DONOR_TIERS = (
     'ULTRA donator',
     'ULTIMATE donator',
 )
+
+DONOR_TIERS_EMOJIS = {
+    'Non-donator': None,
+    'Donator': emojis.LOG,
+    'EPIC donator': emojis.LOG_EPIC,
+    'SUPER donator': emojis.LOG_SUPER,
+    'MEGA donator': emojis.LOG_MEGA,
+    'HYPER donator': emojis.LOG_HYPER,
+    'ULTRA donator': emojis.LOG_ULTRA,
+    'ULTIMATE donator': emojis.LOG_ULTIMATE,
+}
 
 
 # --- Activities ---

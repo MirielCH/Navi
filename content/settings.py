@@ -626,9 +626,9 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
     if clan_settings.upgrade_quests_enabled:
-        clan_upgrade_quests = f'{emojis.GREENTICK}`Allowed`'
+        clan_upgrade_quests = f'{emojis.ENABLED}`Allowed`'
     else:
-        clan_upgrade_quests = f'{emojis.REDTICK}`Not allowed`'
+        clan_upgrade_quests = f'{emojis.DISABLED}`Not allowed`'
     if clan_settings.channel_id is not None:
         clan_channel = f'<#{clan_settings.channel_id}>'
     else:
@@ -802,8 +802,11 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
         partner = f'<@{user_settings.partner_id}>'
         if partner_settings.partner_channel_id is not None:
             partner_partner_channel = f'<#{partner_settings.partner_channel_id}>'
+    partner_donor_tier = strings.DONOR_TIERS[user_settings.partner_donor_tier]
+    partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
+    partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
     donor_tier = (
-        f'{emojis.BP} **Partner donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.BP} **Partner donor tier**: {partner_donor_tier}\n'
         f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
         f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._'
     )
@@ -833,19 +836,19 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
                                clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready settings embed"""
     async def bool_to_text(boolean: bool) -> str:
-        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Hidden`'
+        return f'{emojis.ENABLED}`Visible`' if boolean else f'{emojis.DISABLED}`Hidden`'
 
     if clan_settings is None:
         clan_alert_visible = '`N/A`'
     else:
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
-    auto_ready_enabled = f'{emojis.GREENTICK}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.REDTICK}`Disabled`'
+    auto_ready_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.DISABLED}`Disabled`'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
     if user_settings.ready_up_next_show_hidden_reminders:
-        up_next_hidden_reminders = f'{emojis.GREENTICK}`Enabled`'
+        up_next_hidden_reminders = f'{emojis.ENABLED}`Enabled`'
     else:
-        up_next_hidden_reminders = f'{emojis.REDTICK}`Disabled`'
+        up_next_hidden_reminders = f'{emojis.DISABLED}`Disabled`'
     other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
     if user_settings.ready_pets_claim_after_every_pet:
         pets_claim_type = 'After every pet'
@@ -897,7 +900,7 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
                                          clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready reminders settings embed"""
     async def bool_to_text(boolean: bool) -> str:
-        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Hidden`'
+        return f'{emojis.ENABLED}`Visible`' if boolean else f'{emojis.DISABLED}`Hidden`'
 
     if user_settings.ready_channel_arena is not None:
         channel_arena = f'<#{user_settings.ready_channel_arena}>'
@@ -1076,6 +1079,12 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
     ascension = 'Ascended' if user_settings.ascended else 'Not ascended'
+    user_donor_tier = strings.DONOR_TIERS[user_settings.user_donor_tier]
+    user_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[user_donor_tier]
+    user_donor_tier = f'{user_donor_tier_emoji} `{user_donor_tier}`'.lstrip('None ')
+    partner_donor_tier = strings.DONOR_TIERS[user_settings.partner_donor_tier]
+    partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
+    partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
 
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
@@ -1087,8 +1096,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
     donor_tier = (
-        f'{emojis.BP} **Your donor tier**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'
-        f'{emojis.BP} **Your partner\'s donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.BP} **Your donor tier**: {user_donor_tier}\n'
+        f'{emojis.BP} **Your partner\'s donor tier**: {partner_donor_tier}\n'
         f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
         f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._\n'
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
