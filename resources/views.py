@@ -277,6 +277,7 @@ class SettingsPortalsView(discord.ui.View):
         self.user = ctx.author
         self.user_settings = user_settings
         self.user_portals = user_portals
+        self.allow_deletion = False
         self.add_item(components.ManagePortalsSelect(self))
         self.add_item(components.ManagePortalSettingsSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
