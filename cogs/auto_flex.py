@@ -696,7 +696,7 @@ class AutoFlexCog(commands.Cog):
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
-        # Christmas presents, ultraining embed
+            # Christmas presents, ultraining embed
             search_strings = [
                 'godly present', #All languages, godly present
                 'void present', #All languages, void present

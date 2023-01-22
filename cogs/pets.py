@@ -302,8 +302,11 @@ class PetsCog(commands.Cog):
 
             # Pets claim
             search_strings = [
-                'pet adventure rewards', #English
-                'recompensas de pet adventure', #Spanish, Portuguese
+                'pet adventure rewards', #English 1
+                'reward summary', #English 2
+                'recompensas de pet adventure', #Spanish, Portuguese 1
+                'reward summary', #Spanish 2, MISSING
+                'reward summary', #Portuguese 2, MISSING
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None

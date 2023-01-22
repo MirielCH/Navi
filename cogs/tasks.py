@@ -275,8 +275,11 @@ class TasksCog(commands.Cog):
                         f'{message}{emojis.BP} '
                         f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
-                clan_channel = await functions.get_discord_channel(self.bot, clan.channel_id)
-                await clan_channel.send(message)
+                try:
+                    clan_channel = await functions.get_discord_channel(self.bot, clan.channel_id)
+                    if clan_channel is not None: await clan_channel.send(message)
+                except:
+                    pass
             # Delete leaderboard
             await clans.delete_clan_leaderboard()
 

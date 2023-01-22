@@ -985,23 +985,6 @@ class ManagePortalsSelect(discord.ui.Select):
             await interaction.response.send_modal(modal)
         else:
             channel_id = int(select_value.replace('remove_', ''))
-            if not self.view.allow_deletion:
-                confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-                confirm_interaction = await interaction.response.send_message(
-                    f'**{interaction.user.name}**, are you sure you want to remove channel `{channel_id}`?',
-                    view=confirm_view,
-                    ephemeral=True
-                )
-                confirm_view.interaction_message = confirm_interaction
-                await confirm_view.wait()
-                if confirm_view.value == 'confirm':
-                    self.view.allow_deletion = True
-                    await confirm_interaction.edit_original_response(
-                        content='Alright. I won\'t ask again if you remove any more.', view=None
-                    )
-                else:
-                    await confirm_interaction.edit_original_response(content='Aborted', view=None)
-                    return
             portal = await portals.get_portal(self.view.user_settings.user_id, channel_id)
             await portal.delete()
             self.view.user_portals.remove(portal)
