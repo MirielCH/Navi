@@ -1234,7 +1234,7 @@ class AutoFlexCog(commands.Cog):
                             drop_amount_check = drop_amount / 3
                         else:
                             drop_amount_check = drop_amount
-                        if drop_amount_check >= 4:
+                        if drop_amount_check >= 5:
                             epic_berry_user_found.append('EPIC berry')
                             epic_berry_user_found.append(drop_amount)
                             break
@@ -1282,7 +1282,7 @@ class AutoFlexCog(commands.Cog):
                                 drop_amount_check = drop_amount / 3
                             else:
                                 drop_amount_check = drop_amount
-                            if drop_amount_check >= 4:
+                            if drop_amount_check >= 5:
                                 epic_berry_partner_found.append('EPIC berry')
                                 epic_berry_partner_found.append(drop_amount)
                                 break
@@ -1372,7 +1372,7 @@ class AutoFlexCog(commands.Cog):
                     name, amount = mob_drops_user_found
                     event = 'mob_drops'
                     description = (
-                        f'**{user_name}** just found **{amount}** {mob_drops[name]} **{name}s** in one hunt.\n'
+                        f'**{user_name}** just found **{amount}** {mob_drops[name]} **{name}** in one hunt.\n'
                         f'Enjoy your totally deserved loot. Better make sure to reward your horse!'
                     )
 
@@ -1384,13 +1384,13 @@ class AutoFlexCog(commands.Cog):
                             f'{description}\n\n'
                             f'But, believe it or not, that is not all.\n'
                             f'Their partner **{partner_name}** couldn\'t let this stand and found **{amount}** '
-                            f'{mob_drops[name]} **{name}s** of their own. IN THE SAME HUNT.\n'
+                            f'{mob_drops[name]} **{name}** of their own. IN THE SAME HUNT.\n'
                             f'What even is this!'
                         )
                     else:
                         event = 'mob_drops_partner'
                         description = (
-                            f'What is more embarassing than not finding any {mob_drops[name]} **{name}s**?\n'
+                            f'What is more embarassing than not finding any {mob_drops[name]} **{name}**?\n'
                             f'Finding a whopping **{amount}** of them, only to get them stolen by your partner.\n'
                             f'That\'s what just happened to **{user_name}**. Bwahaha.\n'
                             f'Well played, **{partner_name}**.'

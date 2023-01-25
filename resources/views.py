@@ -393,7 +393,6 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
             'Quest': 'alert_quest',
-            'Party popper': 'alert_party_popper',
             'Pets claim': 'alert_pets',
             'Training': 'alert_training',
             'Vote': 'alert_vote',
@@ -408,13 +407,18 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_boosts = {
+            'Party popper': 'alert_party_popper',
+        }
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
+        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_boosts, 'Toggle boost reminders',
+                                                           'toggle_boost_reminders'))
         self.add_item(components.ManageReadyReminderChannelsSelect(self))
 
-    @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=3)
+    @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=4)
     async def confirm_callback(
         self, button: discord.ui.Button, interaction: discord.Interaction
     ):
@@ -480,7 +484,6 @@ class SettingsRemindersView(discord.ui.View):
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
             'Partner alert': 'alert_partner',
-            'Party popper': 'alert_party_popper',
             'Pets': 'alert_pets',
             'Quest': 'alert_quest',
             'Training': 'alert_training',
@@ -496,10 +499,15 @@ class SettingsRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_boosts = {
+            'Party popper': 'alert_party_popper',
+        }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
+        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_boosts, 'Toggle boost reminders',
+                                                          'toggle_boost_reminders'))
         self.add_item(components.ManageMultipliersSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 

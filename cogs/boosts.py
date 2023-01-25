@@ -97,7 +97,7 @@ class BoostsCog(commands.Cog):
                         return
                     time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                     if time_left < timedelta(0): return
-                    reminder_message = user_settings.alert_party_popper.message
+                    reminder_message = user_settings.alert_party_popper.message.replace('{boost}', 'party popper')
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'party-popper', time_left,
                                                              message.channel.id, reminder_message)
@@ -140,7 +140,7 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_party_popper.enabled: return
                 time_left = timedelta(hours=1)
-                reminder_message = user_settings.alert_party_popper.message
+                reminder_message = user_settings.alert_party_popper.message.replace('{boost}', 'party popper')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'party-popper', time_left,
                                                          message.channel.id, reminder_message)

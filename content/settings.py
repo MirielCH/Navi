@@ -936,13 +936,12 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
-        f'{emojis.BP} **Party popper**: {await bool_to_text(user_settings.alert_party_popper.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
         f'{emojis.BP} **Vote**: {await bool_to_text(user_settings.alert_vote.visible)}\n'
         f'{emojis.BP} **Weekly**: {await bool_to_text(user_settings.alert_weekly.visible)}\n'
-        f'{emojis.BP} **Work**: {await bool_to_text(user_settings.alert_work.visible)}'
+        f'{emojis.BP} **Work**: {await bool_to_text(user_settings.alert_work.visible)}\n'
     )
     event_reminders = (
         f'{emojis.BP} **Big arena**: {await bool_to_text(user_settings.alert_big_arena.visible)}\n'
@@ -950,6 +949,9 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
         f'{emojis.BP} **Lottery**: {await bool_to_text(user_settings.alert_lottery.visible)}\n'
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
+    )
+    boost_reminders = (
+        f'{emojis.BP} **Party popper**: {await bool_to_text(user_settings.alert_party_popper.visible)}\n'
     )
     command_channels = (
         f'_Command channels are shown below the corresponding ready command._\n'
@@ -969,6 +971,7 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='BOOST REMINDERS', value=boost_reminders, inline=False)
     embed.add_field(name='COMMAND CHANNELS', value=command_channels, inline=False)
     return embed
 
@@ -998,7 +1001,6 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
-        f'{emojis.BP} **Party popper**: {await functions.bool_to_text(user_settings.alert_party_popper.enabled)}\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
@@ -1012,6 +1014,9 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Lottery**: {await functions.bool_to_text(user_settings.alert_lottery.enabled)}\n'
         f'{emojis.BP} **Minin\'tboss**: {await functions.bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}\n'
         f'{emojis.BP} **Pet tournament**: {await functions.bool_to_text(user_settings.alert_pet_tournament.enabled)}\n'
+    )
+    boost_reminders = (
+        f'{emojis.BP} **Party popper**: {await functions.bool_to_text(user_settings.alert_party_popper.enabled)}\n'
     )
     multipliers = (
         f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
@@ -1040,6 +1045,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='BOOST REMINDERS', value=boost_reminders, inline=False)
     embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
     return embed
 

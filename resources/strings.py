@@ -86,6 +86,7 @@ LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
+DEFAULT_MESSAGE_BOOST = '{name} Hey! Your {boost} just ran out!'
 DEFAULT_MESSAGE_EVENT = (
     '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
     f'official EPIC RPG server.'
@@ -112,7 +113,7 @@ DEFAULT_MESSAGES = {
     'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '{name} Hey! **{partner}** found {loot} for you!',
-    'party-popper': '{name} Hey! Your party popper just ran out!',
+    'party-popper': DEFAULT_MESSAGE_BOOST,
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
@@ -265,7 +266,6 @@ ACTIVITIES_COMMANDS = (
     'horse',
     'hunt',
     'lootbox',
-    'party-popper',
     'quest',
     'training',
     'vote',
@@ -281,6 +281,9 @@ ACTIVITIES_EVENTS = (
     'pet-tournament',
 )
 
+ACTIVITIES_BOOSTS = (
+    'party-popper',
+)
 
 ACTIVITIES_SLASH_COMMANDS = {
     'advent-calendar': 'xmas calendar',

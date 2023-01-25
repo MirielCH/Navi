@@ -161,12 +161,15 @@ async def command_ready(
         clan_command = f"{command_upgrade} or {command_raid}"
     ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
     ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
+    ready_boost_activities = list(strings.ACTIVITIES_BOOSTS[:])
     active_pet_reminders = False
     for reminder in user_reminders:
         if reminder.activity in ready_command_activities:
             ready_command_activities.remove(reminder.activity)
         elif reminder.activity in ready_event_activities:
             ready_event_activities.remove(reminder.activity)
+        elif reminder.activity in ready_boost_activities:
+            ready_boost_activities.remove(reminder.activity)
         elif 'pets' in reminder.activity:
             active_pet_reminders = True
     if not active_pet_reminders or user_settings.ready_pets_claim_active:
@@ -186,6 +189,10 @@ async def command_ready(
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:
             ready_event_activities.remove(activity)
+    for activity in ready_boost_activities.copy():
+        alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
+        if not alert_settings.enabled:
+            ready_boost_activities.remove(activity)
 
     field_other = ''
     if user_settings.cmd_cd_visible:
@@ -302,6 +309,28 @@ async def command_ready(
                 f'{field_ready_events.strip()}'
             )
             embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
+    if ready_boost_activities:
+        field_ready_boosts = ''
+        ready_boosts = []
+        for activity in ready_boost_activities.copy():
+            alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
+            if not alert_settings.visible:
+                ready_boost_activities.remove(activity)
+                continue
+            command = await get_command_from_activity(activity)
+            ready_boosts.append(command)
+        for boost in sorted(ready_boosts):
+            field_ready_boosts = (
+                f'{field_ready_boosts}\n'
+                f'{emojis.BP} {boost}'
+            )
+        if field_ready_boosts != '':
+            answer = (
+                f'{answer}\n'
+                f'**BOOSTS**\n'
+                f'{field_ready_boosts.strip()}'
+            )
+            embed.add_field(name='BOOSTS', value=field_ready_boosts.strip(), inline=False)
     clan_alert_enabled = getattr(clan, 'alert_enabled', False)
     if not clan_reminder and clan_alert_enabled:
         field_ready_clan = (
@@ -396,6 +425,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User, user_remind
     local_time_difference = datetime.now().replace(microsecond=0) - current_time
     reminders_commands_list = []
     reminders_events_list = []
+    reminders_boosts_list = []
     reminders_pets_list = []
     reminders_custom_list = []
     for reminder in user_reminders:
@@ -405,6 +435,8 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User, user_remind
             reminders_custom_list.append(reminder)
         elif reminder.activity in strings.ACTIVITIES_EVENTS:
             reminders_events_list.append(reminder)
+        elif reminder.activity in strings.ACTIVITIES_BOOSTS:
+            reminders_boosts_list.append(reminder)
         else:
             reminders_commands_list.append(reminder)
 
@@ -473,6 +505,23 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User, user_remind
                 f'{emojis.BP} **`{activity}`** ({reminder_time})'
             )
         embed.add_field(name='EVENTS', value=field_event_reminders.strip(), inline=False)
+    if reminders_boosts_list:
+        field_boosts_reminders = ''
+        for reminder in reminders_boosts_list:
+            if show_timestamps:
+                end_time = reminder.end_time + local_time_difference
+                flag = 'T' if end_time.day == current_time.day else 'f'
+                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+            else:
+                time_left = reminder.end_time - current_time
+                timestring = await functions.parse_timedelta_to_timestring(time_left)
+                reminder_time = f'**{timestring}**'
+            activity = reminder.activity.replace('-',' ').capitalize()
+            field_boosts_reminders = (
+                f'{field_boosts_reminders}\n'
+                f'{emojis.BP} **`{activity}`** ({reminder_time})'
+            )
+        embed.add_field(name='BOOSTS', value=field_boosts_reminders.strip(), inline=False)
     if clan_reminders:
         reminder = clan_reminders[0]
         clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
