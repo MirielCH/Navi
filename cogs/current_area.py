@@ -120,6 +120,7 @@ class CurrentAreaCog(commands.Cog):
             # Set current area from hunt and adventure mobs
             search_strings = [
                 'found a', #English
+                'found the', #English TOP
                 'encontr', #Spanish, Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
@@ -182,10 +183,11 @@ class CurrentAreaCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 search_patterns_mob_name = [
-                    r"found and killed (.+?) \*\*(.+?)\*\*", #English
+                    r"found and killed (.+?) \*\*(.+?)\*\*(?: \(but|\n)", #English
+                    r"found (the) \*\*(.+?)\*\*(?:, | \(but|\n)", #English
                     r"found an? (.+?) \*\*(.+?)\*\*", #English
-                    r"encontró y mató (.+?) \*\*(.+?)\*\*", #Spanish
-                    r"encontrou e matou (.+?) \*\*(.+?)\*\*", #Portuguese
+                    r"encontró y mató (.+?) \*\*(.+?)\*\*(?:, | \(pero|\n)", #Spanish
+                    r"encontrou e matou (.+?) \*\*(.+?)\*\*(?:, | \(só|\n)", #Portuguese
                 ]
                 mob_name_match = await functions.get_match_from_patterns(search_patterns_mob_name, message_content)
                 if not mob_name_match:

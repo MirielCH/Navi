@@ -76,8 +76,11 @@ class HelperContextCog(commands.Cog):
 
             # Pets claim
             search_strings = [
-                'pet adventure rewards', #English
-                'recompensas de pet adventure', #Spanish & Portuguese
+                'pet adventure rewards', #English 1
+                'reward summary', #English 2
+                'recompensas de pet adventure', #Spanish, Portuguese 1
+                'resumen de recompensas', #Spanish 2
+                'resumo de recompensas', #Portuguese 2
             ]
             if any(search_string in embed_title.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
