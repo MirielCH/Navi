@@ -183,11 +183,11 @@ class CurrentAreaCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 search_patterns_mob_name = [
-                    r"found and killed (.+?) \*\*(.+?)\*\*(?: \(but|\n)", #English
-                    r"found (the) \*\*(.+?)\*\*(?:, | \(but|\n)", #English
+                    r"found and killed (.+?) \*\*(.+?)\*\*(?: \(but| \(way|\n)", #English
+                    r"found (the) \*\*(.+?)\*\*(?:, | \(but| \(way|\n)", #English
                     r"found an? (.+?) \*\*(.+?)\*\*", #English
-                    r"encontró y mató (.+?) \*\*(.+?)\*\*(?:, | \(pero|\n)", #Spanish
-                    r"encontrou e matou (.+?) \*\*(.+?)\*\*(?:, | \(só|\n)", #Portuguese
+                    r"encontró y mató (.+?) \*\*(.+?)\*\*(?:, | \(pero| \(mucho|\n)", #Spanish
+                    r"encontrou e matou (.+?) \*\*(.+?)\*\*(?:, | \(só| \(muito|\n)", #Portuguese
                 ]
                 mob_name_match = await functions.get_match_from_patterns(search_patterns_mob_name, message_content)
                 if not mob_name_match:

@@ -129,6 +129,8 @@ class AutoFlexCog(commands.Cog):
             author = f'{user.name} is advancing!'
         elif 'chimney' in event:
             author = f'{user.name} got stuck!'
+        elif 'partner' in event:
+            author = f'{user.name} got robbed!'
         else:
             author = f'{user.name} got lucky!'
         embed.set_author(icon_url=user.display_avatar.url, name=author)
@@ -1200,8 +1202,8 @@ class AutoFlexCog(commands.Cog):
 
                 mob_drops_thresholds = {
                     'wolf skin': 7,
-                    'zombie eye': 7,
-                    'unicorn horn': 7,
+                    'zombie eye': 6,
+                    'unicorn horn': 6,
                     'mermaid hair': 6,
                     'chip': 6,
                     'dragon scale': 6,
@@ -1214,7 +1216,7 @@ class AutoFlexCog(commands.Cog):
                         lootbox_match = re.search(pattern, message_content_user, re.IGNORECASE)
                         if lootbox_match:
                             drop_amount = int(lootbox_match.group(1))
-                            if user_settings.current_area == 21:
+                            if user_settings.current_area in (0, 21):
                                 drop_amount_check = drop_amount / 3
                             else:
                                 drop_amount_check = drop_amount
@@ -1230,7 +1232,7 @@ class AutoFlexCog(commands.Cog):
                     berry_match = re.search(pattern, message_content_user, re.IGNORECASE)
                     if berry_match:
                         drop_amount = int(berry_match.group(1))
-                        if user_settings.current_area == 21:
+                        if user_settings.current_area in (0, 21):
                             drop_amount_check = drop_amount / 3
                         else:
                             drop_amount_check = drop_amount

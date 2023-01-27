@@ -52,10 +52,7 @@ class ArenaCog(commands.Cog):
                 user_command_message = (
                     await messages.find_message(message.channel.id, regex.COMMAND_ARENA)
                 )
-                if user_command_message is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Interaction user not found for arena cooldown message.', message)
-                    return
+                if user_command_message is None: return
                 interaction_user = user_command_message.author
             try:
                 user_settings: users.User = await users.get_user(interaction_user.id)

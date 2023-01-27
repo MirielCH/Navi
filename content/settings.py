@@ -1097,8 +1097,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _You can toggle this by using {await functions.get_navi_slash_command(bot, "on")} '
         f'and {await functions.get_navi_slash_command(bot, "off")}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
-        f'{emojis.BP} **Auto flex alerts**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
-        f'{emojis.DETAIL} _Auto flexing only works if it\'s enabled in the server settings._\n'
+        f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
+        f'{emojis.DETAIL} _Auto flexing only works if it\'s also enabled in the server settings._\n'
         f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
     donor_tier = (
