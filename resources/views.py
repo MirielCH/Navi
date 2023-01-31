@@ -121,8 +121,7 @@ class ConfirmMarriageView(discord.ui.View):
                                               label='I do!'))
         self.add_item(components.CustomButton(style=discord.ButtonStyle.grey,
                                               custom_id='cancel',
-                                              label='Forever alone'),
-                                              row=1)
+                                              label='Forever alone'))
     async def interaction_check(self, interaction: discord.Interaction):
         if interaction.user != self.new_partner:
             await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
