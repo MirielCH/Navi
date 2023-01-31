@@ -1216,7 +1216,10 @@ class AutoFlexCog(commands.Cog):
                         lootbox_match = re.search(pattern, message_content_user, re.IGNORECASE)
                         if lootbox_match:
                             drop_amount = int(lootbox_match.group(1))
-                            if user_settings.current_area in (0, 21):
+                            if (user_settings.current_area == 0
+                                or 'pretending' in message_content_user.lower()
+                                or 'pretendiendo' in message_content_user.lower()
+                                or 'fingindo' in message_content_user.lower()):
                                 drop_amount_check = drop_amount / 3
                             else:
                                 drop_amount_check = drop_amount
@@ -1232,7 +1235,10 @@ class AutoFlexCog(commands.Cog):
                     berry_match = re.search(pattern, message_content_user, re.IGNORECASE)
                     if berry_match:
                         drop_amount = int(berry_match.group(1))
-                        if user_settings.current_area in (0, 21):
+                        if (user_settings.current_area == 0
+                            or 'pretending' in message_content_user.lower()
+                            or 'pretendiendo' in message_content_user.lower()
+                            or 'fingindo' in message_content_user.lower()):
                             drop_amount_check = drop_amount / 3
                         else:
                             drop_amount_check = drop_amount

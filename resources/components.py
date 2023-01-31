@@ -168,6 +168,10 @@ class ManageClanSettingsSelect(discord.ui.Select):
                                             value='set_channel', emoji=emojis.ADD))
         options.append(discord.SelectOption(label='Remove guild channel',
                                             value='reset_channel', emoji=emojis.REMOVE))
+        if (view.clan_settings.quest_user_id is not None
+            and view.clan_settings.quest_user_id == view.ctx.author.id):
+            options.append(discord.SelectOption(label='Remove guild quest',
+                                                value='remove_clan_quest', emoji=emojis.REMOVE))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_clan_settings')
 
@@ -232,6 +236,8 @@ class ManageClanSettingsSelect(discord.ui.Select):
             else:
                 await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
+        elif select_value == 'remove_clan_quest':
+            await self.view.clan_settings.update(quest_user_id=None)
         for child in self.view.children.copy():
             if isinstance(child, ManageClanSettingsSelect):
                 self.view.remove_item(child)

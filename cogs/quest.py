@@ -39,6 +39,7 @@ class QuestCog(commands.Cog):
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.fields:
+                field_name = embed.fields[0].name
                 field_value = embed.fields[0].value
             if embed.title: message_title = str(embed.title)
             if embed.description: message_description = embed.description
@@ -80,29 +81,29 @@ class QuestCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
+                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
                 except exceptions.NoDataFoundError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
                 if not clan.alert_enabled: return
                 await user_settings.update(last_quest_command='quest')
                 if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
                     await message.reply(
-                        f'{emojis.ERROR} Guild quest spot not available.\n'
+                        f'{emojis.DISABLED} Guild quest spot not available.\n'
                         f'Your guild doesn\'t allow doing guild quests below the '
                         f'stealth threshold ({clan.stealth_threshold}).'
                     )
                     return
                 if clan.quest_user_id is not None:
                     await message.reply(
-                        f'{emojis.ERROR} Guild quest spot not available.\n'
+                        f'{emojis.DISABLED} Guild quest spot not available.\n'
                         f'Another guild member is already doing a guild quest.'
                     )
                     return
                 await user_settings.update(guild_quest_prompt_active=True)
                 await message.reply(
-                    f'{emojis.CHECK} Guild quest spot available.\n'
+                    f'{emojis.ENABLED} Guild quest spot available.\n'
                     f'If you accept this quest, the next guild reminder will ping you solo first. '
                     f'You will have 5 minutes to raid before the other members are pinged.\n'
                     f'Note that you will lose your spot if you don\'t answer in time.'
@@ -272,6 +273,89 @@ class QuestCog(commands.Cog):
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+            # Guild quest in progress
+            search_strings = [
+                'if you don\'t want this quest anymore', #English
+                'si ya no quieres esta misión', #Spanish
+                'se você não quiser mais esta missão', #Portuguese
+            ]
+            if (any(search_string in message_description.lower() for search_string in search_strings)
+                and 'guild' in field_name.lower()):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = await message.guild.fetch_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_QUEST,
+                                                            user_name=user_name)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in guild quest progress message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                try:
+                    clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                except exceptions.NoDataFoundError:
+                    return
+                if not clan.alert_enabled: return
+                if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
+                    await message.reply(
+                        f'{emojis.DISABLED} Guild quest spot not available.\n'
+                        f'Your guild doesn\'t allow doing guild quests below the '
+                        f'stealth threshold ({clan.stealth_threshold}).'
+                    )
+                    return
+                if clan.quest_user_id is not None:
+                    if clan.quest_user_id == user.id:
+                        await message.reply(
+                            f'You are already registered for the guild quest. Patience, young Padawan.'
+                        )
+                    else:
+                        await message.reply(
+                            f'{emojis.DISABLED} Guild quest spot not available.\n'
+                            f'Another guild member is already doing a guild quest.'
+                        )
+                    return
+                await user_settings.update(guild_quest_prompt_active=True)
+                await message.reply(
+                    f'{emojis.ENABLED} You are now registered for the guild quest.\n'
+                    f'You will have 5 minutes to raid before the other members are pinged.\n'
+                    f'Note that you will lose your spot if you don\'t answer in time.'
+                )
+                await clan.update(quest_user_id=user.id)
+                try:
+                    clan_reminder: reminders.Reminder = (
+                        await reminders.get_clan_reminder(clan.clan_name)
+                    )
+                except exceptions.NoDataFoundError:
+                    clan_reminder = None
+                current_time = datetime.utcnow().replace(microsecond=0)
+                for member_id in clan.member_ids:
+                    if member_id == user.id: continue
+                    try:
+                        user_clan_reminder: reminders.Reminder = (
+                            await reminders.get_user_reminder(member_id, 'guild')
+                        )
+                    except exceptions.NoDataFoundError:
+                        continue
+                    user_reminder_time_left = user_clan_reminder.end_time - current_time
+                    new_end_time = current_time + (user_reminder_time_left + timedelta(minutes=5))
+                    await user_clan_reminder.update(end_time=new_end_time)
+
+
         if not message.embeds:
             message_content = message.content
             # Quest
@@ -346,22 +430,16 @@ class QuestCog(commands.Cog):
                                     )
                                 except exceptions.NoDataFoundError:
                                     clan_reminder = None
-                            if clan_reminder is not None:
-                                for member_id in clan.member_ids:
-                                    if member_id == user.id: continue
-                                    try:
-                                        user_clan_reminder: reminders.Reminder = (
-                                            await reminders.get_user_reminder(member_id, 'guild')
-                                        )
-                                        user_reminder_time_left = user_clan_reminder.end_time - current_time
-                                        clan_reminder_time_left = clan_reminder.end_time - current_time
-                                        range_upper = clan_reminder_time_left + timedelta(seconds=2)
-                                        range_lower = clan_reminder_time_left - timedelta(seconds=2)
-                                        if not range_lower <= user_reminder_time_left <= range_upper:
-                                            new_end_time = current_time + (clan_reminder_time_left + timedelta(minutes=5))
-                                            await user_clan_reminder.update(end_time=new_end_time)
-                                    except exceptions.NoDataFoundError:
-                                        continue
+                            for member_id in clan.member_ids:
+                                if member_id == user.id: continue
+                                try:
+                                    user_clan_reminder: reminders.Reminder = (
+                                        await reminders.get_user_reminder(member_id, 'guild')
+                                    )
+                                except exceptions.NoDataFoundError:
+                                    continue
+                                new_end_time = user_clan_reminder.end_time + timedelta(minutes=5)
+                                await user_clan_reminder.update(end_time=new_end_time)
                         except exceptions.NoDataFoundError:
                             pass
 
@@ -386,10 +464,18 @@ class QuestCog(commands.Cog):
                     clan: clans.Clan = await clans.get_clan_by_user_id(user.id)
                 except exceptions.NoDataFoundError:
                     return
-                if clan.quest_user_id is not None:
-                    if clan.quest_user_id == user.id:
-                        await clan.update(quest_user_id=None)
-                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                if clan.quest_user_id == user.id:
+                    await clan.update(quest_user_id=None)
+                    for member_id in clan.member_ids:
+                        if member_id == user.id: continue
+                        try:
+                            user_clan_reminder: reminders.Reminder = (
+                                await reminders.get_user_reminder(member_id, 'guild')
+                            )
+                        except exceptions.NoDataFoundError:
+                            continue
+                        await user_clan_reminder.update(end_time=(user_clan_reminder.end_time - timedelta(minutes=5)))
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization
