@@ -101,7 +101,7 @@ class HelperTrainingCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
                 search_strings_void = [
-                    'void', #English
+                    'training in the void', #English
                     'vacío', #Spanish, UNCONFIRMED
                     'vazio', #Portuguese, UNCONFIRMED
                 ]
