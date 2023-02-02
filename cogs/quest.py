@@ -90,23 +90,23 @@ class QuestCog(commands.Cog):
                 await user_settings.update(last_quest_command='quest')
                 if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
                     await message.reply(
-                        f'{emojis.DISABLED} Guild quest spot not available.\n'
+                        f'{emojis.DISABLED} Guild quest slot not available.\n'
                         f'Your guild doesn\'t allow doing guild quests below the '
                         f'stealth threshold ({clan.stealth_threshold}).'
                     )
                     return
                 if clan.quest_user_id is not None:
                     await message.reply(
-                        f'{emojis.DISABLED} Guild quest spot not available.\n'
+                        f'{emojis.DISABLED} Guild quest slot not available.\n'
                         f'Another guild member is already doing a guild quest.'
                     )
                     return
                 await user_settings.update(guild_quest_prompt_active=True)
                 await message.reply(
-                    f'{emojis.ENABLED} Guild quest spot available.\n'
+                    f'{emojis.ENABLED} Guild quest slot available.\n'
                     f'If you accept this quest, the next guild reminder will ping you solo first. '
                     f'You will have 5 minutes to raid before the other members are pinged.\n'
-                    f'Note that you will lose your spot if you don\'t answer in time.'
+                    f'Note that you will lose your slot if you don\'t answer in time.'
                 )
 
             # Quest cooldown
@@ -313,7 +313,7 @@ class QuestCog(commands.Cog):
                 if not clan.alert_enabled: return
                 if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
                     await message.reply(
-                        f'{emojis.DISABLED} Guild quest spot not available.\n'
+                        f'{emojis.DISABLED} Guild quest slot not available.\n'
                         f'Your guild doesn\'t allow doing guild quests below the '
                         f'stealth threshold ({clan.stealth_threshold}).'
                     )
@@ -325,7 +325,7 @@ class QuestCog(commands.Cog):
                         )
                     else:
                         await message.reply(
-                            f'{emojis.DISABLED} Guild quest spot not available.\n'
+                            f'{emojis.DISABLED} Guild quest slot not available.\n'
                             f'Another guild member is already doing a guild quest.'
                         )
                     return
@@ -333,7 +333,7 @@ class QuestCog(commands.Cog):
                 await message.reply(
                     f'{emojis.ENABLED} You are now registered for the guild quest.\n'
                     f'You will have 5 minutes to raid before the other members are pinged.\n'
-                    f'Note that you will lose your spot if you don\'t answer in time.'
+                    f'Note that you will lose your slot if you don\'t answer in time.'
                 )
                 await clan.update(quest_user_id=user.id)
                 try:
