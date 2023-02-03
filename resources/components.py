@@ -254,8 +254,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
     """Select to change ready settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
+        frequency = 'hunt only' if view.user_settings.ready_after_all_commands else 'all commands'
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
-        cmd_cd_action = 'Hide' if view.user_settings.cmd_cd_visible else 'Show'
         up_next_reminder_emoji = emojis.ENABLED if view.user_settings.ready_up_next_visible else emojis.DISABLED
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
         if view.user_settings.ready_pets_claim_after_every_pet:
@@ -270,6 +270,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'Auto-ready',
                                             value='toggle_auto_ready', emoji=auto_ready_emoji))
+        options.append(discord.SelectOption(label=f'Show ready commands after {frequency}',
+                                            value='toggle_frequency', emoji=None))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
                                             value='toggle_message_style', emoji=None))
         options.append(discord.SelectOption(label='Change embed color',
@@ -297,6 +299,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(auto_ready_enabled=not self.view.user_settings.auto_ready_enabled)
         elif select_value == 'toggle_alert':
             await self.view.clan_settings.update(alert_visible=not self.view.clan_settings.alert_visible)
+        elif select_value == 'toggle_frequency':
+            await self.view.user_settings.update(
+                ready_after_all_commands=not self.view.user_settings.ready_after_all_commands
+            )
         elif select_value == 'toggle_message_style':
             await self.view.user_settings.update(ready_as_embed=not self.view.user_settings.ready_as_embed)
         elif select_value == 'change_embed_color':
@@ -304,7 +310,9 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await interaction.response.send_modal(modal)
             return
         elif select_value == 'toggle_up_next':
-            await self.view.user_settings.update(ready_up_next_visible=not self.view.user_settings.ready_up_next_visible)
+            await self.view.user_settings.update(
+                ready_up_next_visible=not self.view.user_settings.ready_up_next_visible
+            )
         elif select_value == 'toggle_up_next_timestamp':
             await self.view.user_settings.update(
                 ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp
@@ -324,7 +332,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManageReadySettingsSelect(self.view))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.clan_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.clan_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:

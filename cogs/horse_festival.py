@@ -124,7 +124,7 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 await reminders.reduce_reminder_time(user.id, 'half', strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
@@ -212,7 +212,8 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
+                    await functions.call_ready_command(self.bot, message, user)
 
 
             search_strings = [
@@ -254,7 +255,8 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-                if user_settings.auto_ready_enabled: await functions.call_ready_command(self.bot, message, user)
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
+                    await functions.call_ready_command(self.bot, message, user)
         """
 
         if message.embeds:

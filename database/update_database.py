@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 4
+NAVI_DB_VERSION = 5
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -302,6 +302,19 @@ if __name__ == '__main__':
             "ALTER TABLE users ADD ready_channel_duel INTEGER",
             "ALTER TABLE users ADD ready_channel_dungeon INTEGER",
             "ALTER TABLE users ADD ready_channel_horse INTEGER",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    if db_version < 5:
+        sqls = [
+            "ALTER TABLE users ADD ready_after_all_commands BOOLEAN NOT NULL DEFAULT (1)",
         ]
         for sql in sqls:
             try:

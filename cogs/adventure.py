@@ -172,7 +172,7 @@ class AdventureCog(commands.Cog):
                     for stuff_name, stuff_emoji in found_stuff.items():
                         if stuff_name in message_content:
                             await message.add_reaction(stuff_emoji)
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 # Add an F if the user died

@@ -323,7 +323,7 @@ class ClanCog(commands.Cog):
                     if not clan_alert_enabled:
                         await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings is not None:
-                    if user_settings.auto_ready_enabled:
+                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         if clan_channel_id == message.channel.id: return
                         await functions.call_ready_command(self.bot, message, user)
 
@@ -429,7 +429,7 @@ class ClanCog(commands.Cog):
                     if not clan_alert_enabled:
                         await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings is not None:
-                    if user_settings.auto_ready_enabled:
+                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         if clan_channel_id == message.channel.id: return
                         await functions.call_ready_command(self.bot, message, user)
 

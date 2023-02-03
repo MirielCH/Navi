@@ -87,6 +87,7 @@ class User():
     portals_spacing_enabled: bool
     guild_quest_prompt_active: bool
     reactions_enabled: bool
+    ready_after_all_commands: bool
     ready_as_embed: bool
     ready_channel_arena: int
     ready_channel_duel: int
@@ -179,6 +180,7 @@ class User():
         self.portals_spacing_enabled = new_settings.portals_spacing_enabled
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
+        self.ready_after_all_commands = new_settings.ready_after_all_commands
         self.ready_as_embed = new_settings.ready_as_embed
         self.ready_channel_arena = new_settings.ready_channel_arena
         self.ready_channel_duel = new_settings.ready_channel_duel
@@ -339,6 +341,7 @@ class User():
             portals_as_embed: bool
             portals_spacing_enabled: bool
             reactions_enabled: bool
+            ready_after_all_commands: bool
             ready_as_embed: bool
             ready_channel_arena: int
             ready_channel_duel: int
@@ -532,6 +535,7 @@ async def _dict_to_user(record: dict) -> User:
             portals_as_embed = bool(record['portals_as_embed']),
             portals_spacing_enabled = bool(record['portals_spacing_enabled']),
             reactions_enabled = bool(record['reactions_enabled']),
+            ready_after_all_commands = bool(record['ready_after_all_commands']),
             ready_as_embed = bool(record['ready_as_embed']),
             ready_channel_arena = record['ready_channel_arena'],
             ready_channel_duel = record['ready_channel_duel'],
@@ -838,6 +842,7 @@ async def _update_user(user: User, **kwargs) -> None:
         portals_as_embed: bool
         portals_spacing_enabled: bool
         reactions_enabled: bool
+        ready_after_all_commands: bool
         ready_as_embed: bool
         ready_channel_arena: int
         ready_channel_duel: int

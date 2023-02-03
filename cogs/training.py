@@ -145,7 +145,7 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings = [
@@ -200,7 +200,7 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -232,7 +232,7 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 

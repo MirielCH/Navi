@@ -843,6 +843,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     else:
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
     auto_ready_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.DISABLED}`Disabled`'
+    frequency = 'After all commands' if user_settings.ready_after_all_commands else 'After hunt only'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
     if user_settings.ready_up_next_show_hidden_reminders:
@@ -856,6 +857,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         pets_claim_type = 'When all pets are back'
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
+        f'{emojis.BP} **Auto-ready frequency**: `{frequency}`\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
         f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
