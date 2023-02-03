@@ -827,7 +827,59 @@ class SettingsServerView(discord.ui.View):
         self.interaction = interaction
         self.user = ctx.author
         self.guild_settings = guild_settings
+        toggled_auto_flex_alerts_1 = {
+            'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
+            'GODLY lootbox from hunt or adventure': 'auto_flex_lb_godly_enabled',
+            'HYPER logs in work commands': 'auto_flex_work_hyperlog_enabled',
+            'Monster drops from hunt': 'auto_flex_mob_drops_enabled',
+            'OMEGA lootbox from hunt or adventure': 'auto_flex_lb_omega_enabled',
+            'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
+            'SUPER fish from work commands': 'auto_flex_work_superfish_enabled',
+            'TIME capsule from GODLY lootbox': 'auto_flex_lb_godly_tt_enabled',
+            'ULTIMATE logs from work commands': 'auto_flex_work_ultimatelog_enabled',
+        }
+        toggled_auto_flex_alerts_2 = {
+            'ULTRA log from EDGY lootbox': 'auto_flex_lb_edgy_ultra_enabled',
+            'ULTRA log from OMEGA lootbox': 'auto_flex_lb_omega_ultra_enabled',
+            'ULTRA logs from work commands': 'auto_flex_work_ultralog_enabled',
+            'VOID lootbox from hunt or adventure': 'auto_flex_lb_void_enabled',
+            'Watermelons from work commands': 'auto_flex_work_watermelon_enabled',
+            'Get ULTRA-EDGY in enchant event': 'auto_flex_event_enchant_enabled',
+            'Get 20 levels in farm event': 'auto_flex_event_farm_enabled',
+            'Kill mysterious man in heal event': 'auto_flex_event_heal_enabled',
+            'Evolve OMEGA lootbox in lootbox event': 'auto_flex_event_lb_enabled',
+            'Successfully fly in void training event': 'auto_flex_event_training_enabled',
+            'Forge GODLY cookie': 'auto_flex_forge_cookie_enabled',
+        }
+        toggled_auto_flex_alerts_3 = {
+            'Lose coin in coinflip': 'auto_flex_event_coinflip_enabled',
+            'Catch pet with EPIC skill in training': 'auto_flex_pets_catch_epic_enabled',
+            'Catch pet with timetraveler skill in training': 'auto_flex_pets_catch_tt_enabled',
+            'Get OMEGA lootbox from snowman pet': 'auto_flex_pets_claim_omega_enabled',
+            'Ascension': 'auto_flex_pr_ascension_enabled',
+            'Time travel milestones': 'auto_flex_time_travel_enabled',
+        }
+        toggled_auto_flex_alerts_seasonal = {
+            'Get stuck in xmas chimney': 'auto_flex_xmas_chimney_enabled',
+            'Drop EPIC snowballs': 'auto_flex_xmas_snowball_enabled',
+            'Drop GODLY presents': 'auto_flex_xmas_godly_enabled',
+            'Drop VOID presents': 'auto_flex_xmas_void_enabled',
+            'Drop sleepy potion or suspicious broom in hal boo': 'auto_flex_hal_boo_enabled',
+        }
+
         self.add_item(components.ManageServerSettingsSelect(self))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_1,
+                                                            'Toggle auto flex alerts (I)',
+                                                            'toggle_auto_flex_alerts_1'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_2,
+                                                            'Toggle auto flex alerts (II)',
+                                                            'toggle_auto_flex_alerts_2'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_3,
+                                                            'Toggle auto flex alerts (III)',
+                                                            'toggle_auto_flex_alerts_3'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_seasonal,
+                                                            'Toggle auto flex alerts (seasonal)',
+                                                            'toggle_auto_flex_alerts_seasonal'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

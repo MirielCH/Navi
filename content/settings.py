@@ -1059,12 +1059,83 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         auto_flex_channel = f'<#{guild_settings.auto_flex_channel_id}>'
     else:
         auto_flex_channel = '`N/A`'
-    prefix = (
+    server_settings = (
         f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
+        f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
+        f'{emojis.BP} **Auto flex channel**: {auto_flex_channel}\n'
     )
-    auto_flex = (
-        f'{emojis.BP} **Alerts**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
-        f'{emojis.BP} **Channel**: {auto_flex_channel}\n'
+    auto_flex_alerts_1 = (
+        f'{emojis.BP} Drop: **EPIC berries from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
+        f'{emojis.BP} Drop: **GODLY lootbox from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_enabled)}\n'
+        f'{emojis.BP} Drop: **HYPER logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_hyperlog_enabled)}\n'
+        f'{emojis.BP} Drop: **Monster drops from `hunt`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_mob_drops_enabled)}\n'
+        f'{emojis.DETAIL} _`7`+ wolf skins, `5`+ dark energy, `6`+ everything else_\n'
+        f'{emojis.BP} Drop: **OMEGA lootbox from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_enabled)}\n'
+        f'{emojis.DETAIL} _Hardmode drops only count if it\'s `3` or more._\n'
+        f'{emojis.BP} Drop: **Party popper from any lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_party_popper_enabled)}\n'
+        f'{emojis.BP} Drop: **SUPER fish from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_superfish_enabled)}\n'
+        f'{emojis.BP} Drop: **TIME capsule from GODLY lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
+        f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
+    )
+    auto_flex_alerts_2 = (
+        f'{emojis.BP} Drop: **ULTRA log from EDGY lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_edgy_ultra_enabled)}\n'
+        f'{emojis.BP} Drop: **ULTRA log from OMEGA lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_ultra_enabled)}\n'
+        f'{emojis.BP} Drop: **ULTRA logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultralog_enabled)}\n'
+        f'{emojis.BP} Drop: **VOID lootbox from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_void_enabled)}\n'
+        f'{emojis.BP} Drop: **Watermelons from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_watermelon_enabled)}\n'
+        f'{emojis.BP} Event: **Get ULTRA-EDGY in enchant event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_enchant_enabled)}\n'
+        f'{emojis.BP} Event: **Get 20 levels in farm event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_farm_enabled)}\n'
+        f'{emojis.BP} Event: **Kill mysterious man in heal event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_heal_enabled)}\n'
+        f'{emojis.BP} Event: **Evolve OMEGA lootbox in lootbox event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_lb_enabled)}\n'
+        f'{emojis.BP} Event: **Successfully fly in void training event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_training_enabled)}\n'
+        f'{emojis.BP} Forging: **Forge GODLY cookie**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_forge_cookie_enabled)}\n'
+    )
+    auto_flex_alerts_3 = (
+        f'{emojis.BP} Gambling: **Lose coin in coinflip**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_coinflip_enabled)}\n'
+        f'{emojis.BP} Pets: **Catch pet with EPIC skill in `training`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_epic_enabled)}\n'
+        f'{emojis.BP} Pets: **Catch pet with timetraveler skill in `training`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_tt_enabled)}\n'
+        f'{emojis.BP} Pets: **Get OMEGA lootbox from snowman pet**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pets_claim_omega_enabled)}\n'
+        f'{emojis.BP} Progress: **Ascension**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pr_ascension_enabled)}\n'
+        f'{emojis.BP} Progress: **Time travel milestones**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_time_travel_enabled)}\n'
+        f'{emojis.DETAIL} _TT `1`, `3`, `5`, `10`, `25`, `50`, `100`, `150`, `200`, `250` and `300`_\n'
+    )
+    auto_flex_alerts_seasonal = (
+        f'{emojis.BP} Christmas: **Get stuck in `xmas chimney`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_chimney_enabled)}\n'
+        f'{emojis.BP} Christmas: **Drop EPIC snowballs**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_snowball_enabled)}\n'
+        f'{emojis.BP} Christmas: **Drop GODLY presents**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_godly_enabled)}\n'
+        f'{emojis.BP} Christmas: **Drop VOID presents**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_void_enabled)}\n'
+        f'{emojis.BP} Halloween: **Drop sleepy potion or suspicious broom in `hal boo`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_hal_boo_enabled)}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -1074,8 +1145,11 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
             f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
         )
     )
-    embed.add_field(name='PREFIX', value=prefix, inline=False)
-    embed.add_field(name='AUTO FLEX', value=auto_flex, inline=False)
+    embed.add_field(name='SETTINGS', value=server_settings, inline=False)
+    embed.add_field(name='AUTO FLEX ALERTS (I)', value=auto_flex_alerts_1, inline=False)
+    embed.add_field(name='AUTO FLEX ALERTS (II)', value=auto_flex_alerts_2, inline=False)
+    embed.add_field(name='AUTO FLEX ALERTS (III)', value=auto_flex_alerts_3, inline=False)
+    embed.add_field(name='AUTO FLEX ALERTS (SEASONAL)', value=auto_flex_alerts_seasonal, inline=False)
     return embed
 
 

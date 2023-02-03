@@ -1203,7 +1203,7 @@ FLEX_TITLES_EVENT_TRAINING = [
     'So we call this "training" now?',
 ]
 
-FLEX_TITLES_COINFLIP_EVENT = [
+FLEX_TITLES_EVENT_COINFLIP = [
     'Uh... how did that happen?',
     'Wait. Where\'s my coin?',
     'I didn\'t even know this could happen, lol',
@@ -1538,7 +1538,7 @@ FLEX_THUMBNAILS_EVENT_TRAINING = [
     'https://media.tenor.com/C_YenjB3niUAAAAC/tinkerbell-happy.gif',
 ]
 
-FLEX_THUMBNAILS_COINFLIP_EVENT = [
+FLEX_THUMBNAILS_EVENT_COINFLIP = [
     'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
     'https://media.giphy.com/media/JQG2I0rQejbRQiDMQZ/giphy.gif',
     'https://media.tenor.com/8yBy9hKYpBkAAAAC/where-is-it-melody-pedras.gif',

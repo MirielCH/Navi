@@ -113,7 +113,8 @@ class ClanCog(commands.Cog):
                             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
-                if user_alert_enabled:
+                if (user_alert_enabled
+                    and not (clan_alert_enabled and clan.channel_id == message.channel.id)):
                     if clan_alert_enabled:
                         action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                         alert_message = await functions.get_slash_command(user_settings, action)
@@ -218,7 +219,8 @@ class ClanCog(commands.Cog):
                         else:
                             new_end_time = current_time + time_left
                         await user_clan_reminder.update(end_time=new_end_time)
-                if user_alert_enabled:
+                if (user_alert_enabled
+                    and not (clan_alert_enabled and clan.channel_id == message.channel.id)):
                     if clan_alert_enabled:
                         action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                         alert_message = await functions.get_slash_command(user_settings, action)

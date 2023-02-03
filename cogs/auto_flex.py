@@ -12,38 +12,33 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 FLEX_TITLES = {
-    'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
-    'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
-    'work_ultralog': strings.FLEX_TITLES_WORK_ULTRALOG,
-    'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
-    'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
+    'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
+    'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
+    'event_coinflip': strings.FLEX_TITLES_EVENT_COINFLIP,
+    'event_enchant': strings.FLEX_TITLES_EVENT_ENCHANT,
+    'event_farm': strings.FLEX_TITLES_EVENT_FARM,
+    'event_heal': strings.FLEX_TITLES_EVENT_HEAL,
+    'event_lb': strings.FLEX_TITLES_EVENT_LB,
+    'event_training': strings.FLEX_TITLES_EVENT_TRAINING,
     'forge_cookie': strings.FLEX_TITLES_FORGE_COOKIE,
     'hal_boo': strings.FLEX_TITLES_HAL_BOO,
+    'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
+    'lb_godly': strings.FLEX_TITLES_LB_GODLY,
+    'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
+    'lb_godly_tt': strings.FLEX_TITLES_GODLY_TT,
     'lb_omega_multiple': strings.FLEX_TITLES_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_TITLES_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_TITLES_LB_OMEGA_PARTNER,
-    'lb_godly': strings.FLEX_TITLES_LB_GODLY,
-    'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
+    'lb_omega_ultra': strings.FLEX_TITLES_OMEGA_ULTRA,
+    'lb_party_popper': strings.FLEX_TITLES_PARTY_POPPER,
     'lb_void': strings.FLEX_TITLES_LB_VOID,
     'lb_void_partner': strings.FLEX_TITLES_LB_VOID_PARTNER,
-    'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
-    'lb_omega_ultra': strings.FLEX_TITLES_OMEGA_ULTRA,
-    'lb_godly_tt': strings.FLEX_TITLES_GODLY_TT,
-    'lb_party_popper': strings.FLEX_TITLES_PARTY_POPPER,
+    'mob_drops': strings.FLEX_TITLES_MOB_DROPS,
+    'mob_drops_partner': strings.FLEX_TITLES_MOB_DROPS_PARTNER,
     'pets_catch_epic': strings.FLEX_TITLES_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_TITLES_PETS_CATCH_TT,
     'pets_claim_omega': strings.FLEX_TITLES_PETS_CLAIM_OMEGA,
     'pr_ascension': strings.FLEX_TITLES_PR_ASCENSION,
-    'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
-    'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
-    'event_lb': strings.FLEX_TITLES_EVENT_LB,
-    'event_enchant': strings.FLEX_TITLES_EVENT_ENCHANT,
-    'event_farm': strings.FLEX_TITLES_EVENT_FARM,
-    'event_heal': strings.FLEX_TITLES_EVENT_HEAL,
-    'event_training': strings.FLEX_TITLES_EVENT_TRAINING,
-    'coinflip_event': strings.FLEX_TITLES_COINFLIP_EVENT,
-    'mob_drops': strings.FLEX_TITLES_MOB_DROPS,
-    'mob_drops_partner': strings.FLEX_TITLES_MOB_DROPS_PARTNER,
     'time_travel_1': strings.FLEX_TITLES_TIME_TRAVEL_1,
     'time_travel_3': strings.FLEX_TITLES_TIME_TRAVEL_3,
     'time_travel_5': strings.FLEX_TITLES_TIME_TRAVEL_5,
@@ -54,6 +49,11 @@ FLEX_TITLES = {
     'time_travel_150': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_200': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_300': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
+    'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
+    'work_ultralog': strings.FLEX_TITLES_WORK_ULTRALOG,
+    'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
+    'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_TITLES_XMAS_CHIMNEY,
     'xmas_godly': strings.FLEX_TITLES_XMAS_GODLY,
     'xmas_snowball': strings.FLEX_TITLES_XMAS_SNOWBALL,
@@ -61,38 +61,33 @@ FLEX_TITLES = {
 }
 
 FLEX_THUMBNAILS = {
-    'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
-    'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
-    'work_ultralog': strings.FLEX_THUMBNAILS_WORK_ULTRALOG,
-    'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
-    'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
+    'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
+    'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
+    'event_coinflip': strings.FLEX_THUMBNAILS_EVENT_COINFLIP,
+    'event_enchant': strings.FLEX_THUMBNAILS_EVENT_ENCHANT,
+    'event_farm': strings.FLEX_THUMBNAILS_EVENT_FARM,
+    'event_heal': strings.FLEX_THUMBNAILS_EVENT_HEAL,
+    'event_lb': strings.FLEX_THUMBNAILS_EVENT_LB,
+    'event_training': strings.FLEX_THUMBNAILS_EVENT_TRAINING,
     'forge_cookie': strings.FLEX_THUMBNAILS_FORGE_COOKIE,
     'hal_boo': strings.FLEX_THUMBNAILS_HAL_BOO,
+    'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
+    'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
+    'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
+    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_TT,
     'lb_omega_multiple': strings.FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_THUMBNAILS_LB_OMEGA_PARTNER,
-    'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
-    'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
+    'lb_omega_ultra': strings.FLEX_THUMBNAILS_OMEGA_ULTRA,
+    'lb_party_popper': strings.FLEX_THUMBNAILS_PARTY_POPPER,
     'lb_void': strings.FLEX_THUMBNAILS_LB_VOID,
     'lb_void_partner': strings.FLEX_THUMBNAILS_LB_VOID_PARTNER,
-    'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
-    'lb_omega_ultra': strings.FLEX_THUMBNAILS_OMEGA_ULTRA,
-    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_TT,
-    'lb_party_popper': strings.FLEX_THUMBNAILS_PARTY_POPPER,
+    'mob_drops': strings.FLEX_THUMBNAILS_MOB_DROPS,
+    'mob_drops_partner': strings.FLEX_THUMBNAILS_MOB_DROPS_PARTNER,
     'pets_catch_epic': strings.FLEX_THUMBNAILS_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_THUMBNAILS_PETS_CATCH_TT,
     'pets_claim_omega': strings.FLEX_THUMBNAILS_PETS_CLAIM_OMEGA,
     'pr_ascension': strings.FLEX_THUMBNAILS_PR_ASCENSION,
-    'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
-    'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
-    'event_lb': strings.FLEX_THUMBNAILS_EVENT_LB,
-    'event_enchant': strings.FLEX_THUMBNAILS_EVENT_ENCHANT,
-    'event_farm': strings.FLEX_THUMBNAILS_EVENT_FARM,
-    'event_heal': strings.FLEX_THUMBNAILS_EVENT_HEAL,
-    'event_training': strings.FLEX_THUMBNAILS_EVENT_TRAINING,
-    'coinflip_event': strings.FLEX_THUMBNAILS_COINFLIP_EVENT,
-    'mob_drops': strings.FLEX_THUMBNAILS_MOB_DROPS,
-    'mob_drops_partner': strings.FLEX_THUMBNAILS_MOB_DROPS_PARTNER,
     'time_travel_1': strings.FLEX_THUMBNAILS_TIME_TRAVEL_1,
     'time_travel_3': strings.FLEX_THUMBNAILS_TIME_TRAVEL_3,
     'time_travel_5': strings.FLEX_THUMBNAILS_TIME_TRAVEL_5,
@@ -103,12 +98,37 @@ FLEX_THUMBNAILS = {
     'time_travel_150': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_200': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_300': strings.FLEX_THUMBNAILS_TIME_TRAVEL_300,
+    'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
+    'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
+    'work_ultralog': strings.FLEX_THUMBNAILS_WORK_ULTRALOG,
+    'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
+    'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_THUMBNAILS_XMAS_CHIMNEY,
     'xmas_godly': strings.FLEX_THUMBNAILS_XMAS_GODLY,
     'xmas_snowball': strings.FLEX_THUMBNAILS_XMAS_SNOWBALL,
     'xmas_void': strings.FLEX_THUMBNAILS_XMAS_VOID,
 }
 
+# Auto flexes that have a column name that differs from the event name
+FLEX_COLUMNS = {
+    'epic_berry_partner': 'epic_berry',
+    'lb_godly_partner': 'lb_godly',
+    'lb_omega_multiple': 'lb_omega',
+    'lb_omega_no_hardmode': 'lb_omega',
+    'lb_omega_partner': 'lb_omega',
+    'lb_void_partner': 'lb_void',
+    'mob_drops_partner': 'mob_drops',
+    'time_travel_1': 'time_travel',
+    'time_travel_3': 'time_travel',
+    'time_travel_5': 'time_travel',
+    'time_travel_10': 'time_travel',
+    'time_travel_25': 'time_travel',
+    'time_travel_50': 'time_travel',
+    'time_travel_100': 'time_travel',
+    'time_travel_150': 'time_travel',
+    'time_travel_200': 'time_travel',
+    'time_travel_300': 'time_travel',
+}
 
 class AutoFlexCog(commands.Cog):
     """Cog that contains the auto flex detection"""
@@ -119,6 +139,13 @@ class AutoFlexCog(commands.Cog):
                                      user_settings: users.User, user: discord.User, event: str,
                                      description: str) -> None:
         """Sends a flex embed to the auto flex channel"""
+        event_column = FLEX_COLUMNS[event] if event in FLEX_COLUMNS else event
+        auto_flex_setting = getattr(guild_settings, f'auto_flex_{event_column}_enabled', None)
+        if auto_flex_setting is None:
+            await functions.add_warning_reaction(message)
+            await errors.log_error(f'Couldn\'t find auto flex setting for event "{event}"', message)
+            return
+        if not auto_flex_setting: return
         description = f'{description}\n\n[Check it out]({message.jump_url})'
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
@@ -444,7 +471,7 @@ class AutoFlexCog(commands.Cog):
                     f'**{user.name}** did some coinflipping and **lost the coin**.\n'
                     f'I mean, how hard can it be, seriously? That\'s just embarassing!'
                 )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'coinflip_event',
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_coinflip',
                                                   description)
 
             # Update time travel count from profile
