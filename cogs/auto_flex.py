@@ -265,7 +265,6 @@ class AutoFlexCog(commands.Cog):
                         f'_**Wait...**_'
                     )
                 elif event == 'lb_omega_ultra':
-                    if guild_settings.guild_id == 713541415099170836: return # Remove when toggleable
                     match = re.search(r'\+(.+?) (.+?) ultra log', embed_field0_value.lower())
                     if not match:
                         await functions.add_warning_reaction(message)
@@ -876,7 +875,6 @@ class AutoFlexCog(commands.Cog):
                 item_amount = int(match.group(2))
                 item_name = match.group(4)
                 event = item_events[item_name.lower().replace('**','')]
-                if event == 'work_hyperlog' and guild_settings.guild_id == 713541415099170836: return # Remove after toggleable
                 if user is None:
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_WORK,

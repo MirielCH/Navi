@@ -1146,10 +1146,10 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         )
     )
     embed.add_field(name='SETTINGS', value=server_settings, inline=False)
-    embed.add_field(name='AUTO FLEX ALERTS (I)', value=auto_flex_alerts_1, inline=False)
-    embed.add_field(name='AUTO FLEX ALERTS (II)', value=auto_flex_alerts_2, inline=False)
-    embed.add_field(name='AUTO FLEX ALERTS (III)', value=auto_flex_alerts_3, inline=False)
-    embed.add_field(name='AUTO FLEX ALERTS (SEASONAL)', value=auto_flex_alerts_seasonal, inline=False)
+    embed.add_field(name='AUTO FLEXES (I)', value=auto_flex_alerts_1, inline=False)
+    embed.add_field(name='AUTO FLEXES (II)', value=auto_flex_alerts_2, inline=False)
+    embed.add_field(name='AUTO FLEXES (III)', value=auto_flex_alerts_3, inline=False)
+    embed.add_field(name='AUTO FLEXES (SEASONAL)', value=auto_flex_alerts_seasonal, inline=False)
     return embed
 
 

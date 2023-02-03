@@ -78,8 +78,8 @@ class SettingsCog(commands.Cog):
         if (not ctx.author.guild_permissions.manage_guild
             and not (ctx.guild.id == 713541415099170836 and ctx.author.id == 619879176316649482)):
             raise commands.MissingPermissions(['manage_guild',])
-            # This is to give me (Miriel) server settings access in RPG ARMY. This does NOT give me access
-            # in any other servers I don't have "Manage Guild" permission.
+            # This is to give me (Miriel) server settings access in RPG ARMY. This does NOT give me backdoor access
+            # in any other server.
         await settings_cmd.command_settings_server(self.bot, ctx)
 
     @cmd_settings.command()
