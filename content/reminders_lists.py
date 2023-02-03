@@ -181,6 +181,8 @@ async def command_ready(
         ready_command_activities.remove('farm')
     if 'training' in ready_command_activities and not user_settings.ascended and user_settings.current_area == 1:
         ready_command_activities.remove('training')
+    if 'guild' in ready_command_activities and clan_reminder:
+        ready_command_activities.remove('guild')
     for activity in ready_command_activities.copy():
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:
