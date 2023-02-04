@@ -115,6 +115,7 @@ class BoostsCog(commands.Cog):
 
         if not message.embeds:
             message_content = message.content
+
             # Party popper
             search_strings = [
                 'uses the <:partypopper', #English
@@ -147,11 +148,62 @@ class BoostsCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_party_popper.enabled: return
-                time_left = timedelta(hours=1)
-                reminder_message = user_settings.alert_party_popper.message.replace('{boost}', 'party popper')
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
+                time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.PARTY_POPPER)
+                        .replace('{boost_item}', 'party popper')
+                    )
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'party-popper', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            # Alchemy potions
+            search_strings = [
+                '**, you\'ve received the following boosts for', #English
+                '**, you\'ve received the following boosts for', #Spanish
+                '**, you\'ve received the following boosts for', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_ALCHEMY)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the alchemy message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                item_name_match = re.search(r'a (.+?) \*\*(.+?)\*\*, ', message_content.lower())
+                timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
+                if not item_name_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find the item name in the alchemy message.',
+                                            message)
+                    return
+                item_name = item_name_match.group(2)
+                item_emoji = emojis.BOOST_ITEMS_EMOJIS.get(item_name, '')
+                time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', item_emoji)
+                        .replace('{boost_item}', item_name)
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, item_name.replace(' ','-'), time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
