@@ -624,10 +624,10 @@ class ReminderMessageSelect(discord.ui.Select):
                         self.view.remove_item(child)
             if 'set_message' not in all_custom_ids:
                 self.view.add_item(SetReminderMessageButton(style=discord.ButtonStyle.blurple, custom_id='set_message',
-                                                       label='Change', row=1))
+                                                            label='Change', row=1))
             if 'reset_message' not in all_custom_ids:
                 self.view.add_item(SetReminderMessageButton(style=discord.ButtonStyle.red, custom_id='reset_message',
-                                                       label='Reset', row=1))
+                                                            label='Reset', row=1))
         embeds = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, select_value)
         await interaction.response.edit_message(embeds=embeds, view=self.view)
 

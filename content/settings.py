@@ -952,9 +952,6 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
     )
-    boost_reminders = (
-        f'{emojis.BP} **Party popper**: {await bool_to_text(user_settings.alert_party_popper.visible)}\n'
-    )
     command_channels = (
         f'_Command channels are shown below the corresponding ready command._\n'
         f'{emojis.BP} **Arena channel**: {channel_arena}\n'
@@ -973,7 +970,6 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='BOOST REMINDERS', value=boost_reminders, inline=False)
     embed.add_field(name='COMMAND CHANNELS', value=command_channels, inline=False)
     return embed
 
@@ -988,6 +984,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
         #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
+        f'{emojis.BP} **Boost items**: {await functions.bool_to_text(user_settings.alert_boosts.enabled)}\n'
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **Duel**: {await functions.bool_to_text(user_settings.alert_duel.enabled)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await functions.bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}\n'
@@ -1017,9 +1014,6 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Minin\'tboss**: {await functions.bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}\n'
         f'{emojis.BP} **Pet tournament**: {await functions.bool_to_text(user_settings.alert_pet_tournament.enabled)}\n'
     )
-    boost_reminders = (
-        f'{emojis.BP} **Party popper**: {await functions.bool_to_text(user_settings.alert_party_popper.enabled)}\n'
-    )
     multipliers = (
         f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
         f'_These are **not** for global event reductions. Ask your Navi admin to set those._\n'
@@ -1044,10 +1038,9 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
             f'_Note that disabling a reminder also deletes the reminder from my database._'
         )
     )
-    embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
-    embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
+    embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
+    embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='BOOST REMINDERS', value=boost_reminders, inline=False)
     embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
     return embed
 

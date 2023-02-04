@@ -315,6 +315,10 @@ if __name__ == '__main__':
     if db_version < 5:
         sqls = [
             "ALTER TABLE users ADD ready_after_all_commands BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_boosts_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_boosts_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!')",
+            "ALTER TABLE users ADD alert_boosts_visible BOOLEAN NOT NULL DEFAULT (0)",
             "ALTER TABLE guilds ADD auto_flex_epic_berry_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE guilds ADD auto_flex_event_coinflip_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE guilds ADD auto_flex_event_enchant_enabled BOOLEAN NOT NULL DEFAULT (1)",

@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from cache import messages
 from database import errors, reminders, users
-from resources import exceptions, functions, regex, settings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class BoostsCog(commands.Cog):
@@ -88,21 +88,30 @@ class BoostsCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled: return
-                if 'party popper' in embed_field0_value.lower() and user_settings.alert_party_popper.enabled:
-                    timestring_match = re.search(r'popper\*\*: (.+?)(?:$|\n)', embed_field0_value.lower())
-                    if not timestring_match:
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                for line in embed_field0_value.lower().split('\n'):
+                    active_item_match = re.search(r' \*\*(.+?)\*\*: (.+?)$', line)
+                    if not active_item_match:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Timestring not found for party popper in boosts message.', message)
+                        await errors.log_error('Active item not found in boosts message.', message)
                         return
-                    time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
+                    active_item = active_item_match.group(1)
+                    active_item_emoji = emojis.BOOST_ITEMS_EMOJIS.get(active_item, '')
+                    time_string = active_item_match.group(2)
+                    time_left = await functions.calculate_time_left_from_timestring(message, time_string)
                     if time_left < timedelta(0): return
-                    reminder_message = user_settings.alert_party_popper.message.replace('{boost}', 'party popper')
+                    reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', active_item_emoji)
+                        .replace('{boost_item}', active_item)
+                        .replace('  ', ' ')
+                    )
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, 'party-popper', time_left,
+                        await reminders.insert_user_reminder(user.id, active_item.replace(' ', '-'), time_left,
                                                              message.channel.id, reminder_message)
                     )
-                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
         if not message.embeds:
             message_content = message.content

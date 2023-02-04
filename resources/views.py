@@ -407,15 +407,10 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
-        toggled_settings_boosts = {
-            'Party popper': 'alert_party_popper',
-        }
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
-        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_boosts, 'Toggle boost reminders',
-                                                           'toggle_boost_reminders'))
         self.add_item(components.ManageReadyReminderChannelsSelect(self))
 
     @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=4)
@@ -473,6 +468,7 @@ class SettingsRemindersView(discord.ui.View):
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
+            'Boost items': 'alert_boosts',
             #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
@@ -499,15 +495,10 @@ class SettingsRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
-        toggled_settings_boosts = {
-            'Party popper': 'alert_party_popper',
-        }
-        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
+        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
-        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_boosts, 'Toggle boost reminders',
-                                                          'toggle_boost_reminders'))
         self.add_item(components.ManageMultipliersSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 

@@ -1,5 +1,6 @@
 # emojis.py
 
+
 # Clan leaderboard
 BEST_RAIDS = '<:panda_cool:834673942793945098>'
 ENERGY = '🔅'
@@ -9,6 +10,26 @@ LEADERBOARD_3 = ':three:'
 LEADERBOARD_4 = ':four:'
 LEADERBOARD_5 = ':five:'
 WORST_RAIDS = '<:anime_sus:834673942530359337>'
+
+# EPIC RPG alchemy items
+FLASK = '<:flask:1071326438411747328>'
+POTION_BANANA = '<:potion_banana:1067883886748631091>'
+POTION_COOKIE = '<:potion_cookie:1067883889252651049>'
+POTION_DRAGON_BREATH = '<:potion_dragon_breath:1067883890741612635>'
+POTION_ELECTRONICAL = '<:potion_electronical:1067883891614027907>'
+POTION_FISH = '<:potion_fish:1067883894113837076>'
+POTION_INVERTED = '<:potion_inverted:1067883895829319751>'
+POTION_JUICE = '<:potion_juice:1067883897951621120>'
+POTION_JUMPY = '<:potion_jumpy:1067883899205722152>'
+POTION_KING = '<:potion_king:1067883901139304480>'
+POTION_LIQUID_HAIR = '<:potion_liquid_hair:1067883903530053713>'
+POTION_LOOTBOX = '<:potion_lootbox:1067883904796733471>'
+POTION_MONSTER = '<:potion_monster:1067884437712425072>'
+POTION_POTION = '<:potion_potion:1067883908127002755>'
+POTION_TIME = '<:potion_time:1067884276714057768>'
+POTION_TRIPLE = '<:potion_triple:1067883911532793968>'
+POTION_VOID = '<:potion_void:1067884199618547723>'
+POTION_WOOD = '<:potion_wood:1067884339523751937>'
 
 # EPIC RPG event items
 HORSE_ARMOR = '<:horsearmor:879416298747080745>'
@@ -66,6 +87,8 @@ ZOMBIE_EYE = '<:zombieeye:770324898194915328>'
 
 # EPIC RPG misc
 ASCENSION = '🌟'
+DEV_BUFF = '<:erg_devbuff:1071442813541175378>'
+MOD_BUFF = '💠'
 GODLY_COOKIE = '<:godlycookie:879251636806098975>'
 MOB_ANCIENT_DRAGON = '<:ancientdragon:818542002332893204>'
 SWORD_GODLY = '<:godlysword:799388569688211536>'
@@ -159,4 +182,30 @@ MONSTER_DROP_AREAS_EMOJIS = {
     18: DARK_ENERGY,
     19: DARK_ENERGY,
     20: DARK_ENERGY,
+}
+
+
+BOOST_ITEMS_EMOJIS = {
+    'banana potion': POTION_BANANA,
+    'cookie potion': POTION_COOKIE,
+    'dev boost': DEV_BUFF,
+    'dev buff': DEV_BUFF,
+    'dragon breath potion': POTION_DRAGON_BREATH,
+    'electronical potion': POTION_ELECTRONICAL,
+    'fish potion': POTION_FISH,
+    'inverted potion': POTION_INVERTED,
+    'juice potion': POTION_JUICE,
+    'jumpy potion': POTION_JUMPY,
+    'king potion': POTION_KING,
+    'liquid hair potion': POTION_LIQUID_HAIR,
+    'lootbox potion': POTION_LOOTBOX,
+    'mod boost': MOD_BUFF,
+    'mod buff': MOD_BUFF,
+    'monster potion': POTION_MONSTER,
+    'party popper': PARTY_POPPER,
+    'potion potion': POTION_POTION,
+    'time potion': POTION_TIME,
+    'triple potion': POTION_TRIPLE,
+    'void potion': POTION_VOID,
+    'wood potion': POTION_WOOD,
 }

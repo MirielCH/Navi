@@ -26,6 +26,7 @@ class User():
     alert_arena: UserAlert
     alert_big_arena: UserAlert
     alert_boo: UserAlert
+    alert_boosts: UserAlert
     alert_chimney: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
@@ -40,7 +41,6 @@ class User():
     alert_lottery: UserAlert
     alert_not_so_mini_boss: UserAlert
     alert_partner: UserAlert
-    alert_party_popper: UserAlert
     alert_pet_tournament: UserAlert
     alert_pets: UserAlert
     alert_quest: UserAlert
@@ -118,6 +118,7 @@ class User():
         self.alert_adventure = new_settings.alert_adventure
         self.alert_arena = new_settings.alert_arena
         self.alert_boo = new_settings.alert_boo
+        self.alert_boosts = new_settings.alert_boosts
         self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
         self.alert_daily = new_settings.alert_daily
@@ -133,7 +134,6 @@ class User():
         self.alert_lottery = new_settings.alert_lottery
         self.alert_not_so_mini_boss = new_settings.alert_not_so_mini_boss
         self.alert_partner = new_settings.alert_partner
-        self.alert_party_popper = new_settings.alert_party_popper
         self.alert_pet_tournament = new_settings.alert_pet_tournament
         self.alert_pets = new_settings.alert_pets
         self.alert_quest = new_settings.alert_quest
@@ -226,6 +226,9 @@ class User():
             alert_boo_enabled: bool
             alert_boo_message: str
             alert_boo_visible: bool
+            alert_boosts_enabled: bool
+            alert_boosts_message: str
+            alert_boosts_visible: bool
             alert_chimney_enabled: bool
             alert_chimney_message: str
             alert_chimney_multiplier: float
@@ -274,9 +277,6 @@ class User():
             alert_not_so_mini_boss_visible: bool
             alert_partner_enabled: bool
             alert_partner_message: str
-            alert_party_popper_enabled: bool
-            alert_party_popper_message: str
-            alert_party_popper_visible: bool
             alert_pet_tournament_enabled: bool
             alert_pet_tournament_message: str
             alert_pet_tournament_visible: bool
@@ -404,6 +404,10 @@ async def _dict_to_user(record: dict) -> User:
                                     message=record['alert_boo_message'],
                                     multiplier=1.0,
                                     visible=bool(record['alert_boo_visible'])),
+            alert_boosts = UserAlert(enabled=bool(record['alert_boosts_enabled']),
+                                     message=record['alert_boosts_message'],
+                                     multiplier=1.0,
+                                     visible=bool(record['alert_boosts_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
                                       multiplier=float(record['alert_chimney_multiplier']),
@@ -464,10 +468,6 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_partner_message'],
                                       multiplier=1.0,
                                       visible=True),
-            alert_party_popper = UserAlert(enabled=bool(record['alert_party_popper_enabled']),
-                                           message=record['alert_party_popper_message'],
-                                           multiplier=1.0,
-                                           visible=bool(record['alert_party_popper_visible'])),
             alert_pet_tournament = UserAlert(enabled=bool(record['alert_pet_tournament_enabled']),
                                              message=record['alert_pet_tournament_message'],
                                              multiplier=1.0,
@@ -727,6 +727,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boo_enabled: bool
         alert_boo_message: str
         alert_boo_visible: bool
+        alert_boosts_enabled: bool
+        alert_boosts_message: str
+        alert_boosts_visible: bool
         alert_chimney_enabled: bool
         alert_chimney_message: str
         alert_chimney_multiplier: float
@@ -775,9 +778,6 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_not_so_mini_boss_visible: bool
         alert_partner_enabled: bool
         alert_partner_message: str
-        alert_party_popper_enabled: bool
-        alert_party_popper_message: str
-        alert_party_popper_visible: bool
         alert_pet_tournament_enabled: bool
         alert_pet_tournament_message: str
         alert_pet_tournament_visible: bool

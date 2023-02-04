@@ -98,6 +98,7 @@ async def command_ready(
             command = '`chimney unstuck lol`'
         else:
             command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity], False)
+
         if activity == 'lootbox':
             lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
             if user_settings.slash_mentions_enabled:
@@ -161,15 +162,12 @@ async def command_ready(
         clan_command = f"{command_upgrade} or {command_raid}"
     ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
     ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
-    ready_boost_activities = list(strings.ACTIVITIES_BOOSTS[:])
     active_pet_reminders = False
     for reminder in user_reminders:
         if reminder.activity in ready_command_activities:
             ready_command_activities.remove(reminder.activity)
         elif reminder.activity in ready_event_activities:
             ready_event_activities.remove(reminder.activity)
-        elif reminder.activity in ready_boost_activities:
-            ready_boost_activities.remove(reminder.activity)
         elif 'pets' in reminder.activity:
             active_pet_reminders = True
     if not active_pet_reminders or user_settings.ready_pets_claim_active:
@@ -191,10 +189,6 @@ async def command_ready(
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:
             ready_event_activities.remove(activity)
-    for activity in ready_boost_activities.copy():
-        alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-        if not alert_settings.enabled:
-            ready_boost_activities.remove(activity)
 
     field_other = ''
     if user_settings.cmd_cd_visible:
@@ -311,28 +305,7 @@ async def command_ready(
                 f'{field_ready_events.strip()}'
             )
             embed.add_field(name='EVENTS', value=field_ready_events.strip(), inline=False)
-    if ready_boost_activities:
-        field_ready_boosts = ''
-        ready_boosts = []
-        for activity in ready_boost_activities.copy():
-            alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-            if not alert_settings.visible:
-                ready_boost_activities.remove(activity)
-                continue
-            command = await get_command_from_activity(activity)
-            ready_boosts.append(command)
-        for boost in sorted(ready_boosts):
-            field_ready_boosts = (
-                f'{field_ready_boosts}\n'
-                f'{emojis.BP} {boost}'
-            )
-        if field_ready_boosts != '':
-            answer = (
-                f'{answer}\n'
-                f'**BOOSTS**\n'
-                f'{field_ready_boosts.strip()}'
-            )
-            embed.add_field(name='BOOSTS', value=field_ready_boosts.strip(), inline=False)
+
     clan_alert_enabled = getattr(clan, 'alert_enabled', False)
     if not clan_reminder and clan_alert_enabled:
         field_ready_clan = (

@@ -86,7 +86,6 @@ LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
-DEFAULT_MESSAGE_BOOST = '{name} Hey! Your {boost} just ran out!'
 DEFAULT_MESSAGE_EVENT = (
     '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
     f'official EPIC RPG server.'
@@ -100,6 +99,7 @@ DEFAULT_MESSAGES = {
     'big-arena': DEFAULT_MESSAGE_EVENT,
     'chimney': DEFAULT_MESSAGE,
     'boo': DEFAULT_MESSAGE,
+    'boosts': '{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!',
     'daily': DEFAULT_MESSAGE,
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
@@ -113,7 +113,6 @@ DEFAULT_MESSAGES = {
     'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '{name} Hey! **{partner}** found {loot} for you!',
-    'party-popper': DEFAULT_MESSAGE_BOOST,
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
@@ -132,6 +131,8 @@ PLACEHOLDER_DESCRIPTIONS = {
     'event': 'The name of the finished event',
     'loot': 'The name of the item your partner found',
     'drop_emoji': 'The emoji of the mob drop in the current area. Unavailable in A0 and the TOP.',
+    'boost_emoji': 'The emoji of the boost item',
+    'boost_item': 'The name of the boost item',
 }
 
 
@@ -223,6 +224,7 @@ ACTIVITIES = (
     'arena',
     'big-arena',
     #'boo',
+    'boosts',
     #'chimney',
     'daily',
     'duel',
@@ -237,7 +239,6 @@ ACTIVITIES = (
     'lottery',
     'minintboss',
     'partner',
-    'party-popper',
     'pets',
     'pet-tournament',
     'quest',
@@ -282,32 +283,70 @@ ACTIVITIES_EVENTS = (
 )
 
 ACTIVITIES_BOOSTS = (
+    'banana-potion',
+    'cookie-potion',
+    'dev-boost',
+    'dev-buff',
+    'dragon-breath-potion',
+    'electronical-potion',
+    'fish-potion',
+    'inverted-potion',
+    'juice-potion',
+    'jumpy-potion',
+    'king-potion',
+    'liquid-hair-potion',
+    'lootbox-potion',
+    'mod-boost',
+    'mod-buff',
+    'monster-potion',
     'party-popper',
+    'potion-potion',
+    'time-potion',
+    'triple-potion',
+    'void-potion',
+    'wood-potion',
 )
 
 ACTIVITIES_SLASH_COMMANDS = {
     'advent-calendar': 'xmas calendar',
     'adventure': 'adventure',
     'arena': 'arena',
+    'banana-potion': 'alchemy',
     'big-arena': 'big arena',
     'boo': 'hal boo',
     'chimney': 'xmas chimney',
+    'cookie-potion': 'alchemy',
     'daily': 'daily',
+    'dragon-breath-potion': 'alchemy',
     'duel': 'duel',
     'dungeon-miniboss': 'dungeon',
+    'electronical-potion': 'alchemy',
     'farm': 'farm',
+    'fish-potion': 'alchemy',
     'guild': 'guild raid',
     'horse': 'horse breeding',
     'horse-race': 'horse race',
     'hunt': 'hunt',
+    'inverted-potion': 'alchemy',
+    'juice-potion': 'alchemy',
+    'jumpy-potion': 'alchemy',
+    'king-potion': 'alchemy',
+    'liquid-hair-potion': 'alchemy',
     'lootbox': 'buy',
+    'lootbox-potion': 'alchemy',
     'lottery': 'lottery',
     'minintboss': 'minintboss',
+    'monster-potion': 'alchemy',
     'pet-tournament': 'pets tournament',
+    'potion-potion': 'alchemy',
     'quest': 'quest',
+    'time-potion': 'alchemy',
     'training': 'training',
+    'triple-potion': 'alchemy',
+    'void-potion': 'alchemy',
     'vote': 'vote',
     'weekly': 'weekly',
+    'wood-potion': 'alchemy',
     'work': 'work',
 }
 
@@ -372,29 +411,51 @@ ACTIVITIES_COLUMNS = {
     'advent-calendar': 'alert_advent',
     'adventure': 'alert_adventure',
     'arena': 'alert_arena',
+    'banana-potion': 'alert_boosts',
     'big-arena': 'alert_big_arena',
     'boo': 'alert_boo',
+    'boosts': 'alert_boosts',
     'chimney': 'alert_chimney',
+    'cookie-potion': 'alert_boosts',
     'daily': 'alert_daily',
+    'dev-boost': 'alert_boosts',
+    'dev-buff': 'alert_boosts',
+    'dragon-breath-potion': 'alert_boosts',
     'duel': 'alert_duel',
     'dungeon-miniboss': 'alert_dungeon_miniboss',
+    'electronical-potion': 'alert_boosts',
     'epic': 'alert_epic',
     'farm': 'alert_farm',
+    'fish-potion': 'alert_boosts',
     'guild': 'alert_guild',
     'horse': 'alert_horse_breed',
     'horse-race': 'alert_horse_race',
     'hunt': 'alert_hunt',
+    'inverted-potion': 'alert_boosts',
+    'juice-potion': 'alert_boosts',
+    'jumpy-potion': 'alert_boosts',
+    'king-potion': 'alert_boosts',
+    'liquid-hair-potion': 'alert_boosts',
     'lootbox': 'alert_lootbox',
+    'lootbox-potion': 'alert_boosts',
     'lottery': 'alert_lottery',
     'minintboss': 'alert_not_so_mini_boss',
+    'mod-boost': 'alert_boosts',
+    'mod-buff': 'alert_boosts',
+    'monster-potion': 'alert_boosts',
     'partner': 'alert_partner',
-    'party-popper': 'alert_party_popper',
-    'pets': 'alert_pets',
+    'party-popper': 'alert_boosts',
     'pet-tournament': 'alert_pet_tournament',
+    'pets': 'alert_pets',
+    'potion-potion': 'alert_boosts',
     'quest': 'alert_quest',
+    'time-potion': 'alert_boosts',
     'training': 'alert_training',
+    'triple-potion': 'alert_boosts',
+    'void-potion': 'alert_boosts',
     'vote': 'alert_vote',
     'weekly': 'alert_weekly',
+    'wood-potion': 'alert_boosts',
     'work': 'alert_work',
 }
 
@@ -411,7 +472,6 @@ ACTIVITIES_WITH_COOLDOWN = (
     'hunt',
     'lootbox',
     'dungeon-miniboss',
-    'party-popper',
     'quest',
     'quest-decline',
     'training',
@@ -780,7 +840,6 @@ EPIC_NPC_NAMES = [
     'NPC ÉPICO', #Spanish, Portuguese
 ]
 
-
 # --- Commands ---
 WORK_COMMANDS = (
     'chop',
@@ -803,6 +862,7 @@ WORK_COMMANDS = (
 
 SLASH_COMMANDS = {
     'adventure': '</adventure:961046240420855808>',
+    'alchemy': '</alchemy:0>',
     'arena': '</arena:960740633302138920>',
     'axe': '</axe:959162695909781504>',
     'big arena': '</big arena:960362922029252719>',
@@ -887,6 +947,7 @@ SLASH_COMMANDS = {
 
 RPG_COMMANDS = {
     'adventure': 'rpg adventure',
+    'alchemy': 'rpg alchemy',
     'arena': 'rpg arena',
     'axe': 'rpg axe',
     'big arena': 'rpg big arena join',

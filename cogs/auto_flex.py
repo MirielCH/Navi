@@ -400,7 +400,11 @@ class AutoFlexCog(commands.Cog):
                 'omega lootbox',
             ]
             if (any(search_string in embed_title.lower() for search_string in search_strings)
-                and any(search_string in embed_fields.lower() for search_string in search_strings_items)):
+                and (
+                    any(search_string in embed_fields.lower() for search_string in search_strings_items)
+                    or any(search_string in embed_description.lower() for search_string in search_strings_items)
+                    )
+                ):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return
                 user_id = user_name = user_command_message = None
