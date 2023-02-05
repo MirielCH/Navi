@@ -86,6 +86,7 @@ class User():
     portals_as_embed: bool
     portals_spacing_enabled: bool
     guild_quest_prompt_active: bool
+    potion_dragon_breath_active: bool
     reactions_enabled: bool
     ready_after_all_commands: bool
     ready_as_embed: bool
@@ -178,6 +179,7 @@ class User():
         self.ping_after_message = new_settings.ping_after_message
         self.portals_as_embed = new_settings.portals_as_embed
         self.portals_spacing_enabled = new_settings.portals_spacing_enabled
+        self.potion_dragon_breath_active = new_settings.potion_dragon_breath_active
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_after_all_commands = new_settings.ready_after_all_commands
@@ -340,6 +342,7 @@ class User():
             ping_after_message: bool
             portals_as_embed: bool
             portals_spacing_enabled: bool
+            potion_dragon_breath_active: bool
             reactions_enabled: bool
             ready_after_all_commands: bool
             ready_as_embed: bool
@@ -534,6 +537,7 @@ async def _dict_to_user(record: dict) -> User:
             ping_after_message = bool(record['ping_after_message']),
             portals_as_embed = bool(record['portals_as_embed']),
             portals_spacing_enabled = bool(record['portals_spacing_enabled']),
+            potion_dragon_breath_active = bool(record['potion_dragon_breath_active']),
             reactions_enabled = bool(record['reactions_enabled']),
             ready_after_all_commands = bool(record['ready_after_all_commands']),
             ready_as_embed = bool(record['ready_as_embed']),
@@ -841,6 +845,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ping_after_message: bool
         portals_as_embed: bool
         portals_spacing_enabled: bool
+        potion_dragon_breath_active: bool
         reactions_enabled: bool
         ready_after_all_commands: bool
         ready_as_embed: bool

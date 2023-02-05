@@ -1250,6 +1250,8 @@ class AutoFlexCog(commands.Cog):
                                 or 'pretendiendo' in message_content_user.lower()
                                 or 'fingindo' in message_content_user.lower()):
                                 drop_amount_check = drop_amount / 3
+                            elif drop == 'dragon scale' and user_settings.potion_dragon_breath_active:
+                                drop_amount_check = drop_amount / 2
                             else:
                                 drop_amount_check = drop_amount
                             if drop_amount_check >= mob_drops_thresholds[drop]:
@@ -1299,6 +1301,8 @@ class AutoFlexCog(commands.Cog):
                                     or 'pretendiendo' in message_content_partner.lower()
                                     or 'fingindo' in message_content_partner.lower()):
                                     drop_amount_check = drop_amount / 3
+                                elif drop == 'dragon scale' and (drop_amount % 2) == 0:
+                                    drop_amount_check = drop_amount / 2
                                 else:
                                     drop_amount_check = drop_amount
                                 if drop_amount_check >= mob_drops_thresholds[drop]:

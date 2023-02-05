@@ -61,6 +61,7 @@ class BoostsCog(commands.Cog):
             if (any(search_string in embed_description.lower() for search_string in search_strings)
                 and all(search_string not in embed_field0_value.lower() for search_string in search_strings_excluded)):
                 user_id = user_name = user_command_message = None
+                potion_dragon_breath_active = False
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
@@ -110,6 +111,9 @@ class BoostsCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, active_item.replace(' ', '-'), time_left,
                                                              message.channel.id, reminder_message)
                     )
+                    if active_item == 'dragon breath potion': potion_dragon_breath_active = True
+                if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
+                    await user_settings.update(potion_dragon_breath_active=potion_dragon_breath_active)
                 if user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
@@ -206,6 +210,8 @@ class BoostsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, item_name.replace(' ','-'), time_left,
                                                          message.channel.id, reminder_message)
                 )
+                if item_name == 'dragon breath potion':
+                    await user_settings.update(potion_dragon_breath_active=True)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

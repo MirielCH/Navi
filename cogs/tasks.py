@@ -93,6 +93,8 @@ class TasksCog(commands.Cog):
                     await asyncio.sleep(time_left.total_seconds())
                     if user_settings.ready_pets_claim_after_every_pet and reminder.activity.startswith('pets'):
                         await user_settings.update(ready_pets_claim_active=True)
+                    if reminder.activity == 'dragon-breath-potion':
+                        await user_settings.update(potion_dragon_breath_active=False)
                     allowed_mentions = discord.AllowedMentions(users=[user,])
                     for message in messages.values():
                         await channel.send(message.strip(), allowed_mentions=allowed_mentions)
