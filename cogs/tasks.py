@@ -221,7 +221,7 @@ class TasksCog(commands.Cog):
                     f'Reminder: {reminder}\nError: {error}'
             )
 
-    @tasks.loop(seconds=55)
+    @tasks.loop(seconds=60)
     async def reset_clans(self) -> None:
         """Task that creates the weekly reports and resets the clans"""
         clan_reset_time = settings.ClanReset()
