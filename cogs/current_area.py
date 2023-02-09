@@ -7,7 +7,7 @@ from discord.ext import commands
 
 from cache import messages
 from database import errors, users
-from resources import emojis, exceptions, functions, regex, settings, strings, views
+from resources import exceptions, functions, regex, settings, strings
 
 
 class CurrentAreaCog(commands.Cog):
@@ -84,7 +84,7 @@ class CurrentAreaCog(commands.Cog):
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                         if user_name_match:
@@ -186,6 +186,7 @@ class CurrentAreaCog(commands.Cog):
                     r"found and killed (.+?) \*\*(.+?)\*\*(?: \(but| \(way|\n)", #English
                     r"found (the) \*\*(.+?)\*\*(?:, | \(but| \(way|\n)", #English
                     r"found an? (.+?) \*\*(.+?)\*\*", #English
+                    r"encontró un (.+?) \*\*(.+?)\*\*(?:, | \(pero| \(mucho|\n)", #Spanish
                     r"encontró y mató (.+?) \*\*(.+?)\*\*(?:, | \(pero| \(mucho|\n)", #Spanish
                     r"encontrou e matou (.+?) \*\*(.+?)\*\*(?:, | \(só| \(muito|\n)", #Portuguese
                 ]

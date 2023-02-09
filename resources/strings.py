@@ -788,6 +788,7 @@ MONSTERS_HUNT_A0 = (
 MONSTERS_HUNT_MISC = (
     '**Christmas Slime**',
     '**Horslime**',
+    '**Pink Wolf**',
 )
 
 MONSTERS_HUNT = (

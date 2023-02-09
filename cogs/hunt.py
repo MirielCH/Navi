@@ -69,7 +69,7 @@ class HuntCog(commands.Cog):
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
                     try:
-                        embed_users.append(await message.guild.fetch_member(user_id))
+                        embed_users.append(message.guild.get_member(user_id))
                     except discord.NotFound:
                         pass
                 else:

@@ -59,7 +59,7 @@ class HorseFestivalCog(commands.Cog):
                             await errors.log_error('User not found in minirace embed.', message)
                             return
                     if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
@@ -300,7 +300,7 @@ class HorseFestivalCog(commands.Cog):
                             return
                     if user_id is not None:
                         try:
-                            user = await message.guild.fetch_member(user_id)
+                            user = message.guild.get_member(user_id)
                         except:
                             pass
                     else:
@@ -466,7 +466,7 @@ class HorseFestivalCog(commands.Cog):
                             await errors.log_error('User not found in megarace message for megarace helper.', message)
                             return
                     if user_id is not None:
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
                         if guild_users:
