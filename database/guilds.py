@@ -18,6 +18,7 @@ from resources import exceptions, settings, strings
 @dataclass()
 class Guild():
     """Object that represents a record from table "guilds"."""
+    auto_flex_brew_electronical_enabled: bool
     auto_flex_channel_id: int
     auto_flex_enabled: bool
     auto_flex_epic_berry_enabled: bool
@@ -58,6 +59,7 @@ class Guild():
         """Refreshes guild data from the database."""
         new_settings = await get_guild(self.guild_id)
         self.prefix = new_settings.prefix
+        self.auto_flex_brew_electronical_enabled = new_settings.auto_flex_brew_electronical_enabled
         self.auto_flex_channel_id = new_settings.auto_flex_channel_id
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_epic_berry_enabled = new_settings.auto_flex_epic_berry_enabled
@@ -98,6 +100,7 @@ class Guild():
         Arguments
         ---------
         kwargs (column=value):
+            auto_flex_brew_electronical_enabled: bool
             auto_flex_channel_id: int
             auto_flex_enabled: bool
             auto_flex_epic_berry_enabled: bool
@@ -156,6 +159,7 @@ async def _dict_to_guild(record: dict) -> Guild:
     function_name = '_dict_to_guild'
     try:
         guild = Guild(
+            auto_flex_brew_electronical_enabled = bool(record['auto_flex_brew_electronical_enabled']),
             auto_flex_channel_id = record['auto_flex_channel_id'],
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_flex_epic_berry_enabled = bool(record['auto_flex_epic_berry_enabled']),
@@ -327,6 +331,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
     Arguments
     ---------
     kwargs (column=value):
+        auto_flex_brew_electronical_enabled: bool
         auto_flex_channel_id: int
         auto_flex_enabled: bool
         auto_flex_epic_berry_enabled: bool

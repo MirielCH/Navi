@@ -1033,6 +1033,14 @@ RPG_COMMANDS = {
 
 
 # Auto flex headlines
+FLEX_TITLES_BREW_ELECTRONICAL = [
+    'Now that\'s an expensive drink',
+    'Champagne would be cheaper, you know',
+    '"What did it cost?" - "Everything"',
+    'Brewing at the robot graveyard',
+    'Seriously, why would ANYONE brew that?',
+]
+
 FLEX_TITLES_WORK_HYPERLOG = [
     'TIMBER!',
     'Hyperino',
@@ -1383,6 +1391,14 @@ FLEX_TITLES_XMAS_VOID = [
 
 
 # Auto flex thumbnails
+FLEX_THUMBNAILS_BREW_ELECTRONICAL = [
+    'https://media.tenor.com/wlpMSYaDoYkAAAAd/tea-time-heure-du-th%C3%A9.gif',
+    'https://media.tenor.com/YBIZSm5Hl8YAAAAi/cat-drink.gif',
+    'https://media.tenor.com/AQlLOEyD-xoAAAAd/swag-potion.gif',
+    'https://media.tenor.com/n5ikt7jBRh0AAAAM/green-smoothie-messy-dog-slurp.gif',
+    'https://media.tenor.com/dSjPLLjh5FYAAAAC/i-love-expensive-things-luxury.gif',
+]
+
 FLEX_THUMBNAILS_WORK_HYPERLOG = [
     'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
     'https://media.tenor.com/CeKTpmgR3ZkAAAAC/yell-timber.gif',

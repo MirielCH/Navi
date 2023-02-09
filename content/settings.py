@@ -1058,6 +1058,8 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{emojis.BP} **Auto flex channel**: {auto_flex_channel}\n'
     )
     auto_flex_alerts_1 = (
+        f'{emojis.BP} Alchemy: **Brew electronical potion**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_brew_electronical_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
         f'{emojis.BP} Drop: **GODLY lootbox from `hunt` or `adventure`**: '
@@ -1076,10 +1078,10 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_superfish_enabled)}\n'
         f'{emojis.BP} Drop: **TIME capsule from GODLY lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
-        f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
-        f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
     )
     auto_flex_alerts_2 = (
+        f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
         f'{emojis.BP} Drop: **ULTRA log from EDGY lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_edgy_ultra_enabled)}\n'
         f'{emojis.BP} Drop: **ULTRA log from OMEGA lootbox**: '
@@ -1100,10 +1102,10 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_lb_enabled)}\n'
         f'{emojis.BP} Event: **Successfully fly in void training event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_training_enabled)}\n'
-        f'{emojis.BP} Forging: **Forge GODLY cookie**: '
-        f'{await functions.bool_to_text(guild_settings.auto_flex_forge_cookie_enabled)}\n'
     )
     auto_flex_alerts_3 = (
+        f'{emojis.BP} Forging: **Forge GODLY cookie**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_forge_cookie_enabled)}\n'
         f'{emojis.BP} Gambling: **Lose coin in coinflip**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_coinflip_enabled)}\n'
         f'{emojis.BP} Pets: **Catch pet with EPIC skill in `training`**: '

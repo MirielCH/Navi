@@ -819,6 +819,7 @@ class SettingsServerView(discord.ui.View):
         self.user = ctx.author
         self.guild_settings = guild_settings
         toggled_auto_flex_alerts_1 = {
+            'Brew electronical potion': 'auto_flex_brew_electronical_enabled',
             'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
             'GODLY lootbox from hunt or adventure': 'auto_flex_lb_godly_enabled',
             'HYPER logs in work commands': 'auto_flex_work_hyperlog_enabled',
@@ -827,9 +828,9 @@ class SettingsServerView(discord.ui.View):
             'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
             'SUPER fish from work commands': 'auto_flex_work_superfish_enabled',
             'TIME capsule from GODLY lootbox': 'auto_flex_lb_godly_tt_enabled',
-            'ULTIMATE logs from work commands': 'auto_flex_work_ultimatelog_enabled',
         }
         toggled_auto_flex_alerts_2 = {
+            'ULTIMATE logs from work commands': 'auto_flex_work_ultimatelog_enabled',
             'ULTRA log from EDGY lootbox': 'auto_flex_lb_edgy_ultra_enabled',
             'ULTRA log from OMEGA lootbox': 'auto_flex_lb_omega_ultra_enabled',
             'ULTRA logs from work commands': 'auto_flex_work_ultralog_enabled',
@@ -840,9 +841,9 @@ class SettingsServerView(discord.ui.View):
             'Kill mysterious man in heal event': 'auto_flex_event_heal_enabled',
             'Evolve OMEGA lootbox in lootbox event': 'auto_flex_event_lb_enabled',
             'Successfully fly in void training event': 'auto_flex_event_training_enabled',
-            'Forge GODLY cookie': 'auto_flex_forge_cookie_enabled',
         }
         toggled_auto_flex_alerts_3 = {
+            'Forge GODLY cookie': 'auto_flex_forge_cookie_enabled',
             'Lose coin in coinflip': 'auto_flex_event_coinflip_enabled',
             'Catch pet with EPIC skill in training': 'auto_flex_pets_catch_epic_enabled',
             'Catch pet with timetraveler skill in training': 'auto_flex_pets_catch_tt_enabled',

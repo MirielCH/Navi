@@ -320,6 +320,7 @@ if __name__ == '__main__':
             "('{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!')",
             "ALTER TABLE users ADD alert_boosts_visible BOOLEAN NOT NULL DEFAULT (0)",
             "ALTER TABLE users ADD potion_dragon_breath_active BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD auto_flex_brew_electronical_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE guilds ADD auto_flex_epic_berry_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE guilds ADD auto_flex_event_coinflip_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE guilds ADD auto_flex_event_enchant_enabled BOOLEAN NOT NULL DEFAULT (1)",
