@@ -1645,7 +1645,7 @@ FLEX_THUMBNAILS_TIME_TRAVEL_5 = [
 FLEX_THUMBNAILS_TIME_TRAVEL_10 = [
     'https://media.tenor.com/pDdh_ISRzZIAAAAC/doctor-who-dr-who.gif',
     'https://media.tenor.com/ZIUSH-XNatEAAAAC/doctorwho-tardis.gif',
-    'https://media.tenor.com/dSLlCYF7vikAAAAC/tardis-doctor.gif',
+    'https://media.tenor.com/R1nsCixefawAAAAC/tardis-doctor-who.gif',
 ]
 
 FLEX_THUMBNAILS_TIME_TRAVEL_25 = [
