@@ -231,12 +231,7 @@ class CooldownsCog(commands.Cog):
                 farm_match = re.search(r"farm`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
                 if farm_match:
                     farm_timestring = farm_match.group(1)
-                    user_command = await functions.get_slash_command(user_settings, 'farm')
-                    if user_settings.last_farm_seed != '':
-                        if user_settings.slash_mentions_enabled:
-                            user_command = f"{user_command} `seed: {user_settings.last_farm_seed}`"
-                        else:
-                            user_command = f"{user_command} `{user_settings.last_farm_seed}`".replace('` `', ' ')
+                    user_command = await functions.get_farm_command(user_settings)
                     farm_message = user_settings.alert_farm.message.replace('{command}', user_command)
                     cooldowns.append(['farm', farm_timestring.lower(), farm_message])
                 else:

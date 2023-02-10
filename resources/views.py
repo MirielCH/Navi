@@ -231,6 +231,7 @@ class SettingsHelpersView(discord.ui.View):
             #'Pumpkin bat helper': 'halloween_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
+        self.add_item(components.SetFarmHelperModeSelect(self))
         self.add_item(components.ManageHelperSettingsSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 

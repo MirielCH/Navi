@@ -80,6 +80,15 @@ INTERNAL_ERROR_NO_ARGUMENTS = 'You need to specify at least one keyword argument
 INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: {function}\nRecord: {record}\n'
 
 
+# Miscellaneous
+FARM_HELPER_MODES = {
+    0: 'Repeat last used seed',
+    1: 'STT score (bread > carrot > potato)',
+    2: 'Ultraining (carrot only)',
+    3: 'Carrotato chips (balance carrots & potatoes)',
+}
+
+
 # Links
 LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
 LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
@@ -87,8 +96,7 @@ LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
 DEFAULT_MESSAGE_EVENT = (
-    '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
-    f'official EPIC RPG server.'
+    '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485>.'
 )
 DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **{message}**!'
 

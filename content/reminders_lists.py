@@ -115,11 +115,8 @@ async def command_ready(
                 command = f"{command} `mode: {user_settings.last_hunt_mode}`"
             else:
                 command = f"{command} `{user_settings.last_hunt_mode}`"
-        elif activity == 'farm' and user_settings.last_farm_seed != '':
-            if user_settings.slash_mentions_enabled:
-                command = f"{command} `seed: {user_settings.last_farm_seed}`"
-            else:
-                command = f"{command} `{user_settings.last_farm_seed}`"
+        elif activity == 'farm':
+            command = await functions.get_farm_command(user_settings, False)
         return command.replace('` `', ' ')
 
     if isinstance(ctx, discord.Message):

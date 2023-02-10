@@ -575,9 +575,7 @@ class AutoFlexCog(commands.Cog):
                     if tt_match:
                         time_travel_count = int(tt_match.group(1))
                     else:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Time travel count not found in time travel message.', message)
-                        return
+                        time_travel_count = 0
                 await user_settings.update(time_travel_count=time_travel_count)
 
             # Time travel

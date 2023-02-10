@@ -18,6 +18,16 @@ class UserAlert(NamedTuple):
     multiplier: float
     visible: bool
 
+class UserInventory(NamedTuple):
+    """Object that summarizes all tracked inventory items for a user"""
+    bread: int
+    carrot: int
+    potato: int
+    ruby: int
+    seed_bread: int
+    seed_carrot: int
+    seed_potato: int
+
 @dataclass()
 class User():
     """Object that represents a record from table "user"."""
@@ -62,10 +72,12 @@ class User():
     context_helper_enabled: bool
     current_area: int
     dnd_mode_enabled: bool
+    farm_helper_mode: int
     halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
     hunt_rotation_enabled: bool
+    inventory: UserInventory
     last_adventure_mode: str
     last_farm_seed: str
     last_hunt_mode: str
@@ -101,7 +113,6 @@ class User():
     ready_up_next_as_timestamp: bool
     ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
-    rubies: int
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -156,10 +167,12 @@ class User():
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
+        self.farm_helper_mode = new_settings.farm_helper_mode
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
         self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
+        self.inventory = new_settings.inventory
         self.last_adventure_mode = new_settings.last_adventure_mode
         self.last_farm_seed = new_settings.last_farm_seed
         self.last_hunt_mode = new_settings.last_hunt_mode
@@ -195,7 +208,6 @@ class User():
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
-        self.rubies = new_settings.rubies
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -318,11 +330,19 @@ class User():
             context_helper_enabled: bool
             current_area: int
             dnd_mode_enabled: bool
+            farm_helper_mode: int
             guild_quest_prompt_active: bool
             halloween_helper_enabled: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
             hunt_rotation_enabled: bool
+            inventory_bread: int
+            inventory_carrot: int
+            inventory_potato: int
+            inventory_ruby: int
+            inventory_seed_bread: int
+            inventory_seed_carrot: int
+            inventory_seed_potato: int
             last_adventure_mode: str
             last_farm_seed: str
             last_hunt_mode: str
@@ -357,7 +377,6 @@ class User():
             ready_up_next_as_timestamp: bool
             ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
-            rubies: int
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -513,11 +532,17 @@ async def _dict_to_user(record: dict) -> User:
             context_helper_enabled = bool(record['context_helper_enabled']),
             current_area = -1 if record['current_area'] is None else record['current_area'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
+            farm_helper_mode = record['farm_helper_mode'],
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
             hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
+            inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
+                                      potato=(record['inventory_potato']),
+                                      ruby=(record['inventory_ruby']), seed_bread=(record['inventory_seed_bread']),
+                                      seed_carrot=(record['inventory_seed_carrot']),
+                                      seed_potato=(record['inventory_seed_potato'])),
             last_adventure_mode = '' if record['last_adventure_mode'] is None else record['last_adventure_mode'],
             last_farm_seed = '' if record['last_farm_seed'] is None else record['last_farm_seed'],
             last_hunt_mode = '' if record['last_hunt_mode'] is None else record['last_hunt_mode'],
@@ -552,7 +577,6 @@ async def _dict_to_user(record: dict) -> User:
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
-            rubies = record['rubies'],
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -821,11 +845,19 @@ async def _update_user(user: User, **kwargs) -> None:
         context_helper_enabled: bool
         current_area: int
         dnd_mode_enabled: bool
+        farm_helper_mode: int
         guild_quest_prompt_active: bool
         halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
         hunt_rotation_enabled: bool
+        inventory_bread: int
+        inventory_carrot: int
+        inventory_potato: int
+        inventory_ruby: int
+        inventory_seed_bread: int
+        inventory_seed_carrot: int
+        inventory_seed_potato: int
         last_adventure_mode: str
         last_farm_seed: str
         last_hunt_mode: str
@@ -860,7 +892,6 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_up_next_as_timestamp: bool
         ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
-        rubies: int
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

@@ -695,6 +695,8 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
+        f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'
+        f'{emojis.DETAIL} _Changes your farm reminder according to the mode and your inventory._\n'
         #f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
         #f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
         #f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
@@ -881,20 +883,20 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
     )
     command_event_reminders = (
-        f'{emojis.BP} _Choose "Manage command / event reminders" below to manage reminders and command channels._'
+        f'{emojis.BP} _Choose "Show/hide commands" below to manage visible commands and command channels._'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
         description = (
             f'_General settings for the {await functions.get_navi_slash_command(bot, "ready")} list._\n'
-            f'_To show or hide reminders or change command channels, choose "Manage command / event reminders" below._'
+            f'_Note that the ready list does not list commands for reminders that are turned off._'
         )
     )
     embed.add_field(name='SETTINGS', value=field_settings, inline=False)
     embed.add_field(name='UP NEXT REMINDER', value=up_next_reminder, inline=False)
     embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
-    embed.add_field(name='COMMAND & EVENT REMINDERS', value=command_event_reminders, inline=False)
+    embed.add_field(name='VISIBLE COMMANDS', value=command_event_reminders, inline=False)
     return embed
 
 

@@ -9,7 +9,7 @@ import discord
 
 from content import settings as settings_cmd
 from database import cooldowns, portals, reminders, users
-from resources import emojis, functions, modals, strings, views
+from resources import emojis, exceptions, functions, modals, strings, views
 
 
 class ToggleAutoReadyButton(discord.ui.Button):
@@ -882,6 +882,37 @@ class ManageHelperSettingsSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
+class SetFarmHelperModeSelect(discord.ui.Select):
+    """Select to change farm helper mode"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for value, label in strings.FARM_HELPER_MODES.items():
+            emoji = emojis.ENABLED if view.user_settings.farm_helper_mode == value else None
+            options.append(discord.SelectOption(label=label, value=str(value), emoji=emoji))
+        super().__init__(placeholder='Change farm helper mode', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='set_farm_helper_mode')
+
+    async def callback(self, interaction: discord.Interaction):
+        await self.view.user_settings.update(farm_helper_mode=int(self.values[0]))
+        try:
+            reminder = await reminders.get_user_reminder(self.view.user_settings.user_id, 'farm')
+            user_command = await functions.get_farm_command(self.view.user_settings)
+            reminder_message = self.view.user_settings.alert_farm.message.replace('{command}', user_command)
+            await reminder.update(message=reminder_message)
+        except exceptions.NoDataFoundError:
+            pass
+        for child in self.view.children.copy():
+            if isinstance(child, SetFarmHelperModeSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SetFarmHelperModeSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
 class ManageServerSettingsSelect(discord.ui.Select):
     """Select to change server settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -1064,9 +1095,9 @@ class SwitchToReadyRemindersSelect(discord.ui.Select):
     """Select to switch to ready reminder settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        options.append(discord.SelectOption(label=f'Manage command / event reminders',
+        options.append(discord.SelectOption(label=f'Show/hide commands',
                                             value='switch_to_ready_reminders'))
-        super().__init__(placeholder='Manage command / event reminders', min_values=1, max_values=1, options=options, row=row,
+        super().__init__(placeholder='Show/hide commands', min_values=1, max_values=1, options=options, row=row,
                          custom_id='switch_to_ready_reminders')
 
     async def callback(self, interaction: discord.Interaction):

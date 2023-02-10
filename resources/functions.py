@@ -931,6 +931,34 @@ async def get_megarace_answer(message: discord.Message, slash_command: bool = Fa
     return answer
 
 
+async def get_farm_command(user_settings: users.User, include_prefix: Optional[bool] = True) -> str:
+    """Returns the farm command to remind for according to the farm helper mode and slash settings"""
+    next_seed = 'basic'
+    if user_settings.farm_helper_mode == 0 and user_settings.last_farm_seed != '':
+        next_seed = user_settings.last_farm_seed
+    elif user_settings.farm_helper_mode == 1:
+        if user_settings.inventory.seed_bread > 0:
+            next_seed = 'bread'
+        elif user_settings.inventory.seed_carrot > 0:
+            next_seed = 'carrot'
+        elif user_settings.inventory.seed_potato > 0:
+            next_seed = 'potato'
+    elif user_settings.farm_helper_mode == 2 and user_settings.inventory.seed_carrot > 0:
+        next_seed = 'carrot'
+    elif user_settings.farm_helper_mode == 3:
+        if user_settings.inventory.carrot >= user_settings.inventory.potato and user_settings.inventory.seed_potato > 0:
+            next_seed = 'potato'
+        elif user_settings.inventory.potato > user_settings.inventory.carrot and user_settings.inventory.seed_carrot > 0:
+            next_seed = 'carrot'
+    user_command = await get_slash_command(user_settings, 'farm', include_prefix)
+    if next_seed != 'basic':
+        if user_settings.slash_mentions_enabled:
+            user_command = f"{user_command} `seed: {next_seed}`"
+        else:
+            user_command = f"{user_command} `{next_seed}`".replace('` `', ' ')
+    return user_command
+
+
 # Miscellaneous
 async def call_ready_command(bot: commands.Bot, message: discord.Message, user: discord.User) -> None:
     """Calls the ready command as a reply to the current message"""
