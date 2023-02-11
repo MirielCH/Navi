@@ -192,6 +192,7 @@ class SettingsCog(commands.Cog):
             f'➜ {await functions.get_navi_slash_command(self.bot, "settings helpers")}\n'
             f'➜ {await functions.get_navi_slash_command(self.bot, "settings messages")}\n'
             f'➜ {await functions.get_navi_slash_command(self.bot, "settings partner")}\n'
+            f'➜ {await functions.get_navi_slash_command(self.bot, "settings portals")}\n'
             f'➜ {await functions.get_navi_slash_command(self.bot, "settings ready")}\n'
             f'➜ {await functions.get_navi_slash_command(self.bot, "settings reminders")}\n'
             f'➜ {await functions.get_navi_slash_command(self.bot, "settings server")}\n'

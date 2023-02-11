@@ -1194,7 +1194,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'
-        f'{emojis.BP} **Last time travel**: <t:{tt_timestamp}:f> UTC\n'
+        f'{emojis.BP} **Last time travel**: <t:{tt_timestamp}:f>\n'
         f'{emojis.DETAIL} _This is used to calculate your command count since last TT._\n'
     )
     embed = discord.Embed(
