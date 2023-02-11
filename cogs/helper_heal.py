@@ -120,6 +120,7 @@ class HelperHealCog(commands.Cog):
                 'horslime',
                 'bat slime',
                 'christmas slime',
+                'pink wolf',
             ]
             if (
                 any(event_mob in message_content.lower() for event_mob in event_mobs)

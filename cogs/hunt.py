@@ -203,6 +203,7 @@ class HuntCog(commands.Cog):
                 search_strings_event_mobs = [
                     'horslime',
                     'christmas slime',
+                    'pink wolf',
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_event_mobs):
                     search_strings_together = [
