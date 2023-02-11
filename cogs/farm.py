@@ -140,8 +140,12 @@ class FarmCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 kwargs = {}
-                seed_type_match = re.search(r':\d+>(.+?)seed', message_content.lower())
-                seed_type = seed_type_match.group(1).strip()
+                seed_used_type_match = re.search(r':\d+>(.+?)seed', message_content.lower())
+                seed_used_type = seed_used_type_match.group(1).strip()
+                if seed_used_type != '':
+                    seed_used_count = getattr(user_settings.inventory, f'seed_{seed_used_type}') - 1
+                    if seed_used_count < 0: seed_used_count = 0
+                    kwargs[f'inventory_seed_{seed_used_type}'] = seed_used_count
                 crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
                 if crop_match is None:
                     search_patterns = [
@@ -154,17 +158,22 @@ class FarmCog(commands.Cog):
                 crop_count = getattr(user_settings.inventory, crop_type)
                 crop_count += int(crop_match.group(1).replace(',',''))
                 kwargs[f'inventory_{crop_type}'] = crop_count
-                if seed_type != '':
-                    seed_count = getattr(user_settings.inventory, f'seed_{seed_type}') - 1
-                    search_patterns = [
-                        r'also got (\d+?) \*\*', #English
-                        r'también consiguió (\d+?) \*\*', #Spanish
-                        r'também conseguiu(\d+?) \*\*', #Portuguese
-                    ]
-                    seed_return_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                    if seed_return_match: seed_count += int(seed_return_match.group(1))
-                    if seed_count < 0: seed_count = 0
-                    kwargs[f'inventory_seed_{seed_type}'] = seed_count
+                search_patterns = [
+                    r'also got (\d+?) \*\*(?:.+?) (.+?) ', #English
+                    r'también consiguió (\d+?) \*\*(?:.+?) (.+?) ', #Spanish
+                    r'também conseguiu(\d+?) \*\*(?:.+?) (.+?) ', #Portuguese
+                ]
+                seed_returned_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if seed_returned_match:
+                    seed_returned_count = int(seed_returned_match.group(1))
+                    seed_returned_type = seed_returned_match.group(2)
+                    if f'inventory_seed_{seed_returned_type}' in kwargs:
+                        kwargs[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
+                    else:
+                        seed_returned_count = (
+                            getattr(user_settings.inventory, f'seed_{seed_returned_type}') + seed_returned_count
+                        )
+                        kwargs[f'inventory_seed_{seed_returned_type}'] = seed_returned_count
                 await user_settings.update(**kwargs)
                 if not user_settings.alert_farm.enabled: return
                 search_strings = [
@@ -172,7 +181,6 @@ class FarmCog(commands.Cog):
                     '{} en el suelo', #Spanish
                     '{} no solo', #Portuguese
                 ]
-                user_command = await functions.get_slash_command(user_settings, 'farm')
                 if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
                     last_farm_seed = 'bread'
                 elif any(search_string.format('carrot seed') in message_content.lower() for search_string in search_strings):
