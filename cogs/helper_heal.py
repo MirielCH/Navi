@@ -76,7 +76,7 @@ class HelperHealCog(commands.Cog):
             if message_content.startswith('__'):
                 partner_start = message_content.rfind(partner_name)
                 message_content_user = message_content[:partner_start]
-                health_match = re.search(r'-(.+?) hp \(:heart: (.+?)/', message_content_user.lower())
+                health_match = re.search(r'-(.+?) hp \(❤️ (.+?)/', message_content_user.lower())
             else:
                 search_patterns = [
                     fr'\*\*{re.escape(user_name)}\*\* lost (.+?) hp, remaining hp is (.+?)/', #English
