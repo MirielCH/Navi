@@ -34,18 +34,17 @@ class BoostsCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_author = embed_title = icon_url = embed_description = ''
-            embed_field0_name = embed_field0_value = embed_field1_name = embed_field1_value = ''
             if embed.author:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.title: embed_title = str(embed.title)
             if embed.description: embed_description = str(embed.description)
+            embed_potion_fields = ''
             if embed.fields:
-                embed_field0_name = embed.fields[0].name
-                embed_field0_value = embed.fields[0].value
+                embed_potion_fields = embed.fields[0].value
                 if len(embed.fields) > 1:
-                    embed_field1_name = embed.fields[1].name
-                    embed_field1_value = embed.fields[1].value
+                    if embed.fields[1].name == '':
+                        embed_potion_fields = f'{embed_potion_fields}\n{embed.fields[1].value}'
 
             # Boosts cooldowns
             search_strings = [
@@ -59,7 +58,7 @@ class BoostsCog(commands.Cog):
                 'none', #Portuguese, MISSING
             ]
             if (any(search_string in embed_description.lower() for search_string in search_strings)
-                and all(search_string not in embed_field0_value.lower() for search_string in search_strings_excluded)):
+                and all(search_string not in embed_potion_fields.lower() for search_string in search_strings_excluded)):
                 user_id = user_name = user_command_message = None
                 potion_dragon_breath_active = False
                 user = await functions.get_interaction_user(message)
@@ -90,7 +89,7 @@ class BoostsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
-                for line in embed_field0_value.lower().split('\n'):
+                for line in embed_potion_fields.lower().split('\n'):
                     active_item_match = re.search(r' \*\*(.+?)\*\*: (.+?)$', line)
                     if not active_item_match:
                         await functions.add_warning_reaction(message)
