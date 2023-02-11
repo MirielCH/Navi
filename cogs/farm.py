@@ -140,7 +140,7 @@ class FarmCog(commands.Cog):
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 kwargs = {}
-                seed_type_match = re.search(r'>(.+?)seed', message_content.lower())
+                seed_type_match = re.search(r':\d+>(.+?)seed', message_content.lower())
                 seed_type = seed_type_match.group(1).strip()
                 crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
                 if crop_match is None:
