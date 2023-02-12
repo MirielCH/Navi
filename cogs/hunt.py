@@ -171,6 +171,7 @@ class HuntCog(commands.Cog):
                 and (
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
                     or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
+                    or 'pink wolf' in message_content.lower()
                 )
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
