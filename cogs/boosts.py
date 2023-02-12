@@ -213,6 +213,42 @@ class BoostsCog(commands.Cog):
                     await user_settings.update(potion_dragon_breath_active=True)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+            # Valentine boost
+            search_strings = [
+                '`valentine boost` successfully bought', #English
+                '`valentine boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_LOVE_BUY_VALENTINE_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the valentine boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left = timedelta(hours=1)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', '❤️')
+                        .replace('{boost_item}', 'valentine boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'valentine-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
 
 # Initialization
 def setup(bot):

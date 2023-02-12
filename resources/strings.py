@@ -311,6 +311,7 @@ ACTIVITIES_BOOSTS = (
     'potion-potion',
     'time-potion',
     'triple-potion',
+    'valentine-boost',
     'void-potion',
     'wood-potion',
 )
@@ -460,6 +461,7 @@ ACTIVITIES_COLUMNS = {
     'time-potion': 'alert_boosts',
     'training': 'alert_training',
     'triple-potion': 'alert_boosts',
+    'valentine-boost': 'alert_boosts',
     'void-potion': 'alert_boosts',
     'vote': 'alert_vote',
     'weekly': 'alert_weekly',

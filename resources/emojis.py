@@ -206,6 +206,7 @@ BOOST_ITEMS_EMOJIS = {
     'potion potion': POTION_POTION,
     'time potion': POTION_TIME,
     'triple potion': POTION_TRIPLE,
+    'valentine boost': '❤️',
     'void potion': POTION_VOID,
     'wood potion': POTION_WOOD,
 }
