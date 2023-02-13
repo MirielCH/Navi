@@ -33,12 +33,12 @@ VERSION_FILE = os.path.join(BOT_DIR, 'VERSION')
 load_dotenv()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
-if TOKEN is None:
+if TOKEN == '':
     print(ENV_VARIABLE_MISSING.format(var='DISCORD_TOKEN'))
     sys.exit()
 
 OWNER_ID = os.getenv('OWNER_ID')
-if OWNER_ID is None:
+if OWNER_ID == '':
     print(ENV_VARIABLE_MISSING.format(var='OWNER_ID'))
     sys.exit()
 try:
@@ -48,9 +48,6 @@ except:
     sys.exit()
 
 DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
-if DEBUG_MODE is None:
-    print(ENV_VARIABLE_MISSING.format(var='DEBUG_MODE'))
-    sys.exit()
 
 DEV_IDS = os.getenv('DEV_IDS')
 if DEV_IDS is None or DEV_IDS == '':
@@ -65,7 +62,7 @@ else:
 DEV_IDS += [OWNER_ID,]
 
 DEV_GUILDS = os.getenv('DEV_GUILDS')
-if DEV_GUILDS is None:
+if DEV_GUILDS == '':
     print(ENV_VARIABLE_MISSING.format(var='DEV_GUILDS'))
     sys.exit()
 if DEV_GUILDS == '':

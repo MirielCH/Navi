@@ -140,7 +140,6 @@ class ClanCog(commands.Cog):
             ]
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
-                if message.mentions: return # Yes that also disables it if you ping yourself but who does that
                 if user is None:
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_CLAN)
@@ -149,6 +148,7 @@ class ClanCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a command for guild overview message.', message)
                         return
+                    if user_command_message.mentions: return
                     user = user_command_message.author
                 try:
                     clan_name = re.search(r"^\*\*(.+?)\*\*", message_description).group(1)
