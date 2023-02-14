@@ -339,7 +339,7 @@ async def command_ready(
             current_time = datetime.utcnow().replace(microsecond=0)
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
-                if not user_settings.ready_up_next_show_hidden_reminders:
+                if not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity:
                     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
                     if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:
