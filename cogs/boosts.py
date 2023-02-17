@@ -8,7 +8,7 @@ from discord.ext import commands
 
 from cache import messages
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, regex, settings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class BoostsCog(commands.Cog):
@@ -52,13 +52,7 @@ class BoostsCog(commands.Cog):
                 'these are your active boosts', #Spanish, MISSING
                 'these are your active boosts', #Portuguese, MISSING
             ]
-            search_strings_excluded = [
-                'none', #English
-                'none', #Spanish, MISSING
-                'none', #Portuguese, MISSING
-            ]
-            if (any(search_string in embed_description.lower() for search_string in search_strings)
-                and all(search_string not in embed_potion_fields.lower() for search_string in search_strings_excluded)):
+            if (any(search_string in embed_description.lower() for search_string in search_strings)):
                 user_id = user_name = user_command_message = None
                 potion_dragon_breath_active = False
                 user = await functions.get_interaction_user(message)
@@ -88,14 +82,37 @@ class BoostsCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                if not user_settings.bot_enabled: return
+                all_boosts = list(strings.ACTIVITIES_BOOSTS[:])
                 for line in embed_potion_fields.lower().split('\n'):
+                    search_strings = [
+                        'none', #English
+                        'ninguno', #Spanish
+                        'nenhum', #Portuguese
+                    ]
+                    if any(search_string == embed_potion_fields.lower() for search_string in search_strings):
+                        try:
+                            active_reminders = await reminders.get_active_user_reminders(user.id)
+                            for active_reminder in active_reminders:
+                                if active_reminder.activity in strings.ACTIVITIES_BOOSTS:
+                                    await active_reminder.delete()
+                        except exceptions.NoDataFoundError:
+                            pass
+                        break
                     active_item_match = re.search(r' \*\*(.+?)\*\*: (.+?)$', line)
                     if not active_item_match:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Active item not found in boosts message.', message)
                         return
                     active_item = active_item_match.group(1)
+                    active_item_activity = active_item.replace(' ','-')
+                    if active_item_activity in all_boosts: all_boosts.remove(active_item_activity)
+                    if active_item == 'dragon breath potion':
+                        potion_dragon_breath_active = True
+                        if not user_settings.potion_dragon_breath_active:
+                            await user_settings.update(potion_dragon_breath_active=True)
+                        if not user_settings.alert_boosts.enabled: return
+                    if not user_settings.alert_boosts.enabled: continue
                     active_item_emoji = emojis.BOOST_ITEMS_EMOJIS.get(active_item, '')
                     time_string = active_item_match.group(2)
                     time_left = await functions.calculate_time_left_from_timestring(message, time_string)
@@ -107,13 +124,18 @@ class BoostsCog(commands.Cog):
                         .replace('  ', ' ')
                     )
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, active_item.replace(' ', '-'), time_left,
+                        await reminders.insert_user_reminder(user.id, active_item_activity, time_left,
                                                              message.channel.id, reminder_message)
                     )
-                    if active_item == 'dragon breath potion': potion_dragon_breath_active = True
+                for activity in all_boosts:
+                    try:
+                        active_reminder = await reminders.get_user_reminder(user.id, activity)
+                        await active_reminder.delete()
+                    except exceptions.NoDataFoundError:
+                        continue
                 if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
                     await user_settings.update(potion_dragon_breath_active=potion_dragon_breath_active)
-                if user_settings.reactions_enabled:
+                if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
         if not message.embeds:
@@ -188,7 +210,7 @@ class BoostsCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                if not user_settings.bot_enabled: return
                 item_name_match = re.search(r'a (.+?) \*\*(.+?)\*\*, ', message_content.lower())
                 timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
                 if not item_name_match:
@@ -197,6 +219,9 @@ class BoostsCog(commands.Cog):
                                             message)
                     return
                 item_name = item_name_match.group(2)
+                if item_name == 'dragon breath potion':
+                    await user_settings.update(potion_dragon_breath_active=True)
+                    if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOST_ITEMS_EMOJIS.get(item_name, '')
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
                 reminder_message = (
@@ -209,8 +234,6 @@ class BoostsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, item_name.replace(' ','-'), time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if item_name == 'dragon breath potion':
-                    await user_settings.update(potion_dragon_breath_active=True)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Valentine boost
