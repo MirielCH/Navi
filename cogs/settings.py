@@ -63,7 +63,7 @@ class SettingsCog(commands.Cog):
 
     @cmd_settings.command()
     async def ready(self, ctx: discord.ApplicationContext) -> None:
-        """Manage reminder messages"""
+        """Manage ready settings"""
         await settings_cmd.command_settings_ready(self.bot, ctx)
 
     @cmd_settings.command()
