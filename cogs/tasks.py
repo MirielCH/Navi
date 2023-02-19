@@ -93,6 +93,8 @@ class TasksCog(commands.Cog):
                     await asyncio.sleep(time_left.total_seconds())
                     if user_settings.ready_pets_claim_after_every_pet and reminder.activity.startswith('pets'):
                         await user_settings.update(ready_pets_claim_active=True)
+                    if reminder.activity == 'dragon-breath-potion':
+                        await user_settings.update(potion_dragon_breath_active=False)
                     allowed_mentions = discord.AllowedMentions(users=[user,])
                     for message in messages.values():
                         await channel.send(message.strip(), allowed_mentions=allowed_mentions)
@@ -221,7 +223,7 @@ class TasksCog(commands.Cog):
                     f'Reminder: {reminder}\nError: {error}'
             )
 
-    @tasks.loop(seconds=55)
+    @tasks.loop(seconds=60)
     async def reset_clans(self) -> None:
         """Task that creates the weekly reports and resets the clans"""
         clan_reset_time = settings.ClanReset()
@@ -275,8 +277,11 @@ class TasksCog(commands.Cog):
                         f'{message}{emojis.BP} '
                         f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy:,}_ {emojis.ENERGY})\n'
                     )
-                clan_channel = await functions.get_discord_channel(self.bot, clan.channel_id)
-                await clan_channel.send(message)
+                try:
+                    clan_channel = await functions.get_discord_channel(self.bot, clan.channel_id)
+                    if clan_channel is not None: await clan_channel.send(message)
+                except:
+                    pass
             # Delete leaderboard
             await clans.delete_clan_leaderboard()
 
@@ -320,9 +325,9 @@ class TasksCog(commands.Cog):
             time_passed = end_time - start_time
             logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
-    @tasks.loop(minutes=1)
+    @tasks.loop(minutes=2)
     async def delete_old_messages_from_cache(self) -> None:
-        """Task that deletes messages from the message cache that are older than 1 minute"""
+        """Task that deletes messages from the message cache that are older than 2 minutes"""
         deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=2))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')

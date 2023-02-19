@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 3
+NAVI_DB_VERSION = 5
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -235,10 +235,22 @@ if __name__ == '__main__':
                 )
 
     # Update database with new stuff added in later versions.
-    if db_version < NAVI_DB_VERSION:
+    if db_version < 1:
         sqls = [
             'ALTER TABLE guilds ADD auto_flex_enabled BOOLEAN NOT NULL DEFAULT (0)',
             "ALTER TABLE tracking_log ADD type TEXT NOT NULL DEFAULT ('single')",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    if db_version < 2:
+        sqls = [
             "ALTER TABLE users ADD alert_adventure_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_chimney_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_daily_multiplier REAL NOT NULL DEFAULT (1)",
@@ -253,6 +265,18 @@ if __name__ == '__main__':
             "ALTER TABLE users ADD alert_work_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD ascended BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD current_area INTEGER",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    if db_version < 3:
+        sqls = [
             "ALTER TABLE users ADD alert_party_popper_enabled BOOLEAN NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_party_popper_message TEXT NOT NULL DEFAULT ('{name} Hey! Your party popper just ran out!')",
             "ALTER TABLE users ADD alert_party_popper_visible BOOLEAN NOT NULL DEFAULT (0)",
@@ -265,7 +289,119 @@ if __name__ == '__main__':
                     continue
                 else:
                     raise
-        cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
+
+    if db_version < 4:
+        sqls = [
+            "CREATE TABLE users_portals (sort_index INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+            "user_id INTEGER NOT NULL, channel_id INTEGER NOT NULL)",
+            "CREATE UNIQUE INDEX user_channel ON users_portals (user_id, channel_id)",
+            "ALTER TABLE users ADD portals_as_embed BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD portals_spacing_enabled BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD ready_up_next_show_hidden_reminders BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD ready_channel_arena INTEGER",
+            "ALTER TABLE users ADD ready_channel_duel INTEGER",
+            "ALTER TABLE users ADD ready_channel_dungeon INTEGER",
+            "ALTER TABLE users ADD ready_channel_horse INTEGER",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+    if db_version < 5:
+        sqls = [
+            "ALTER TABLE users ADD ready_after_all_commands BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_boosts_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_boosts_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!')",
+            "ALTER TABLE users ADD alert_boosts_visible BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD farm_helper_mode INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD inventory_bread INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD inventory_carrot INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD inventory_seed_bread INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD inventory_seed_carrot INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD inventory_seed_potato INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD inventory_potato INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD potion_dragon_breath_active BOOLEAN NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD auto_flex_brew_electronical_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_epic_berry_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_event_coinflip_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_event_enchant_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_event_farm_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_event_heal_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_event_lb_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_event_training_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_forge_cookie_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_hal_boo_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_edgy_ultra_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_godly_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_godly_tt_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_omega_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_omega_ultra_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_party_popper_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_void_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_pets_catch_epic_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_pets_catch_tt_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_pets_claim_omega_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_pr_ascension_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_mob_drops_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_time_travel_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_hyperlog_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_ultimatelog_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_ultralog_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_superfish_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_watermelon_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_xmas_chimney_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_xmas_godly_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_xmas_snowball_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_xmas_void_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE users RENAME COLUMN rubies TO inventory_ruby",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                error_msg = error.args[0]
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                elif 'no such column' in error.args[0]:
+                    continue
+                else:
+                    raise
+
+        # Update default event messages
+        default_message_event_old = (
+            '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
+            f'official EPIC RPG server.'
+        )
+        default_message_event_new = (
+            '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485>.'
+        )
+        cur.execute('SELECT * FROM users')
+        all_users = cur.fetchall()
+        if all_users:
+            for user in all_users:
+                user = dict(user)
+                new_values = {}
+                for column, value in user.items():
+                    if value == default_message_event_old:
+                        new_values[column] = default_message_event_new
+                if new_values:
+                    sql = f'UPDATE users SET'
+                    for value in new_values:
+                        sql = f'{sql} {value} = :{value},'
+                    sql = sql.strip(",")
+                    new_values['user_id'] = user['user_id']
+                    sql = f'{sql} WHERE user_id = :user_id'
+                    cur.execute(sql, new_values)
+
+
+    # Set DB version, vaccum, integrity check
+    cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
     db_version = get_user_version()
     print(
         f'Updated database to version {db_version}.\n\n'

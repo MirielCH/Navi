@@ -1,5 +1,6 @@
 # emojis.py
 
+
 # Clan leaderboard
 BEST_RAIDS = '<:panda_cool:834673942793945098>'
 ENERGY = '🔅'
@@ -9,6 +10,26 @@ LEADERBOARD_3 = ':three:'
 LEADERBOARD_4 = ':four:'
 LEADERBOARD_5 = ':five:'
 WORST_RAIDS = '<:anime_sus:834673942530359337>'
+
+# EPIC RPG alchemy items
+FLASK = '<:flask:1071326438411747328>'
+POTION_BANANA = '<:potion_banana:1067883886748631091>'
+POTION_COOKIE = '<:potion_cookie:1067883889252651049>'
+POTION_DRAGON_BREATH = '<:potion_dragon_breath:1067883890741612635>'
+POTION_ELECTRONICAL = '<:potion_electronical:1067883891614027907>'
+POTION_FISH = '<:potion_fish:1067883894113837076>'
+POTION_INVERTED = '<:potion_inverted:1067883895829319751>'
+POTION_JUICE = '<:potion_juice:1067883897951621120>'
+POTION_JUMPY = '<:potion_jumpy:1067883899205722152>'
+POTION_KING = '<:potion_king:1067883901139304480>'
+POTION_LIQUID_HAIR = '<:potion_liquid_hair:1067883903530053713>'
+POTION_LOOTBOX = '<:potion_lootbox:1067883904796733471>'
+POTION_MONSTER = '<:potion_monster:1067884437712425072>'
+POTION_POTION = '<:potion_potion:1067883908127002755>'
+POTION_TIME = '<:potion_time:1067884276714057768>'
+POTION_TRIPLE = '<:potion_triple:1067883911532793968>'
+POTION_VOID = '<:potion_void:1067884199618547723>'
+POTION_WOOD = '<:potion_wood:1067884339523751937>'
 
 # EPIC RPG event items
 HORSE_ARMOR = '<:horsearmor:879416298747080745>'
@@ -47,7 +68,10 @@ EPIC_BERRY = '<:epicberry:1019660565867675678>'
 FISH = '<:fish:770324897884536865>'
 FISH_SUPER = '<:fish_super:931087456416202753>'
 LIFE_POTION = '<:lifepotion:770327166956601425>'
+LOG = '<:woodenlog:770902085851283476>'
+LOG_EPIC = '<:epiclog:770324898098053140>'
 LOG_HYPER = '<:log_hyper:770324898093596722>'
+LOG_MEGA = '<:megalog:770324897720565782>'
 LOG_SUPER = '<:log_super:770324898102640720>'
 LOG_ULTIMATE = '<:log_ultimate:931087456479088681>'
 LOG_ULTRA = '<:log_ultra:770324898345648179>'
@@ -63,6 +87,8 @@ ZOMBIE_EYE = '<:zombieeye:770324898194915328>'
 
 # EPIC RPG misc
 ASCENSION = '🌟'
+DEV_BUFF = '<:devbuff:1071442813541175378>'
+MOD_BUFF = '💠'
 GODLY_COOKIE = '<:godlycookie:879251636806098975>'
 MOB_ANCIENT_DRAGON = '<:ancientdragon:818542002332893204>'
 SWORD_GODLY = '<:godlysword:799388569688211536>'
@@ -91,7 +117,7 @@ SKILL_EPIC = '<:skill_epic:770327200606978069>'
 SKILL_TIME_TRAVELER = '<:skill_tt:770327200217169962>'
 
 # Fun reactions
-ANGRY = '<:angry_eyes:817419266189164584>'
+ANGRY = '<:angry_eyes:1062806355221680188>'
 ANIME_SUS = WORST_RAIDS
 FIRE = '🔥'
 FISHPOGGERS = '<a:fishpoggers:909868100739006485>'
@@ -117,19 +143,21 @@ WOAH = '<a:woah:992868108937203873>'
 YAY = '<a:yay:816581523271581696>'
 
 # Misc
+ADD = '<:add:1065725229499949137>'
 BOOM = '💥'
 BP = '🔹'
 CHECK = '✅'
 CROSS = '❎'
 CROSSED_SWORDS = '⚔️'
 DETAIL = '<:detail:1013338367779426384>'
+DISABLED = '<:disabled:1065723594342142083>'
+ENABLED = '<:enabled:1065722838935412797>'
 ERROR = '<:redcross:796796637695311963>'
 GITHUB = '<:github:1010927917297053707>'
-GREENTICK = '<:greentick:1011351857387540570>'
 NAVI = '<:navi:796362481274060802>'
 PARTNER_ALERT = '💌'
 PRIVACY_POLICY = '<:privacy:1010927920832847882>'
-REDTICK = '<:redtick:1011351858570350635>'
+REMOVE = '<:remove:1065725922445107330>'
 WARNING = '⚠️'
 
 
@@ -154,4 +182,31 @@ MONSTER_DROP_AREAS_EMOJIS = {
     18: DARK_ENERGY,
     19: DARK_ENERGY,
     20: DARK_ENERGY,
+}
+
+
+BOOST_ITEMS_EMOJIS = {
+    'banana potion': POTION_BANANA,
+    'cookie potion': POTION_COOKIE,
+    'dev boost': DEV_BUFF,
+    'dev buff': DEV_BUFF,
+    'dragon breath potion': POTION_DRAGON_BREATH,
+    'electronical potion': POTION_ELECTRONICAL,
+    'fish potion': POTION_FISH,
+    'inverted potion': POTION_INVERTED,
+    'juice potion': POTION_JUICE,
+    'jumpy potion': POTION_JUMPY,
+    'king potion': POTION_KING,
+    'liquid hair potion': POTION_LIQUID_HAIR,
+    'lootbox potion': POTION_LOOTBOX,
+    'mod boost': MOD_BUFF,
+    'mod buff': MOD_BUFF,
+    'monster potion': POTION_MONSTER,
+    'party popper': PARTY_POPPER,
+    'potion potion': POTION_POTION,
+    'time potion': POTION_TIME,
+    'triple potion': POTION_TRIPLE,
+    'valentine boost': '❤️',
+    'void potion': POTION_VOID,
+    'wood potion': POTION_WOOD,
 }

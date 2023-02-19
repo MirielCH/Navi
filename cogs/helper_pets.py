@@ -160,7 +160,8 @@ class HelperPetsCog(commands.Cog):
                     description = commands_high_risk,
                 )
                 embed_high_risk.set_footer(text=chance_high_risk)
-                await message.reply(embeds=[embed_low_risk, embed_high_risk])
+                content = user.mention if not user_settings.dnd_mode_enabled else None
+                await message.reply(content=content, embeds=[embed_low_risk, embed_high_risk])
 
 
 # Initialization

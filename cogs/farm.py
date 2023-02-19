@@ -54,7 +54,7 @@ class FarmCog(commands.Cog):
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
@@ -86,12 +86,7 @@ class FarmCog(commands.Cog):
                     elif 'potato' in user_command_message.content.lower():
                         last_farm_seed = 'potato'
                     await user_settings.update(last_farm_seed=last_farm_seed)
-                user_command = await functions.get_slash_command(user_settings, 'farm')
-                if user_settings.last_farm_seed != '':
-                    if user_settings.slash_mentions_enabled:
-                        user_command = f"{user_command} `seed: {user_settings.last_farm_seed}`"
-                    else:
-                        user_command = f"{user_command} `{user_settings.last_farm_seed}`".replace('` `', ' ')
+                user_command = await functions.get_farm_command(user_settings)
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:
@@ -144,13 +139,48 @@ class FarmCog(commands.Cog):
                 current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                kwargs = {}
+                seed_used_type_match = re.search(r':\d+>(.+?)seed', message_content.lower())
+                seed_used_type = seed_used_type_match.group(1).strip()
+                if seed_used_type != '':
+                    seed_used_count = getattr(user_settings.inventory, f'seed_{seed_used_type}') - 1
+                    if seed_used_count < 0: seed_used_count = 0
+                    kwargs[f'inventory_seed_{seed_used_type}'] = seed_used_count
+                crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
+                if crop_match is None:
+                    search_patterns = [
+                        r'give you ([0-9,]+) <.+> (.+?), ', #English, TOP
+                        r'give you ([0-9,]+) <.+> (.+?), ', #Spanish, TOP, MISSING
+                        r'give you ([0-9,]+) <.+> (.+?), ', #Portuguese, TOP, MISSING
+                    ]
+                    crop_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                crop_type = crop_match.group(2)
+                crop_count = getattr(user_settings.inventory, crop_type)
+                crop_count += int(crop_match.group(1).replace(',',''))
+                kwargs[f'inventory_{crop_type}'] = crop_count
+                search_patterns = [
+                    r'also got (\d+?) \*\*(?:.+?) (.+?) ', #English
+                    r'también consiguió (\d+?) \*\*(?:.+?) (.+?) ', #Spanish
+                    r'também conseguiu(\d+?) \*\*(?:.+?) (.+?) ', #Portuguese
+                ]
+                seed_returned_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if seed_returned_match:
+                    seed_returned_count = int(seed_returned_match.group(1))
+                    seed_returned_type = seed_returned_match.group(2)
+                    if f'inventory_seed_{seed_returned_type}' in kwargs:
+                        kwargs[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
+                    else:
+                        seed_returned_count = (
+                            getattr(user_settings.inventory, f'seed_{seed_returned_type}') + seed_returned_count
+                        )
+                        kwargs[f'inventory_seed_{seed_returned_type}'] = seed_returned_count
+                await user_settings.update(**kwargs)
                 if not user_settings.alert_farm.enabled: return
                 search_strings = [
                     '{} in the ground', #English
                     '{} en el suelo', #Spanish
                     '{} no solo', #Portuguese
                 ]
-                user_command = await functions.get_slash_command(user_settings, 'farm')
                 if any(search_string.format('bread seed') in message_content.lower() for search_string in search_strings):
                     last_farm_seed = 'bread'
                 elif any(search_string.format('carrot seed') in message_content.lower() for search_string in search_strings):
@@ -158,11 +188,7 @@ class FarmCog(commands.Cog):
                 elif any(search_string.format('potato seed') in message_content.lower() for search_string in search_strings):
                     last_farm_seed = 'potato'
                 await user_settings.update(last_farm_seed=last_farm_seed)
-                if user_settings.last_farm_seed != '':
-                    if user_settings.slash_mentions_enabled:
-                        user_command = f"{user_command} `seed: {user_settings.last_farm_seed}`"
-                    else:
-                        user_command = f"{user_command} `{user_settings.last_farm_seed}`".replace('` `', ' ')
+                user_command = await functions.get_farm_command(user_settings)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
@@ -170,7 +196,7 @@ class FarmCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings = [
@@ -214,18 +240,15 @@ class FarmCog(commands.Cog):
                         await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                     if not user_settings.alert_farm.enabled: return
                     user_command = await functions.get_slash_command(user_settings, 'farm')
-                    seed = None
+                    last_farm_seed = None
                     if 'bread' in user_command_message.content.lower():
-                        seed = 'bread'
+                        last_farm_seed = 'bread'
                     elif 'carrot' in user_command_message.content.lower():
-                        seed = 'carrot'
+                        last_farm_seed = 'carrot'
                     elif 'potato' in user_command_message.content.lower():
-                        seed = 'potato'
-                    if seed is not None:
-                        if user_settings.slash_mentions_enabled:
-                            user_command = f"{user_command} `seed: {seed}`"
-                        else:
-                            user_command = f"{user_command} `{seed}`".replace('` `', ' ')
+                        last_farm_seed = 'potato'
+                    await user_settings.update(last_farm_seed=last_farm_seed)
+                    user_command = await functions.get_farm_command(user_settings)
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
@@ -256,12 +279,13 @@ class FarmCog(commands.Cog):
                     if not user_settings.alert_farm.enabled: return
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                     if time_left < timedelta(0): return
+                    user_command = await functions.get_farm_command(user_settings)
                     reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
+                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 

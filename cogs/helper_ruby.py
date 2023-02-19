@@ -82,10 +82,10 @@ class HelperRubyCog(commands.Cog):
                     await errors.log_error('Ruby count not found in trade message for ruby counter.', message)
                     return
                 if trade_type == 'E': ruby_count *= -1
-                ruby_count += user_settings.rubies
+                ruby_count += user_settings.inventory.ruby
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from lootboxes
@@ -100,7 +100,7 @@ class HelperRubyCog(commands.Cog):
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
@@ -128,10 +128,10 @@ class HelperRubyCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in lootbox message for ruby counter.', message)
                     return
-                ruby_count += user_settings.rubies
+                ruby_count += user_settings.inventory.ruby
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from inventory
@@ -158,7 +158,7 @@ class HelperRubyCog(commands.Cog):
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
-                    embed_users.append(await message.guild.fetch_member(user_id))
+                    embed_users.append(message.guild.get_member(user_id))
                 else:
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
@@ -179,8 +179,8 @@ class HelperRubyCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Ruby count not found in inventory message for ruby counter.', message)
                         return
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
         if not message.embeds:
@@ -225,10 +225,10 @@ class HelperRubyCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in ruby training message for ruby counter.', message)
                     return
-                answer = f'You have {user_settings.rubies:,} {emojis.RUBY}'
+                answer = f'You have {user_settings.inventory.ruby:,} {emojis.RUBY}'
                 if user_settings.ruby_counter_button_mode:
                     buttons = {}
-                    correct_button = 'training_yes' if user_settings.rubies > ruby_count else 'training_no'
+                    correct_button = 'training_yes' if user_settings.inventory.ruby > ruby_count else 'training_no'
                     for row, action_row in enumerate(message.components, start=1):
                         buttons[row] = {}
                         for button in action_row.children:
@@ -238,7 +238,7 @@ class HelperRubyCog(commands.Cog):
                                 buttons[row][button.custom_id] = (button.label, button.emoji, False)
                     view = views.TrainingAnswerView(buttons)
                 else:
-                    answer = f'`YES` ({answer})' if user_settings.rubies > ruby_count else f'`NO` ({answer})'
+                    answer = f'`YES` ({answer})' if user_settings.inventory.ruby > ruby_count else f'`NO` ({answer})'
                     view = None
                 if not user_settings.dnd_mode_enabled:
                     answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
@@ -273,10 +273,10 @@ class HelperRubyCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in sell message for ruby counter.', message)
                     return
-                ruby_count = user_settings.rubies - ruby_count
+                ruby_count = user_settings.inventory.ruby - ruby_count
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from work commands
@@ -326,9 +326,9 @@ class HelperRubyCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in work message for ruby counter.', message)
                     return
-                ruby_count += user_settings.rubies
+                ruby_count += user_settings.inventory.ruby
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
+                await user_settings.update(inventory_ruby=ruby_count)
 
             # Rubies from crafting ruby sword
             search_strings = [
@@ -352,10 +352,10 @@ class HelperRubyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                ruby_count = user_settings.rubies - 4
+                ruby_count = user_settings.inventory.ruby - 4
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting ruby armor
@@ -380,10 +380,10 @@ class HelperRubyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                ruby_count = user_settings.rubies - 7
+                ruby_count = user_settings.inventory.ruby - 7
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting coin sword
@@ -408,10 +408,10 @@ class HelperRubyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                ruby_count = user_settings.rubies - 4
+                ruby_count = user_settings.inventory.ruby - 4
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
             # Rubies from crafting ultra-edgy armor
@@ -436,10 +436,10 @@ class HelperRubyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                ruby_count = user_settings.rubies - 400
+                ruby_count = user_settings.inventory.ruby - 400
                 if ruby_count < 0: ruby_count == 0
-                await user_settings.update(rubies=ruby_count)
-                if user_settings.rubies == ruby_count and user_settings.reactions_enabled:
+                await user_settings.update(inventory_ruby=ruby_count)
+                if user_settings.inventory.ruby == ruby_count and user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
 
 

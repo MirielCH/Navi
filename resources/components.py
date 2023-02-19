@@ -7,8 +7,9 @@ from typing import Dict, List, Literal, Optional
 
 import discord
 
-from database import cooldowns, reminders, users
-from resources import emojis, functions, modals, strings, views
+from content import settings as settings_cmd
+from database import cooldowns, portals, reminders, users
+from resources import emojis, exceptions, functions, modals, strings, views
 
 
 class ToggleAutoReadyButton(discord.ui.Button):
@@ -75,7 +76,7 @@ class ToggleUserSettingsSelect(discord.ui.Select):
             setting_enabled = getattr(view.user_settings, setting)
             if isinstance(setting_enabled, users.UserAlert):
                 setting_enabled = getattr(setting_enabled, 'enabled')
-            emoji = emojis.GREENTICK if setting_enabled else emojis.REDTICK
+            emoji = emojis.ENABLED if setting_enabled else emojis.DISABLED
             options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
         super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
                          custom_id=custom_id)
@@ -106,6 +107,49 @@ class ToggleUserSettingsSelect(discord.ui.Select):
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
+class ToggleServerSettingsSelect(discord.ui.Select):
+    """Toggle select that shows and toggles the status of server settings."""
+    def __init__(self, view: discord.ui.View, toggled_settings: Dict[str, str], placeholder: str,
+                 custom_id: Optional[str] = 'toggle_server_settings', row: Optional[int] = None):
+        self.toggled_settings = toggled_settings
+        options = []
+        options.append(discord.SelectOption(label='Enable all', value='enable_all', emoji=None))
+        options.append(discord.SelectOption(label='Disable all', value='disable_all', emoji=None))
+        for label, setting in toggled_settings.items():
+            setting_enabled = getattr(view.guild_settings, setting)
+            if isinstance(setting_enabled, users.UserAlert):
+                setting_enabled = getattr(setting_enabled, 'enabled')
+            emoji = emojis.ENABLED if setting_enabled else emojis.DISABLED
+            options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id=custom_id)
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        kwargs = {}
+        if select_value in ('enable_all','disable_all'):
+            enabled = True if select_value == 'enable_all' else False
+            for setting in self.toggled_settings.values():
+                if not setting.endswith('_enabled'):
+                    setting = f'{setting}_enabled'
+                kwargs[setting] = enabled
+        else:
+            setting_value = getattr(self.view.guild_settings, select_value)
+            if isinstance(setting_value, users.UserAlert):
+                setting_value = getattr(setting_value, 'enabled')
+            if not select_value.endswith('_enabled'):
+                select_value = f'{select_value}_enabled'
+            kwargs[select_value] = not setting_value
+        await self.view.guild_settings.update(**kwargs)
+        for child in self.view.children.copy():
+            if child.custom_id == self.custom_id:
+                self.view.remove_item(child)
+                self.view.add_item(ToggleServerSettingsSelect(self.view, self.toggled_settings,
+                                                            self.placeholder, self.custom_id))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
 
 class ToggleReadySettingsSelect(discord.ui.Select):
     """Toggle select that shows and toggles the status of ready settings."""
@@ -119,7 +163,7 @@ class ToggleReadySettingsSelect(discord.ui.Select):
             setting_enabled = getattr(view.user_settings, setting)
             if isinstance(setting_enabled, users.UserAlert):
                 setting_enabled = getattr(setting_enabled, 'visible')
-            emoji = emojis.GREENTICK if setting_enabled else emojis.REDTICK
+            emoji = emojis.ENABLED if setting_enabled else emojis.DISABLED
             options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
         super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
                          custom_id=custom_id)
@@ -155,18 +199,22 @@ class ManageClanSettingsSelect(discord.ui.Select):
     """Select to change guild settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        reminder_action = 'Disable' if view.clan_settings.alert_enabled else 'Enable'
-        quest_action = 'Disable' if view.clan_settings.upgrade_quests_enabled else 'Allow'
-        options.append(discord.SelectOption(label=f'{reminder_action} reminder',
-                                            value='toggle_reminder'))
-        options.append(discord.SelectOption(label=f'{quest_action} quests below stealth threshold',
-                                            value='toggle_quest'))
+        reminder_emoji = emojis.ENABLED if view.clan_settings.alert_enabled else emojis.DISABLED
+        quest_emoji = emojis.ENABLED if view.clan_settings.upgrade_quests_enabled else emojis.DISABLED
+        options.append(discord.SelectOption(label=f'Reminder',
+                                            value='toggle_reminder', emoji=reminder_emoji))
+        options.append(discord.SelectOption(label=f'Quests below stealth threshold',
+                                            value='toggle_quest', emoji=quest_emoji))
         options.append(discord.SelectOption(label='Change stealth threshold',
-                                            value='set_threshold', emoji=None))
-        options.append(discord.SelectOption(label='Set this channel as guild channel',
-                                            value='set_channel', emoji=None))
-        options.append(discord.SelectOption(label='Reset guild channel',
-                                            value='reset_channel', emoji=None))
+                                            value='set_threshold'))
+        options.append(discord.SelectOption(label='Add this channel as guild channel',
+                                            value='set_channel', emoji=emojis.ADD))
+        options.append(discord.SelectOption(label='Remove guild channel',
+                                            value='reset_channel', emoji=emojis.REMOVE))
+        if (view.clan_settings.quest_user_id is not None
+            and view.clan_settings.quest_user_id == view.ctx.author.id):
+            options.append(discord.SelectOption(label='Remove guild quest',
+                                                value='remove_clan_quest', emoji=emojis.REMOVE))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_clan_settings')
 
@@ -231,6 +279,8 @@ class ManageClanSettingsSelect(discord.ui.Select):
             else:
                 await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
+        elif select_value == 'remove_clan_quest':
+            await self.view.clan_settings.update(quest_user_id=None)
         for child in self.view.children.copy():
             if isinstance(child, ManageClanSettingsSelect):
                 self.view.remove_item(child)
@@ -247,26 +297,34 @@ class ManageReadySettingsSelect(discord.ui.Select):
     """Select to change ready settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
+        frequency = 'hunt only' if view.user_settings.ready_after_all_commands else 'all commands'
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
-        cmd_cd_action = 'Hide' if view.user_settings.cmd_cd_visible else 'Show'
-        up_next_reminder_action = 'Hide' if view.user_settings.ready_up_next_visible else 'Show'
+        up_next_reminder_emoji = emojis.ENABLED if view.user_settings.ready_up_next_visible else emojis.DISABLED
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
         if view.user_settings.ready_pets_claim_after_every_pet:
             pets_claim_type = 'when all pets are back'
         else:
             pets_claim_type = 'after every pet'
-        auto_ready_action = 'Disable' if view.user_settings.auto_ready_enabled else 'Enable'
+        if view.user_settings.ready_up_next_show_hidden_reminders:
+            up_next_hidden_emoji = emojis.ENABLED
+        else:
+            up_next_hidden_emoji = emojis.DISABLED
+        auto_ready_emoji = emojis.ENABLED if view.user_settings.auto_ready_enabled else emojis.DISABLED
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
-        options.append(discord.SelectOption(label=f'{auto_ready_action} auto-ready',
-                                            value='toggle_auto_ready', emoji=None))
+        options.append(discord.SelectOption(label=f'Auto-ready',
+                                            value='toggle_auto_ready', emoji=auto_ready_emoji))
+        options.append(discord.SelectOption(label=f'Show ready commands after {frequency}',
+                                            value='toggle_frequency', emoji=None))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
                                             value='toggle_message_style', emoji=None))
         options.append(discord.SelectOption(label='Change embed color',
                                             value='change_embed_color', emoji=None))
-        options.append(discord.SelectOption(label=f'{up_next_reminder_action} "up next" reminder',
-                                                value='toggle_up_next'))
+        options.append(discord.SelectOption(label=f'"Up next" reminder',
+                                            value='toggle_up_next', emoji=up_next_reminder_emoji))
         options.append(discord.SelectOption(label=f'Show "up next" reminder with {up_next_style}',
-                                                value='toggle_up_next_timestamp'))
+                                            value='toggle_up_next_timestamp'))
+        options.append(discord.SelectOption(label=f'Hidden reminders in "up next"',
+                                            value='toggle_up_next_hidden_reminders', emoji=up_next_hidden_emoji))
         options.append(discord.SelectOption(label=f'Show "/pets claim" {pets_claim_type}',
                                                 value='toggle_pets_claim'))
         if view.clan_settings is not None:
@@ -284,6 +342,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(auto_ready_enabled=not self.view.user_settings.auto_ready_enabled)
         elif select_value == 'toggle_alert':
             await self.view.clan_settings.update(alert_visible=not self.view.clan_settings.alert_visible)
+        elif select_value == 'toggle_frequency':
+            await self.view.user_settings.update(
+                ready_after_all_commands=not self.view.user_settings.ready_after_all_commands
+            )
         elif select_value == 'toggle_message_style':
             await self.view.user_settings.update(ready_as_embed=not self.view.user_settings.ready_as_embed)
         elif select_value == 'change_embed_color':
@@ -291,9 +353,17 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await interaction.response.send_modal(modal)
             return
         elif select_value == 'toggle_up_next':
-            await self.view.user_settings.update(ready_up_next_visible=not self.view.user_settings.ready_up_next_visible)
+            await self.view.user_settings.update(
+                ready_up_next_visible=not self.view.user_settings.ready_up_next_visible
+            )
         elif select_value == 'toggle_up_next_timestamp':
-            await self.view.user_settings.update(ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp)
+            await self.view.user_settings.update(
+                ready_up_next_as_timestamp=not self.view.user_settings.ready_up_next_as_timestamp
+            )
+        elif select_value == 'toggle_up_next_hidden_reminders':
+            await self.view.user_settings.update(
+                ready_up_next_show_hidden_reminders=not self.view.user_settings.ready_up_next_show_hidden_reminders
+            )
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
         elif select_value == 'toggle_pets_claim':
@@ -305,7 +375,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManageReadySettingsSelect(self.view))
                 break
-        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.clan_settings)
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.clan_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -332,26 +403,26 @@ class ManageUserSettingsSelect(discord.ui.Select):
     """Select to change user settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        reactions_action = 'Disable' if view.user_settings.reactions_enabled else 'Enable'
-        #christmas_area_action = 'Disable' if view.user_settings.christmas_area_enabled else 'Enable'
-        auto_flex_action = 'Disable' if view.user_settings.auto_flex_enabled else 'Enable'
-        dnd_action = 'Disable' if view.user_settings.dnd_mode_enabled else 'Enable'
-        hunt_action = 'Disable' if view.user_settings.hunt_rotation_enabled else 'Enable'
-        mentions_action = 'Disable' if view.user_settings.slash_mentions_enabled else 'Enable'
-        tracking_action = 'Disable' if view.user_settings.tracking_enabled else 'Enable'
-        options.append(discord.SelectOption(label=f'{reactions_action} reactions',
+        reactions_emoji = emojis.ENABLED if view.user_settings.reactions_enabled else emojis.DISABLED
+        #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
+        auto_flex_emoji = emojis.ENABLED if view.user_settings.auto_flex_enabled else emojis.DISABLED
+        dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
+        hunt_emoji = emojis.ENABLED if view.user_settings.hunt_rotation_enabled else emojis.DISABLED
+        mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
+        tracking_emoji = emojis.ENABLED if view.user_settings.tracking_enabled else emojis.DISABLED
+        options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
                                             value='toggle_reactions'))
-        options.append(discord.SelectOption(label=f'{auto_flex_action} auto flex alerts',
+        options.append(discord.SelectOption(label=f'Auto flex alerts', emoji=auto_flex_emoji,
                                             value='toggle_auto_flex'))
-        options.append(discord.SelectOption(label=f'{dnd_action} DND mode',
+        options.append(discord.SelectOption(label=f'DND mode', emoji=dnd_emoji,
                                             value='toggle_dnd'))
-        options.append(discord.SelectOption(label=f'{hunt_action} hunt rotation',
+        options.append(discord.SelectOption(label=f'Hunt rotation', emoji=hunt_emoji,
                                             value='toggle_hunt'))
-        options.append(discord.SelectOption(label=f'{mentions_action} slash command reminders',
+        options.append(discord.SelectOption(label=f'Slash command reminders', emoji=mentions_emoji,
                                             value='toggle_mentions'))
         #options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
         #                                    value='toggle_christmas_area'))
-        options.append(discord.SelectOption(label=f'{tracking_action} command tracking',
+        options.append(discord.SelectOption(label=f'Command tracking', emoji=tracking_emoji,
                                             value='toggle_tracking'))
         options.append(discord.SelectOption(label=f'Change last time travel time',
                                             value='set_last_tt', emoji=None))
@@ -394,12 +465,12 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
     """Select to change partner settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        options.append(discord.SelectOption(label='Set this channel as partner channel',
-                                            value='set_channel', emoji=None))
-        options.append(discord.SelectOption(label='Reset partner channel',
-                                            value='reset_channel', emoji=None))
-        options.append(discord.SelectOption(label='Reset partner',
-                                            value='reset_partner', emoji=None))
+        options.append(discord.SelectOption(label='Add this channel as partner channel',
+                                            value='set_channel', emoji=emojis.ADD))
+        options.append(discord.SelectOption(label='Remove partner channel',
+                                            value='reset_channel', emoji=emojis.REMOVE))
+        options.append(discord.SelectOption(label='Remove partner',
+                                            value='reset_partner', emoji=emojis.REMOVE))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_partner_settings')
 
@@ -506,7 +577,8 @@ class SetDonorTierSelect(discord.ui.Select):
         self.donor_type = donor_type
         options = []
         for index, donor_tier in enumerate(strings.DONOR_TIERS):
-            options.append(discord.SelectOption(label=donor_tier, value=str(index), emoji=None))
+            options.append(discord.SelectOption(label=donor_tier, value=str(index),
+                                                emoji=strings.DONOR_TIERS_EMOJIS[donor_tier]))
         super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, disabled=disabled,
                          row=row, custom_id=f'set_{donor_type}_donor_tier')
 
@@ -552,10 +624,10 @@ class ReminderMessageSelect(discord.ui.Select):
                         self.view.remove_item(child)
             if 'set_message' not in all_custom_ids:
                 self.view.add_item(SetReminderMessageButton(style=discord.ButtonStyle.blurple, custom_id='set_message',
-                                                       label='Change', row=1))
+                                                            label='Change', row=1))
             if 'reset_message' not in all_custom_ids:
                 self.view.add_item(SetReminderMessageButton(style=discord.ButtonStyle.red, custom_id='reset_message',
-                                                       label='Reset', row=1))
+                                                            label='Reset', row=1))
         embeds = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, select_value)
         await interaction.response.edit_message(embeds=embeds, view=self.view)
 
@@ -810,19 +882,51 @@ class ManageHelperSettingsSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
+class SetFarmHelperModeSelect(discord.ui.Select):
+    """Select to change farm helper mode"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for value, label in strings.FARM_HELPER_MODES.items():
+            emoji = emojis.ENABLED if view.user_settings.farm_helper_mode == value else None
+            options.append(discord.SelectOption(label=label, value=str(value), emoji=emoji))
+        super().__init__(placeholder='Change farm helper mode', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='set_farm_helper_mode')
+
+    async def callback(self, interaction: discord.Interaction):
+        await self.view.user_settings.update(farm_helper_mode=int(self.values[0]))
+        try:
+            reminder = await reminders.get_user_reminder(self.view.user_settings.user_id, 'farm')
+            user_command = await functions.get_farm_command(self.view.user_settings)
+            reminder_message = self.view.user_settings.alert_farm.message.replace('{command}', user_command)
+            await reminder.update(message=reminder_message)
+        except exceptions.NoDataFoundError:
+            pass
+        for child in self.view.children.copy():
+            if isinstance(child, SetFarmHelperModeSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SetFarmHelperModeSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
 class ManageServerSettingsSelect(discord.ui.Select):
     """Select to change server settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
+        auto_flex_emoji = emojis.ENABLED if view.guild_settings.auto_flex_enabled else emojis.DISABLED
         reminder_action = 'Disable' if view.guild_settings.auto_flex_enabled else 'Enable'
         options.append(discord.SelectOption(label='Change prefix',
                                             value='set_prefix', emoji=None))
         options.append(discord.SelectOption(label=f'{reminder_action} auto flex alerts',
-                                            value='toggle_auto_flex'))
+                                            value='toggle_auto_flex', emoji=auto_flex_emoji))
         options.append(discord.SelectOption(label='Set this channel as auto flex channel',
-                                            value='set_channel', emoji=None))
+                                            value='set_channel', emoji=emojis.ADD))
         options.append(discord.SelectOption(label='Reset auto flex channel',
-                                            value='reset_channel', emoji=None))
+                                            value='reset_channel', emoji=emojis.REMOVE))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_server_settings')
 
@@ -948,3 +1052,138 @@ class CopyEventReductionsButton(discord.ui.Button):
             await interaction.response.edit_message(embed=embed, view=self.view)
         else:
             await self.view.message.edit(embed=embed, view=self.view)
+
+
+class ManagePortalsSelect(discord.ui.Select):
+    """Select to change portal settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        if len(view.user_portals) < 20:
+            options.append(discord.SelectOption(label=f'Add portal', emoji=emojis.ADD,
+                                                value='add_portal'))
+        for index, portal in enumerate(view.user_portals):
+            options.append(discord.SelectOption(label=f'Remove portal {index + 1} ({portal.channel_id})',
+                                                emoji=emojis.REMOVE,
+                                                value=f'remove_{portal.channel_id}'))
+        super().__init__(placeholder='Manage portals', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_portals')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'add_portal':
+            modal = modals.AddPortalModal(self.view, ManagePortalsSelect)
+            await interaction.response.send_modal(modal)
+        else:
+            channel_id = int(select_value.replace('remove_', ''))
+            portal = await portals.get_portal(self.view.user_settings.user_id, channel_id)
+            await portal.delete()
+            self.view.user_portals.remove(portal)
+        for child in self.view.children.copy():
+            if isinstance(child, ManagePortalsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManagePortalsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.user_portals)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class SwitchToReadyRemindersSelect(discord.ui.Select):
+    """Select to switch to ready reminder settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        options.append(discord.SelectOption(label=f'Show/hide commands',
+                                            value='switch_to_ready_reminders'))
+        super().__init__(placeholder='Show/hide commands', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='switch_to_ready_reminders')
+
+    async def callback(self, interaction: discord.Interaction):
+        view = views.SettingsReadyRemindersView(self.view.ctx, self.view.bot, self.view.user_settings,
+                                                self.view.clan_settings, settings_cmd.embed_settings_ready_reminders)
+        embed = await settings_cmd.embed_settings_ready_reminders(self.view.bot, self.view.ctx, self.view.user_settings,
+                                                                  self.view.clan_settings)
+        await interaction.response.edit_message(embed=embed, view=view)
+        view.interaction = interaction
+        self.view.stop()
+
+
+class ManageReadyReminderChannelsSelect(discord.ui.Select):
+    """Select to manage ready reminder channel settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        options.append(discord.SelectOption(label=f'Add arena channel', emoji=emojis.ADD,
+                                            value='add_channel_arena'))
+        options.append(discord.SelectOption(label=f'Add duel channel', emoji=emojis.ADD,
+                                            value='add_channel_duel'))
+        options.append(discord.SelectOption(label=f'Add dungeon channel', emoji=emojis.ADD,
+                                            value='add_channel_dungeon'))
+        options.append(discord.SelectOption(label=f'Add horse breed channel', emoji=emojis.ADD,
+                                            value='add_channel_horse'))
+        options.append(discord.SelectOption(label=f'Remove arena channel', emoji=emojis.REMOVE,
+                                            value='remove_channel_arena'))
+        options.append(discord.SelectOption(label=f'Remove duel channel', emoji=emojis.REMOVE,
+                                            value='remove_channel_duel'))
+        options.append(discord.SelectOption(label=f'Remove dungeon channel', emoji=emojis.REMOVE,
+                                            value='remove_channel_dungeon'))
+        options.append(discord.SelectOption(label=f'Remove horse breed channel', emoji=emojis.REMOVE,
+                                            value='remove_channel_horse'))
+        super().__init__(placeholder='Manage command channels', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_command_channels')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'remove_channel_arena':
+            await self.view.user_settings.update(ready_channel_arena=None)
+        elif select_value == 'remove_channel_duel':
+            await self.view.user_settings.update(ready_channel_duel=None)
+        elif select_value == 'remove_channel_dungeon':
+            await self.view.user_settings.update(ready_channel_dungeon=None)
+        elif select_value == 'remove_channel_horse':
+            await self.view.user_settings.update(ready_channel_horse=None)
+        else:
+            modal = modals.AddCommandChannelModal(self.view, select_value.replace('add_channel_',''))
+            await interaction.response.send_modal(modal)
+            return
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.clan_settings)
+        if not interaction.response.is_done():
+            await interaction.response.edit_message(embed=embed, view=self.view)
+        else:
+            await self.view.message.edit(embed=embed, view=self.view)
+
+
+class ManagePortalSettingsSelect(discord.ui.Select):
+    """Select to change portal settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        message_style = 'normal message' if view.user_settings.portals_as_embed else 'embed'
+        spacing_emoji = emojis.ENABLED if view.user_settings.portals_spacing_enabled else emojis.DISABLED
+        options.append(discord.SelectOption(label=f'Show portal list as {message_style}',
+                                            value='toggle_message_style', emoji=None))
+        options.append(discord.SelectOption(label=f'Mobile spacing', emoji=spacing_emoji,
+                                            value='toggle_mobile_spacing'))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_portal_settings')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'toggle_mobile_spacing':
+            await self.view.user_settings.update(
+                portals_spacing_enabled=not self.view.user_settings.portals_spacing_enabled
+            )
+        elif select_value == 'toggle_message_style':
+            await self.view.user_settings.update(portals_as_embed=not self.view.user_settings.portals_as_embed)
+        for child in self.view.children.copy():
+            if isinstance(child, ManagePortalSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManagePortalSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.user_portals)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)

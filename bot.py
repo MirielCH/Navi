@@ -11,7 +11,7 @@ from discord.ext import commands
 from database import errors, guilds
 from database import settings as settings_db
 from database.update_database import NAVI_DB_VERSION
-from resources import functions, logs, settings
+from resources import functions, settings
 
 
 #Check if database is up to date
@@ -67,10 +67,9 @@ async def on_error(event: str, *args, **kwargs) -> None:
         if isinstance(error, discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
-        print(traceback_message)
         embed.add_field(name='Event', value=f'`{event}`', inline=False)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
-        await errors.log_error(f'Got an error in event {event}:\nError: {error[1]}\nTraceback: {traceback_str}', message)
+        await errors.log_error(f'- Event: {event}\n- Error: {error[1]}\n- Traceback:\n{traceback_str}', message)
         if settings.DEBUG_MODE: await message.channel.send(embed=embed)
     else:
         try:
@@ -82,9 +81,8 @@ async def on_error(event: str, *args, **kwargs) -> None:
         if isinstance(error, discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
-        print(traceback_message)
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
-        await errors.log_error(f'Got an error:\nError: {error[1]}\nTraceback: {traceback_str}', message)
+        await errors.log_error(f'- Event: {event}\n- Error: {error[1]}\n- Traceback:\n{traceback_str}', message)
         if settings.DEBUG_MODE: await message.channel.send(embed=embed)
         if event == 'on_reaction_add':
             reaction, user = args
@@ -116,7 +114,9 @@ EXTENSIONS = [
         'cogs.fun',
         #'cogs.halloween',
         'cogs.helper_context',
+        'cogs.helper_farm',
         'cogs.helper_heal',
+        'cogs.helper_pets',
         'cogs.helper_ruby',
         'cogs.helper_training',
         'cogs.horse',
@@ -128,8 +128,8 @@ EXTENSIONS = [
         'cogs.main',
         'cogs.nsmb_bigarena',
         'cogs.pets_tournament',
-        'cogs.helper_pets',
         'cogs.pets',
+        'cogs.portals',
         'cogs.quest',
         'cogs.reminders_custom',
         'cogs.reminders_lists',

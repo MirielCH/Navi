@@ -1,6 +1,8 @@
 # strings.py
 """Contains global strings"""
 
+from resources import emojis
+
 # --- Error messages ---
 MSG_INTERACTION_ERRORS =  [
     "Hands off, mate! Interactions are sentient beings too, you know!",
@@ -78,6 +80,15 @@ INTERNAL_ERROR_NO_ARGUMENTS = 'You need to specify at least one keyword argument
 INTERNAL_ERROR_DICT_TO_OBJECT = 'Error converting record into object\nFunction: {function}\nRecord: {record}\n'
 
 
+# Miscellaneous
+FARM_HELPER_MODES = {
+    0: 'Repeat last used seed',
+    1: 'STT score (bread > carrot > potato)',
+    2: 'Ultraining (carrot only)',
+    3: 'Carrotato chips (balance carrots & potatoes)',
+}
+
+
 # Links
 LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
 LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
@@ -85,8 +96,7 @@ LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
 DEFAULT_MESSAGE_EVENT = (
-    '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
-    f'official EPIC RPG server.'
+    '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485>.'
 )
 DEFAULT_MESSAGE_CUSTOM_REMINDER = 'Hey! This is your reminder for **{message}**!'
 
@@ -97,6 +107,7 @@ DEFAULT_MESSAGES = {
     'big-arena': DEFAULT_MESSAGE_EVENT,
     'chimney': DEFAULT_MESSAGE,
     'boo': DEFAULT_MESSAGE,
+    'boosts': '{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!',
     'daily': DEFAULT_MESSAGE,
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
@@ -110,7 +121,6 @@ DEFAULT_MESSAGES = {
     'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'partner': '{name} Hey! **{partner}** found {loot} for you!',
-    'party-popper': '{name} Hey! Your party popper just ran out!',
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
@@ -129,6 +139,8 @@ PLACEHOLDER_DESCRIPTIONS = {
     'event': 'The name of the finished event',
     'loot': 'The name of the item your partner found',
     'drop_emoji': 'The emoji of the mob drop in the current area. Unavailable in A0 and the TOP.',
+    'boost_emoji': 'The emoji of the boost item',
+    'boost_item': 'The name of the boost item',
 }
 
 
@@ -149,6 +161,17 @@ DONOR_TIERS = (
     'ULTRA donator',
     'ULTIMATE donator',
 )
+
+DONOR_TIERS_EMOJIS = {
+    'Non-donator': None,
+    'Donator': emojis.LOG,
+    'EPIC donator': emojis.LOG_EPIC,
+    'SUPER donator': emojis.LOG_SUPER,
+    'MEGA donator': emojis.LOG_MEGA,
+    'HYPER donator': emojis.LOG_HYPER,
+    'ULTRA donator': emojis.LOG_ULTRA,
+    'ULTIMATE donator': emojis.LOG_ULTIMATE,
+}
 
 
 # --- Activities ---
@@ -209,6 +232,7 @@ ACTIVITIES = (
     'arena',
     'big-arena',
     #'boo',
+    'boosts',
     #'chimney',
     'daily',
     'duel',
@@ -223,7 +247,6 @@ ACTIVITIES = (
     'lottery',
     'minintboss',
     'partner',
-    'party-popper',
     'pets',
     'pet-tournament',
     'quest',
@@ -252,7 +275,6 @@ ACTIVITIES_COMMANDS = (
     'horse',
     'hunt',
     'lootbox',
-    'party-popper',
     'quest',
     'training',
     'vote',
@@ -268,30 +290,72 @@ ACTIVITIES_EVENTS = (
     'pet-tournament',
 )
 
+ACTIVITIES_BOOSTS = (
+    'banana-potion',
+    'cookie-potion',
+    'dev-boost',
+    'dev-buff',
+    'dragon-breath-potion',
+    'electronical-potion',
+    'fish-potion',
+    'inverted-potion',
+    'juice-potion',
+    'jumpy-potion',
+    'king-potion',
+    'liquid-hair-potion',
+    'lootbox-potion',
+    'mod-boost',
+    'mod-buff',
+    'monster-potion',
+    'party-popper',
+    'potion-potion',
+    'time-potion',
+    'triple-potion',
+    'valentine-boost',
+    'void-potion',
+    'wood-potion',
+)
 
 ACTIVITIES_SLASH_COMMANDS = {
     'advent-calendar': 'xmas calendar',
     'adventure': 'adventure',
     'arena': 'arena',
+    'banana-potion': 'alchemy',
     'big-arena': 'big arena',
     'boo': 'hal boo',
     'chimney': 'xmas chimney',
+    'cookie-potion': 'alchemy',
     'daily': 'daily',
+    'dragon-breath-potion': 'alchemy',
     'duel': 'duel',
     'dungeon-miniboss': 'dungeon',
+    'electronical-potion': 'alchemy',
     'farm': 'farm',
+    'fish-potion': 'alchemy',
     'guild': 'guild raid',
     'horse': 'horse breeding',
     'horse-race': 'horse race',
     'hunt': 'hunt',
+    'inverted-potion': 'alchemy',
+    'juice-potion': 'alchemy',
+    'jumpy-potion': 'alchemy',
+    'king-potion': 'alchemy',
+    'liquid-hair-potion': 'alchemy',
     'lootbox': 'buy',
+    'lootbox-potion': 'alchemy',
     'lottery': 'lottery',
     'minintboss': 'minintboss',
+    'monster-potion': 'alchemy',
     'pet-tournament': 'pets tournament',
+    'potion-potion': 'alchemy',
     'quest': 'quest',
+    'time-potion': 'alchemy',
     'training': 'training',
+    'triple-potion': 'alchemy',
+    'void-potion': 'alchemy',
     'vote': 'vote',
     'weekly': 'weekly',
+    'wood-potion': 'alchemy',
     'work': 'work',
 }
 
@@ -356,29 +420,52 @@ ACTIVITIES_COLUMNS = {
     'advent-calendar': 'alert_advent',
     'adventure': 'alert_adventure',
     'arena': 'alert_arena',
+    'banana-potion': 'alert_boosts',
     'big-arena': 'alert_big_arena',
     'boo': 'alert_boo',
+    'boosts': 'alert_boosts',
     'chimney': 'alert_chimney',
+    'cookie-potion': 'alert_boosts',
     'daily': 'alert_daily',
+    'dev-boost': 'alert_boosts',
+    'dev-buff': 'alert_boosts',
+    'dragon-breath-potion': 'alert_boosts',
     'duel': 'alert_duel',
     'dungeon-miniboss': 'alert_dungeon_miniboss',
+    'electronical-potion': 'alert_boosts',
     'epic': 'alert_epic',
     'farm': 'alert_farm',
+    'fish-potion': 'alert_boosts',
     'guild': 'alert_guild',
     'horse': 'alert_horse_breed',
     'horse-race': 'alert_horse_race',
     'hunt': 'alert_hunt',
+    'inverted-potion': 'alert_boosts',
+    'juice-potion': 'alert_boosts',
+    'jumpy-potion': 'alert_boosts',
+    'king-potion': 'alert_boosts',
+    'liquid-hair-potion': 'alert_boosts',
     'lootbox': 'alert_lootbox',
+    'lootbox-potion': 'alert_boosts',
     'lottery': 'alert_lottery',
     'minintboss': 'alert_not_so_mini_boss',
+    'mod-boost': 'alert_boosts',
+    'mod-buff': 'alert_boosts',
+    'monster-potion': 'alert_boosts',
     'partner': 'alert_partner',
-    'party-popper': 'alert_party_popper',
-    'pets': 'alert_pets',
+    'party-popper': 'alert_boosts',
     'pet-tournament': 'alert_pet_tournament',
+    'pets': 'alert_pets',
+    'potion-potion': 'alert_boosts',
     'quest': 'alert_quest',
+    'time-potion': 'alert_boosts',
     'training': 'alert_training',
+    'triple-potion': 'alert_boosts',
+    'valentine-boost': 'alert_boosts',
+    'void-potion': 'alert_boosts',
     'vote': 'alert_vote',
     'weekly': 'alert_weekly',
+    'wood-potion': 'alert_boosts',
     'work': 'alert_work',
 }
 
@@ -395,7 +482,6 @@ ACTIVITIES_WITH_COOLDOWN = (
     'hunt',
     'lootbox',
     'dungeon-miniboss',
-    'party-popper',
     'quest',
     'quest-decline',
     'training',
@@ -712,6 +798,7 @@ MONSTERS_HUNT_A0 = (
 MONSTERS_HUNT_MISC = (
     '**Christmas Slime**',
     '**Horslime**',
+    '**Pink Wolf**',
 )
 
 MONSTERS_HUNT = (
@@ -753,8 +840,9 @@ TRACKED_COMMANDS = (
     'work',
     'farm',
     'training',
+    'ultraining',
     'adventure',
-    'epic guard'
+    'epic guard',
 ) # Sorted by cooldown length
 
 
@@ -762,7 +850,6 @@ EPIC_NPC_NAMES = [
     'EPIC NPC', #English
     'NPC ÉPICO', #Spanish, Portuguese
 ]
-
 
 # --- Commands ---
 WORK_COMMANDS = (
@@ -786,6 +873,7 @@ WORK_COMMANDS = (
 
 SLASH_COMMANDS = {
     'adventure': '</adventure:961046240420855808>',
+    'alchemy': '</alchemy:0>',
     'arena': '</arena:960740633302138920>',
     'axe': '</axe:959162695909781504>',
     'big arena': '</big arena:960362922029252719>',
@@ -870,6 +958,7 @@ SLASH_COMMANDS = {
 
 RPG_COMMANDS = {
     'adventure': 'rpg adventure',
+    'alchemy': 'rpg alchemy',
     'arena': 'rpg arena',
     'axe': 'rpg axe',
     'big arena': 'rpg big arena join',
@@ -954,6 +1043,14 @@ RPG_COMMANDS = {
 
 
 # Auto flex headlines
+FLEX_TITLES_BREW_ELECTRONICAL = [
+    'Now that\'s an expensive drink',
+    'Champagne would be cheaper, you know',
+    '"What did it cost?" - "Everything"',
+    'Brewing at the robot graveyard',
+    'Seriously, why would ANYONE brew that?',
+]
+
 FLEX_TITLES_WORK_HYPERLOG = [
     'TIMBER!',
     'Hyperino',
@@ -1116,10 +1213,35 @@ FLEX_TITLES_PETS_CATCH_TT = [
     'Always close your phone box door',
 ]
 
+FLEX_TITLES_PETS_CLAIM_OMEGA = [
+    'Anything for the OMEGAs it seems',
+    'This is against the Geneva Conventions',
+    'Chance too high, lume pls fix',
+    'SAVE THE SNOWMANS',
+    'Bill Watterson might have inspired this flex',
+]
+
 FLEX_TITLES_PR_ASCENSION = [
     'Up up and away',
     'Goodbye peasants!',
     'We demand a giveaway!',
+]
+
+FLEX_TITLES_EPIC_BERRY = [
+    'Time for some fruit salad!',
+    'Are these fruits or vegetables?',
+    'Margarita time!',
+    'Horse! Time to celebrate!',
+    'This might just be enough for a proper dessert',
+    'Only about a quadrillion more until epicness 100',
+]
+
+FLEX_TITLES_EPIC_BERRY_PARTNER = [
+    'Not even berries are safe anymore',
+    'The berries is where the fun ends, I swear',
+    'Hello 911, I want to report a robberry',
+    'Hey, I needed those for the margarita!',
+    'Reason for divorce: ',
 ]
 
 FLEX_TITLES_EVENT_LB = [
@@ -1161,12 +1283,29 @@ FLEX_TITLES_EVENT_TRAINING = [
     'So we call this "training" now?',
 ]
 
-FLEX_TITLES_COINFLIP_EVENT = [
+FLEX_TITLES_EVENT_COINFLIP = [
     'Uh... how did that happen?',
     'Wait. Where\'s my coin?',
     'I didn\'t even know this could happen, lol',
     'Why is there a flex for this?',
     'MY COOOIIIINN NOOOOOOOOOOOOOOOOOOO',
+]
+
+FLEX_TITLES_MOB_DROPS = [
+    'Not sure I wanna know how this looting looked',
+    'SO MANY?!',
+    'Some people are happy with what they have, and then there\'s this person',
+    'T10 OP, PLS NERF',
+    'Now this is proper looting',
+    'This makes perfect sense',
+]
+
+FLEX_TITLES_MOB_DROPS_PARTNER = [
+    'YOU SHALL NOT... STEAL',
+    'Kinda embarrassing, really',
+    'Sucks to be you tbh',
+    'Easy come easy go',
+    'Get the divorce papers!',
 ]
 
 FLEX_TITLES_TIME_TRAVEL_1 = [
@@ -1262,6 +1401,14 @@ FLEX_TITLES_XMAS_VOID = [
 
 
 # Auto flex thumbnails
+FLEX_THUMBNAILS_BREW_ELECTRONICAL = [
+    'https://media.tenor.com/wlpMSYaDoYkAAAAd/tea-time-heure-du-th%C3%A9.gif',
+    'https://media.tenor.com/YBIZSm5Hl8YAAAAi/cat-drink.gif',
+    'https://media.tenor.com/AQlLOEyD-xoAAAAd/swag-potion.gif',
+    'https://media.tenor.com/n5ikt7jBRh0AAAAM/green-smoothie-messy-dog-slurp.gif',
+    'https://media.tenor.com/dSjPLLjh5FYAAAAC/i-love-expensive-things-luxury.gif',
+]
+
 FLEX_THUMBNAILS_WORK_HYPERLOG = [
     'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
     'https://media.tenor.com/CeKTpmgR3ZkAAAAC/yell-timber.gif',
@@ -1411,10 +1558,36 @@ FLEX_THUMBNAILS_PETS_CATCH_TT = [
     'https://media.giphy.com/media/U7JM6ChJMrFnXfFHvE/giphy.gif',
 ]
 
+FLEX_THUMBNAILS_PETS_CLAIM_OMEGA = [
+    'https://media.tenor.com/sQVkHE1_BgcAAAAC/ahh-scared.gif',
+    'https://media.tenor.com/eFNKOmp6hSsAAAAC/olaf-disney.gif',
+    'https://media.tenor.com/gZcSvrfQPXgAAAAC/snowman-melting.gif',
+    'https://media.tenor.com/l5BcI5CzQV0AAAAC/elmo-fire-elmo-snowman.gif',
+    'https://media.tenor.com/nzD-S3_ZC-8AAAAd/snowgolem-minecraft.gif',
+]
+
 FLEX_THUMBNAILS_PR_ASCENSION = [
     'https://media.tenor.com/wfma4CqwxCwAAAAC/railgun-misaka-mikoto.gif',
     'https://media.tenor.com/NF5dnWvoaN8AAAAC/glameow-purugly.gif',
     'https://media.tenor.com/EoCQm0KsqP8AAAAC/pokemon-anime.gif',
+]
+
+FLEX_THUMBNAILS_EPIC_BERRY = [
+    'https://media.tenor.com/yuSXdXW7tgsAAAAC/strawberry-juice.gif',
+    'https://media.tenor.com/oxTE2Jll0R4AAAAd/strawberries-cute-baby.gif',
+    'https://media.tenor.com/wjAK63POzTMAAAAd/monkey-monkey-eating.gif',
+    'https://media.tenor.com/CkRsEfWoUx4AAAAC/mmm-good-creepy.gif',
+    'https://media.tenor.com/sc7R5jLoYioAAAAd/cat-cats.gif',
+    'https://media.tenor.com/dtDUL6UpUg4AAAAd/yummy-strawberry.gif',
+]
+
+FLEX_THUMBNAILS_EPIC_BERRY_PARTNER = [
+    'https://media.tenor.com/jUAC58SFqzsAAAAC/bunny-steal.gif',
+    'https://media.tenor.com/g3VXd3gcG9wAAAAC/it-crowd-richard-ayoade.gif',
+    'https://media.tenor.com/_6FGp_11YQIAAAAd/worst-marriage-ever-family-feud-canada.gif',
+    'https://media.tenor.com/kbfjUFqT1psAAAAd/unromantic-bad-wedding.gif',
+    'https://media.tenor.com/sPe_qdC2idcAAAAC/modern-family-modern-family-joe.gif',
+    'https://media.tenor.com/0Jeb1C_TaBcAAAAd/now-thats-stealing-redd-foxx.gif',
 ]
 
 FLEX_THUMBNAILS_EVENT_LB = [
@@ -1453,10 +1626,28 @@ FLEX_THUMBNAILS_EVENT_TRAINING = [
     'https://media.tenor.com/C_YenjB3niUAAAAC/tinkerbell-happy.gif',
 ]
 
-FLEX_THUMBNAILS_COINFLIP_EVENT = [
+FLEX_THUMBNAILS_EVENT_COINFLIP = [
     'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
     'https://media.giphy.com/media/JQG2I0rQejbRQiDMQZ/giphy.gif',
     'https://media.tenor.com/8yBy9hKYpBkAAAAC/where-is-it-melody-pedras.gif',
+]
+
+FLEX_THUMBNAILS_MOB_DROPS = [
+    'https://media.tenor.com/AIjT_Z2IvQ8AAAAC/loot-gold.gif',
+    'https://media.tenor.com/OQ1HKTY5GKwAAAAC/look-at-that-loot-clash-banging.gif',
+    'https://media.tenor.com/LRifcomETsAAAAAC/1up-uptrennd.gif',
+    'https://media.tenor.com/5mzAxEwD4mUAAAAd/i-have-a-lot-of-loot-klaus.gif',
+    'https://media.tenor.com/Kp0EqMZrdIEAAAAC/legend-of.gif',
+    'https://media.tenor.com/TzCFttJJiakAAAAd/kgf-chapter2.gif',
+    'https://media.tenor.com/yg3y3tL18CUAAAAC/greedy-eating.gif',
+]
+
+FLEX_THUMBNAILS_MOB_DROPS_PARTNER = [
+    'https://media.tenor.com/0isSP3YRK7IAAAAC/truth-train-meme-looting.gif',
+    'https://media.tenor.com/UrGhgb_PnHIAAAAC/looting-stealing.gif',
+    'https://media.tenor.com/fHIje4LvTeYAAAAC/animation-art.gif',
+    'https://media.tenor.com/Jse3JnkVbKIAAAAd/hora-de-aventura-tren.gif',
+    'https://media.tenor.com/bR3QjhHR6-AAAAAC/robbery-robbed.gif',
 ]
 
 FLEX_THUMBNAILS_TIME_TRAVEL_1 = [
@@ -1480,7 +1671,7 @@ FLEX_THUMBNAILS_TIME_TRAVEL_5 = [
 FLEX_THUMBNAILS_TIME_TRAVEL_10 = [
     'https://media.tenor.com/pDdh_ISRzZIAAAAC/doctor-who-dr-who.gif',
     'https://media.tenor.com/ZIUSH-XNatEAAAAC/doctorwho-tardis.gif',
-    'https://media.tenor.com/dSLlCYF7vikAAAAC/tardis-doctor.gif',
+    'https://media.tenor.com/R1nsCixefawAAAAC/tardis-doctor-who.gif',
 ]
 
 FLEX_THUMBNAILS_TIME_TRAVEL_25 = [

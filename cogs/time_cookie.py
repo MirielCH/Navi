@@ -65,7 +65,7 @@ class TimeCookieCog(commands.Cog):
                 return
             if not user_settings.bot_enabled: return
             search_patterns = [
-                r'! (.+?) minut[eo]s', #English, Spanish, Portuguese
+                r'! (\d+?) minut[eo]s', #English, Spanish, Portuguese
             ]
             time_match = await functions.get_match_from_patterns(search_patterns, message_content)
             if not time_match:

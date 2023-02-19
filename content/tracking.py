@@ -99,7 +99,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User) -> dis
         timestamp = user_settings.last_tt.timestamp()
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         timestamp = 0
-    field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(timestamp)}:f> UTC.'
+    field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(timestamp)}:f>.'
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,

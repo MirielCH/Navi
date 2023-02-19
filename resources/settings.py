@@ -14,16 +14,31 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
+
+# Files and directories
+BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+DB_FILE = os.path.join(BOT_DIR, 'database/navi_db.db')
+if os.path.isfile(DB_FILE):
+    NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
+else:
+    print(f'Database {DB_FILE} does not exist. Please follow the setup instructions in the README first.')
+    sys.exit()
+NAVI_DB.row_factory = sqlite3.Row
+LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
+IMG_NAVI = os.path.join(BOT_DIR, 'images/navi.png')
+VERSION_FILE = os.path.join(BOT_DIR, 'VERSION')
+
+
 # Load .env variables
 load_dotenv()
 
 TOKEN = os.getenv('DISCORD_TOKEN')
-if TOKEN is None:
+if TOKEN == '':
     print(ENV_VARIABLE_MISSING.format(var='DISCORD_TOKEN'))
     sys.exit()
 
 OWNER_ID = os.getenv('OWNER_ID')
-if OWNER_ID is None:
+if OWNER_ID == '':
     print(ENV_VARIABLE_MISSING.format(var='OWNER_ID'))
     sys.exit()
 try:
@@ -33,9 +48,6 @@ except:
     sys.exit()
 
 DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
-if DEBUG_MODE is None:
-    print(ENV_VARIABLE_MISSING.format(var='DEBUG_MODE'))
-    sys.exit()
 
 DEV_IDS = os.getenv('DEV_IDS')
 if DEV_IDS is None or DEV_IDS == '':
@@ -50,7 +62,7 @@ else:
 DEV_IDS += [OWNER_ID,]
 
 DEV_GUILDS = os.getenv('DEV_GUILDS')
-if DEV_GUILDS is None:
+if DEV_GUILDS == '':
     print(ENV_VARIABLE_MISSING.format(var='DEV_GUILDS'))
     sys.exit()
 if DEV_GUILDS == '':
@@ -75,13 +87,10 @@ else:
         sys.exit()
 
 
-# Files and directories
-BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DB_FILE = os.path.join(BOT_DIR, 'database/navi_db.db')
-NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
-NAVI_DB.row_factory = sqlite3.Row
-LOG_FILE = os.path.join(BOT_DIR, 'logs/discord.log')
-IMG_NAVI = os.path.join(BOT_DIR, 'images/navi.png')
+# Read bot version
+_version_file = open(VERSION_FILE, 'r')
+VERSION = _version_file.readline().rstrip('\n')
+_version_file.close()
 
 
 DONOR_COOLDOWNS = (1, 0.9, 0.8, 0.65)

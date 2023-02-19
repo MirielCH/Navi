@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, guilds, reminders, users
+from database import clans, guilds, portals, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
@@ -261,6 +261,30 @@ async def command_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationCon
         user_settings: users.User = await users.get_user(ctx.author.id)
     view = views.SettingsHelpersView(ctx, bot, user_settings, embed_settings_helpers)
     embed = await embed_settings_helpers(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                   switch_view: Optional[discord.ui.View] = None) -> None:
+    """Portals settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    try:
+        user_portals = list(await portals.get_portals(ctx.author.id))
+    except exceptions.NoDataFoundError:
+        user_portals = []
+    view = views.SettingsPortalsView(ctx, bot, user_settings, user_portals, embed_settings_portals)
+    embed = await embed_settings_portals(bot, ctx, user_settings, user_portals)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
     else:
@@ -601,19 +625,14 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
 async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
-    clan_channel = None
     if clan_settings.upgrade_quests_enabled:
-        clan_upgrade_quests = f'{emojis.GREENTICK}`Allowed`'
+        clan_upgrade_quests = f'{emojis.ENABLED}`Allowed`'
     else:
-        clan_upgrade_quests = f'{emojis.REDTICK}`Not allowed`'
+        clan_upgrade_quests = f'{emojis.DISABLED}`Not allowed`'
     if clan_settings.channel_id is not None:
-        try:
-            clan_channel = await functions.get_discord_channel(bot, clan_settings.channel_id)
-        except discord.Forbidden:
-            clan_channel_name = 'Access forbidden'
-        if clan_channel is not None: clan_channel_name = clan_channel.name
+        clan_channel = f'<#{clan_settings.channel_id}>'
     else:
-        clan_channel_name = 'N/A'
+        clan_channel = '`N/A`'
     if clan_settings.quest_user_id is not None:
         quest_user = f'<@{clan_settings.quest_user_id}>'
     else:
@@ -624,7 +643,7 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.BP} **Owner**: <@{clan_settings.leader_id}>\n'
     )
     reminder = (
-        f'{emojis.BP} **Guild channel**: `{clan_channel_name}`\n'
+        f'{emojis.BP} **Guild channel**: {clan_channel}\n'
         f'{emojis.DETAIL} _Reminders will always be sent to this channel._\n'
         f'{emojis.BP} **Reminder**: {reminder_enabled}\n'
         f'{emojis.BP} **Stealth threshold**: `{clan_settings.stealth_threshold}`\n'
@@ -676,6 +695,8 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
+        f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'
+        f'{emojis.DETAIL} _Changes your farm reminder according to the mode and your inventory._\n'
         #f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
         #f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
         #f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
@@ -694,6 +715,27 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
     )
     embed.add_field(name='HELPERS', value=helpers, inline=False)
     embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
+    return embed
+
+async def embed_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+                                 user_portals: List[portals.Portal]) -> discord.Embed:
+    """Portals settings embed"""
+    message_style = 'Embed' if user_settings.portals_as_embed else 'Normal message'
+    portal_list = ''
+    for index, portal in enumerate(user_portals):
+        portal_list = f'{portal_list}\n{emojis.BP} {index + 1}: <#{portal.channel_id}> ({portal.channel_id})'
+    if not portal_list: portal_list = f'{emojis.BP} _No portals set._'
+    portal_settings = (
+        f'{emojis.BP} **Message style**: `{message_style}`\n'
+        f'{emojis.BP} **Mobile spacing**: {await functions.bool_to_text(user_settings.portals_spacing_enabled)}'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name.upper()}\'S PORTAL SETTINGS',
+        description = '_Portals will take you to another channel. You can add up to 20 portals._'
+    )
+    embed.add_field(name='PORTALS', value=portal_list, inline=False)
+    embed.add_field(name='SETTINGS', value=portal_settings, inline=False)
     return embed
 
 
@@ -755,35 +797,28 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
 async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
-    user_partner_channel_name = partner = '`N/A`'
-    partner_partner_channel_name = user_partner_channel_name = '`N/A`'
-    partner_partner_channel = user_partner_channel = None
-    try:
-        user_partner_channel = await functions.get_discord_channel(bot, user_settings.partner_channel_id)
-    except discord.Forbidden:
-        user_partner_channel_name = '`Access forbidden`'
-    if user_partner_channel is not None:
-        user_partner_channel_name = f'`{user_partner_channel.name}`)'
+    partner = partner_partner_channel = user_partner_channel = '`N/A`'
+    if user_settings.partner_channel_id is not None:
+        user_partner_channel = f'<#{user_settings.partner_channel_id}>'
     if partner_settings is not None:
         partner = f'<@{user_settings.partner_id}>'
-        try:
-            partner_partner_channel = await functions.get_discord_channel(bot, partner_settings.partner_channel_id)
-        except discord.Forbidden:
-            partner_partner_channel_name = '`Access forbidden`'
-        if partner_partner_channel is not None:
-            partner_partner_channel_name = f'`{partner_partner_channel.name}`)'
+        if partner_settings.partner_channel_id is not None:
+            partner_partner_channel = f'<#{partner_settings.partner_channel_id}>'
+    partner_donor_tier = strings.DONOR_TIERS[user_settings.partner_donor_tier]
+    partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
+    partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
     donor_tier = (
-        f'{emojis.BP} **Partner donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.BP} **Partner donor tier**: {partner_donor_tier}\n'
         f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
         f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._'
     )
     settings_user = (
         f'{emojis.BP} **Partner**: {partner}\n'
-        f'{emojis.BP} **Partner alert channel**: {user_partner_channel_name}\n'
+        f'{emojis.BP} **Partner alert channel**: {user_partner_channel}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
     )
     settings_partner = (
-        f'{emojis.BP} **Partner alert channel**: {partner_partner_channel_name}\n'
+        f'{emojis.BP} **Partner alert channel**: {partner_partner_channel}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -803,15 +838,20 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
                                clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready settings embed"""
     async def bool_to_text(boolean: bool) -> str:
-        return f'{emojis.GREENTICK}`Visible`' if boolean else f'{emojis.REDTICK}`Hidden`'
+        return f'{emojis.ENABLED}`Visible`' if boolean else f'{emojis.DISABLED}`Hidden`'
 
     if clan_settings is None:
         clan_alert_visible = '`N/A`'
     else:
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
-    auto_ready_enabled = f'{emojis.GREENTICK}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.REDTICK}`Disabled`'
+    auto_ready_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.DISABLED}`Disabled`'
+    frequency = 'After all commands' if user_settings.ready_after_all_commands else 'After hunt only'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
+    if user_settings.ready_up_next_show_hidden_reminders:
+        up_next_hidden_reminders = f'{emojis.ENABLED}`Enabled`'
+    else:
+        up_next_hidden_reminders = f'{emojis.DISABLED}`Disabled`'
     other_field_position = 'Top' if user_settings.ready_other_on_top else 'Bottom'
     if user_settings.ready_pets_claim_after_every_pet:
         pets_claim_type = 'After every pet'
@@ -819,15 +859,70 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         pets_claim_type = 'When all pets are back'
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
+        f'{emojis.BP} **Auto-ready frequency**: `{frequency}`\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
         f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
-        f'{emojis.BP} **"Up next" reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
-        f'{emojis.BP} **"Up next" reminder style**: `{up_next_tyle}`\n'
-        f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["pets claim"]} type**: `{pets_claim_type}`\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
+    up_next_reminder = (
+        f'{emojis.BP} **Reminder**: {await bool_to_text(user_settings.ready_up_next_visible)}\n'
+        f'{emojis.BP} **Style**: `{up_next_tyle}`\n'
+        f'{emojis.DETAIL} _If timestamps are inaccurate, set your local time correctly._\n'
+        f'{emojis.BP} **Also show hidden reminders**: {up_next_hidden_reminders}\n'
+    )
+    other_commands = (
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["cd"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
+        f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
+        f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
+        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "ready")} command**: '
+        f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
+        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "slashboard")} command**: '
+        f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
+    )
+    command_event_reminders = (
+        f'{emojis.BP} _Choose "Show/hide commands" below to manage visible commands and command channels._'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
+        description = (
+            f'_General settings for the {await functions.get_navi_slash_command(bot, "ready")} list._\n'
+            f'_Note that the ready list does not list commands for reminders that are turned off._'
+        )
+    )
+    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+    embed.add_field(name='UP NEXT REMINDER', value=up_next_reminder, inline=False)
+    embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
+    embed.add_field(name='VISIBLE COMMANDS', value=command_event_reminders, inline=False)
+    return embed
+
+
+async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+                                         clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
+    """Ready reminders settings embed"""
+    async def bool_to_text(boolean: bool) -> str:
+        return f'{emojis.ENABLED}`Visible`' if boolean else f'{emojis.DISABLED}`Hidden`'
+
+    if user_settings.ready_channel_arena is not None:
+        channel_arena = f'<#{user_settings.ready_channel_arena}>'
+    else:
+        channel_arena = '`N/A`'
+    if user_settings.ready_channel_duel is not None:
+        channel_duel = f'<#{user_settings.ready_channel_duel}>'
+    else:
+        channel_duel = '`N/A`'
+    if user_settings.ready_channel_dungeon is not None:
+        channel_dungeon = f'<#{user_settings.ready_channel_dungeon}>'
+    else:
+        channel_dungeon = '`N/A`'
+    if user_settings.ready_channel_horse is not None:
+        channel_horse = f'<#{user_settings.ready_channel_horse}>'
+    else:
+        channel_horse = '`N/A`'
+
     command_reminders = (
         #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_advent.visible)}\n'
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
@@ -845,13 +940,12 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
-        f'{emojis.BP} **Party popper**: {await bool_to_text(user_settings.alert_party_popper.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
         f'{emojis.BP} **Vote**: {await bool_to_text(user_settings.alert_vote.visible)}\n'
         f'{emojis.BP} **Weekly**: {await bool_to_text(user_settings.alert_weekly.visible)}\n'
-        f'{emojis.BP} **Work**: {await bool_to_text(user_settings.alert_work.visible)}'
+        f'{emojis.BP} **Work**: {await bool_to_text(user_settings.alert_work.visible)}\n'
     )
     event_reminders = (
         f'{emojis.BP} **Big arena**: {await bool_to_text(user_settings.alert_big_arena.visible)}\n'
@@ -860,29 +954,25 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
     )
-    other_commands = (
-        f'{emojis.BP} **{strings.SLASH_COMMANDS["cd"]} command**: '
-        f'{await bool_to_text(user_settings.cmd_cd_visible)}\n'
-        f'{emojis.BP} **{strings.SLASH_COMMANDS["inventory"]} command**: '
-        f'{await bool_to_text(user_settings.cmd_inventory_visible)}\n'
-        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "ready")} command**: '
-        f'{await bool_to_text(user_settings.cmd_ready_visible)}\n'
-        f'{emojis.BP} **{await functions.get_navi_slash_command(bot, "slashboard")} command**: '
-        f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
+    command_channels = (
+        f'_Command channels are shown below the corresponding ready command._\n'
+        f'{emojis.BP} **Arena channel**: {channel_arena}\n'
+        f'{emojis.BP} **Duel channel**: {channel_duel}\n'
+        f'{emojis.BP} **Dungeon channel**: {channel_dungeon}\n'
+        f'{emojis.BP} **Horse breed channel**: {channel_horse}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
+        title = f'{ctx.author.name.upper()}\'S READY LIST REMINDER SETTINGS',
         description = (
             f'_Settings to toggle visibility of reminders in {await functions.get_navi_slash_command(bot, "ready")}._\n'
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
         )
     )
-    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
+    embed.add_field(name='COMMAND CHANNELS', value=command_channels, inline=False)
     return embed
 
 
@@ -896,6 +986,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
         #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
+        f'{emojis.BP} **Boost items**: {await functions.bool_to_text(user_settings.alert_boosts.enabled)}\n'
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **Duel**: {await functions.bool_to_text(user_settings.alert_duel.enabled)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await functions.bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}\n'
@@ -911,7 +1002,6 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
-        f'{emojis.BP} **Party popper**: {await functions.bool_to_text(user_settings.alert_party_popper.enabled)}\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
@@ -950,8 +1040,8 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
             f'_Note that disabling a reminder also deletes the reminder from my database._'
         )
     )
-    embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
-    embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
+    embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
+    embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
     embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
     return embed
@@ -960,14 +1050,89 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
 async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext,
                                 guild_settings: guilds.Guild) -> discord.Embed:
     """Server settings embed"""
-    auto_flex_channel = await functions.get_discord_channel(bot, guild_settings.auto_flex_channel_id)
-    auto_flex_channel_name = f'`{auto_flex_channel.name}`' if auto_flex_channel is not None else '`N/A`'
-    prefix = (
+    if guild_settings.auto_flex_channel_id is not None:
+        auto_flex_channel = f'<#{guild_settings.auto_flex_channel_id}>'
+    else:
+        auto_flex_channel = '`N/A`'
+    server_settings = (
         f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
+        f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
+        f'{emojis.BP} **Auto flex channel**: {auto_flex_channel}\n'
     )
-    auto_flex = (
-        f'{emojis.BP} **Alerts**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
-        f'{emojis.BP} **Channel**: {auto_flex_channel_name}\n'
+    auto_flex_alerts_1 = (
+        f'{emojis.BP} Alchemy: **Brew electronical potion**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_brew_electronical_enabled)}\n'
+        f'{emojis.BP} Drop: **EPIC berries from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
+        f'{emojis.BP} Drop: **GODLY lootbox from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_enabled)}\n'
+        f'{emojis.BP} Drop: **HYPER logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_hyperlog_enabled)}\n'
+        f'{emojis.BP} Drop: **Monster drops from `hunt`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_mob_drops_enabled)}\n'
+        f'{emojis.DETAIL} _`7`+ wolf skins, `5`+ dark energy, `6`+ everything else_\n'
+        f'{emojis.BP} Drop: **OMEGA lootbox from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_enabled)}\n'
+        f'{emojis.DETAIL} _Hardmode drops only count if it\'s `3` or more._\n'
+        f'{emojis.BP} Drop: **Party popper from any lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_party_popper_enabled)}\n'
+        f'{emojis.BP} Drop: **SUPER fish from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_superfish_enabled)}\n'
+        f'{emojis.BP} Drop: **TIME capsule from GODLY lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
+    )
+    auto_flex_alerts_2 = (
+        f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
+        f'{emojis.BP} Drop: **ULTRA log from EDGY lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_edgy_ultra_enabled)}\n'
+        f'{emojis.BP} Drop: **ULTRA log from OMEGA lootbox**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_ultra_enabled)}\n'
+        f'{emojis.BP} Drop: **ULTRA logs from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultralog_enabled)}\n'
+        f'{emojis.BP} Drop: **VOID lootbox from `hunt` or `adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_void_enabled)}\n'
+        f'{emojis.BP} Drop: **Watermelons from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_watermelon_enabled)}\n'
+        f'{emojis.BP} Event: **Get ULTRA-EDGY in enchant event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_enchant_enabled)}\n'
+        f'{emojis.BP} Event: **Get 20 levels in farm event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_farm_enabled)}\n'
+        f'{emojis.BP} Event: **Kill mysterious man in heal event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_heal_enabled)}\n'
+        f'{emojis.BP} Event: **Evolve OMEGA lootbox in lootbox event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_lb_enabled)}\n'
+        f'{emojis.BP} Event: **Successfully fly in void training event**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_training_enabled)}\n'
+    )
+    auto_flex_alerts_3 = (
+        f'{emojis.BP} Forging: **Forge GODLY cookie**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_forge_cookie_enabled)}\n'
+        f'{emojis.BP} Gambling: **Lose coin in coinflip**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_event_coinflip_enabled)}\n'
+        f'{emojis.BP} Pets: **Catch pet with EPIC skill in `training`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_epic_enabled)}\n'
+        f'{emojis.BP} Pets: **Catch pet with timetraveler skill in `training`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_tt_enabled)}\n'
+        f'{emojis.BP} Pets: **Get OMEGA lootbox from snowman pet**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pets_claim_omega_enabled)}\n'
+        f'{emojis.BP} Progress: **Ascension**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_pr_ascension_enabled)}\n'
+        f'{emojis.BP} Progress: **Time travel milestones**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_time_travel_enabled)}\n'
+        f'{emojis.DETAIL} _TT `1`, `3`, `5`, `10`, `25`, `50`, `100`, `150`, `200`, `250` and `300`_\n'
+    )
+    auto_flex_alerts_seasonal = (
+        f'{emojis.BP} Christmas: **Get stuck in `xmas chimney`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_chimney_enabled)}\n'
+        f'{emojis.BP} Christmas: **Drop EPIC snowballs**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_snowball_enabled)}\n'
+        f'{emojis.BP} Christmas: **Drop GODLY presents**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_godly_enabled)}\n'
+        f'{emojis.BP} Christmas: **Drop VOID presents**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_xmas_void_enabled)}\n'
+        f'{emojis.BP} Halloween: **Drop sleepy potion or suspicious broom in `hal boo`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_hal_boo_enabled)}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -977,8 +1142,11 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
             f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
         )
     )
-    embed.add_field(name='PREFIX', value=prefix, inline=False)
-    embed.add_field(name='AUTO FLEX', value=auto_flex, inline=False)
+    embed.add_field(name='SETTINGS', value=server_settings, inline=False)
+    embed.add_field(name='AUTO FLEXES (I)', value=auto_flex_alerts_1, inline=False)
+    embed.add_field(name='AUTO FLEXES (II)', value=auto_flex_alerts_2, inline=False)
+    embed.add_field(name='AUTO FLEXES (III)', value=auto_flex_alerts_3, inline=False)
+    embed.add_field(name='AUTO FLEXES (SEASONAL)', value=auto_flex_alerts_seasonal, inline=False)
     return embed
 
 
@@ -990,19 +1158,25 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
     ascension = 'Ascended' if user_settings.ascended else 'Not ascended'
+    user_donor_tier = strings.DONOR_TIERS[user_settings.user_donor_tier]
+    user_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[user_donor_tier]
+    user_donor_tier = f'{user_donor_tier_emoji} `{user_donor_tier}`'.lstrip('None ')
+    partner_donor_tier = strings.DONOR_TIERS[user_settings.partner_donor_tier]
+    partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
+    partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
 
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
         f'{emojis.DETAIL} _You can toggle this by using {await functions.get_navi_slash_command(bot, "on")} '
         f'and {await functions.get_navi_slash_command(bot, "off")}._\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
-        f'{emojis.BP} **Auto flex alerts**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
-        f'{emojis.DETAIL} _Auto flexing only works if it\'s enabled in the server settings._\n'
+        f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
+        f'{emojis.DETAIL} _Auto flexing only works if it\'s also enabled in the server settings._\n'
         f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
     donor_tier = (
-        f'{emojis.BP} **Your donor tier**: `{strings.DONOR_TIERS[user_settings.user_donor_tier]}`\n'
-        f'{emojis.BP} **Your partner\'s donor tier**: `{strings.DONOR_TIERS[user_settings.partner_donor_tier]}`\n'
+        f'{emojis.BP} **Your donor tier**: {user_donor_tier}\n'
+        f'{emojis.BP} **Your partner\'s donor tier**: {partner_donor_tier}\n'
         f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
         f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._\n'
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
@@ -1020,7 +1194,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'
-        f'{emojis.BP} **Last time travel**: <t:{tt_timestamp}:f> UTC\n'
+        f'{emojis.BP} **Last time travel**: <t:{tt_timestamp}:f>\n'
         f'{emojis.DETAIL} _This is used to calculate your command count since last TT._\n'
     )
     embed = discord.Embed(

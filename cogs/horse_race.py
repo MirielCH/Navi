@@ -1,6 +1,5 @@
 # horse_race.py
 
-import asyncio
 from datetime import timedelta
 import re
 
@@ -50,7 +49,6 @@ class HorseRaceCog(commands.Cog):
                 already_registered = False
             user_name = user_command_message = None
             user = await functions.get_interaction_user(message)
-            slash_command = True if user is not None else False
             if user is None:
                 if message.mentions:
                     user = message.mentions[0]
@@ -101,7 +99,7 @@ class HorseRaceCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'horse', time_left,
                                                          message.channel.id, reminder_message)
                 )
-            if user_settings.auto_ready_enabled:
+            if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                 await functions.call_ready_command(self.bot, message, user)
 
 

@@ -76,7 +76,7 @@ class HelperHealCog(commands.Cog):
             if message_content.startswith('__'):
                 partner_start = message_content.rfind(partner_name)
                 message_content_user = message_content[:partner_start]
-                health_match = re.search(r'-(.+?) hp \(:heart: (.+?)/', message_content_user.lower())
+                health_match = re.search(r'-(.+?) hp \(❤️ (.+?)/', message_content_user.lower())
             else:
                 search_patterns = [
                     fr'\*\*{re.escape(user_name)}\*\* lost (.+?) hp, remaining hp is (.+?)/', #English
@@ -120,6 +120,7 @@ class HelperHealCog(commands.Cog):
                 'horslime',
                 'bat slime',
                 'christmas slime',
+                'pink wolf',
             ]
             if (
                 any(event_mob in message_content.lower() for event_mob in event_mobs)
@@ -202,6 +203,38 @@ class HelperHealCog(commands.Cog):
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Couldn\'t find a command for the omega sword heal message.', message)
+                    return
+                user = user_command_message.author
+            try:
+                user_settings: users.User = await users.get_user(user.id)
+            except exceptions.FirstTimeUserError:
+                return
+            if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            action = await functions.get_slash_command(user_settings, 'heal')
+            warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
+            if not user_settings.dnd_mode_enabled:
+                if user_settings.ping_after_message:
+                    await message.channel.send(f'{warning} {user.mention}')
+                else:
+                    await message.channel.send(f'{user.mention} {warning}')
+            else:
+                await message.channel.send(f'**{user.name}**, {warning}')
+
+        # Heal after brewing dragon breath potion
+        search_strings = [
+            '**dragon breath potion**, you\'ve received the following boosts', #English
+            '**dragon breath potion**, you\'ve received the following boosts', #Spanish, MISSING
+            '**dragon breath potion**, you\'ve received the following boosts', #Portuguese, MISSING
+        ]
+        if any(search_string in message_content.lower() for search_string in search_strings):
+            user = await functions.get_interaction_user(message)
+            if user is None:
+                user_command_message = (
+                    await messages.find_message(message.channel.id, regex.COMMAND_ALCHEMY)
+                )
+                if user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find a command for the dragon breath potion heal message.', message)
                     return
                 user = user_command_message.author
             try:

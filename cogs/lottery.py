@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import random
 import re
 
 import discord
@@ -84,6 +85,7 @@ class LotteryCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1).strip('`')
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -139,12 +141,13 @@ class LotteryCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -156,7 +159,6 @@ class LotteryCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
-                slash_command = True if user is not None else False
                 if user is None: user = message.mentions[0]
                 try:
                     user_settings: users.User = await users.get_user(user.id)
@@ -178,12 +180,13 @@ class LotteryCog(commands.Cog):
                     time_left = today_12pm - current_time
                 else:
                     time_left = tomorrow_12am - current_time
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'lottery', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 

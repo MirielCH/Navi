@@ -18,7 +18,7 @@ _MESSAGE_CACHE = {}
 async def find_message(channel_id: int, regex: Union[str, re.Pattern] = None,
                       user: Optional[discord.User] = None, user_name: Optional[str] = None) -> discord.Message:
     """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns
-    both the message and the matched string. If user is defined, only messages from that user are returned.
+    the message. If user and/or user_name are defined, only messages from that user are returned.
 
     Arguments
     ---------
@@ -31,7 +31,7 @@ async def find_message(channel_id: int, regex: Union[str, re.Pattern] = None,
 
     Returns
     -------
-    The found message and the matched string. Returns None if no matching message was found.
+    The found message. Returns None if no matching message was found.
 
     Raises
     ------
@@ -87,4 +87,7 @@ async def delete_old_messages(timespan: timedelta) -> int:
             if message.created_at.replace(tzinfo=None) < (current_time - timespan):
                 _MESSAGE_CACHE[channel_id].remove(message)
                 message_count += 1
+    if message_count > 0:
+        for key in list(_MESSAGE_CACHE.keys()):
+            if not _MESSAGE_CACHE[key]: del _MESSAGE_CACHE[key]
     return message_count

@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import random
 import re
 
 import discord
@@ -69,12 +70,13 @@ class PetsTournamentCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 reminder_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'pet-tournament', time_left,
                                                         message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -107,7 +109,7 @@ class PetsTournamentCog(commands.Cog):
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                         if user_name_match:
@@ -140,6 +142,7 @@ class PetsTournamentCog(commands.Cog):
                     time_left = today_20pm - current_time
                 else:
                     time_left = tomorrow_8am - current_time
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_pet_tournament.message.replace('{event}', 'pet tournament')
                 reminder: reminders.Reminder = (

@@ -2,19 +2,20 @@
 """Contains global interaction views"""
 
 import random
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from discord.ext import commands
 
 from content import settings as settings_cmd
-from database import clans, cooldowns, guilds, reminders, users
+from database import clans, cooldowns, guilds, portals, reminders, users
 from resources import components, functions, settings, strings
 
 COMMANDS_SETTINGS = {
     'Guild channel': settings_cmd.command_settings_clan,
     'Helpers': settings_cmd.command_settings_helpers,
     'Partner': settings_cmd.command_settings_partner,
+    'Portals': settings_cmd.command_settings_portals,
     'Ready list': settings_cmd.command_settings_ready,
     'Reminders': settings_cmd.command_settings_reminders,
     'Reminder messages': settings_cmd.command_settings_messages,
@@ -193,7 +194,6 @@ class SettingsClanView(discord.ui.View):
         await functions.edit_interaction(self.interaction, view=None)
         self.stop()
 
-
 class SettingsHelpersView(discord.ui.View):
     """View with a all components to manage helper settings.
     Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
@@ -231,7 +231,55 @@ class SettingsHelpersView(discord.ui.View):
             #'Pumpkin bat helper': 'halloween_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
+        self.add_item(components.SetFarmHelperModeSelect(self))
         self.add_item(components.ManageHelperSettingsSelect(self))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
+class SettingsPortalsView(discord.ui.View):
+    """View with a all components to manage portal settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: user object with the settings of the user.
+    user_portals: Dict[channel_id: discord.TextChannel object]
+    embed_function: Functino that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - ctx: Context
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 user_portals: List[portals.Portal], embed_function: callable,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.embed_function = embed_function
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.user_portals = user_portals
+        self.add_item(components.ManagePortalsSelect(self))
+        self.add_item(components.ManagePortalSettingsSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -247,6 +295,60 @@ class SettingsHelpersView(discord.ui.View):
 
 class SettingsReadyView(discord.ui.View):
     """View with a all components to manage ready settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    clan_settings: Clan object with the settings of the clan.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 clan_settings: clans.Clan, embed_function: callable,
+                 interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.clan_settings = clan_settings
+        self.embed_function = embed_function
+        toggled_settings_other = {
+            '/cd': 'cmd_cd_visible',
+            '/inventory': 'cmd_inventory_visible',
+            '/ready': 'cmd_ready_visible',
+            '/slashboard': 'cmd_slashboard_visible',
+        }
+        self.add_item(components.ManageReadySettingsSelect(self))
+        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_other, 'Toggle other commands',
+                                                           'toggle_other_commands'))
+        self.add_item(components.SwitchToReadyRemindersSelect(self))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+
+
+class SettingsReadyRemindersView(discord.ui.View):
+    """View with a all components to manage ready setting reminders.
     Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
 
     Arguments
@@ -292,7 +394,6 @@ class SettingsReadyView(discord.ui.View):
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
             'Quest': 'alert_quest',
-            'Party popper': 'alert_party_popper',
             'Pets claim': 'alert_pets',
             'Training': 'alert_training',
             'Vote': 'alert_vote',
@@ -307,20 +408,22 @@ class SettingsReadyView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
-        toggled_settings_other = {
-            '/cd': 'cmd_cd_visible',
-            '/inventory': 'cmd_inventory_visible',
-            '/ready': 'cmd_ready_visible',
-            '/slashboard': 'cmd_slashboard_visible',
-        }
-        self.add_item(components.ManageReadySettingsSelect(self))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
-        self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_other, 'Toggle other commands',
-                                                          'toggle_other_commands'))
-        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+        self.add_item(components.ManageReadyReminderChannelsSelect(self))
+
+    @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=4)
+    async def confirm_callback(
+        self, button: discord.ui.Button, interaction: discord.Interaction
+    ):
+        view = SettingsReadyView(self.ctx, self.bot, self.user_settings, self.clan_settings,
+                                 settings_cmd.embed_settings_ready)
+        embed = await settings_cmd.embed_settings_ready(self.bot, self.ctx, self.user_settings, self.clan_settings)
+        await interaction.response.edit_message(embed=embed, view=view)
+        view.interaction = interaction
+        self.stop()
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
@@ -366,6 +469,7 @@ class SettingsRemindersView(discord.ui.View):
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
+            'Boost items': 'alert_boosts',
             #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
@@ -377,7 +481,6 @@ class SettingsRemindersView(discord.ui.View):
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
             'Partner alert': 'alert_partner',
-            'Party popper': 'alert_party_popper',
             'Pets': 'alert_pets',
             'Quest': 'alert_quest',
             'Training': 'alert_training',
@@ -393,7 +496,7 @@ class SettingsRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
-        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
+        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
@@ -716,7 +819,60 @@ class SettingsServerView(discord.ui.View):
         self.interaction = interaction
         self.user = ctx.author
         self.guild_settings = guild_settings
+        toggled_auto_flex_alerts_1 = {
+            'Brew electronical potion': 'auto_flex_brew_electronical_enabled',
+            'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
+            'GODLY lootbox from hunt or adventure': 'auto_flex_lb_godly_enabled',
+            'HYPER logs in work commands': 'auto_flex_work_hyperlog_enabled',
+            'Monster drops from hunt': 'auto_flex_mob_drops_enabled',
+            'OMEGA lootbox from hunt or adventure': 'auto_flex_lb_omega_enabled',
+            'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
+            'SUPER fish from work commands': 'auto_flex_work_superfish_enabled',
+            'TIME capsule from GODLY lootbox': 'auto_flex_lb_godly_tt_enabled',
+        }
+        toggled_auto_flex_alerts_2 = {
+            'ULTIMATE logs from work commands': 'auto_flex_work_ultimatelog_enabled',
+            'ULTRA log from EDGY lootbox': 'auto_flex_lb_edgy_ultra_enabled',
+            'ULTRA log from OMEGA lootbox': 'auto_flex_lb_omega_ultra_enabled',
+            'ULTRA logs from work commands': 'auto_flex_work_ultralog_enabled',
+            'VOID lootbox from hunt or adventure': 'auto_flex_lb_void_enabled',
+            'Watermelons from work commands': 'auto_flex_work_watermelon_enabled',
+            'Get ULTRA-EDGY in enchant event': 'auto_flex_event_enchant_enabled',
+            'Get 20 levels in farm event': 'auto_flex_event_farm_enabled',
+            'Kill mysterious man in heal event': 'auto_flex_event_heal_enabled',
+            'Evolve OMEGA lootbox in lootbox event': 'auto_flex_event_lb_enabled',
+            'Successfully fly in void training event': 'auto_flex_event_training_enabled',
+        }
+        toggled_auto_flex_alerts_3 = {
+            'Forge GODLY cookie': 'auto_flex_forge_cookie_enabled',
+            'Lose coin in coinflip': 'auto_flex_event_coinflip_enabled',
+            'Catch pet with EPIC skill in training': 'auto_flex_pets_catch_epic_enabled',
+            'Catch pet with timetraveler skill in training': 'auto_flex_pets_catch_tt_enabled',
+            'Get OMEGA lootbox from snowman pet': 'auto_flex_pets_claim_omega_enabled',
+            'Ascension': 'auto_flex_pr_ascension_enabled',
+            'Time travel milestones': 'auto_flex_time_travel_enabled',
+        }
+        toggled_auto_flex_alerts_seasonal = {
+            'Get stuck in xmas chimney': 'auto_flex_xmas_chimney_enabled',
+            'Drop EPIC snowballs': 'auto_flex_xmas_snowball_enabled',
+            'Drop GODLY presents': 'auto_flex_xmas_godly_enabled',
+            'Drop VOID presents': 'auto_flex_xmas_void_enabled',
+            'Drop sleepy potion or suspicious broom in hal boo': 'auto_flex_hal_boo_enabled',
+        }
+
         self.add_item(components.ManageServerSettingsSelect(self))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_1,
+                                                            'Toggle auto flex alerts (I)',
+                                                            'toggle_auto_flex_alerts_1'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_2,
+                                                            'Toggle auto flex alerts (II)',
+                                                            'toggle_auto_flex_alerts_2'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_3,
+                                                            'Toggle auto flex alerts (III)',
+                                                            'toggle_auto_flex_alerts_3'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_seasonal,
+                                                            'Toggle auto flex alerts (seasonal)',
+                                                            'toggle_auto_flex_alerts_seasonal'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

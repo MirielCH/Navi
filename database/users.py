@@ -18,6 +18,16 @@ class UserAlert(NamedTuple):
     multiplier: float
     visible: bool
 
+class UserInventory(NamedTuple):
+    """Object that summarizes all tracked inventory items for a user"""
+    bread: int
+    carrot: int
+    potato: int
+    ruby: int
+    seed_bread: int
+    seed_carrot: int
+    seed_potato: int
+
 @dataclass()
 class User():
     """Object that represents a record from table "user"."""
@@ -26,6 +36,7 @@ class User():
     alert_arena: UserAlert
     alert_big_arena: UserAlert
     alert_boo: UserAlert
+    alert_boosts: UserAlert
     alert_chimney: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
@@ -40,7 +51,6 @@ class User():
     alert_lottery: UserAlert
     alert_not_so_mini_boss: UserAlert
     alert_partner: UserAlert
-    alert_party_popper: UserAlert
     alert_pet_tournament: UserAlert
     alert_pets: UserAlert
     alert_quest: UserAlert
@@ -62,10 +72,12 @@ class User():
     context_helper_enabled: bool
     current_area: int
     dnd_mode_enabled: bool
+    farm_helper_mode: int
     halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
     hunt_rotation_enabled: bool
+    inventory: UserInventory
     last_adventure_mode: str
     last_farm_seed: str
     last_hunt_mode: str
@@ -83,16 +95,24 @@ class User():
     pet_helper_icon_mode: bool
     pet_tip_read: bool
     ping_after_message: bool
+    portals_as_embed: bool
+    portals_spacing_enabled: bool
     guild_quest_prompt_active: bool
+    potion_dragon_breath_active: bool
     reactions_enabled: bool
+    ready_after_all_commands: bool
     ready_as_embed: bool
+    ready_channel_arena: int
+    ready_channel_duel: int
+    ready_channel_dungeon: int
+    ready_channel_horse: int
     ready_embed_color: str
     ready_pets_claim_active: bool
     ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
     ready_up_next_as_timestamp: bool
+    ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
-    rubies: int
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -110,6 +130,7 @@ class User():
         self.alert_adventure = new_settings.alert_adventure
         self.alert_arena = new_settings.alert_arena
         self.alert_boo = new_settings.alert_boo
+        self.alert_boosts = new_settings.alert_boosts
         self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
         self.alert_daily = new_settings.alert_daily
@@ -125,7 +146,6 @@ class User():
         self.alert_lottery = new_settings.alert_lottery
         self.alert_not_so_mini_boss = new_settings.alert_not_so_mini_boss
         self.alert_partner = new_settings.alert_partner
-        self.alert_party_popper = new_settings.alert_party_popper
         self.alert_pet_tournament = new_settings.alert_pet_tournament
         self.alert_pets = new_settings.alert_pets
         self.alert_quest = new_settings.alert_quest
@@ -147,10 +167,12 @@ class User():
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
+        self.farm_helper_mode = new_settings.farm_helper_mode
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
         self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
+        self.inventory = new_settings.inventory
         self.last_adventure_mode = new_settings.last_adventure_mode
         self.last_farm_seed = new_settings.last_farm_seed
         self.last_hunt_mode = new_settings.last_hunt_mode
@@ -168,16 +190,24 @@ class User():
         self.pet_helper_icon_mode = new_settings.pet_helper_icon_mode
         self.pet_tip_read = new_settings.pet_tip_read
         self.ping_after_message = new_settings.ping_after_message
+        self.portals_as_embed = new_settings.portals_as_embed
+        self.portals_spacing_enabled = new_settings.portals_spacing_enabled
+        self.potion_dragon_breath_active = new_settings.potion_dragon_breath_active
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
+        self.ready_after_all_commands = new_settings.ready_after_all_commands
         self.ready_as_embed = new_settings.ready_as_embed
+        self.ready_channel_arena = new_settings.ready_channel_arena
+        self.ready_channel_duel = new_settings.ready_channel_duel
+        self.ready_channel_dungeon = new_settings.ready_channel_dungeon
+        self.ready_channel_horse = new_settings.ready_channel_horse
         self.ready_embed_color = new_settings.ready_embed_color
         self.ready_pets_claim_active = new_settings.ready_pets_claim_active
         self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
+        self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
-        self.rubies = new_settings.rubies
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -210,6 +240,9 @@ class User():
             alert_boo_enabled: bool
             alert_boo_message: str
             alert_boo_visible: bool
+            alert_boosts_enabled: bool
+            alert_boosts_message: str
+            alert_boosts_visible: bool
             alert_chimney_enabled: bool
             alert_chimney_message: str
             alert_chimney_multiplier: float
@@ -258,9 +291,6 @@ class User():
             alert_not_so_mini_boss_visible: bool
             alert_partner_enabled: bool
             alert_partner_message: str
-            alert_party_popper_enabled: bool
-            alert_party_popper_message: str
-            alert_party_popper_visible: bool
             alert_pet_tournament_enabled: bool
             alert_pet_tournament_message: str
             alert_pet_tournament_visible: bool
@@ -300,11 +330,19 @@ class User():
             context_helper_enabled: bool
             current_area: int
             dnd_mode_enabled: bool
+            farm_helper_mode: int
             guild_quest_prompt_active: bool
             halloween_helper_enabled: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
             hunt_rotation_enabled: bool
+            inventory_bread: int
+            inventory_carrot: int
+            inventory_potato: int
+            inventory_ruby: int
+            inventory_seed_bread: int
+            inventory_seed_carrot: int
+            inventory_seed_potato: int
             last_adventure_mode: str
             last_farm_seed: str
             last_hunt_mode: str
@@ -322,15 +360,23 @@ class User():
             pet_helper_icon_mode: bool
             pet_tip_read: bool
             ping_after_message: bool
+            portals_as_embed: bool
+            portals_spacing_enabled: bool
+            potion_dragon_breath_active: bool
             reactions_enabled: bool
+            ready_after_all_commands: bool
             ready_as_embed: bool
+            ready_channel_arena: int
+            ready_channel_duel: int
+            ready_channel_dungeon: int
+            ready_channel_horse: int
             ready_embed_color: str
             ready_pets_claim_active: bool
             ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
             ready_up_next_as_timestamp: bool
+            ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
-            rubies: int
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -380,6 +426,10 @@ async def _dict_to_user(record: dict) -> User:
                                     message=record['alert_boo_message'],
                                     multiplier=1.0,
                                     visible=bool(record['alert_boo_visible'])),
+            alert_boosts = UserAlert(enabled=bool(record['alert_boosts_enabled']),
+                                     message=record['alert_boosts_message'],
+                                     multiplier=1.0,
+                                     visible=bool(record['alert_boosts_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
                                       multiplier=float(record['alert_chimney_multiplier']),
@@ -440,10 +490,6 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_partner_message'],
                                       multiplier=1.0,
                                       visible=True),
-            alert_party_popper = UserAlert(enabled=bool(record['alert_party_popper_enabled']),
-                                           message=record['alert_party_popper_message'],
-                                           multiplier=1.0,
-                                           visible=bool(record['alert_party_popper_visible'])),
             alert_pet_tournament = UserAlert(enabled=bool(record['alert_pet_tournament_enabled']),
                                              message=record['alert_pet_tournament_message'],
                                              multiplier=1.0,
@@ -486,11 +532,17 @@ async def _dict_to_user(record: dict) -> User:
             context_helper_enabled = bool(record['context_helper_enabled']),
             current_area = -1 if record['current_area'] is None else record['current_area'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
+            farm_helper_mode = record['farm_helper_mode'],
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
             hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
+            inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
+                                      potato=(record['inventory_potato']),
+                                      ruby=(record['inventory_ruby']), seed_bread=(record['inventory_seed_bread']),
+                                      seed_carrot=(record['inventory_seed_carrot']),
+                                      seed_potato=(record['inventory_seed_potato'])),
             last_adventure_mode = '' if record['last_adventure_mode'] is None else record['last_adventure_mode'],
             last_farm_seed = '' if record['last_farm_seed'] is None else record['last_farm_seed'],
             last_hunt_mode = '' if record['last_hunt_mode'] is None else record['last_hunt_mode'],
@@ -508,15 +560,23 @@ async def _dict_to_user(record: dict) -> User:
             pet_helper_icon_mode = bool(record['pet_helper_icon_mode']),
             pet_tip_read = bool(record['pet_tip_read']),
             ping_after_message = bool(record['ping_after_message']),
+            portals_as_embed = bool(record['portals_as_embed']),
+            portals_spacing_enabled = bool(record['portals_spacing_enabled']),
+            potion_dragon_breath_active = bool(record['potion_dragon_breath_active']),
             reactions_enabled = bool(record['reactions_enabled']),
+            ready_after_all_commands = bool(record['ready_after_all_commands']),
             ready_as_embed = bool(record['ready_as_embed']),
+            ready_channel_arena = record['ready_channel_arena'],
+            ready_channel_duel = record['ready_channel_duel'],
+            ready_channel_dungeon = record['ready_channel_dungeon'],
+            ready_channel_horse = record['ready_channel_horse'],
             ready_embed_color = record['ready_embed_color'],
             ready_other_on_top = bool(record['ready_other_on_top']),
             ready_pets_claim_active = bool(record['ready_pets_claim_active']),
             ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
+            ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
-            rubies = record['rubies'],
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -695,6 +755,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boo_enabled: bool
         alert_boo_message: str
         alert_boo_visible: bool
+        alert_boosts_enabled: bool
+        alert_boosts_message: str
+        alert_boosts_visible: bool
         alert_chimney_enabled: bool
         alert_chimney_message: str
         alert_chimney_multiplier: float
@@ -743,9 +806,6 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_not_so_mini_boss_visible: bool
         alert_partner_enabled: bool
         alert_partner_message: str
-        alert_party_popper_enabled: bool
-        alert_party_popper_message: str
-        alert_party_popper_visible: bool
         alert_pet_tournament_enabled: bool
         alert_pet_tournament_message: str
         alert_pet_tournament_visible: bool
@@ -785,11 +845,19 @@ async def _update_user(user: User, **kwargs) -> None:
         context_helper_enabled: bool
         current_area: int
         dnd_mode_enabled: bool
+        farm_helper_mode: int
         guild_quest_prompt_active: bool
         halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
         hunt_rotation_enabled: bool
+        inventory_bread: int
+        inventory_carrot: int
+        inventory_potato: int
+        inventory_ruby: int
+        inventory_seed_bread: int
+        inventory_seed_carrot: int
+        inventory_seed_potato: int
         last_adventure_mode: str
         last_farm_seed: str
         last_hunt_mode: str
@@ -807,15 +875,23 @@ async def _update_user(user: User, **kwargs) -> None:
         pet_helper_icon_mode: bool
         pet_tip_read: bool
         ping_after_message: bool
+        portals_as_embed: bool
+        portals_spacing_enabled: bool
+        potion_dragon_breath_active: bool
         reactions_enabled: bool
+        ready_after_all_commands: bool
         ready_as_embed: bool
+        ready_channel_arena: int
+        ready_channel_duel: int
+        ready_channel_dungeon: int
+        ready_channel_horse: int
         ready_embed_color: str
         ready_pets_claim_active: bool
         ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool
         ready_up_next_as_timestamp: bool
+        ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
-        rubies: int
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

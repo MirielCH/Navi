@@ -54,7 +54,7 @@ class WorkCog(commands.Cog):
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
-                        user = await message.guild.fetch_member(user_id)
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
@@ -243,7 +243,7 @@ class WorkCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled:
+                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.reactions_enabled:
@@ -340,7 +340,7 @@ class WorkCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
+                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -376,7 +376,7 @@ class WorkCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'work', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
+                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 

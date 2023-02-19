@@ -53,10 +53,7 @@ class DungeonMinibossCog(commands.Cog):
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_DUNGEON_MINIBOSS_MININTBOSS)
                     )
-                    if user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Interaction user not found for dungeon cooldown message.', message)
-                        return
+                    if user_command_message is None: return
                     interaction_user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(interaction_user.id)
@@ -65,7 +62,7 @@ class DungeonMinibossCog(commands.Cog):
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))
-                    embed_users.append(await message.guild.fetch_member(user_id))
+                    embed_users.append(message.guild.get_member(user_id))
                 else:
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:

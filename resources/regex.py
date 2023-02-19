@@ -22,6 +22,7 @@ NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")
 
 # --- User command detection ---
 COMMAND_ADVENTURE = re.compile(rf"(?:\badv\b|\badventure\b)")
+COMMAND_ALCHEMY = re.compile(rf"\balchemy\b")
 COMMAND_AREA_MOVE = re.compile(rf"(?:\barea\b|\bmove\b)\s+\b\d\d?\b")
 COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
     rf"(?:(?:\barea\b|\bmove\b)\s+\b\d\d?\b|(?:\bxmas\b\s+|\bchristmas\b\s+)(?:\buse\b|\beat\b)\s+\bcandy\b\s+\bcane\b)"
@@ -29,6 +30,7 @@ COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
 COMMAND_ARENA = re.compile(rf"\barena\b")
 COMMAND_BOOSTS = re.compile(rf"\bboosts?\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
+COMMAND_CLAN_BUY_SPECIAL_SEED = re.compile(rf"\bguild\b\s+\bbuy\b\s+\bspecial\b\s+\bseed\b")
 COMMAND_CLAN_RAID = re.compile(rf"\bguild\b\s+\braid\b")
 COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"\bguild\b\s+(?:\braid\b|\bupgrade\b)")
 COMMAND_CLAN_UPGRADE = re.compile(rf"guild\b\s+upgrade\b")
@@ -58,6 +60,7 @@ COMMAND_HUNT_ADVENTURE = re.compile(rf"(?:\bhunt\b|\badv\b|\badventure\b)")
 COMMAND_INVENTORY = re.compile(rf"(?:\bi\b|\binv\b|\binventory\b)")
 COMMAND_LOOTBOX = re.compile(rf"\bbuy\s+[a-z]+\s+(?:\blb\b|\blootbox\b)")
 COMMAND_LOTTERY = re.compile(rf'(?:\blottery\b|\bbuy\b\s+\blottery\b\s+\bticket\b)')
+COMMAND_LOVE_BUY_VALENTINE_BOOST = re.compile(rf'\blove\b\s+\bbuy\b\s+\bvalentine\b\s+\bboost\b')
 COMMAND_NSMB_BIGARENA = re.compile(rf"(?:\bbig\b\s+\barena\b|\bminintboss\b)")
 COMMAND_OMEGA_HORSE_TOKEN = re.compile(rf"\buse\b\s+\bomega\b\s+\bhorse\b\s+\btoken\b")
 COMMAND_OPEN = re.compile(rf"\bopen\b")

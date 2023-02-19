@@ -19,7 +19,8 @@ class MainCog(commands.Cog):
 
     # Commands
     @slash_command(description='Main help command')
-    async def help(self,ctx: discord.ApplicationContext) -> None:
+    @commands.guild_only()
+    async def help(self, ctx: discord.ApplicationContext) -> None:
         """Main help command"""
         await main.command_help(self.bot, ctx)
 

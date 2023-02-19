@@ -69,6 +69,9 @@ It's not possible to reload the following files:
 
 To reload files in subfolders, use `folder.file` (e.g. `resources.settings`). Cogs don't need that, the filename is enough (e.g. `adventure`).  
 
+### `/dev server-list`  
+Lists all servers Navi is in by name.  
+
 ### `/dev shutdown`  
 Shuts down the bot. Note that if the bot is registered as a systemctl or systemd service, it will of course automatically restart.  
 
