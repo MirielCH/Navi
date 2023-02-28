@@ -566,8 +566,8 @@ class HuntCog(commands.Cog):
 
             # Hunt event slash (all languages)
             if  ((':zombie' in message_content.lower() and '#2' in message_content.lower())
-                    or ':crossed_swords:' in message_content.lower()
-                    or ':sweat_drops:' in message_content.lower()):
+                    or ':crossed_swords:' in message_content.lower() or '⚔️' in message_content.lower()
+                    or ':sweat_drops:' in message_content.lower() or '💦' in message_content.lower()):
                 user_name = user_command = None
                 interaction = await functions.get_interaction(message)
                 if interaction is not None:

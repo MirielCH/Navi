@@ -260,8 +260,8 @@ class FarmCog(commands.Cog):
 
             # Farm event slash (all languages)
             if  (('<:seed' in message_content.lower() and '!!' in message_content.lower())
-                 or ':crossed_swords:' in message_content.lower()
-                 or ':sweat_drops:' in message_content.lower()):
+                 or ':crossed_swords:' in message_content.lower() or '⚔️' in message_content.lower()
+                 or ':sweat_drops:' in message_content.lower() or '💦' in message_content.lower()):
                 user_name = user_command = None
                 interaction = await functions.get_interaction(message)
                 if interaction is not None:

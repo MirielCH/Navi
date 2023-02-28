@@ -336,7 +336,7 @@ class ClanCog(commands.Cog):
                 '** RAIDOU **', #Portuguese
             ]
             if (any(search_string in message_description for search_string in search_strings)
-                and ':crossed_swords:' in message_description.lower()):
+                and (('⚔️' in message_description.lower()) or ':crossed_swords:' in message_description.lower())):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False

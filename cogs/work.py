@@ -127,6 +127,7 @@ class WorkCog(commands.Cog):
                 'puntos extras de vida', #Spanish, overheal
                 'pontos de vida extras', #Portuguese, overheal
                 ':crossed_swords:', #Ruby dragon event, all languages
+                '⚔️', #Ruby dragon event, all languages
                 'guildring', #Stuff bought from guild shop, all languages
                 'zombie', #Zombie horde hunt event, all languages
                 'well done', #English, training
@@ -348,8 +349,11 @@ class WorkCog(commands.Cog):
             search_strings = [
                 ':x:',
                 ':crossed_swords:',
+                '⚔️',
                 ':zzz:',
+                '💤',
                 ':sweat_drops:',
+                '💦',
             ]
             if  any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command = None
