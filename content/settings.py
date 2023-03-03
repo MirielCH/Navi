@@ -1,6 +1,7 @@
 # settings_clan.py
 """Contains clan settings commands"""
 
+from datetime import timezone
 import re
 from typing import List, Optional, Union
 
@@ -1154,7 +1155,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
                               user_settings: users.User) -> discord.Embed:
     """User settings embed"""
     try:
-        tt_timestamp = int(user_settings.last_tt.timestamp())
+        tt_timestamp = int(user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
     ascension = 'Ascended' if user_settings.ascended else 'Not ascended'

@@ -1,15 +1,14 @@
 # tracking.py
 """Contains commands related to command tracking"""
 
-from datetime import datetime, timedelta
-import re
+from datetime import datetime, timedelta, timezone
 from typing import Optional, Union
 
 import discord
 from discord.ext import commands
 
-from database import errors, users, tracking
-from resources import emojis, functions, exceptions, regex, settings, strings, views
+from database import users, tracking
+from resources import emojis, functions, exceptions, settings, strings, views
 
 
 # --- Commands ---
@@ -96,7 +95,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User) -> dis
         last_tt = await command_count(command, current_time-user_settings.last_tt)
         field_last_tt = f'{field_last_tt}\n{last_tt}'
     try:
-        timestamp = user_settings.last_tt.timestamp()
+        timestamp = user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp()
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         timestamp = 0
     field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(timestamp)}:f>.'
