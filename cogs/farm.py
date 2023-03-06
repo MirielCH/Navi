@@ -111,13 +111,7 @@ class FarmCog(commands.Cog):
                'en el suelo...', #Spanish
                'no solo...', #Portuguese
             ]
-            search_strings_excluded = [
-                'no crop has grown', #English
-                'no crop has grown', #Spanish, MISSING
-                'no crop has grown', #Portuguese, MISSING
-            ]
-            if (any(search_string in message_content.lower() for search_string in search_strings)
-                and all(search_string not in message_content.lower() for search_string in search_strings_excluded)):
+            if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = last_farm_seed = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
@@ -152,35 +146,41 @@ class FarmCog(commands.Cog):
                     seed_used_count = getattr(user_settings.inventory, f'seed_{seed_used_type}') - 1
                     if seed_used_count < 0: seed_used_count = 0
                     kwargs[f'inventory_seed_{seed_used_type}'] = seed_used_count
-                crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
-                if crop_match is None:
-                    search_patterns = [
-                        r'give you ([0-9,]+) <.+> (.+?), ', #English, TOP
-                        r'give you ([0-9,]+) <.+> (.+?), ', #Spanish, TOP, MISSING
-                        r'give you ([0-9,]+) <.+> (.+?), ', #Portuguese, TOP, MISSING
-                    ]
-                    crop_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                crop_type = crop_match.group(2)
-                crop_count = getattr(user_settings.inventory, crop_type)
-                crop_count += int(crop_match.group(1).replace(',',''))
-                kwargs[f'inventory_{crop_type}'] = crop_count
-                search_patterns = [
-                    r'also got (\d+?) \*\*(?:.+?) (.+?) ', #English
-                    r'también consiguió (\d+?) \*\*(?:.+?) (.+?) ', #Spanish
-                    r'também conseguiu(\d+?) \*\*(?:.+?) (.+?) ', #Portuguese
+                search_strings_excluded = [
+                    'no crop has grown', #English
+                    'no crop has grown', #Spanish, MISSING
+                    'no crop has grown', #Portuguese, MISSING
                 ]
-                seed_returned_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                if seed_returned_match:
-                    seed_returned_count = int(seed_returned_match.group(1))
-                    seed_returned_type = seed_returned_match.group(2)
-                    if f'inventory_seed_{seed_returned_type}' in kwargs:
-                        kwargs[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
-                    else:
-                        seed_returned_count = (
-                            getattr(user_settings.inventory, f'seed_{seed_returned_type}') + seed_returned_count
-                        )
-                        kwargs[f'inventory_seed_{seed_returned_type}'] = seed_returned_count
-                await user_settings.update(**kwargs)
+                if all(search_string not in message_content.lower() for search_string in search_strings_excluded):
+                    crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
+                    if crop_match is None:
+                        search_patterns = [
+                            r'give you ([0-9,]+) <.+> (.+?), ', #English, TOP
+                            r'give you ([0-9,]+) <.+> (.+?), ', #Spanish, TOP, MISSING
+                            r'give you ([0-9,]+) <.+> (.+?), ', #Portuguese, TOP, MISSING
+                        ]
+                        crop_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    crop_type = crop_match.group(2)
+                    crop_count = getattr(user_settings.inventory, crop_type)
+                    crop_count += int(crop_match.group(1).replace(',',''))
+                    kwargs[f'inventory_{crop_type}'] = crop_count
+                    search_patterns = [
+                        r'also got (\d+?) \*\*(?:.+?) (.+?) ', #English
+                        r'también consiguió (\d+?) \*\*(?:.+?) (.+?) ', #Spanish
+                        r'também conseguiu(\d+?) \*\*(?:.+?) (.+?) ', #Portuguese
+                    ]
+                    seed_returned_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                    if seed_returned_match:
+                        seed_returned_count = int(seed_returned_match.group(1))
+                        seed_returned_type = seed_returned_match.group(2)
+                        if f'inventory_seed_{seed_returned_type}' in kwargs:
+                            kwargs[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
+                        else:
+                            seed_returned_count = (
+                                getattr(user_settings.inventory, f'seed_{seed_returned_type}') + seed_returned_count
+                            )
+                            kwargs[f'inventory_seed_{seed_returned_type}'] = seed_returned_count
+                if kwargs: await user_settings.update(**kwargs)
                 if not user_settings.alert_farm.enabled: return
                 search_strings = [
                     '{} in the ground', #English
