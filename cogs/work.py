@@ -303,7 +303,7 @@ class WorkCog(commands.Cog):
                 slash_command = True if interaction is not None else False
                 if interaction is None:
                     user_name = user_command = user_command_message = None
-                    user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
@@ -312,7 +312,7 @@ class WorkCog(commands.Cog):
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await('User not found for work event non-slash message.', message)
+                        await errors.log_error('User not found for work event non-slash message.', message)
                         return
                     user = user_command_message.author
                     try:

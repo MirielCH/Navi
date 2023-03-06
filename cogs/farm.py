@@ -111,7 +111,13 @@ class FarmCog(commands.Cog):
                'en el suelo...', #Spanish
                'no solo...', #Portuguese
             ]
-            if any(search_string in message_content.lower() for search_string in search_strings):
+            search_strings_excluded = [
+                'no crop has grown', #English
+                'no crop has grown', #Spanish, MISSING
+                'no crop has grown', #Portuguese, MISSING
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings)
+                and all(search_string not in message_content.lower() for search_string in search_strings_excluded)):
                 user_name = last_farm_seed = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
