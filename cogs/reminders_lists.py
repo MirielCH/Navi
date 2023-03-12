@@ -1,5 +1,5 @@
-# settings_clan.py
-"""Contains clan settings commands"""
+# reminders_lists.py
+"""Contains reminders lists commands"""
 
 import discord
 from discord.commands import slash_command, Option
@@ -10,7 +10,7 @@ from resources import functions
 
 
 class RemindersListsCog(commands.Cog):
-    """Cog with user settings commands"""
+    """Cog with reminders lists commands"""
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 

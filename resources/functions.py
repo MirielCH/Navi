@@ -966,7 +966,7 @@ async def call_ready_command(bot: commands.Bot, message: discord.Message, user: 
     if command is not None: await command.callback(command.cog, message, user=user)
 
 
-async def get_slash_command(user_settings: users.User, command_name: str, include_prefix: Optional[bool] = True) -> None:
+async def get_slash_command(user_settings: users.User, command_name: str, include_prefix: Optional[bool] = True) -> str:
     """Gets a slash command string or mention depending on user setting"""
     if user_settings.slash_mentions_enabled:
         return strings.SLASH_COMMANDS.get(command_name, None)
@@ -976,7 +976,7 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
         return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
 
 
-async def get_navi_slash_command(bot: discord.Bot, command_name: str) -> None:
+async def get_navi_slash_command(bot: discord.Bot, command_name: str) -> str:
     """Gets a slash command from Navi. If found, returns the slash mention. If not found, just returns /command.
     Note that slash mentions only work with GLOBAL commands."""
     main_command, *sub_commands = command_name.lower().split(' ')
@@ -986,7 +986,7 @@ async def get_navi_slash_command(bot: discord.Bot, command_name: str) -> None:
     return f'`/{command_name}`'
 
 
-async def get_area(mob_name: str) -> None:
+async def get_area(mob_name: str) -> int:
     """Gets the area from a mob name"""
     for area, monsters in strings.MONSTERS_AREA.items():
         monsters = [monster.lower() for monster in monsters]

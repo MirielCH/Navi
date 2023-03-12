@@ -1,5 +1,5 @@
-# settings_user.py
-"""Contains user settings commands"""
+# reminders_lists.py
+"""Contains reminder list commands"""
 
 from datetime import datetime, timedelta
 from typing import List, Optional, Union

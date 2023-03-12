@@ -446,6 +446,8 @@ class HuntCog(commands.Cog):
                                 channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
                                 await channel.send(lb_message)
                                 if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
+                            except discord.errors.Forbidden:
+                                return
                             except Exception as error:
                                 await errors.log_error(
                                     f'Had the following error while trying to send the partner alert:\n{error}',

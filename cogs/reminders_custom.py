@@ -16,7 +16,7 @@ class RemindersCustomCog(commands.Cog):
 
     # Slash commands
     @slash_command(name='custom-reminder')
-    async def help(
+    async def custom_reminder(
         self,
         ctx: discord.ApplicationContext,
         timestring: Option(str, 'Timestring (e.g. 1h20m10s'),

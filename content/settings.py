@@ -1,5 +1,5 @@
-# settings_clan.py
-"""Contains clan settings commands"""
+# settings.py
+"""Contains settings commands"""
 
 from datetime import timezone
 import re
@@ -8,7 +8,6 @@ from typing import List, Optional, Union
 import discord
 from discord.ext import commands
 
-from content import settings as settings_cmd
 from database import clans, guilds, portals, reminders, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
@@ -179,7 +178,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         await view.wait()
         if view.value == 'pressed':
             await functions.edit_interaction(interaction, view=None)
-            await settings_cmd.command_settings_user(bot, ctx)
+            await command_settings_user(bot, ctx)
 
 
 async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
@@ -403,7 +402,7 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
                 await view.wait()
                 if view.value == 'pressed':
                     await functions.edit_interaction(interaction, view=None)
-                    await settings_cmd.command_settings_partner(bot, ctx)
+                    await command_settings_partner(bot, ctx)
                 await functions.edit_interaction(interaction, view=None)
                 return
             else:
@@ -717,6 +716,7 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
     embed.add_field(name='HELPERS', value=helpers, inline=False)
     embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     return embed
+
 
 async def embed_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  user_portals: List[portals.Portal]) -> discord.Embed:

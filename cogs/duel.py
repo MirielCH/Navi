@@ -116,8 +116,6 @@ class DuelCog(commands.Cog):
                     interaction_user_name = interaction_user_name_match.group(1)
                     interaction_users = await functions.get_guild_member_by_name(message.guild, interaction_user_name)
                     if len(interaction_users) > 1:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error(f'Interaction user {interaction_user_name} is not unique.', message)
                         return
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_DUEL,
@@ -155,18 +153,7 @@ class DuelCog(commands.Cog):
                         duel_user_name = duel_user_name_match.group(1)
                         duel_users = await functions.get_guild_member_by_name(message.guild, duel_user_name)
                         if len(duel_users) > 1:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error(f'Duelled user {duel_user_name} is not unique.', message)
                             return
-                            """
-                            await message.reply(
-                                f'Couldn\'t add a reminder for **{user_name}** because I found more than one '
-                                f'user with that name using Navi.\n\n'
-                                f'To resolve this, there are two options:\n'
-                                f'{emojis.BP} **{user_name}** can change their username\n'
-                                f'{emojis.BP} Don\'t use slash command when duelling **{user_name}**'
-                            )
-                            """
                     if not duel_user_name_match:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Duelled user not found in duel message.', message)

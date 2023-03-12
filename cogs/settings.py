@@ -1,5 +1,5 @@
-# settings_clan.py
-"""Contains clan settings commands"""
+# settings.py
+"""Contains settings commands"""
 
 import discord
 from discord.commands import SlashCommandGroup, slash_command, Option
