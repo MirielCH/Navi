@@ -22,6 +22,7 @@ COMMANDS_SETTINGS = {
     'User': settings_cmd.command_settings_user,
 }
 
+
 class AutoReadyView(discord.ui.View):
     """View with button to toggle the auto_ready feature.
 

@@ -6,12 +6,12 @@ from humanfriendly import format_timespan
 import psutil
 import random
 import sys
-from typing import Union
+from typing import List, Union
 
 import discord
 from discord.ext import commands
 
-from database import guilds, users
+from database import cooldowns, guilds, users
 from database import settings as settings_db
 from resources import emojis, functions, settings, strings
 
@@ -27,6 +27,13 @@ class LinksView(discord.ui.View):
 
 
 # --- Commands ---
+async def command_event_reduction(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+    """Help command"""
+    all_cooldowns = list(await cooldowns.get_all_cooldowns())
+    embed = await embed_event_reductions(bot, all_cooldowns)
+    await ctx.respond(embed=embed)
+
+        
 async def command_help(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context, discord.Message]) -> None:
     """Help command"""
     view = LinksView()
@@ -49,6 +56,33 @@ async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> No
 
 
 # --- Embeds ---
+# --- Embeds ---
+async def embed_event_reductions(bot: discord.Bot, all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+    """Event reductions embed"""
+    reductions_slash = reductions_text = ''
+    for cooldown in all_cooldowns:
+        if cooldown.event_reduction_slash > 0:
+            reductions_slash = f'{reductions_slash}\n{emojis.BP} {cooldown.activity}: `{cooldown.event_reduction_slash}`%'
+        if cooldown.event_reduction_mention > 0:
+            reductions_text = f'{reductions_text}\n{emojis.BP} {cooldown.activity}: `{cooldown.event_reduction_mention}`%'
+    if reductions_slash == '':
+        reductions_slash = f'{emojis.BP} No event reductions active'
+    if reductions_text == '':
+        reductions_text = f'{emojis.BP} No event reductions active'
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'ACTIVE EVENT REDUCTIONS',
+        description = (
+            f'_Event reductions are set by your Navi bot admin._\n'
+            f'_You can set additional personal multipliers with '
+            f'{await functions.get_navi_slash_command(bot, "settings reminders")}_\n'
+        )
+    )
+    embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
+    embed.add_field(name='TEXT & MENTION COMMANDS', value=reductions_text, inline=False)
+    return embed
+
+
 async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> discord.Embed:
     """Main menu embed"""
     prefix = await guilds.get_prefix(ctx)
@@ -88,6 +122,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "enable")} & '
         f'{await functions.get_navi_slash_command(bot, "disable")} : Speed enable/disable settings\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}enable` & `{prefix}disable`_\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "event-reductions")} : Check active event reductions\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "portals")} : Customizable list of channel links\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}portals`, `{prefix}pt`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings portals")} : Manage your portals\n'

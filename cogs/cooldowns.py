@@ -9,6 +9,7 @@ from datetime import timedelta
 
 from cache import messages
 from database import errors, reminders, users
+from database import cooldowns as cooldowns_db
 from resources import emojis, exceptions, functions, regex, settings, strings
 
 
@@ -33,7 +34,9 @@ class CooldownsCog(commands.Cog):
         if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if not message.embeds: return
         embed: discord.Embed = message.embeds[0]
-        message_author = message_footer = message_fields = icon_url = ''
+        message_author = message_footer = message_fields = icon_url = message_description = ''
+        if embed.description:
+            message_description = embed.description
         if embed.author:
             message_author = str(embed.author.name)
             icon_url = embed.author.icon_url
@@ -77,6 +80,37 @@ class CooldownsCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
+            # Anniversary event reduction update
+            search_patterns = [
+                r'anniversary event cooldown reduction\*\*: (\d+?)%',
+                r'reducción de cooldown del evento de aniversario\*\*: (\d+?)%',
+                r'redução do cooldown do evento de aniversário\*\*: (\d+?)%',
+            ]
+            anniversary_event_match = await functions.get_match_from_patterns(search_patterns,
+                                                                              message_description)
+            if anniversary_event_match:
+                event_reduction = int(anniversary_event_match.group(1))
+                anniversary_activities = [
+                    'arena',
+                    'quest',
+                    'dungeon-miniboss',
+                    'lootbox',
+                    'hunt',
+                    'adventure',
+                    'training',
+                    'work',
+                    'horse',
+                    'duel',
+                    'quest-decline',
+                    'epic',
+                    'farm',
+                ]
+                all_cooldowns = await cooldowns_db.get_all_cooldowns()
+                if all_cooldowns[0].event_reduction_slash != event_reduction:
+                    for cooldown in all_cooldowns:
+                        if cooldown.activity in anniversary_activities:
+                            await cooldown.update(event_reduction_slash=event_reduction,
+                                                event_reduction_mention=event_reduction)
             cooldowns = []
             ready_commands = []
             if user_settings.alert_daily.enabled:

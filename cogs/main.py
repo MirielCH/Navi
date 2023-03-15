@@ -9,7 +9,7 @@ from discord.commands import slash_command
 
 from content import main
 from database import errors, guilds
-from resources import exceptions, functions, logs, settings, strings
+from resources import exceptions, functions, logs, settings
 
 
 class MainCog(commands.Cog):
@@ -18,6 +18,11 @@ class MainCog(commands.Cog):
         self.bot = bot
 
     # Commands
+    @slash_command(name='event-reductions')
+    async def event_reductions(self, ctx: discord.ApplicationContext) -> None:
+        """Shows currently active event reductions"""
+        await main.command_event_reduction(self.bot, ctx)
+        
     @slash_command(description='Main help command')
     @commands.guild_only()
     async def help(self, ctx: discord.ApplicationContext) -> None:
