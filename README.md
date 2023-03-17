@@ -6,7 +6,7 @@ Reminder / Helper for EPIC RPG.
 
 ## Setup
 
-• Install python 3.8, 3.9 or 3.10. Note that python 3.11+ is untested. It might run, or it might not.  
+• Install python 3.8 or higher. I recommend the newest version (3.11).  
 • Install the third party libraries mentioned in `requirements.txt`.  
 • Create a Discord application with a bot user, activate the required intents and generate a bot token.  
 • Rename `default.env` to `.env` and set all required variables mentioned in the file.  
