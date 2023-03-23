@@ -311,6 +311,7 @@ ACTIVITIES_BOOSTS = (
     'potion-potion',
     'time-potion',
     'triple-potion',
+    'unepic',
     'valentine-boost',
     'void-potion',
     'wood-potion',

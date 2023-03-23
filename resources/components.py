@@ -1095,10 +1095,10 @@ class SwitchToReadyRemindersSelect(discord.ui.Select):
     """Select to switch to ready reminder settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
-        options.append(discord.SelectOption(label=f'Show/hide commands',
+        options.append(discord.SelectOption(label='Manage visible commands and command channels',
                                             value='switch_to_ready_reminders'))
-        super().__init__(placeholder='Show/hide commands', min_values=1, max_values=1, options=options, row=row,
-                         custom_id='switch_to_ready_reminders')
+        super().__init__(placeholder='Manage visible commands and command channels', min_values=1, max_values=1,
+                         options=options, row=row, custom_id='switch_to_ready_reminders')
 
     async def callback(self, interaction: discord.Interaction):
         view = views.SettingsReadyRemindersView(self.view.ctx, self.view.bot, self.view.user_settings,

@@ -250,9 +250,13 @@ class PetsCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
                 reminder_created = False
                 try:
-                    summary_reminder = await reminders.get_user_reminder(user_id=user.id, activity='pets-?')
+                    summary_reminder_min = await reminders.get_user_reminder(user_id=user.id, activity='pets-MIN')
                 except exceptions.NoDataFoundError:
-                    summary_reminder = None
+                    summary_reminder_min = None
+                try:
+                    summary_reminder_max = await reminders.get_user_reminder(user_id=user.id, activity='pets-MAX')
+                except exceptions.NoDataFoundError:
+                    summary_reminder_max = None
                 for field in embed.fields:
                     pet_id_match = re.search(r'`ID: (.+?)`', field.name)
                     pet_emoji = ''
@@ -288,10 +292,14 @@ class PetsCog(commands.Cog):
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
                     end_time = current_time + time_left
                     if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
-                    if summary_reminder is not None:
-                        if end_time - timedelta(seconds=2) <= summary_reminder.end_time <= end_time + timedelta(seconds=2):
-                            await summary_reminder.delete()
-                            summary_reminder = None
+                    if summary_reminder_min is not None:
+                        if end_time - timedelta(seconds=2) <= summary_reminder_min.end_time <= end_time + timedelta(seconds=2):
+                            await summary_reminder_min.delete()
+                            summary_reminder_min = None
+                    if summary_reminder_max is not None:
+                        if end_time - timedelta(seconds=2) <= summary_reminder_max.end_time <= end_time + timedelta(seconds=2):
+                            await summary_reminder_max.delete()
+                            summary_reminder_max = None
                     reminder_created = True
                     reminder_message = user_settings.alert_pets.message.replace('{id}', pet_id).replace('{emoji}',pet_emoji)
                     reminder: reminders.Reminder = (
@@ -379,41 +387,54 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
-                search_patterns = [
+                search_patterns_min = [
                     r'min time left\*\*: (.+?)\n', #English
                     r'tiempo mínimo restante\*\*: (.+?)\n', #Spanish
                     r'tempo restante\*\*: (.+?)\n', #Portuguese
                 ]
-                timestring_match = await functions.get_match_from_patterns(search_patterns, message_field_1_value)
-                if not timestring_match:
+                search_patterns_max = [
+                    r'max time left\*\*: (.+?)$', #English
+                    r'tiempo máximo restante\*\*: (.+?)$', #Spanish
+                    r'tempo máximo restante\*\*: (.+?)$', #Portuguese
+                ]
+                timestring_min_match = await functions.get_match_from_patterns(search_patterns_min, message_field_1_value)
+                timestring_max_match = await functions.get_match_from_patterns(search_patterns_max, message_field_1_value)
+                if not timestring_min_match or not timestring_max_match:
                     await functions.add_warning_reaction(message)
-                    await errors.log_error('Timestring not found in pet summary message.', message)
+                    await errors.log_error('Timestring for min or max pet not found in pet summary message.', message)
                     return
-                timestring = timestring_match.group(1)
-                if timestring != '--':
+                timestrings = {
+                    'min': timestring_min_match.group(1),
+                    'max': timestring_max_match.group(1),
+                }
+                if timestrings['min'] != '--' or timestrings['max'] != '--':
                     current_time = datetime.utcnow().replace(microsecond=0)
-                    time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                    end_time = current_time + time_left
-                    if time_left < timedelta(0): return
-                    try:
-                        pet_reminders = (
-                            await reminders.get_active_user_reminders(user_id=user.id, activity='pets',
-                                                                      end_time=end_time - timedelta(seconds=1))
-                        )
-                    except exceptions.NoDataFoundError:
-                        pet_reminders = ()
-                    reminder_exists = False
-                    for reminder in pet_reminders:
-                        if reminder.activity == 'pets-?': continue
-                        if end_time - timedelta(seconds=2) <= reminder.end_time <= end_time + timedelta(seconds=2):
-                            reminder_exists = True
-                    if not reminder_exists:
-                        reminder_message = user_settings.alert_pets.message.replace('{id}', '?').replace('{emoji}','').strip()
-                        reminder: reminders.Reminder = (
-                            await reminders.insert_user_reminder(user.id, f'pets-?', time_left,
-                                                                    message.channel.id, reminder_message)
-                        )
-                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    for timestring_type, timestring in timestrings.items():
+                        if timestring_type == '--': continue
+                        time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                        end_time = current_time + time_left
+                        if time_left < timedelta(0): return
+                        reminder_exists = False
+                        try:
+                            pet_reminders = (
+                                await reminders.get_active_user_reminders(user_id=user.id, activity='pets',
+                                                                          end_time=end_time - timedelta(seconds=1))
+                            )
+                        except exceptions.NoDataFoundError:
+                            pet_reminders = ()
+                        for reminder in pet_reminders:
+                            if reminder.activity == f'pets-{timestring_type}': continue
+                            if end_time - timedelta(seconds=2) <= reminder.end_time <= end_time + timedelta(seconds=2):
+                                reminder_exists = True
+                        if not reminder_exists:
+                            reminder_message = (
+                                user_settings.alert_pets.message.replace('{id}', timestring_type.upper()).replace('{emoji}','').strip()
+                            )
+                            reminder: reminders.Reminder = (
+                                await reminders.insert_user_reminder(user.id, f'pets-{timestring_type.upper()}',
+                                                                     time_left, message.channel.id, reminder_message)
+                            )
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
                 search_patterns = [
                     r'claim\*\*: (\d+?)/\d+\n', #English
                     r'reclamar\*\*: (\d+?)/\d+\n', #Spanish

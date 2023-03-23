@@ -884,7 +884,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{await bool_to_text(user_settings.cmd_slashboard_visible)}\n'
     )
     command_event_reminders = (
-        f'{emojis.BP} _Choose "Show/hide commands" below to manage visible commands and command channels._'
+        f'{emojis.BP} _Choose "Manage visible commands and command channels" below to change these settings._'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -897,7 +897,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     embed.add_field(name='SETTINGS', value=field_settings, inline=False)
     embed.add_field(name='UP NEXT REMINDER', value=up_next_reminder, inline=False)
     embed.add_field(name='OTHER COMMANDS', value=other_commands, inline=False)
-    embed.add_field(name='VISIBLE COMMANDS', value=command_event_reminders, inline=False)
+    embed.add_field(name='VISIBLE COMMANDS & COMMAND CHANNELS', value=command_event_reminders, inline=False)
     return embed
 
 
