@@ -21,11 +21,13 @@ class HelperPetsCog(commands.Cog):
         if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_field_name = message_field_value = message_author = ''
+            message_field_name = message_field_value = message_author = icon_url = ''
             if embed.fields:
                 message_field_name = str(embed.fields[0].name)
                 message_field_value = str(embed.fields[0].value)
                 message_author = str(embed.author.name)
+            if embed.author:
+                icon_url = str(embed.author.icon_url)
 
             # Pet catch
             search_strings_name = [
@@ -76,20 +78,25 @@ class HelperPetsCog(commands.Cog):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
-                    search_patterns = [
-                        r"APPROACHING \*\*(.+?)\*\*", #English
-                        r"ACERCANDO A \*\*(.+?)\*\*", #Spanish
-                        r"APROXIMANDO DE \*\*(.+?)\*\*", #Portuguese
-                    ]
-                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
-                    if not user_name_match:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
-                    if user_name_match:
-                        user_name = user_name_match.group(1)
-                        user_command_message = (
-                            await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
-                                                        user_name=user_name)
-                        )
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    else:
+                        search_patterns = [
+                            r"APPROACHING \*\*(.+?)\*\*", #English
+                            r"ACERCANDO A \*\*(.+?)\*\*", #Spanish
+                            r"APROXIMANDO DE \*\*(.+?)\*\*", #Portuguese
+                        ]
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_field_name)
+                        if not user_name_match:
+                            user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                            user_name=user_name)
+                            )
                         if not user_name_match or user_command_message is None:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in pet catch message for pet helper.', message)
