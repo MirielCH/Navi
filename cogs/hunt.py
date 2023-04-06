@@ -225,9 +225,19 @@ class HuntCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         partner_name = user_name_match.group(2)
                     else:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User names not found in hunt together message.', message)
-                        return
+                        if event_mob:
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_HUNT)
+                            )
+                            if user_command_message is None:
+                                await functions.add_warning_reaction(message)
+                                await errors.log_error('User not found for event mob hunt message.', message)
+                                return
+                            user = user_command_message.author
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User names not found in hunt together message.', message)
+                            return
                 else:
                     search_patterns = [
                         r"\*\*(.+?)\*\* found a", #English

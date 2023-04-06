@@ -40,7 +40,8 @@ class HelperPetsCog(commands.Cog):
             ]
             if (any(search_string in message_field_name.lower() for search_string in search_strings_name)
                 and any(search_string in message_field_value.lower() for search_string in search_strings_value)):
-
+                bunny_event = True if 'bunny' in message_author else False
+                    
                 async def design_pet_catch_field(feeds: int, pats: int, user_settings: users.User) -> str:
                     """Returns an embed field with the commands and the catch chance"""
                     hunger_remaining_min = hunger - (feeds * 22)
@@ -67,7 +68,7 @@ class HelperPetsCog(commands.Cog):
                     for x in range(0,feeds):
                         commands = f'{commands} feed'
                     commands = commands.upper().strip()
-                    hunger_emoji = emojis.PET_HUNGER_EASTER if 'bunny' in message_author else emojis.PET_HUNGER
+                    hunger_emoji = emojis.PET_HUNGER_EASTER if bunny_event else emojis.PET_HUNGER
                     actions = f'{emojis.PET_HAPPINESS} {pats} pats, {hunger_emoji} {feeds} feeds'
                     if pats + feeds < 6:
                         actions = f'{actions}, {emojis.PET_RANDOM} tame'
@@ -93,15 +94,28 @@ class HelperPetsCog(commands.Cog):
                             user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
-                                                            user_name=user_name)
-                            )
-                        if not user_name_match or user_command_message is None:
+                            if not bunny_event:
+                                user_command_message = (
+                                    await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                                                user_name=user_name)
+                                )
+                                if user_command_message is None:
+                                    await functions.add_warning_reaction(message)
+                                    await errors.log_error('User not found in pet catch message for pet helper.', message)
+                                    return
+                                user = user_command_message.author
+                            else:
+                                guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                                if len(guild_users) > 1: return
+                                if not guild_users:
+                                    await functions.add_warning_reaction(message)
+                                    await errors.log_error('User not found in bunny catch message for pet helper.', message)
+                                    return
+                                user = guild_users[0]
+                        if not user_name_match:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in pet catch message for pet helper.', message)
                             return
-                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -158,7 +172,7 @@ class HelperPetsCog(commands.Cog):
                 commands_high_risk, chance_high_risk = await design_pet_catch_field(feeds, pats, user_settings)
                 high_skill_name = 'HIGHER CHANCE AT SKILL' if command_amount_low_risk < 6 else 'CHANCE AT SKILL'
                 embed_low_risk = discord.Embed(
-                    title = 'LOWEST RISK',
+                    title = 'LOWEST RISK' if not bunny_event else 'CATCH COMMANDS',
                     description = commands_low_risk,
                 )
                 embed_low_risk.set_footer(text=chance_low_risk)
@@ -168,7 +182,8 @@ class HelperPetsCog(commands.Cog):
                 )
                 embed_high_risk.set_footer(text=chance_high_risk)
                 content = user.mention if not user_settings.dnd_mode_enabled else None
-                await message.reply(content=content, embeds=[embed_low_risk, embed_high_risk])
+                embeds=[embed_low_risk, embed_high_risk] if not bunny_event else [embed_low_risk,]
+                await message.reply(content=content, embeds=embeds)
 
 
 # Initialization
