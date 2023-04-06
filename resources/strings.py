@@ -296,6 +296,8 @@ ACTIVITIES_BOOSTS = (
     'dev-boost',
     'dev-buff',
     'dragon-breath-potion',
+    'easter-boost',
+    'egg-blessing',
     'electronical-potion',
     'fish-potion',
     'inverted-potion',
@@ -797,6 +799,7 @@ MONSTERS_HUNT_A0 = (
 )
 
 MONSTERS_HUNT_MISC = (
+    '**Bunny Slime**',
     '**Christmas Slime**',
     '**Horslime**',
     '**Pink Wolf**',
