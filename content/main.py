@@ -56,7 +56,6 @@ async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> No
 
 
 # --- Embeds ---
-# --- Embeds ---
 async def embed_event_reductions(bot: discord.Bot, all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
     """Event reductions embed"""
     reductions_slash = reductions_text = ''

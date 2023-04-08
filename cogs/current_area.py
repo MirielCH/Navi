@@ -79,26 +79,29 @@ class CurrentAreaCog(commands.Cog):
             ]
             if (any(search_string in embed_author.lower() for search_string in search_strings)
                 and not 'epic npc' in embed_author.lower()):
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                        user = message.guild.get_member(user_id)
-                    else:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS,
-                                                            user_name=user_name)
-                            )
-                        if not user_name_match or user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            return
-                        user = user_command_message.author
+                embed_users = []
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS)
+                    )
+                    if user_command_message is None: return
+                    interaction_user = user_command_message.author
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    embed_users.append(message.guild.get_member(user_id))
+                else:
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or not embed_users:
+                        await functions.add_warning_reaction(message)
+                        return
+                if interaction_user not in embed_users: return
                 try:
-                    user_settings: users.User = await users.get_user(user.id)
+                    user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
