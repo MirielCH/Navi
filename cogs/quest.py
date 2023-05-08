@@ -102,11 +102,23 @@ class QuestCog(commands.Cog):
                     )
                     return
                 await user_settings.update(guild_quest_prompt_active=True)
+                try:
+                    clan_reminder = await reminders.get_clan_reminder(user_settings.clan_name)
+                except exceptions.NoDataFoundError:
+                    clan_reminder = None
+                command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                if clan_reminder is not None:
+                    current_time = datetime.utcnow().replace(microsecond=0)
+                    time_left = clan_reminder.end_time - current_time
+                    timestring = await functions.parse_timedelta_to_timestring(time_left)
+                    raid_ready = f'🕓 {command_raid} ready in **{timestring}**.'
+                else:
+                    raid_ready = f'{emojis.ENABLED} {command_raid} ready **now**!'
                 await message.reply(
-                    f'{emojis.ENABLED} Guild quest slot available.\n'
-                    f'If you accept this quest, the next guild reminder will ping you solo first. '
-                    f'You will have 5 minutes to raid before the other members are pinged.\n'
-                    f'Note that you will lose your slot if you don\'t answer in time.'
+                    f'{emojis.ENABLED} Guild quest slot available!\n{raid_ready}\n\n'
+                    f'_If you accept this quest, the next guild reminder will ping you solo first. '
+                    f'You will have 5 minutes to raid before the other members are pinged._\n'
+                    f'_Note that you will lose your slot if you don\'t answer in time._'
                 )
 
             # Quest cooldown
