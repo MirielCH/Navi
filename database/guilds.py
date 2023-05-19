@@ -30,6 +30,7 @@ class Guild():
     auto_flex_event_training_enabled: bool
     auto_flex_forge_cookie_enabled: bool
     auto_flex_hal_boo_enabled: bool
+    auto_flex_lb_a18_enabled: bool
     auto_flex_lb_edgy_ultra_enabled: bool
     auto_flex_lb_godly_enabled: bool
     auto_flex_lb_godly_tt_enabled: bool
@@ -43,6 +44,7 @@ class Guild():
     auto_flex_pr_ascension_enabled: bool
     auto_flex_mob_drops_enabled: bool
     auto_flex_time_travel_enabled: bool
+    auto_flex_work_epicberry_enabled: bool
     auto_flex_work_hyperlog_enabled: bool
     auto_flex_work_ultimatelog_enabled: bool
     auto_flex_work_ultralog_enabled: bool
@@ -71,6 +73,7 @@ class Guild():
         self.auto_flex_event_training_enabled = new_settings.auto_flex_event_training_enabled
         self.auto_flex_forge_cookie_enabled = new_settings.auto_flex_forge_cookie_enabled
         self.auto_flex_hal_boo_enabled = new_settings.auto_flex_hal_boo_enabled
+        self.auto_flex_lb_a18_enabled = new_settings.auto_flex_lb_a18_enabled
         self.auto_flex_lb_edgy_ultra_enabled = new_settings.auto_flex_lb_edgy_ultra_enabled
         self.auto_flex_lb_godly_enabled = new_settings.auto_flex_lb_godly_enabled
         self.auto_flex_lb_godly_tt_enabled = new_settings.auto_flex_lb_godly_tt_enabled
@@ -84,6 +87,7 @@ class Guild():
         self.auto_flex_pr_ascension_enabled = new_settings.auto_flex_pr_ascension_enabled
         self.auto_flex_mob_drops_enabled = new_settings.auto_flex_mob_drops_enabled
         self.auto_flex_time_travel_enabled = new_settings.auto_flex_time_travel_enabled
+        self.auto_flex_work_epicberry_enabled = new_settings.auto_flex_work_epicberry_enabled
         self.auto_flex_work_hyperlog_enabled = new_settings.auto_flex_work_hyperlog_enabled
         self.auto_flex_work_ultimatelog_enabled = new_settings.auto_flex_work_ultimatelog_enabled
         self.auto_flex_work_ultralog_enabled = new_settings.auto_flex_work_ultralog_enabled
@@ -112,6 +116,7 @@ class Guild():
             auto_flex_event_training_enabled: bool
             auto_flex_forge_cookie_enabled: bool
             auto_flex_hal_boo_enabled: bool
+            auto_flex_lb_a18_enabled: bool
             auto_flex_lb_edgy_ultra_enabled: bool
             auto_flex_lb_godly_enabled: bool
             auto_flex_lb_godly_tt_enabled: bool
@@ -125,6 +130,7 @@ class Guild():
             auto_flex_pr_ascension_enabled: bool
             auto_flex_mob_drops_enabled: bool
             auto_flex_time_travel_enabled: bool
+            auto_flex_work_epicberry_enabled: bool
             auto_flex_work_hyperlog_enabled: bool
             auto_flex_work_ultimatelog_enabled: bool
             auto_flex_work_ultralog_enabled: bool
@@ -171,6 +177,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_event_training_enabled = bool(record['auto_flex_event_training_enabled']),
             auto_flex_forge_cookie_enabled = bool(record['auto_flex_forge_cookie_enabled']),
             auto_flex_hal_boo_enabled = bool(record['auto_flex_hal_boo_enabled']),
+            auto_flex_lb_a18_enabled = bool(record['auto_flex_lb_a18_enabled']),
             auto_flex_lb_edgy_ultra_enabled = bool(record['auto_flex_lb_edgy_ultra_enabled']),
             auto_flex_lb_godly_enabled = bool(record['auto_flex_lb_godly_enabled']),
             auto_flex_lb_godly_tt_enabled = bool(record['auto_flex_lb_godly_tt_enabled']),
@@ -184,6 +191,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_pr_ascension_enabled = bool(record['auto_flex_pr_ascension_enabled']),
             auto_flex_mob_drops_enabled = bool(record['auto_flex_mob_drops_enabled']),
             auto_flex_time_travel_enabled = bool(record['auto_flex_time_travel_enabled']),
+            auto_flex_work_epicberry_enabled = bool(record['auto_flex_work_epicberry_enabled']),
             auto_flex_work_hyperlog_enabled = bool(record['auto_flex_work_hyperlog_enabled']),
             auto_flex_work_ultimatelog_enabled = bool(record['auto_flex_work_ultimatelog_enabled']),
             auto_flex_work_ultralog_enabled = bool(record['auto_flex_work_ultralog_enabled']),
@@ -343,6 +351,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_event_training_enabled: bool
         auto_flex_forge_cookie_enabled: bool
         auto_flex_hal_boo_enabled: bool
+        auto_flex_lb_a18_enabled: bool
         auto_flex_lb_edgy_ultra_enabled: bool
         auto_flex_lb_godly_enabled: bool
         auto_flex_lb_godly_tt_enabled: bool
@@ -356,6 +365,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_pr_ascension_enabled: bool
         auto_flex_mob_drops_enabled: bool
         auto_flex_time_travel_enabled: bool
+        auto_flex_work_epicberry_enabled: bool
         auto_flex_work_hyperlog_enabled: bool
         auto_flex_work_ultimatelog_enabled: bool
         auto_flex_work_ultralog_enabled: bool

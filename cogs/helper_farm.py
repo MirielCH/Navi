@@ -168,8 +168,8 @@ class HelperFarmCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     search_patterns = [
-                        r"^\*\*(.+?)\*\* got (\d+) (?:.+?) \*\*(.+?) seed", #English
-                        r"^\*\*(.+?)\*\* cons[ie]gui[óu] (\d+) (?:.+?) \*\*(.+?) seed", #Spanish & Portuguese
+                        r"\*\*(.+?)\*\* got (\d+) (?:.+?) \*\*(.+?) seed", #English
+                        r"\*\*(.+?)\*\* cons[ie]gui[óu] (\d+) (?:.+?) \*\*(.+?) seed", #Spanish & Portuguese
                     ]
                     data_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if data_match:

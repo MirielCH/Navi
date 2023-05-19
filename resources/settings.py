@@ -86,6 +86,26 @@ else:
         print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
         sys.exit()
 
+COMPLAINT_CHANNEL_ID = os.getenv('COMPLAINT_CHANNEL_ID')
+if COMPLAINT_CHANNEL_ID != '' and COMPLAINT_CHANNEL_ID is not None:
+    try:
+        COMPLAINT_CHANNEL_ID = int(COMPLAINT_CHANNEL_ID)
+    except:
+        print(f'Complain channel ID "{COMPLAINT_CHANNEL_ID}" in the .env variable COMPLAINT_CHANNEL_ID is not a number.')
+        sys.exit()
+else:
+    COMPLAINT_CHANNEL_ID = None
+        
+SUGGESTION_CHANNEL_ID = os.getenv('SUGGESTION_CHANNEL_ID')
+if SUGGESTION_CHANNEL_ID != '' and SUGGESTION_CHANNEL_ID is not None:
+    try:
+        SUGGESTION_CHANNEL_ID = int(SUGGESTION_CHANNEL_ID)
+    except:
+        print(f'Suggestion channel ID "{SUGGESTION_CHANNEL_ID}" in the .env variable SUGGESTION_CHANNEL_ID is not a number.')
+        sys.exit()
+else:
+    SUGGESTION_CHANNEL_ID = None
+
 
 # Read bot version
 _version_file = open(VERSION_FILE, 'r')

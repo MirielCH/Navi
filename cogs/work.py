@@ -303,7 +303,7 @@ class WorkCog(commands.Cog):
                 slash_command = True if interaction is not None else False
                 if interaction is None:
                     user_name = user_command = user_command_message = None
-                    user_name_match = re.search(r'\s\*\*(.+?)\*\*\sfights', message_content)
+                    user_name_match = re.search(r'\s\*\*(.+?)\*\*\s(?:cried|fights|sleeps)', message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (

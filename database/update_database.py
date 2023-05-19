@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 5
+NAVI_DB_VERSION = 6
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -399,6 +399,22 @@ if __name__ == '__main__':
                     sql = f'{sql} WHERE user_id = :user_id'
                     cur.execute(sql, new_values)
 
+    if db_version < 6:
+        sqls = [
+            "ALTER TABLE guilds ADD auto_flex_lb_a18_enabled BOOLEAN NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_epicberry_enabled BOOLEAN NOT NULL DEFAULT (1)",
+        ]
+        for sql in sqls:
+            try:
+                cur.execute(sql)
+            except sqlite3.Error as error:
+                error_msg = error.args[0]
+                if 'duplicate column name' in error.args[0]:
+                    continue
+                elif 'no such column' in error.args[0]:
+                    continue
+                else:
+                    raise
 
     # Set DB version, vaccum, integrity check
     cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')

@@ -878,6 +878,7 @@ WORK_COMMANDS = (
 SLASH_COMMANDS = {
     'adventure': '</adventure:961046240420855808>',
     'alchemy': '</alchemy:0>',
+    'area': '</area:956658464879427604>',
     'arena': '</arena:960740633302138920>',
     'axe': '</axe:959162695909781504>',
     'big arena': '</big arena:960362922029252719>',
@@ -1055,6 +1056,13 @@ FLEX_TITLES_BREW_ELECTRONICAL = [
     'Seriously, why would ANYONE brew that?',
 ]
 
+FLEX_TITLES_WORK_EPICBERRY = [
+    'Insalata epica',
+    'Feel free to share',
+    'Look who got greedy',
+    'Stop stealing our food!',
+]
+
 FLEX_TITLES_WORK_HYPERLOG = [
     'TIMBER!',
     'Hyperino',
@@ -1112,6 +1120,21 @@ FLEX_TITLES_HAL_BOO = [
     'A treat for the trick',
     'Hope they didn\'t get a heart attack',
     'Halloween hacking',
+]
+
+FLEX_TITLES_LB_A18 = [
+    'That\'s... not how you do it',
+    'Spring cleaning?',
+    'Not like this',
+    'What exactly are you even doing',
+    'Well that is... embarassing, lol',
+]
+
+FLEX_TITLES_LB_A18_PARTNER = [
+    'How dare you!',
+    'That\'s it, ima divorce',
+    'Heart: Broken',
+    'How did they even deserve this',
 ]
 
 FLEX_TITLES_LB_OMEGA_MULTIPLE = [
@@ -1413,6 +1436,14 @@ FLEX_THUMBNAILS_BREW_ELECTRONICAL = [
     'https://media.tenor.com/dSjPLLjh5FYAAAAC/i-love-expensive-things-luxury.gif',
 ]
 
+FLEX_THUMBNAILS_WORK_EPICBERRY = [
+    'https://media.tenor.com/kNbvRBLOpe0AAAAC/blueberry-berry.gif',
+    'https://media.tenor.com/wjAK63POzTMAAAAd/monkey-monkey-eating.gif',
+    'https://media.tenor.com/oxTE2Jll0R4AAAAd/strawberries-cute-baby.gif',
+    'https://media.tenor.com/XzNFyKEujQgAAAAd/cute-cats-cute.gif',
+    'https://media.tenor.com/mNpLTVfVxMkAAAAC/betty-bunny-betty.gif',
+]
+
 FLEX_THUMBNAILS_WORK_HYPERLOG = [
     'https://c.tenor.com/p8NKGRDxNvMAAAAC/rut-daniels-timber.gif',
     'https://media.tenor.com/CeKTpmgR3ZkAAAAC/yell-timber.gif',
@@ -1474,6 +1505,21 @@ FLEX_THUMBNAILS_HAL_BOO = [
     'https://media.tenor.com/A6zk0D9xNVcAAAAC/boo-ghosts.gif',
     'https://media.giphy.com/media/12RfP2odT4hEOI/giphy.gif',
     'https://media.giphy.com/media/3o7TKqnN349PBUtGFO/giphy.gif',
+]
+
+FLEX_THUMBNAILS_LB_A18 = [
+    'https://media.tenor.com/-h9txtxh3osAAAAC/vorikx-box.gif',
+    'https://media.tenor.com/hq6Fi0viNQQAAAAC/sassy.gif',
+    'https://media.tenor.com/roi7tc89FQwAAAAi/peach-cat-you-bad-bad.gif',
+    'https://media.tenor.com/XQLVLptLIBEAAAAd/maes-b-lost-in-a-field.gif',
+    'https://media.tenor.com/VcywkrgsobEAAAAC/thats-horrible-thats-terrible.gif',
+]
+
+FLEX_THUMBNAILS_LB_A18_PARTNER = [
+    'https://media.tenor.com/P285-2vH5FYAAAAi/alone-lonely.gif',
+    'https://media.tenor.com/yjlnfb4WoIAAAAAd/heart-broke.gif',
+    'https://media.tenor.com/8_cSc3omGmoAAAAd/theres-a-sharp-pain-right-here-pointing-to-chest.gif',
+    'https://media.tenor.com/XXv6c1i9G9gAAAAC/new-girl-heartbreak.gif',
 ]
 
 FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE = [
