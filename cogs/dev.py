@@ -10,7 +10,7 @@ from discord.commands import SlashCommandGroup, Option
 from discord.ext import commands
 
 from database import cooldowns
-from resources import emojis, exceptions, functions, logs, settings, strings, views
+from resources import emojis, exceptions, functions, logs, settings, views
 
 
 EVENT_REDUCTION_TYPES = [

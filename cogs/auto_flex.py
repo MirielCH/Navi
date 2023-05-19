@@ -23,6 +23,8 @@ FLEX_TITLES = {
     'event_training': strings.FLEX_TITLES_EVENT_TRAINING,
     'forge_cookie': strings.FLEX_TITLES_FORGE_COOKIE,
     'hal_boo': strings.FLEX_TITLES_HAL_BOO,
+    'lb_a18': strings.FLEX_TITLES_LB_A18,
+    'lb_a18_partner': strings.FLEX_TITLES_LB_A18_PARTNER,
     'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
     'lb_godly': strings.FLEX_TITLES_LB_GODLY,
     'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
@@ -50,6 +52,7 @@ FLEX_TITLES = {
     'time_travel_150': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_200': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_300': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'work_epicberry': strings.FLEX_TITLES_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
     'work_ultralog': strings.FLEX_TITLES_WORK_ULTRALOG,
@@ -73,6 +76,8 @@ FLEX_THUMBNAILS = {
     'event_training': strings.FLEX_THUMBNAILS_EVENT_TRAINING,
     'forge_cookie': strings.FLEX_THUMBNAILS_FORGE_COOKIE,
     'hal_boo': strings.FLEX_THUMBNAILS_HAL_BOO,
+    'lb_a18': strings.FLEX_THUMBNAILS_LB_A18,
+    'lb_a18_partner': strings.FLEX_THUMBNAILS_LB_A18_PARTNER,
     'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
     'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
     'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
@@ -100,6 +105,7 @@ FLEX_THUMBNAILS = {
     'time_travel_150': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_200': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_300': strings.FLEX_THUMBNAILS_TIME_TRAVEL_300,
+    'work_epicberry': strings.FLEX_THUMBNAILS_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
     'work_ultralog': strings.FLEX_THUMBNAILS_WORK_ULTRALOG,
@@ -114,6 +120,7 @@ FLEX_THUMBNAILS = {
 # Auto flexes that have a column name that differs from the event name
 FLEX_COLUMNS = {
     'epic_berry_partner': 'epic_berry',
+    'lb_a18_partner': 'lb_a18',
     'lb_godly_partner': 'lb_godly',
     'lb_omega_multiple': 'lb_omega',
     'lb_omega_no_hardmode': 'lb_omega',
@@ -158,6 +165,10 @@ class AutoFlexCog(commands.Cog):
             author = f'{user.name} is advancing!'
         elif 'chimney' in event:
             author = f'{user.name} got stuck!'
+        elif 'a18_partner' in event:
+            author = f'{user.name} is being mean!'
+        elif 'a18' in event:
+            author = f'{user.name} is losing their stuff!'
         elif 'partner' in event:
             author = f'{user.name} got robbed!'
         else:
@@ -848,6 +859,7 @@ class AutoFlexCog(commands.Cog):
                 'is this a **dream**????', #English, ultra logs
                 'oooooofff!!', #English, super fish
                 'wwwooooooaaa!!!1', #English, hyper logs
+                '**epic berry**', #English, epic berries
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 or ('nice!' in message_content.lower() and 'watermelon' in message_content.lower())):
@@ -858,12 +870,14 @@ class AutoFlexCog(commands.Cog):
                     r'\?\? \*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English ULTRA log
                     r'!!1 (.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English HYPER log
                     r' \*\*(.+?)\*\* got (.+?) (.+?) __\*\*(ultimate log)\*\*__', #English ULTIMATE log
+                    r'\*\*(.+?)\*\* also got (.+?) (.+?) \*\*(epic berry)\*\*', #English EPIC berry
                     r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English SUPER fish, watermelon
                     r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
                     r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
                     r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTIMATE log, SUPER fish, watermelon
                 ]
                 item_events = {
+                    'epic berry': 'work_epicberry',
                     'hyper log': 'work_hyperlog',
                     'super fish': 'work_superfish',
                     'ultimate log': 'work_ultimatelog',
@@ -878,6 +892,7 @@ class AutoFlexCog(commands.Cog):
                 user_name = match.group(1)
                 item_amount = int(match.group(2))
                 item_name = match.group(4)
+                if item_name not in item_events: return
                 event = item_events[item_name.lower().replace('**','')]
                 if user is None:
                     user_command_message = (
@@ -923,6 +938,13 @@ class AutoFlexCog(commands.Cog):
                     description = (
                         f'**{user_name}** took a walk in the park when suddenly a tree fell over and split into '
                         f'**{item_amount:,}** {emojis.LOG_HYPER} **HYPER logs**.'
+                    )
+                elif event == 'work_epicberry':
+                    description = (
+                        f'**{user_name}** is making fruit salad!\n'
+                        f'It will consist of bananas, apples and '
+                        f'**{item_amount:,}** {emojis.EPIC_BERRY} **EPIC berries** they just randomly found '
+                        f'while gathering the rest.\n'
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
@@ -1161,7 +1183,17 @@ class AutoFlexCog(commands.Cog):
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                 }
+                lootboxes_user_lost = {
+                    'OMEGA lootbox': emojis.LB_OMEGA,
+                    'GODLY lootbox': emojis.LB_GODLY,
+                    'VOID lootbox': emojis.LB_VOID,
+                }
                 lootboxes_partner = {
+                    'OMEGA lootbox': emojis.LB_OMEGA,
+                    'GODLY lootbox': emojis.LB_GODLY,
+                    'VOID lootbox': emojis.LB_VOID,
+                }
+                lootboxes_partner_lost = {
                     'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
@@ -1176,7 +1208,9 @@ class AutoFlexCog(commands.Cog):
                     'dark energy': emojis.DARK_ENERGY,
                 }
                 lootbox_user_found = []
+                lootbox_user_lost = []
                 lootbox_partner_found = []
+                lootbox_partner_lost = []
                 mob_drops_user_found = []
                 epic_berry_user_found = []
                 mob_drops_partner_found = []
@@ -1185,13 +1219,21 @@ class AutoFlexCog(commands.Cog):
                     fr"{re.escape(user_name)}\*\* got (.+?) (.+?)", #English
                     fr"{re.escape(user_name)}\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
                 ]
+                search_patterns_together_old_user_lost = [
+                    fr"{re.escape(user_name)}\*\* lost (.+?) (.+?)", #English
+                ]
                 search_patterns_solo = [
                     fr"\*\* got (.+?) (.+?)", #English
                     fr"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
                 ]
+                search_patterns_solo_lost = [
+                    fr"\*\* lost (.+?) (.+?)", #English
+                ]
                 message_content_user = message_content_partner = ''
                 search_patterns_user = []
+                search_patterns_user_lost = []
                 search_patterns_partner = []
+                search_patterns_partner_lost = []
                 if together and not old_format:
                     partner_loot_start = message_content.find(f'**{partner_name}**:')
                     message_content_user = message_content[:partner_loot_start]
@@ -1201,21 +1243,31 @@ class AutoFlexCog(commands.Cog):
                     search_patterns_together_new = [
                         fr"\+(.+?) (.+?)", #All languages
                     ]
+                    search_patterns_together_new_lost = [
+                        fr"\-(.+?) (.+?)", #All languages
+                    ]
                     search_patterns_together_old_partner = [
-                       fr"{re.escape(partner_name)}\*\* got (.+?) (.+?)", #English
+                        fr"{re.escape(partner_name)}\*\* got (.+?) (.+?)", #English
                         fr"{re.escape(partner_name)}\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese
+                    ]
+                    search_patterns_together_old_partner_lost = [
+                        fr"{re.escape(partner_name)}\*\* lost (.+?) (.+?)", #English
                     ]
                     if old_format:
                         search_patterns_user = search_patterns_together_old_user
+                        search_patterns_user_lost = search_patterns_together_old_user_lost
                         search_patterns_partner = search_patterns_together_old_partner
+                        search_patterns_partner_lost = search_patterns_together_old_partner_lost
                         message_content_user = message_content_partner = message_content
                     else:
                         search_patterns_user = search_patterns_partner = search_patterns_together_new
+                        search_patterns_user_lost = search_patterns_together_new_lost
                         partner_loot_start = message_content.find(f'**{partner_name}**:')
                         message_content_user = message_content[:partner_loot_start]
                         message_content_partner = message_content[partner_loot_start:]
                 else:
                     search_patterns_user = search_patterns_solo
+                    search_patterns_user_lost = search_patterns_solo_lost
                     message_content_user = message_content
 
                 for lootbox in lootboxes_user.keys():
@@ -1227,6 +1279,17 @@ class AutoFlexCog(commands.Cog):
                     lootbox_amount = lootbox_match.group(1)
                     lootbox_user_found.append(lootbox)
                     lootbox_user_found.append(lootbox_amount)
+                    break
+                
+                for lootbox in lootboxes_user_lost.keys():
+                    for pattern in search_patterns_user_lost:
+                        pattern = rf'{pattern} {re.escape(lootbox)}'
+                        lootbox_match = re.search(pattern, message_content_user, re.IGNORECASE)
+                        if lootbox_match: break
+                    if not lootbox_match: continue
+                    lootbox_amount = lootbox_match.group(1)
+                    lootbox_user_lost.append(lootbox)
+                    lootbox_user_lost.append(lootbox_amount)
                     break
 
                 mob_drops_thresholds = {
@@ -1289,6 +1352,17 @@ class AutoFlexCog(commands.Cog):
                         lootbox_partner_found.append(lootbox)
                         lootbox_partner_found.append(lootbox_amount)
                         break
+                    
+                    for lootbox in lootboxes_partner_lost.keys():
+                        for pattern in search_patterns_partner_lost:
+                            pattern = rf'{pattern} {re.escape(lootbox)}'
+                            lootbox_match = re.search(pattern, message_content_partner, re.IGNORECASE)
+                            if lootbox_match: break
+                        if not lootbox_match: continue
+                        lootbox_amount = lootbox_match.group(1)
+                        lootbox_partner_lost.append(lootbox)
+                        lootbox_partner_lost.append(lootbox_amount)
+                        break
 
                     for drop in mob_drops.keys():
                         drop_amount = drop_amount_check = 0
@@ -1329,7 +1403,8 @@ class AutoFlexCog(commands.Cog):
                                 break
 
                 if (not lootbox_user_found and not lootbox_partner_found and not mob_drops_user_found
-                    and not mob_drops_partner_found and not epic_berry_user_found and not epic_berry_partner_found):
+                    and not mob_drops_partner_found and not epic_berry_user_found and not epic_berry_partner_found
+                    and not lootbox_user_lost and not lootbox_partner_lost):
                     return
 
                 # Lootboxes
@@ -1373,6 +1448,13 @@ class AutoFlexCog(commands.Cog):
                             f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
                             f'~~They should be banned!~~ We are so happy for you!'
                         )
+                if lootbox_user_lost:
+                    name, amount = lootbox_user_lost
+                    event = 'lb_a18'
+                    description = (
+                        f'**{user_name}** just lost **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
+                        f'Damn, they really suck at this game.'
+                    )
                 if lootbox_partner_found:
                     name, amount = lootbox_partner_found
                     if lootbox_user_found:
@@ -1404,6 +1486,14 @@ class AutoFlexCog(commands.Cog):
                                 f'just got delivered.\n'
                                 f'...to **{partner_name}**\'s address lol.'
                             )
+                if lootbox_partner_lost:
+                    name, amount = lootbox_partner_lost
+                    event = 'lb_a18_partner'
+                    description = (
+                        f'**{user_name}** turns out to be the worst partner you can image.\n'
+                        f'They just made **{partner_name}** lose  **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
+                        f'You should be ashamed, really.'
+                    )
                 if description != '':
                     await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 

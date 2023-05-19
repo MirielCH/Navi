@@ -148,6 +148,9 @@ EXTENSIONS = [
         'cogs.dev_old',
     ]
 
+if settings.COMPLAINT_CHANNEL_ID is not None and settings.SUGGESTION_CHANNEL_ID is not None:
+    EXTENSIONS += ['cogs.feedback',]
+
 if __name__ == '__main__':
     for extension in EXTENSIONS:
         bot.load_extension(extension)

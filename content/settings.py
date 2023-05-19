@@ -686,7 +686,7 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
     ping_mode_setting = 'After' if user_settings.ping_after_message else 'Before'
     helpers = (
         f'{emojis.BP} **Context helper**: {await functions.bool_to_text(user_settings.context_helper_enabled)}\n'
-        f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (slash only)._\n'
+        f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (mostly slash only)._\n'
         f'{emojis.BP} **Heal warning**: {await functions.bool_to_text(user_settings.heal_warning_enabled)}\n'
         f'{emojis.DETAIL} _Warns you when you are about to die._\n'
         f'{emojis.BP} **Pet catch helper**: {await functions.bool_to_text(user_settings.pet_helper_enabled)}\n'
@@ -1065,6 +1065,8 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_brew_electronical_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
+        f'{emojis.BP} Drop: **EPIC berries from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_epicberry_enabled)}\n'
         f'{emojis.BP} Drop: **GODLY lootbox from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_enabled)}\n'
         f'{emojis.BP} Drop: **HYPER logs from work commands**: '
@@ -1075,14 +1077,16 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{emojis.BP} Drop: **OMEGA lootbox from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_enabled)}\n'
         f'{emojis.DETAIL} _Hardmode drops only count if it\'s `3` or more._\n'
+        f'{emojis.BP} Drop: **Lost lootboxes in area 18**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_a18_enabled)}\n'
         f'{emojis.BP} Drop: **Party popper from any lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_party_popper_enabled)}\n'
+    )
+    auto_flex_alerts_2 = (
         f'{emojis.BP} Drop: **SUPER fish from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_superfish_enabled)}\n'
         f'{emojis.BP} Drop: **TIME capsule from GODLY lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
-    )
-    auto_flex_alerts_2 = (
         f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
         f'{emojis.BP} Drop: **ULTRA log from EDGY lootbox**: '
@@ -1101,12 +1105,12 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_farm_enabled)}\n'
         f'{emojis.BP} Event: **Kill mysterious man in heal event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_heal_enabled)}\n'
+    )
+    auto_flex_alerts_3 = (
         f'{emojis.BP} Event: **Evolve OMEGA lootbox in lootbox event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_lb_enabled)}\n'
         f'{emojis.BP} Event: **Successfully fly in void training event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_training_enabled)}\n'
-    )
-    auto_flex_alerts_3 = (
         f'{emojis.BP} Forging: **Forge GODLY cookie**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_forge_cookie_enabled)}\n'
         f'{emojis.BP} Gambling: **Lose coin in coinflip**: '

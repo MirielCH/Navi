@@ -345,8 +345,6 @@ class CooldownsCog(commands.Cog):
                     user_name = user_name_match.group(1)
                     embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
                 if not user_name_match or not embed_users:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Embed user not found for ready message.', message)
                     return
             if interaction_user not in embed_users: return
             if not user_settings.bot_enabled: return

@@ -1,10 +1,13 @@
 # helper_context.py
 
+import re
+
 import discord
 from discord.ext import commands
 
-from database import users
-from resources import exceptions, functions, settings, strings
+from cache import messages
+from database import errors, users
+from resources import exceptions, functions, regex, settings, strings
 
 
 class HelperContextCog(commands.Cog):
@@ -246,6 +249,72 @@ class HelperContextCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.context_helper_enabled: return
                 await message.reply(f"➜ {strings.SLASH_COMMANDS['jail']}")
+
+            if  ':zombie' in message_content.lower() and '#2' in message_content.lower():
+                user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_HUNT,
+                                                        user_name=user_name)
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for training helper zombie area 2 message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
+                action = await functions.get_slash_command(user_settings, 'area')
+                warning = f'Hey! Don\'t forget to use {action} to go back to your previous area!'
+                if not user_settings.dnd_mode_enabled:
+                    if user_settings.ping_after_message:
+                        await message.channel.send(f'{warning} {user.mention}')
+                    else:
+                        await message.channel.send(f'{user.mention} {warning}')
+                else:
+                    await message.channel.send(f'**{user.name}**, {warning}')
+
+            search_strings = [
+                ':mag:', #Ruby dragon event, all languages
+                '🔍', #Ruby dragon event, all languages
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user_name = user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_WORK,
+                                                        user_name=user_name)
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found for training helper ruby dragon message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
+                action = await functions.get_slash_command(user_settings, 'area')
+                warning = f'Hey! Don\'t forget to use {action} to go back to your previous area!'
+                if not user_settings.dnd_mode_enabled:
+                    if user_settings.ping_after_message:
+                        await message.channel.send(f'{warning} {user.mention}')
+                    else:
+                        await message.channel.send(f'{user.mention} {warning}')
+                else:
+                    await message.channel.send(f'**{user.name}**, {warning}')
 
 
 # Initialization
