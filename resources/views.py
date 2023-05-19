@@ -12,6 +12,7 @@ from database import clans, cooldowns, guilds, portals, reminders, users
 from resources import components, functions, settings, strings
 
 COMMANDS_SETTINGS = {
+    'Alts': settings_cmd.command_settings_alts,
     'Guild channel': settings_cmd.command_settings_clan,
     'Helpers': settings_cmd.command_settings_helpers,
     'Partner': settings_cmd.command_settings_partner,
@@ -99,9 +100,9 @@ class ConfirmCancelView(discord.ui.View):
     async def on_timeout(self):
         self.stop()
 
-
-class ConfirmMarriageView(discord.ui.View):
-    """View with confirm and cancel button.
+        
+class ConfirmUserView(discord.ui.View):
+    """View with yes and no buttons that asks a user to allow him to be added.
 
     Args: ctx, labels: Optional[list[str]]
 
@@ -110,21 +111,21 @@ class ConfirmMarriageView(discord.ui.View):
 
     Returns 'confirm', 'cancel' or None (if timeout/error)
     """
-    def __init__(self, ctx: discord.ApplicationCommand, new_partner: discord.User,
+    def __init__(self, asked_user: discord.User, confirm_label: Optional[str] = 'Yes',
+                 cancel_label: Optional[str] = 'No',
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
-        self.user = ctx.author
-        self.new_partner = new_partner
+        self.asked_user = asked_user
         self.interaction = interaction
         self.add_item(components.CustomButton(style=discord.ButtonStyle.green,
                                               custom_id='confirm',
-                                              label='I do!'))
+                                              label=confirm_label))
         self.add_item(components.CustomButton(style=discord.ButtonStyle.grey,
                                               custom_id='cancel',
-                                              label='Forever alone'))
+                                              label=cancel_label))
     async def interaction_check(self, interaction: discord.Interaction):
-        if interaction.user != self.new_partner:
+        if interaction.user != self.asked_user:
             await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
             return False
         return True
@@ -153,6 +154,51 @@ class TrainingAnswerView(discord.ui.View):
                 self.add_item(components.DisabledButton(style=style, label=label, row=row, emoji=emoji))
         self.stop()
 
+
+class SettingsAltsView(discord.ui.View):
+    """View with a all components to manage alt settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: discord.ApplicationContext, bot: discord.Bot, user_settings: users.User,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.embed_function = embed_function
+        if len(user_settings.alts) < 24:
+            self.add_item(components.AddAltSelect(self))
+        if user_settings.alts:
+            self.add_item(components.RemoveAltSelect(self))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await functions.edit_interaction(self.interaction, view=None)
+        self.stop()
+        
 
 class SettingsClanView(discord.ui.View):
     """View with a all components to manage clan settings.
@@ -498,6 +544,7 @@ class SettingsRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        self.add_item(components.ManageReminderBehaviourSelect(self))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
@@ -650,6 +697,7 @@ class SettingsPartnerView(discord.ui.View):
         self.user_settings = user_settings
         self.partner_settings = partner_settings
         self.embed_function = embed_function
+        self.add_item(components.AddPartnerSelect(self, "Change partner"))
         self.add_item(components.ManagePartnerSettingsSelect(self))
         partner_select_disabled = True if user_settings.partner_id is not None else False
         self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled))
@@ -712,8 +760,8 @@ class RemindersListView(discord.ui.View):
     None
     """
     def __init__(self, bot: discord.Bot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
-                 user_reminders: List[reminders.Reminder], clan_reminders: List[reminders.Reminder],
-                 custom_reminders: List[reminders.Reminder],
+                 user_settings: users.User, user_mentioned: bool, user_reminders: List[reminders.Reminder],
+                 clan_reminders: List[reminders.Reminder], custom_reminders: List[reminders.Reminder],
                  embed_function: callable, show_timestamps: Optional[bool] = False,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -726,7 +774,12 @@ class RemindersListView(discord.ui.View):
         self.embed_function = embed_function
         self.interaction_message = interaction_message
         self.user = user
+        self.user_settings = user_settings
+        self.user_mentioned = user_mentioned
         self.show_timestamps = show_timestamps
+        self.active_alt_id = user.id
+        if not user_mentioned and user_settings.alts:
+            self.add_item(components.SwitchRemindersListAltSelect(self))
         self.add_item(components.ToggleTimestampsButton('Show end time'))
         if custom_reminders:
             self.add_item(components.DeleteCustomRemindersButton())

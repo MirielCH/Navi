@@ -33,6 +33,11 @@ class SettingsCog(commands.Cog):
     )
 
     @cmd_settings.command()
+    async def alts(self, ctx: discord.ApplicationContext) -> None:
+        """Manage alt settings"""
+        await settings_cmd.command_settings_alts(self.bot, ctx)
+        
+    @cmd_settings.command()
     async def guild(self, ctx: discord.ApplicationContext) -> None:
         """Manage guild settings"""
         await settings_cmd.command_settings_clan(self.bot, ctx)
@@ -56,10 +61,9 @@ class SettingsCog(commands.Cog):
     async def partner(
         self,
         ctx: discord.ApplicationContext,
-        new_partner: Option(discord.User, 'Set a new partner', default=None)
     ) -> None:
         """Manage partner settings"""
-        await settings_cmd.command_settings_partner(self.bot, ctx, new_partner)
+        await settings_cmd.command_settings_partner(self.bot, ctx)
 
     @cmd_settings.command()
     async def ready(self, ctx: discord.ApplicationContext) -> None:

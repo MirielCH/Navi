@@ -19,7 +19,11 @@ async def command_list(
     user: Optional[discord.User] = None
 ) -> None:
     """Lists all active reminders"""
-    user = user if user is not None else ctx.author
+    if user is not None and user != ctx.author:
+        user_mentioned = True
+    else:
+        user = ctx.author
+        user_mentioned = False
     try:
         user_settings: users.User = await users.get_user(user.id)
     except exceptions.FirstTimeUserError:
@@ -43,7 +47,8 @@ async def command_list(
         except:
             pass
     embed = await embed_reminders_list(bot, user, user_reminders, clan_reminders)
-    view = views.RemindersListView(bot, ctx, user, user_reminders, clan_reminders, custom_reminders, embed_reminders_list)
+    view = views.RemindersListView(bot, ctx, user, user_settings, user_mentioned, user_reminders, clan_reminders,
+                                   custom_reminders, embed_reminders_list)
     if isinstance(ctx, discord.ApplicationContext):
         interaction_message = await ctx.respond(embed=embed, view=view)
     else:
@@ -61,6 +66,7 @@ async def command_ready(
     channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
     if not channel_permissions.view_channel or not channel_permissions.send_messages or not channel_permissions.embed_links:
         return
+    
     async def get_command_from_activity(activity:str) -> str:
         if activity == 'dungeon-miniboss':
             command_dungeon = await functions.get_slash_command(user_settings, 'dungeon', False)

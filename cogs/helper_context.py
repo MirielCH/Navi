@@ -156,7 +156,7 @@ class HelperContextCog(commands.Cog):
                         f"➜ {strings.SLASH_COMMANDS['pets adventure']}\n"
                         f"➜ {strings.SLASH_COMMANDS['pets list']}\n"
                     )
-                await message.reply(answer)
+                    await message.reply(answer)
 
             # Quest - Only works with slash
             search_strings = [

@@ -891,9 +891,9 @@ class AutoFlexCog(commands.Cog):
                     return
                 user_name = match.group(1)
                 item_amount = int(match.group(2))
-                item_name = match.group(4)
+                item_name = match.group(4).lower().replace('**','').strip()
                 if item_name not in item_events: return
-                event = item_events[item_name.lower().replace('**','')]
+                event = item_events[item_name]
                 if user is None:
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_WORK,
@@ -1443,6 +1443,8 @@ class AutoFlexCog(commands.Cog):
                                 f'**{user_name}** just found __**{amount}**__ of them at once!\n'
                                 f'(Well, actually, the horse did all the work)'
                             )
+                        else:
+                            return
                     else:
                         description = (
                             f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'

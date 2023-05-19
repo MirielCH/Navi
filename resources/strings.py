@@ -1546,7 +1546,7 @@ FLEX_THUMBNAILS_LB_GODLY = [
     'https://media.tenor.com/f8-9UL5OveIAAAAi/box-cute.gif',
     'https://media.tenor.com/ZDW2vrkgYB4AAAAC/whats-inside-ricky-berwick.gif',
     'https://media.tenor.com/kI9zfph0YdIAAAAC/andre-leon-talley-present.gif',
-    'https://media.tenor.com/GXVWyf8jBgsAAAAd/dancing-box-happy-box.gif',
+    'https://media.tenor.com/tuOmcb4nNG0AAAAd/nice-package-austin-evans.gif',
 ]
 
 FLEX_THUMBNAILS_LB_GODLY_PARTNER = [

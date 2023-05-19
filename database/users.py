@@ -6,6 +6,7 @@ from datetime import datetime
 import sqlite3
 from typing import NamedTuple, Tuple
 
+from database import alts as alts_db
 from database import errors
 from resources import exceptions, settings, strings
 
@@ -58,6 +59,7 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
+    alts: Tuple[int]
     ascended: bool
     auto_flex_enabled: bool
     auto_flex_tip_read: bool
@@ -113,6 +115,7 @@ class User():
     ready_up_next_as_timestamp: bool
     ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
+    reminder_channel_id: int
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -153,6 +156,7 @@ class User():
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
         self.alert_work = new_settings.alert_work
+        self.alts = new_settings.alts
         self.ascended = new_settings.ascended
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_tip_read = new_settings.auto_flex_tip_read
@@ -208,6 +212,7 @@ class User():
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
+        self.reminder_channel_id = new_settings.reminder_channel_id
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -217,6 +222,26 @@ class User():
         self.training_helper_enabled = new_settings.training_helper_enabled
         self.user_donor_tier = new_settings.user_donor_tier
 
+    async def add_alt(self, alt_id: int) -> None:
+        """Adds an alt to the database. Also calls refresh().
+
+        Arguments
+        ---------
+        alt_id: int
+        """
+        await alts_db.insert_alt(self.user_id, alt_id)
+        await self.refresh()
+        
+    async def remove_alt(self, alt_id: int) -> None:
+        """Deletes an alt in the database. Also calls refresh().
+
+        Arguments
+        ---------
+        alt_id: int
+        """
+        await alts_db.delete_alt(self.user_id, alt_id)
+        await self.refresh()
+        
     async def update(self, **kwargs) -> None:
         """Updates the user record in the database. Also calls refresh().
         If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
@@ -377,6 +402,7 @@ class User():
             ready_up_next_as_timestamp: bool
             ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
+            reminder_channel_id: int
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -518,6 +544,7 @@ async def _dict_to_user(record: dict) -> User:
                                    message=record['alert_work_message'],
                                    multiplier=float(record['alert_work_multiplier']),
                                    visible=bool(record['alert_work_visible'])),
+            alts = record['alts'],
             ascended = bool(record['ascended']),
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
@@ -577,6 +604,7 @@ async def _dict_to_user(record: dict) -> User:
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
+            reminder_channel_id = record['reminder_channel_id'],
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -625,7 +653,9 @@ async def get_user(user_id: int) -> User:
         raise
     if not record:
         raise exceptions.FirstTimeUserError(f'No user data found in database for user "{user_id}".')
-    user = await _dict_to_user(dict(record))
+    record = dict(record)
+    record['alts'] = await alts_db.get_alts(user_id)
+    user = await _dict_to_user(record)
 
     return user
 
@@ -660,7 +690,9 @@ async def get_all_users() -> Tuple[User]:
         raise exceptions.FirstTimeUserError(f'No user data found in database (how likely is that).')
     users = []
     for record in records:
-        user = await _dict_to_user(dict(record))
+        record = dict(record)
+        record['alts'] = await alts_db.get_alts(record['user_id'])
+        user = await _dict_to_user(record)
         users.append(user)
 
     return tuple(users)
@@ -696,7 +728,9 @@ async def get_users_by_clan_name(clan_name: str) -> Tuple[User]:
         raise exceptions.FirstTimeUserError(f'No users found for clan {clan_name} ')
     users = []
     for record in records:
-        user = await _dict_to_user(dict(record))
+        record = dict(record)
+        record['alts'] = await alts_db.get_alts(record['user_id'])
+        user = await _dict_to_user(record)
         users.append(user)
 
     return tuple(users)
@@ -892,6 +926,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_up_next_as_timestamp: bool
         ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
+        reminder_channel_id: int
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

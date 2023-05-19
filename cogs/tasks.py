@@ -4,6 +4,7 @@
 import asyncio
 from datetime import datetime, timedelta
 from humanfriendly import format_timespan
+import re
 import sqlite3
 from typing import List
 
@@ -34,11 +35,15 @@ class TasksCog(commands.Cog):
             return time_left
 
         try:
-            channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
-            if channel is None: return
             if first_reminder.reminder_type == 'user':
                 user = await functions.get_discord_user(self.bot, first_reminder.user_id)
                 user_settings = await users.get_user(user.id)
+                if user_settings.reminder_channel_id is not None:
+                    reminder_channel_id = user_settings.reminder_channel_id
+                else:
+                    reminder_channel_id = first_reminder.channel_id
+                channel = await functions.get_discord_channel(self.bot, reminder_channel_id)
+                if channel is None: return
                 message_no = 1
                 messages = {message_no: ''}
                 for reminder in reminders_list:
@@ -95,15 +100,19 @@ class TasksCog(commands.Cog):
                         await user_settings.update(ready_pets_claim_active=True)
                     if reminder.activity == 'dragon-breath-potion':
                         await user_settings.update(potion_dragon_breath_active=False)
-                    allowed_mentions = discord.AllowedMentions(users=[user,])
                     for message in messages.values():
-                        await channel.send(message.strip(), allowed_mentions=allowed_mentions)
+                        for found_id in re.findall(r'<@(\d{16,20})>', message):
+                            if int(found_id) not in user_settings.alts:
+                                message = re.sub(rf'<@{found_id}>', '-Removed alt-', message)
+                        await channel.send(message.strip())
                 except asyncio.CancelledError:
                     return
                 except discord.errors.Forbidden:
                     return
 
             if first_reminder.reminder_type == 'clan':
+                channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
+                if channel is None: return
                 clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
                 if clan.quest_user_id is not None:
                     quest_user_id = clan.quest_user_id

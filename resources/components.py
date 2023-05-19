@@ -383,6 +383,37 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
+class SwitchRemindersListAltSelect(discord.ui.Select):
+    """Select to switch between alts"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        emoji = emojis.BP if view.user.id == view.active_alt_id else None
+        options = [discord.SelectOption(label=view.user.name, value=str(view.user.id), emoji=emoji),]
+        for alt_id in view.user_settings.alts:
+            alt = view.bot.get_user(alt_id)
+            label = str(alt_id) if alt is None else alt.name
+            emoji = emojis.BP if alt_id == view.active_alt_id else None
+            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+        super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
+                         options=sorted(options, key=lambda option: option.label), row=row,
+                         custom_id='switch_alt')
+
+    async def callback(self, interaction: discord.Interaction):
+        alt_id = int(self.values[0])
+        self.view.active_alt_id = alt_id
+        alt = await functions.get_discord_user(self.view.bot, alt_id)
+        embed = await self.view.embed_function(self.view.bot, alt, self.view.user_reminders, self.view.clan_reminders,
+                                               self.view.show_timestamps)
+        for child in self.view.children.copy():
+            if isinstance(child, SwitchRemindersListAltSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SwitchRemindersListAltSelect(self.view))
+                break
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+        
 class SwitchSettingsSelect(discord.ui.Select):
     """Select to switch between settings embeds"""
     def __init__(self, view: discord.ui.View, commands_settings: Dict[str, callable], row: Optional[int] = None):
@@ -404,24 +435,12 @@ class ManageUserSettingsSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         reactions_emoji = emojis.ENABLED if view.user_settings.reactions_enabled else emojis.DISABLED
-        #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
         auto_flex_emoji = emojis.ENABLED if view.user_settings.auto_flex_enabled else emojis.DISABLED
-        dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
-        hunt_emoji = emojis.ENABLED if view.user_settings.hunt_rotation_enabled else emojis.DISABLED
-        mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
         tracking_emoji = emojis.ENABLED if view.user_settings.tracking_enabled else emojis.DISABLED
         options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
                                             value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'Auto flex alerts', emoji=auto_flex_emoji,
                                             value='toggle_auto_flex'))
-        options.append(discord.SelectOption(label=f'DND mode', emoji=dnd_emoji,
-                                            value='toggle_dnd'))
-        options.append(discord.SelectOption(label=f'Hunt rotation', emoji=hunt_emoji,
-                                            value='toggle_hunt'))
-        options.append(discord.SelectOption(label=f'Slash command reminders', emoji=mentions_emoji,
-                                            value='toggle_mentions'))
-        #options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
-        #                                    value='toggle_christmas_area'))
         options.append(discord.SelectOption(label=f'Command tracking', emoji=tracking_emoji,
                                             value='toggle_tracking'))
         options.append(discord.SelectOption(label=f'Change last time travel time',
@@ -435,14 +454,6 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(reactions_enabled=not self.view.user_settings.reactions_enabled)
         elif select_value == 'toggle_auto_flex':
             await self.view.user_settings.update(auto_flex_enabled=not self.view.user_settings.auto_flex_enabled)
-        elif select_value == 'toggle_dnd':
-            await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
-        elif select_value == 'toggle_hunt':
-            await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
-        elif select_value == 'toggle_mentions':
-            await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
-        elif select_value == 'toggle_christmas_area':
-            await self.view.user_settings.update(christmas_area_enabled=not self.view.user_settings.christmas_area_enabled)
         elif select_value == 'toggle_tracking':
             await self.view.user_settings.update(tracking_enabled=not self.view.user_settings.tracking_enabled)
         elif select_value == 'set_last_tt':
@@ -461,6 +472,128 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
+class ManageReminderBehaviourSelect(discord.ui.Select):
+    """Select to change reminder behaviour settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
+        hunt_emoji = emojis.ENABLED if view.user_settings.hunt_rotation_enabled else emojis.DISABLED
+        mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
+        #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
+        options.append(discord.SelectOption(label='DND mode', emoji=dnd_emoji,
+                                            value='toggle_dnd'))
+        options.append(discord.SelectOption(label='Hunt rotation', emoji=hunt_emoji,
+                                            value='toggle_hunt'))
+        options.append(discord.SelectOption(label='Slash command reminders', emoji=mentions_emoji,
+                                            value='toggle_mentions'))
+        options.append(discord.SelectOption(label='Add this channel as reminder channel', emoji=emojis.ADD,
+                                            value='set_channel'))
+        options.append(discord.SelectOption(label='Remove reminder channel', emoji=emojis.REMOVE,
+                                            value='reset_channel'))
+        #options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
+        #                                    value='toggle_christmas_area'))
+        super().__init__(placeholder='Manage reminder behaviour', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_reminder_behaviour')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        if select_value == 'toggle_dnd':
+            await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
+        elif select_value == 'toggle_hunt':
+            await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
+        elif select_value == 'toggle_mentions':
+            await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
+        elif select_value == 'set_channel':
+            confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+            confirm_interaction = await interaction.response.send_message(
+                f'**{interaction.user.name}**, do you want to set `{interaction.channel.name}` as the reminder '
+                f'channel?\n'
+                f'If a reminder channel is set, all reminders will be sent to that channel\n',
+                view=confirm_view,
+                ephemeral=True
+            )
+            confirm_view.interaction_message = confirm_interaction
+            await confirm_view.wait()
+            if confirm_view.value == 'confirm':
+                await self.view.user_settings.update(reminder_channel_id=interaction.channel.id)
+                await confirm_interaction.edit_original_response(content='Channel updated.', view=None)
+            else:
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
+                return
+        elif select_value == 'reset_channel':
+            if self.view.user_settings.reminder_channel_id is None:
+                await interaction.response.send_message(
+                    f'You don\'t have a reminder channel set already.',
+                    ephemeral=True
+                )
+                return
+            confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            confirm_interaction = await interaction.response.send_message(
+                f'**{interaction.user.name}**, do you want to reset your reminder channel?\n\n'
+                f'If you do this, reminders will be sent to where you create them.',
+                view=confirm_view,
+                ephemeral=True
+            )
+            confirm_view.interaction_message = confirm_interaction
+            await confirm_view.wait()
+            if confirm_view.value == 'confirm':
+                await self.view.user_settings.update(reminder_channel_id=None)
+                await confirm_interaction.edit_original_response(content='Channel reset.', view=None)
+            else:
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
+                return
+        for child in self.view.children.copy():
+            if isinstance(child, ManageReminderBehaviourSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageReminderBehaviourSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class RemoveAltSelect(discord.ui.Select):
+    """Select to change alt settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for alt_id in view.user_settings.alts:
+            alt = view.bot.get_user(alt_id)
+            label = str(alt_id) if alt is None else alt.name
+            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emojis.REMOVE))
+        options.sort()
+        super().__init__(placeholder='Remove alts', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='remove_alts')
+
+    async def callback(self, interaction: discord.Interaction):
+        alt_id = int(self.values[0])
+        confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+        confirm_interaction = await interaction.response.send_message(
+            f'**{interaction.user.name}**, do you want to remove <@{alt_id}> as your alt?',
+            view=confirm_view,
+            ephemeral=True
+        )
+        confirm_view.interaction_message = confirm_interaction
+        await confirm_view.wait()
+        if confirm_view.value == 'confirm':
+            await self.view.user_settings.remove_alt(alt_id)
+            await confirm_interaction.edit_original_response(content='Alt removed.', view=None)
+        else:
+            await confirm_interaction.edit_original_response(content='Aborted', view=None)
+        for child in self.view.children.copy():
+            if isinstance(child, RemoveAltSelect):
+                self.view.remove_item(child)
+                if self.view.user_settings.alts:
+                    self.view.add_item(ManagePartnerSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+            
 class ManagePartnerSettingsSelect(discord.ui.Select):
     """Select to change partner settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -591,6 +724,188 @@ class SetDonorTierSelect(discord.ui.Select):
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
+        
+class AddAltSelect(discord.ui.Select):
+    """Select to add a new alt"""
+    def __init__(self, view: discord.ui.View,
+                 disabled: Optional[bool] = False, row: Optional[int] = None):
+        super().__init__(select_type=discord.ComponentType.user_select, min_values=1, max_values=1, disabled=disabled,
+                         row=row, custom_id='add_alt', placeholder='Add alts')
+
+    async def callback(self, interaction: discord.Interaction):
+        new_alt = self.values[0]
+        if new_alt == interaction.user:
+            await interaction.response.send_message(
+                f'You want to add **yourself** as an alt? Are you **that** lonely?',
+                ephemeral=True
+            )
+            return
+        if new_alt.id in self.view.user_settings.alts:
+            await interaction.response.send_message(f'**{new_alt.name}** is already set as an alt.', ephemeral=True)
+            return
+        if new_alt.bot:
+            await interaction.response.send_message(
+                f'Sorry, bots are not allowed to be alts because they are too smol.',
+                ephemeral=True
+            )
+            return
+        view = views.ConfirmUserView(new_alt, 'Sure', 'Ugh, no')
+        interaction = await interaction.response.send_message(
+            f'{new_alt.mention}, **{interaction.user.name}** wants to set you as their alt. '
+            f'Do you want to allow that?\n\n'
+            f'_Alts have the following benefits:_\n'
+            f'{emojis.BP} _Alts are allowed to ping each other in reminders_\n'
+            f'{emojis.BP} _You can quickly switch to alts in '
+            f'{await functions.get_navi_slash_command(self.view.bot, "ready")}, '
+            f'{await functions.get_navi_slash_command(self.view.bot, "list")}'
+            f'and {await functions.get_navi_slash_command(self.view.bot, "stats")}._',
+            view=view
+        )
+        view.interaction = interaction
+        await view.wait()
+        if view.value is None:
+            await functions.edit_interaction(
+                interaction,
+                content=f'**{interaction.user.name}**, the user didn\'t answer in time.',
+                view=None
+            )
+        elif view.value == 'confirm':
+            await self.view.user_settings.add_alt(new_alt.id)
+            await functions.edit_interaction(
+                interaction,
+                content=f'**{interaction.user.name}** and **{new_alt.name}** are now alts of each other.',
+                view=None
+            )
+        else:
+            await functions.edit_interaction(
+                interaction,
+                content=(
+                    f'**{new_alt.name}** doesn\'t want to be an alt. Oh no.\n'
+                    f'Guess they don\'t like you. Oh well. Happens.'
+                ),
+                view=None
+            )
+            return
+        for child in self.view.children.copy():
+            if isinstance(child, AddAltSelect):
+                self.view.remove_item(child)
+                if len(self.view.user_settings.alts) < 24:
+                    self.view.add_item(AddAltSelect(self.view))
+            if isinstance(child, RemoveAltSelect):
+                self.view.remove_item(child)
+        if self.view.user_settings.alts:
+            self.view.add_item(RemoveAltSelect(self.view))
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+            
+class AddPartnerSelect(discord.ui.Select):
+    """Select to add a new partner"""
+    def __init__(self, view: discord.ui.View, placeholder: str,
+                 disabled: Optional[bool] = False, row: Optional[int] = None):
+        super().__init__(select_type=discord.ComponentType.user_select, min_values=1, max_values=1, disabled=disabled,
+                         row=row, custom_id='choose_user', placeholder=placeholder)
+
+    async def callback(self, interaction: discord.Interaction):
+        new_partner = self.values[0]
+        if new_partner == interaction.user:
+            await interaction.response.send_message('Marrying yourself? Now that\'s just sad.', ephemeral=True)
+            return
+        try:
+            new_partner_settings: users.User = await users.get_user(new_partner.id)
+        except exceptions.FirstTimeUserError:
+            await interaction.response.send_message(
+                f'**{new_partner.name}** is not registered with this bot yet. They need to do '
+                f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
+                ephemeral=True
+            )
+            return
+        if self.view.user_settings.partner_id is not None:
+            view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            replace_interaction = await interaction.response.send_message(
+                f'**{interaction.user.name}**, you already have a partner set.\n'
+                f'Setting a new partner will remove your old partner. Do you want to continue?',
+                view=view,
+                ephemeral=True
+            )
+            view.interaction_message = replace_interaction
+            await view.wait()
+            if view.value is None:
+                await functions.edit_interaction(
+                    replace_interaction,
+                    content=f'**{interaction.user.name}**, you didn\'t answer in time.',
+                    view=None
+                )
+                return
+            elif view.value == 'confirm':
+                await functions.edit_interaction(replace_interaction, view=None)
+            else:
+                await functions.edit_interaction(replace_interaction, content='Aborted.', view=None)
+                return
+        
+        view = views.ConfirmUserView(new_partner, 'I do!', 'Forever alone')
+        partner_answer = (
+            f'{new_partner.mention}, **{interaction.user.name}** wants to set you as their partner.\n'
+            f'Do you want to grind together until... idk, drama?'
+        )
+        if interaction.response.is_done():
+            partner_interaction = await interaction.followup.send(partner_answer, view=view)
+        else:
+            partner_interaction = await interaction.response.send_message(partner_answer, view=view)
+        view.interaction = partner_interaction
+        await view.wait()
+        if view.value is None:
+            await functions.edit_interaction(
+                partner_interaction,
+                content=f'**{interaction.user.name}**, your lazy partner didn\'t answer in time.',
+                view=None
+            )
+            return
+        elif view.value == 'confirm':
+            if self.view.user_settings.partner_id is not None:
+                try:
+                    old_partner_settings = await users.get_user(self.view.user_settings.partner_id)
+                    await old_partner_settings.update(partner_id=None)
+                except exceptions.NoDataFoundError:
+                    pass
+            await self.view.user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier)
+            await new_partner_settings.update(
+                partner_id=interaction.user.id, partner_donor_tier=self.view.user_settings.user_donor_tier
+            )
+            if self.view.user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == interaction.user.id:
+                answer = (
+                    f'{emojis.BP} **{interaction.user.name}**, {new_partner.name} is now set as your partner!\n'
+                    f'{emojis.BP} **{new_partner.name}**, {interaction.user.name} is now set as your partner!\n'
+                    f'{emojis.BP} **{interaction.user.name}**, {interaction.user.name} is now set as your partner\'s partner!\n'
+                    f'{emojis.BP} **{new_partner.name}**, ... wait what?\n\n'
+                    f'Anyway, you may now kiss the brides.'
+                )
+                await functions.edit_interaction(partner_interaction, view=None)
+                await interaction.followup.send(answer)
+            else:
+                await interaction.followup.send(strings.MSG_ERROR)
+                return
+        else:
+            await functions.edit_interaction(
+                partner_interaction,
+                content=(
+                    f'**{new_partner.name}** prefers to be forever alone.\n'
+                    f'Stood up at the altar, that\'s gotta hurt, rip.'
+                ),
+                view=None
+            )
+            return
+        self.view.partner_settings = new_partner_settings
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.partner_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
 
 class ReminderMessageSelect(discord.ui.Select):
     """Select to select reminder messages by activity"""
@@ -681,15 +996,17 @@ class SetReminderMessageButton(discord.ui.Button):
             except asyncio.TimeoutError:
                 await interaction.edit_original_response(content=f'**{interaction.user.name}**, you didn\'t answer in time.')
                 return
-            if answer.mentions:
-                for user in answer.mentions:
-                    if user != answer.author:
-                        await interaction.delete_original_response(delay=5)
-                        followup_message = await interaction.followup.send(
-                            content='Aborted. Please don\'t ping other people in your reminders.',
-                        )
-                        await followup_message.delete(delay=5)
-                        return
+            for found_id in re.findall(r'<@(\d{16,20})>', answer.content.lower()):
+                if int(found_id) not in self.view.user_settings.alts:
+                    await interaction.delete_original_response(delay=5)
+                    followup_message = await interaction.followup.send(
+                        content=(
+                            f'Aborted. You are only allowed to ping yourself and your alts set in '
+                            f'{await functions.get_navi_slash_command(self.view.bot, "settings alts")} in reminders.'
+                        ),
+                    )
+                    await followup_message.delete(delay=5)
+                    return
             new_message = answer.content
             if new_message.lower() in ('abort','cancel','stop'):
                 await interaction.delete_original_response(delay=3)

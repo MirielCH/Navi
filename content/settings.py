@@ -220,6 +220,26 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         await functions.edit_interaction(interaction, content='Aborted.', view=None)
 
 
+async def command_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                switch_view: Optional[discord.ui.View] = None) -> None:
+    """Alt settings command"""
+    interaction = user_settings = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    if switch_view is not None: switch_view.stop()
+    view = views.SettingsAltsView(ctx, bot, user_settings, embed_settings_alts)
+    embed = await embed_settings_alts(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+    
 async def command_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
                                 switch_view: Optional[discord.ui.View] = None) -> None:
     """Clan settings command"""
@@ -314,7 +334,6 @@ async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCo
 
 
 async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                   new_partner: Optional[discord.User] = None,
                                    switch_view: Optional[discord.ui.View] = None) -> None:
     """Partner settings command"""
     user_settings = interaction = partner_settings = None
@@ -331,91 +350,14 @@ async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationCon
         except exceptions.NoDataFoundError:
             await ctx.respond(strings.MSG_ERROR, ephemeral=True)
             return
-    if new_partner is None:
-        view = views.SettingsPartnerView(ctx, bot, user_settings, partner_settings, embed_settings_partner)
-        embed = await embed_settings_partner(bot, ctx, user_settings, partner_settings)
-        if interaction is None:
-            interaction = await ctx.respond(embed=embed, view=view)
-        else:
-            await functions.edit_interaction(interaction, embed=embed, view=view)
-        view.interaction = interaction
-        await view.wait()
+    view = views.SettingsPartnerView(ctx, bot, user_settings, partner_settings, embed_settings_partner)
+    embed = await embed_settings_partner(bot, ctx, user_settings, partner_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
     else:
-        try:
-            new_partner_settings: users.User = await users.get_user(new_partner.id)
-        except exceptions.FirstTimeUserError:
-            await ctx.respond(
-                f'**{new_partner.name}** is not registered with this bot yet. They need to do '
-                f'{await functions.get_navi_slash_command(bot, "on")} first.'
-            )
-            return
-        if user_settings.partner_id is not None:
-            view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-            interaction = await ctx.respond(
-                f'**{ctx.author.name}**, you already have a partner set.\n'
-                f'Setting a new partner will remove your old partner. Do you want to continue?',
-                view=view
-            )
-            view.interaction_message = interaction
-            await view.wait()
-            if view.value is None:
-                await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
-                                                 view=None)
-                return
-            elif view.value == 'confirm':
-                await functions.edit_interaction(interaction, view=None)
-            else:
-                await functions.edit_interaction(interaction, content='Aborted.', view=None)
-                return
-        view = views.ConfirmMarriageView(ctx, new_partner)
-        interaction = await ctx.respond(
-            f'{new_partner.mention}, **{ctx.author.name}** wants to set you as their partner.\n'
-            f'Do you want to grind together until... idk, drama?',
-            view=view
-        )
-        view.interaction = interaction
-        await view.wait()
-        if view.value is None:
-            await functions.edit_interaction(interaction,
-                                             content=f'**{ctx.author.name}**, your lazy partner didn\'t answer in time.',
-                                             view=None)
-        elif view.value == 'confirm':
-            if user_settings.partner_id is not None:
-                try:
-                    old_partner_settings = await users.get_user(user_settings.partner_id)
-                    await old_partner_settings.update(partner_id=None)
-                except exceptions.NoDataFoundError:
-                    pass
-            await user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier)
-            await new_partner_settings.update(partner_id=ctx.author.id, partner_donor_tier=user_settings.user_donor_tier)
-            if user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == ctx.author.id:
-                answer = (
-                    f'{emojis.BP} **{ctx.author.name}**, {new_partner.name} is now set as your partner!\n'
-                    f'{emojis.BP} **{new_partner.name}**, {ctx.author.name} is now set as your partner!\n'
-                    f'{emojis.BP} **{ctx.author.name}**, {ctx.author.name} is now set as your partner\'s partner!\n'
-                    f'{emojis.BP} **{new_partner.name}**, ... wait what?\n\n'
-                    f'Anyway, you may now kiss the brides.'
-                )
-                view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Partner settings')
-                interaction = await ctx.respond(answer, view=view)
-                view.interaction_message = interaction
-                await view.wait()
-                if view.value == 'pressed':
-                    await functions.edit_interaction(interaction, view=None)
-                    await command_settings_partner(bot, ctx)
-                await functions.edit_interaction(interaction, view=None)
-                return
-            else:
-                await ctx.send(strings.MSG_ERROR)
-                return
-        else:
-            await functions.edit_interaction(interaction,
-                                             content=(
-                                                 f'**{new_partner.name}** prefers to be forever alone.\n'
-                                                 f'Stood up at the altar, that\'s gotta hurt, rip.'
-                                             ),
-                                             view=None)
-            return
+        await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
 
 
 async def command_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext,
@@ -622,6 +564,29 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
 
 
 # --- Embeds ---
+async def embed_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
+    """Alt settings embed"""
+    alts = f'{emojis.BP} No alts set'
+    alt_count = 0
+    if user_settings.alts:
+        alts = ''
+        for alt_id in user_settings.alts:
+            alts = f'{alts}\n{emojis.BP} <@{alt_id}>'
+            alt_count += 1
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name.upper()}\'S ALTS',
+        description = (
+            f'_You can ping alts in reminders and quickly view their status in '
+            f'{await functions.get_navi_slash_command(bot, "ready")}, '
+            f'{await functions.get_navi_slash_command(bot, "list")}'
+            f' and {await functions.get_navi_slash_command(bot, "stats")}._'
+        )
+    )
+    embed.add_field(name=f'ALTS ({alt_count}/24)', value=alts, inline=False)
+    return embed
+
+
 async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
@@ -980,6 +945,21 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
 async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
                                    user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
+    reminder_channel = '`N/A`'
+    if user_settings.reminder_channel_id is not None:
+        reminder_channel = f'<#{user_settings.reminder_channel_id}>'
+    behaviour = (
+        f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
+        f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
+        f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
+        f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
+        f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
+        f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
+        f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
+        f'{emojis.DETAIL} _If this is set, all reminders are sent to this channel._\n'
+        #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
+        #f'{emojis.DETAIL} _Reduces your reminders by 10%._\n'
+    )
     command_reminders = (
         #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
         #f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
@@ -1041,6 +1021,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
             f'_Note that disabling a reminder also deletes the reminder from my database._'
         )
     )
+    embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
     embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
     embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
@@ -1187,16 +1168,6 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
         f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} to update this setting._\n'
     )
-    behaviour = (
-        f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
-        f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
-        f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
-        f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
-        f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
-        f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
-        #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
-        #f'{emojis.DETAIL} _Reduces your reminders by 10%._\n'
-    )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'
         f'{emojis.BP} **Last time travel**: <t:{tt_timestamp}:f>\n'
@@ -1211,6 +1182,5 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     )
     embed.add_field(name='MAIN', value=bot, inline=False)
     embed.add_field(name='EPIC RPG RELATED', value=donor_tier, inline=False)
-    embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
     embed.add_field(name='TRACKING', value=tracking, inline=False)
     return embed
