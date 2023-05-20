@@ -964,6 +964,7 @@ SLASH_COMMANDS = {
 RPG_COMMANDS = {
     'adventure': 'rpg adventure',
     'alchemy': 'rpg alchemy',
+    'area': 'rpg area',
     'arena': 'rpg arena',
     'axe': 'rpg axe',
     'big arena': 'rpg big arena join',

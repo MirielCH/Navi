@@ -383,8 +383,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
-class SwitchRemindersListAltSelect(discord.ui.Select):
-    """Select to switch between alts"""
+class SwitchReadyAltSelect(discord.ui.Select):
+    """Select to switch between alts in /ready"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         emoji = emojis.BP if view.user.id == view.active_alt_id else None
         options = [discord.SelectOption(label=view.user.name, value=str(view.user.id), emoji=emoji),]
@@ -401,13 +401,79 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
         alt_id = int(self.values[0])
         self.view.active_alt_id = alt_id
         alt = await functions.get_discord_user(self.view.bot, alt_id)
-        embed = await self.view.embed_function(self.view.bot, alt, self.view.user_reminders, self.view.clan_reminders,
-                                               self.view.show_timestamps)
+        embed, content = await self.view.embed_function(self.view.bot, alt, False)
+        if self.view.user_settings.ready_as_embed:
+            content = None
+        else:
+            embed = None
+        for child in self.view.children.copy():
+            if isinstance(child, SwitchReadyAltSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SwitchReadyAltSelect(self.view))
+        if interaction.response.is_done():
+            await interaction.message.edit(content=content, embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(content=content, embed=embed, view=self.view)
+
+            
+class SwitchStatsAltSelect(discord.ui.Select):
+    """Select to switch between alts in /stats"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        emoji = emojis.BP if view.user.id == view.active_alt_id else None
+        options = [discord.SelectOption(label=view.user.name, value=str(view.user.id), emoji=emoji),]
+        for alt_id in view.user_settings.alts:
+            alt = view.bot.get_user(alt_id)
+            label = str(alt_id) if alt is None else alt.name
+            emoji = emojis.BP if alt_id == view.active_alt_id else None
+            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+        super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
+                         options=sorted(options, key=lambda option: option.label), row=row,
+                         custom_id='switch_alt')
+
+    async def callback(self, interaction: discord.Interaction):
+        alt_id = int(self.values[0])
+        self.view.active_alt_id = alt_id
+        alt = await functions.get_discord_user(self.view.bot, alt_id)
+        embed = await self.view.embed_function(self.view.bot, alt, self.view.time_left)
+        for child in self.view.children.copy():
+            if isinstance(child, SwitchStatsAltSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SwitchStatsAltSelect(self.view))
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+            
+class SwitchRemindersListAltSelect(discord.ui.Select):
+    """Select to switch between alts in /list"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        emoji = emojis.BP if view.user.id == view.active_alt_id else None
+        options = [discord.SelectOption(label=view.user.name, value=str(view.user.id), emoji=emoji),]
+        for alt_id in view.user_settings.alts:
+            alt = view.bot.get_user(alt_id)
+            label = str(alt_id) if alt is None else alt.name
+            emoji = emojis.BP if alt_id == view.active_alt_id else None
+            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+        super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
+                         options=sorted(options, key=lambda option: option.label), row=row,
+                         custom_id='switch_alt')
+
+    async def callback(self, interaction: discord.Interaction):
+        alt_id = int(self.values[0])
+        self.view.active_alt_id = alt_id
+        alt = await functions.get_discord_user(self.view.bot, alt_id)
+        embed = await self.view.embed_function(self.view.bot, alt, self.view.show_timestamps)
         for child in self.view.children.copy():
             if isinstance(child, SwitchRemindersListAltSelect):
                 self.view.remove_item(child)
                 self.view.add_item(SwitchRemindersListAltSelect(self.view))
-                break
+            if isinstance(child, DeleteCustomReminderSelect) and alt != self.view.user:
+                self.view.remove_item(child)
+            if isinstance(child, DeleteCustomRemindersButton) and alt != self.view.user:
+                self.view.remove_item(child)
+        if alt == self.view.user and self.view.custom_reminders: 
+            self.view.add_item(DeleteCustomRemindersButton())
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -745,7 +811,28 @@ class AddAltSelect(discord.ui.Select):
             return
         if new_alt.bot:
             await interaction.response.send_message(
-                f'Sorry, bots are not allowed to be alts because they are too smol.',
+                f'Sorry, bots are not allowed to be alts, they are too smol.',
+                ephemeral=True
+            )
+            return
+        if len(self.view.user_settings.alts) >= 24:
+            await interaction.response.send_message(
+                f'You already have 24 alts and no space left. You need to remove one first.',
+                ephemeral=True
+            )
+            return
+        try:
+            new_alt_settings = await users.get_user(new_alt.id)
+        except exceptions.FirstTimeUserError:
+            await interaction.response.send_message(
+                f'**{new_alt.name}** is not registered with Navi yet. They need to do '
+                f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
+                ephemeral=True
+            )
+            return
+        if len(new_alt_settings.alts) >= 24:
+            await interaction.response.send_message(
+                f'**{new_alt.name}** already has 24 alts and no space left. They need to remove one first.',
                 ephemeral=True
             )
             return
@@ -818,7 +905,7 @@ class AddPartnerSelect(discord.ui.Select):
             new_partner_settings: users.User = await users.get_user(new_partner.id)
         except exceptions.FirstTimeUserError:
             await interaction.response.send_message(
-                f'**{new_partner.name}** is not registered with this bot yet. They need to do '
+                f'**{new_partner.name}** is not registered with Navi yet. They need to do '
                 f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
@@ -1072,8 +1159,7 @@ class DeleteCustomRemindersButton(discord.ui.Button):
     async def callback(self, interaction: discord.Interaction) -> None:
         self.view.remove_item(self)
         self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))
-        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_reminders,
-                                               self.view.clan_reminders, self.view.show_timestamps)
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.show_timestamps)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
@@ -1089,8 +1175,7 @@ class ToggleTimestampsButton(discord.ui.Button):
             self.label = 'Show time left'
         else:
             self.label = 'Show end time'
-        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_reminders,
-                                               self.view.clan_reminders, self.view.show_timestamps)
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.show_timestamps)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
@@ -1112,12 +1197,11 @@ class DeleteCustomReminderSelect(discord.ui.Select):
             if reminder.custom_id == int(select_value):
                 await reminder.delete()
                 self.custom_reminders.remove(reminder)
-                for user_reminder in self.view.user_reminders:
-                    if user_reminder.custom_id == reminder.custom_id:
-                        self.view.user_reminders.remove(user_reminder)
+                for custom_reminder in self.view.custom_reminders:
+                    if custom_reminder.custom_id == reminder.custom_id:
+                        self.view.custom_reminder.remove(custom_reminder)
                         break
-        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.user_reminders,
-                                               self.view.clan_reminders, self.view.show_timestamps)
+        embed = await self.view.embed_function(self.view.bot, self.view.user, self.view.show_timestamps)
         self.view.remove_item(self)
         if self.custom_reminders:
             self.view.add_item(DeleteCustomReminderSelect(self.view, self.view.custom_reminders))

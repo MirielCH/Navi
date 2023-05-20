@@ -101,7 +101,6 @@ class QuestCog(commands.Cog):
                         f'Another guild member is already doing a guild quest.'
                     )
                     return
-                await user_settings.update(guild_quest_prompt_active=True)
                 try:
                     clan_reminder = await reminders.get_clan_reminder(user_settings.clan_name)
                 except exceptions.NoDataFoundError:
@@ -112,6 +111,7 @@ class QuestCog(commands.Cog):
                     time_left = clan_reminder.end_time - current_time
                     timestring = await functions.parse_timedelta_to_timestring(time_left)
                     raid_ready = f'🕓 {command_raid} ready in **{timestring}**.'
+                    await user_settings.update(guild_quest_prompt_active=True)
                 else:
                     raid_ready = f'{emojis.ENABLED} {command_raid} ready **now**!'
                 await message.reply(

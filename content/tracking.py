@@ -19,7 +19,11 @@ async def command_stats(
     user: Optional[discord.User] = None,
 ) -> None:
     """Lists all stats"""
-    if user is None: user = ctx.author
+    if user is not None and user != ctx.author:
+        user_mentioned = True
+    else:
+        user = ctx.author
+        user_mentioned = False
     try:
         user_settings: users.User = await users.get_user(user.id)
     except exceptions.FirstTimeUserError:
@@ -29,7 +33,9 @@ async def command_stats(
             await functions.reply_or_respond(ctx, 'This user is not registered with this bot.', True)
             return
     if timestring is None:
+        time_left = timedelta(0)
         embed = await embed_stats_overview(ctx, user)
+        embed_function = embed_stats_overview
     else:
         try:
             timestring = await functions.check_timestring(timestring)
@@ -54,17 +60,23 @@ async def command_stats(
             await ctx.reply('The maximum time is 365d, sorry.')
             return
         embed = await embed_stats_timeframe(ctx, user, time_left)
-    view = views.StatsView(ctx, user, user_settings)
+        embed_function = embed_stats_timeframe
+    if not user_mentioned:
+        view = views.StatsView(bot, ctx, user_settings, user_mentioned, time_left, embed_function)
+    else:
+        view = None
     if isinstance(ctx, discord.ApplicationContext):
         interaction_message = await ctx.respond(embed=embed, view=view)
     else:
         interaction_message = await ctx.reply(embed=embed, view=view)
-    view.interaction_message = interaction_message
-    await view.wait()
+    if not user_mentioned:
+        view.interaction_message = interaction_message
+        await view.wait()
 
 
 # --- Embeds ---
-async def embed_stats_overview(ctx: commands.Context, user: discord.User) -> discord.Embed:
+async def embed_stats_overview(ctx: commands.Context, user: discord.User,
+                               time_left: timedelta = timedelta(0)) -> discord.Embed:
     """Stats overview embed"""
 
     async def command_count(command: str, timeframe: timedelta) -> str:

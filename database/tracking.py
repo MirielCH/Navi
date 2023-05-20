@@ -345,6 +345,52 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     return tuple(log_entries)
 
 
+async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
+    """Gets ALL log entries for a user.
+
+    Arguments
+    ---------
+    user_id: int
+    command: str
+    timeframe: timedelta object with the amount of time that should be covered, starting from UTC now
+    guild_id: Optional[int]
+
+    Returns
+    -------
+    Tuple[LogEntry]
+
+    Raises
+    ------
+    sqlite3.Error if something happened within the database.
+    exceptions.NoDataFoundError if no guild was found.
+    LookupError if something goes wrong reading the dict.
+    Also logs all errors to the database.
+    """
+    table = 'tracking_log'
+    function_name = 'get_log_entries'
+    sql = (
+        f'SELECT * FROM {table} WHERE user_id=?'
+    )
+    try:
+        cur = settings.NAVI_DB.cursor()
+        cur.execute(sql, (user_id,))
+        records = cur.fetchall()
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    if not records:
+        error_message = f'No log data found in database for user {user_id}".'
+        raise exceptions.NoDataFoundError(error_message)
+    log_entries = []
+    for record in records:
+        log_entry = await _dict_to_log_entry(dict(record))
+        log_entries.append(log_entry)
+
+    return tuple(log_entries)
+
+
 async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
     """Gets all single log entries older than a certain amount of days.
 

@@ -93,6 +93,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "custom-reminder")} : Add a custom reminder\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}reminder`, `{prefix}rm`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings messages")} : Manage reminder messages\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings multipliers")} : Manage custom multipliers\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings ready")} : Manage the ready list\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings reminders")} : Enable/disable reminders\n'
     )
@@ -109,6 +110,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings helpers")} : Enable/disable helpers\n'
     )
     partner_settings = (
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings alts")} : Manage alts\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings partner")} : Manage partner settings\n'
     )
     guild_settings = (
@@ -124,6 +126,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "event-reductions")} : Check active event reductions\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "portals")} : Customizable list of channel links\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}portals`, `{prefix}pt`_\n'
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "purge data")} : Purges your user data\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings portals")} : Manage your portals\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")} : List of some EPIC RPG slash commands\n'
     )
@@ -145,7 +148,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         )
     )
     embed.add_field(name='USER', value=user_settings, inline=False)
-    embed.add_field(name='PARTNER', value=partner_settings, inline=False)
+    embed.add_field(name='PARTNER & ALTS', value=partner_settings, inline=False)
     embed.add_field(name='REMINDERS', value=reminder_settings, inline=False)
     embed.add_field(name='HELPERS', value=helper_settings, inline=False)
     embed.add_field(name='GUILD CHANNEL REMINDERS', value=guild_settings, inline=False)

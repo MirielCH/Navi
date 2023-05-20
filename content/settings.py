@@ -1,6 +1,7 @@
 # settings.py
 """Contains settings commands"""
 
+import asyncio
 from datetime import timezone
 import re
 from typing import List, Optional, Union
@@ -8,7 +9,7 @@ from typing import List, Optional, Union
 import discord
 from discord.ext import commands
 
-from database import clans, guilds, portals, reminders, users
+from database import clans, guilds, portals, reminders, tracking, users
 from resources import emojis, exceptions, functions, settings, strings, views
 
 
@@ -220,6 +221,112 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         await functions.edit_interaction(interaction, content='Aborted.', view=None)
 
 
+async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+    """Purge data command"""
+    user_settings: users.User = await users.get_user(ctx.author.id)
+    answer_aborted = f'**{ctx.author.name}**, phew, was worried there for a second.'
+    answer_timeout = f'**{ctx.author.name}**, you didn\'t answer in time.'
+    answer = (
+        f'{emojis.WARNING} **{ctx.author.name}**, this will purge your user data from Navi **completely** {emojis.WARNING}\n\n'
+        f'This includes the following:\n'
+        f'{emojis.BP} Your alts\n'
+        f'{emojis.BP} All reminders\n'
+        f'{emojis.BP} All raids in the current guild leaderboard\n'
+        f'{emojis.BP} Your complete command tracking history\n'
+        f'{emojis.BP} Your user portals\n'
+        f'{emojis.BP} And finally, your user settings\n\n'
+        f'**There is no coming back from this**.\n'
+        f'You will of course be able to start using Navi again, but all of your data will start '
+        f'from scratch.\n'
+        f'Are you **SURE**?'
+    )
+    view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
+    interaction = await ctx.respond(answer, view=view)
+    view.interaction_message = interaction
+    await view.wait()
+    if view.value is None:
+        await functions.edit_interaction(
+            interaction, content=answer_timeout, view=None
+        )
+    elif view.value == 'confirm':
+        await functions.edit_interaction(interaction, view=None)
+        answer = (
+            f'{emojis.WARNING} **{ctx.author.name}**, just a friendly final warning {emojis.WARNING}\n'
+            f'**ARE YOU SURE?**'
+        )
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
+        interaction = await ctx.respond(answer, view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await functions.edit_interaction(
+                interaction, content=answer_timeout, view=None
+            )
+        elif view.value == 'confirm':
+            cur = settings.NAVI_DB.cursor()
+            await functions.edit_interaction(
+                interaction, content='Purging user settings...',
+                view=None
+            )
+            if user_settings.partner_id is not None:
+                try:
+                    partner_settings: users.User = await users.get_user(user_settings.partner_id)
+                    await partner_settings.update(partner_id=None)
+                except exceptions.FirstTimeUserError:
+                    pass
+            cur.execute('DELETE FROM users WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await functions.edit_interaction(
+                interaction, content='Purging alts...',
+                view=None
+            )
+            cur.execute('DELETE FROM alts WHERE user1_id=? OR user2_id=?', (ctx.author.id, ctx.author.id))
+            await asyncio.sleep(1)
+            await functions.edit_interaction(
+                interaction, content='Purging reminders...',
+                view=None
+            )
+            cur.execute('DELETE FROM reminders_users WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await functions.edit_interaction(
+                interaction, content='Purging raid data...',
+                view=None
+            )
+            cur.execute('DELETE FROM clans_raids WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await functions.edit_interaction(
+                interaction, content='Purging portals...',
+                view=None
+            )
+            cur.execute('DELETE FROM users_portals WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await functions.edit_interaction(
+                interaction, content='Purging tracking data... (this can take a while)',
+                view=None
+            )
+            try:
+                log_entries =  await tracking.get_all_log_entries(ctx.author.id)
+            except exceptions.NoDataFoundError:
+                log_entries = []
+            for log_entry in log_entries:
+                await log_entry.delete()
+                await asyncio.sleep(0.01)
+            await asyncio.sleep(1)
+            await functions.edit_interaction(
+                interaction,
+                content=f'{emojis.ENABLED} **{ctx.author.name}**, you are now gone and forgotton. Thanks for using me!',
+                view=None
+            )   
+        else:
+            await functions.edit_interaction(
+                interaction, content=answer_aborted, view=None
+            )
+    else:
+        await functions.edit_interaction(
+            interaction, content=answer_aborted, view=None
+        )
+        
+
 async def command_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext,
                                 switch_view: Optional[discord.ui.View] = None) -> None:
     """Alt settings command"""
@@ -332,6 +439,26 @@ async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCo
     view.interaction = interaction
     await view.wait()
 
+
+async def command_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                       switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder multiplier settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsMultipliersView(ctx, bot, user_settings, embed_settings_multipliers)
+    embed = await embed_settings_multipliers(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await functions.edit_interaction(interaction, embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+    
 
 async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext,
                                    switch_view: Optional[discord.ui.View] = None) -> None:
@@ -760,6 +887,37 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
     return embeds
 
 
+async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationContext,
+                                     user_settings: users.User) -> discord.Embed:
+    """Reminder multiplier settings embed"""
+    multipliers = (
+        f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
+        #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: `{user_settings.alert_chimney.multiplier}`\n'
+        f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
+        f'{emojis.BP} **Duel**: `{user_settings.alert_duel.multiplier}`\n'
+        f'{emojis.BP} **EPIC items**: `{user_settings.alert_epic.multiplier}`\n'
+        f'{emojis.BP} **Farm**: `{user_settings.alert_farm.multiplier}`\n'
+        f'{emojis.BP} **Hunt**: `{user_settings.alert_hunt.multiplier}`\n'
+        f'{emojis.BP} **Lootbox**: `{user_settings.alert_lootbox.multiplier}`\n'
+        f'{emojis.BP} **Quest**: `{user_settings.alert_quest.multiplier}`\n'
+        f'{emojis.BP} **Training**: `{user_settings.alert_training.multiplier}`\n'
+        f'{emojis.BP} **Weekly**: `{user_settings.alert_weekly.multiplier}`\n'
+        f'{emojis.BP} **Work**: `{user_settings.alert_work.multiplier}`\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.author.name.upper()}\'S REMINDER MULTIPLIERS',
+        description = (
+            f'_Multipliers are applied to all reminder times._\n'
+            f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
+            f'_These are **not** for global event reductions. Those are set by your Navi admin and can be '
+            f'viewed in {await functions.get_navi_slash_command(bot, "event-reductions")}._\n'
+        )
+    )
+    embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
+    return embed
+
+
 async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
@@ -945,7 +1103,7 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
 async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
                                    user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
-    reminder_channel = '`N/A`'
+    reminder_channel = '`Last channel the reminder was updated in`'
     if user_settings.reminder_channel_id is not None:
         reminder_channel = f'<#{user_settings.reminder_channel_id}>'
     behaviour = (
@@ -956,7 +1114,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
         f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
-        f'{emojis.DETAIL} _If this is set, all reminders are sent to this channel._\n'
+        f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
         #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
         #f'{emojis.DETAIL} _Reduces your reminders by 10%._\n'
     )
@@ -997,22 +1155,6 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Minin\'tboss**: {await functions.bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}\n'
         f'{emojis.BP} **Pet tournament**: {await functions.bool_to_text(user_settings.alert_pet_tournament.enabled)}\n'
     )
-    multipliers = (
-        f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
-        f'_These are **not** for global event reductions. Ask your Navi admin to set those._\n'
-        f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
-        #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: `{user_settings.alert_chimney.multiplier}`\n'
-        f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
-        f'{emojis.BP} **Duel**: `{user_settings.alert_duel.multiplier}`\n'
-        f'{emojis.BP} **EPIC items**: `{user_settings.alert_epic.multiplier}`\n'
-        f'{emojis.BP} **Farm**: `{user_settings.alert_farm.multiplier}`\n'
-        f'{emojis.BP} **Hunt**: `{user_settings.alert_hunt.multiplier}`\n'
-        f'{emojis.BP} **Lootbox**: `{user_settings.alert_lootbox.multiplier}`\n'
-        f'{emojis.BP} **Quest**: `{user_settings.alert_quest.multiplier}`\n'
-        f'{emojis.BP} **Training**: `{user_settings.alert_training.multiplier}`\n'
-        f'{emojis.BP} **Weekly**: `{user_settings.alert_weekly.multiplier}`\n'
-        f'{emojis.BP} **Work**: `{user_settings.alert_work.multiplier}`\n'
-    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S REMINDER SETTINGS',
@@ -1025,7 +1167,6 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
     embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
-    embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
     return embed
 
 
