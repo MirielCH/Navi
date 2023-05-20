@@ -365,11 +365,11 @@ if __name__ == '__main__':
 
     if db_version < 7:
         sqls += [
-            "CREATE TABLE alts (user1_id INTEGER NOT NULL, user2_id INTEGER NOT NULL)",
+            "CREATE TABLE alts (sort_index INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, "
+            "user1_id INTEGER NOT NULL, user2_id INTEGER NOT NULL)",
             "CREATE UNIQUE INDEX users_unique ON alts (user1_id, user2_id)",
             "ALTER TABLE users ADD reminder_channel_id INTEGER",
         ]
-
 
     # Run SQLs
     for sql in sqls:

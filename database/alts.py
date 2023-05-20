@@ -24,7 +24,7 @@ async def get_alts(user_id: int) -> Tuple[int]:
     """
     table = 'alts'
     function_name = 'get_alts'
-    sql = f'SELECT user1_id, user2_id FROM {table} WHERE user1_id=? OR user2_id=?'
+    sql = f'SELECT user1_id, user2_id FROM {table} WHERE user1_id=? OR user2_id=? ORDER BY sort_index ASC'
     try:
         cur=settings.NAVI_DB.cursor()
         cur.execute(sql, (user_id, user_id))

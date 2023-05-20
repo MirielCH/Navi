@@ -394,7 +394,7 @@ class SwitchReadyAltSelect(discord.ui.Select):
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
-                         options=sorted(options, key=lambda option: option.label), row=row,
+                         options=options, row=row,
                          custom_id='switch_alt')
 
     async def callback(self, interaction: discord.Interaction):
@@ -427,7 +427,7 @@ class SwitchStatsAltSelect(discord.ui.Select):
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
-                         options=sorted(options, key=lambda option: option.label), row=row,
+                         options=options, row=row,
                          custom_id='switch_alt')
 
     async def callback(self, interaction: discord.Interaction):
@@ -438,7 +438,7 @@ class SwitchStatsAltSelect(discord.ui.Select):
         for child in self.view.children.copy():
             if isinstance(child, SwitchStatsAltSelect):
                 self.view.remove_item(child)
-                self.view.add_item(SwitchStatsAltSelect(self.view))
+                self.view.add_item(SwitchReadyAltSelect(self.view))
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
@@ -456,7 +456,7 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
-                         options=sorted(options, key=lambda option: option.label), row=row,
+                         options=options, row=row,
                          custom_id='switch_alt')
 
     async def callback(self, interaction: discord.Interaction):
@@ -629,7 +629,7 @@ class RemoveAltSelect(discord.ui.Select):
             label = str(alt_id) if alt is None else alt.name
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emojis.REMOVE))
         super().__init__(placeholder='Remove alts', min_values=1, max_values=1,
-                         options=sorted(options, key=lambda option: option.label), row=row,
+                         options=options, row=row,
                          custom_id='remove_alts')
 
     async def callback(self, interaction: discord.Interaction):
@@ -799,27 +799,52 @@ class AddAltSelect(discord.ui.Select):
                          row=row, custom_id='add_alt', placeholder='Add alts')
 
     async def callback(self, interaction: discord.Interaction):
+
+        async def update_message() -> None:
+            for child in self.view.children.copy():
+                if isinstance(child, AddAltSelect):
+                    self.view.remove_item(child)
+                if isinstance(child, RemoveAltSelect):
+                    self.view.remove_item(child)
+                    
+            embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+            if interaction.response.is_done():
+                await interaction.message.edit(embed=embed, view=self.view)
+            else:
+                await interaction.response.edit_message(embed=embed, view=self.view)
+            
+            await asyncio.sleep(0.1)
+            if len(self.view.user_settings.alts) < 24:
+                self.view.add_item(AddAltSelect(self.view, row=0))
+            if self.view.user_settings.alts:
+                self.view.add_item(RemoveAltSelect(self.view, row=1))
+            await interaction.message.edit(view=self.view)
+
         new_alt = self.values[0]
         if new_alt == interaction.user:
             await interaction.response.send_message(
                 f'You want to add **yourself** as an alt? Are you **that** lonely?',
                 ephemeral=True
             )
+            await update_message()
             return
         if new_alt.id in self.view.user_settings.alts:
             await interaction.response.send_message(f'**{new_alt.name}** is already set as an alt.', ephemeral=True)
+            await update_message()
             return
         if new_alt.bot:
             await interaction.response.send_message(
                 f'Sorry, bots are not allowed to be alts, they are too smol.',
                 ephemeral=True
             )
+            await update_message()
             return
         if len(self.view.user_settings.alts) >= 24:
             await interaction.response.send_message(
-                f'You already have 24 alts and no space left. You need to remove one first.',
+                f'Your already has 24 alts and no space left. They need to remove one first.',
                 ephemeral=True
             )
+            await update_message()
             return
         try:
             new_alt_settings = await users.get_user(new_alt.id)
@@ -829,12 +854,14 @@ class AddAltSelect(discord.ui.Select):
                 f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
+            await update_message()
             return
         if len(new_alt_settings.alts) >= 24:
             await interaction.response.send_message(
                 f'**{new_alt.name}** already has 24 alts and no space left. They need to remove one first.',
                 ephemeral=True
             )
+            await update_message()
             return
         view = views.ConfirmUserView(new_alt, 'Sure', 'Ugh, no')
         interaction = await interaction.response.send_message(
@@ -872,21 +899,7 @@ class AddAltSelect(discord.ui.Select):
                 ),
                 view=None
             )
-            return
-        for child in self.view.children.copy():
-            if isinstance(child, AddAltSelect):
-                self.view.remove_item(child)
-                if len(self.view.user_settings.alts) < 24:
-                    self.view.add_item(AddAltSelect(self.view))
-            if isinstance(child, RemoveAltSelect):
-                self.view.remove_item(child)
-        if self.view.user_settings.alts:
-            self.view.add_item(RemoveAltSelect(self.view))
-        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
-        if interaction.response.is_done():
-            await interaction.message.edit(embed=embed, view=self.view)
-        else:
-            await interaction.response.edit_message(embed=embed, view=self.view)
+        await update_message()
 
             
 class AddPartnerSelect(discord.ui.Select):
@@ -897,9 +910,25 @@ class AddPartnerSelect(discord.ui.Select):
                          row=row, custom_id='choose_user', placeholder=placeholder)
 
     async def callback(self, interaction: discord.Interaction):
+
+        async def update_message() -> None:
+            for child in self.view.children.copy():
+                if isinstance(child, AddPartnerSelect):
+                    self.view.remove_item(child)    
+            embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
+                                               self.view.partner_settings)
+            if interaction.response.is_done():
+                await interaction.message.edit(embed=embed, view=self.view)
+            else:
+                await interaction.response.edit_message(embed=embed, view=self.view)
+            await asyncio.sleep(0.1)
+            self.view.add_item(AddPartnerSelect(self.view, "Change partner", row=0))
+            await interaction.message.edit(embed=embed, view=self.view)
+        
         new_partner = self.values[0]
         if new_partner == interaction.user:
             await interaction.response.send_message('Marrying yourself? Now that\'s just sad.', ephemeral=True)
+            await update_message()
             return
         try:
             new_partner_settings: users.User = await users.get_user(new_partner.id)
@@ -909,6 +938,7 @@ class AddPartnerSelect(discord.ui.Select):
                 f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
+            await update_message()
             return
         if self.view.user_settings.partner_id is not None:
             view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
@@ -926,13 +956,14 @@ class AddPartnerSelect(discord.ui.Select):
                     content=f'**{interaction.user.name}**, you didn\'t answer in time.',
                     view=None
                 )
+                await update_message()
                 return
             elif view.value == 'confirm':
                 await functions.edit_interaction(replace_interaction, view=None)
             else:
                 await functions.edit_interaction(replace_interaction, content='Aborted.', view=None)
+                await update_message()
                 return
-        
         view = views.ConfirmUserView(new_partner, 'I do!', 'Forever alone')
         partner_answer = (
             f'{new_partner.mention}, **{interaction.user.name}** wants to set you as their partner.\n'
@@ -950,6 +981,7 @@ class AddPartnerSelect(discord.ui.Select):
                 content=f'**{interaction.user.name}**, your lazy partner didn\'t answer in time.',
                 view=None
             )
+            await update_message()
             return
         elif view.value == 'confirm':
             if self.view.user_settings.partner_id is not None:
@@ -974,6 +1006,7 @@ class AddPartnerSelect(discord.ui.Select):
                 await interaction.followup.send(answer)
             else:
                 await interaction.followup.send(strings.MSG_ERROR)
+                await update_message()
                 return
         else:
             await functions.edit_interaction(
@@ -986,12 +1019,7 @@ class AddPartnerSelect(discord.ui.Select):
             )
             return
         self.view.partner_settings = new_partner_settings
-        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
-                                               self.view.partner_settings)
-        if interaction.response.is_done():
-            await interaction.message.edit(embed=embed, view=self.view)
-        else:
-            await interaction.response.edit_message(embed=embed, view=self.view)
+        await update_message()
 
 
 class ReminderMessageSelect(discord.ui.Select):

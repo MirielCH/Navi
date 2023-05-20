@@ -192,10 +192,10 @@ class SettingsAltsView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         if len(user_settings.alts) < 24:
-            self.add_item(components.AddAltSelect(self))
+            self.add_item(components.AddAltSelect(self, row=0))
         if user_settings.alts:
-            self.add_item(components.RemoveAltSelect(self))
-        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+            self.add_item(components.RemoveAltSelect(self, row=1))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=2))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
@@ -746,11 +746,11 @@ class SettingsPartnerView(discord.ui.View):
         self.user_settings = user_settings
         self.partner_settings = partner_settings
         self.embed_function = embed_function
-        self.add_item(components.AddPartnerSelect(self, "Change partner"))
-        self.add_item(components.ManagePartnerSettingsSelect(self))
+        self.add_item(components.AddPartnerSelect(self, "Change partner", row=0))
+        self.add_item(components.ManagePartnerSettingsSelect(self, row=1))
         partner_select_disabled = True if user_settings.partner_id is not None else False
-        self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled))
-        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+        self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled, row=2))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=3))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
