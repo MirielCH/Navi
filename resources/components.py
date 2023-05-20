@@ -628,8 +628,8 @@ class RemoveAltSelect(discord.ui.Select):
             alt = view.bot.get_user(alt_id)
             label = str(alt_id) if alt is None else alt.name
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emojis.REMOVE))
-        options.sort()
-        super().__init__(placeholder='Remove alts', min_values=1, max_values=1, options=options, row=row,
+        super().__init__(placeholder='Remove alts', min_values=1, max_values=1,
+                         options=sorted(options, key=lambda option: option.label), row=row,
                          custom_id='remove_alts')
 
     async def callback(self, interaction: discord.Interaction):
