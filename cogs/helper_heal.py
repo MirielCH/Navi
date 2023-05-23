@@ -88,11 +88,14 @@ class HelperHealCog(commands.Cog):
             if not health_match:
                 search_strings = [
                     f'{user_name}** lost but', #English 1
-                    'but lost fighting', #English 1
+                    'but lost fighting', #English 2
+                    'both lost fighting', #English 3
                     f'{user_name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
+                    'ambos perdieron luchando', #Spanish 3
                     f'{user_name}** perdeu, mas ', #Portuguese 1
                     'mas perdeu a luta', #Portuguese 2
+                    'mas perdeu a luta', #Portuguese 3, MISSING
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
                     await functions.add_warning_reaction(message)
