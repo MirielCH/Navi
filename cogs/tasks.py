@@ -101,9 +101,9 @@ class TasksCog(commands.Cog):
                     if reminder.activity == 'dragon-breath-potion':
                         await user_settings.update(potion_dragon_breath_active=False)
                     for message in messages.values():
-                        for found_id in re.findall(r'<@(\d{16,20})>', message):
+                        for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
-                                message = re.sub(rf'<@{found_id}>', '-Removed alt-', message)
+                                message = re.sub(rf'<@!?{found_id}>', '-Removed alt-', message)
                         await channel.send(message.strip())
                 except asyncio.CancelledError:
                     return

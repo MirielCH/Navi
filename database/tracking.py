@@ -351,9 +351,6 @@ async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
     Arguments
     ---------
     user_id: int
-    command: str
-    timeframe: timedelta object with the amount of time that should be covered, starting from UTC now
-    guild_id: Optional[int]
 
     Returns
     -------
@@ -367,7 +364,7 @@ async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
     Also logs all errors to the database.
     """
     table = 'tracking_log'
-    function_name = 'get_log_entries'
+    function_name = 'get_all_log_entries'
     sql = (
         f'SELECT * FROM {table} WHERE user_id=?'
     )

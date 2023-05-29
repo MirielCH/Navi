@@ -577,16 +577,29 @@ class AutoFlexCog(commands.Cog):
                 if tt_match:
                     time_travel_count = int(tt_match.group(1)) - 1
                 if not tt_match:
+                    search_strings = [
+                        'are you sure you want to **time travel**?', #English
+                        'estás seguro que quieres **viajar en el tiempo**?', #Spanish
+                        'tem certeza de que deseja **viajar no tempo**?', #Portuguese
+                    ]
+                    if any(search_string in embed_description.lower() for search_string in search_strings):
+                        next_tt = True
+                    else:
+                        next_tt = False
                     search_patterns = [
                         'time travels\*\*: (.+?)\n', #English
+                        'extra pet slots\*\*: (.+?)\n', #English
                         'viajes en el tiempo\*\*: (.+?)\n', #Spanish
-                        'viagem no tempo\*\*: (.+?)\n', #Spanish
+                        'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
+                        'viagem no tempo\*\*: (.+?)\n', #Portuguese
+                        'espaços extras para pets\*\*: (.+?)\n', #Portuguese
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                     if tt_match:
                         time_travel_count = int(tt_match.group(1))
+                        if next_tt: time_travel_count -= 1
                     else:
-                        time_travel_count = 0
+                        return
                 await user_settings.update(time_travel_count=time_travel_count)
 
             # Time travel
@@ -861,7 +874,11 @@ class AutoFlexCog(commands.Cog):
                 'wwwooooooaaa!!!1', #English, hyper logs
                 '**epic berry**', #English, epic berries
             ]
+            search_strings_excluded = [
+                'contribu', #All languages, void contributions
+            ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
+                and all(search_string not in message_content.lower() for search_string in search_strings_excluded)
                 or ('nice!' in message_content.lower() and 'watermelon' in message_content.lower())):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
                 if not guild_settings.auto_flex_enabled: return

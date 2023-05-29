@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from cache import messages
 from content import tracking as tracking_cmd
-from database import errors, users, tracking
+from database import errors, reminders, users, tracking
 from resources import emojis, functions, exceptions, regex, settings
 
 
@@ -125,6 +125,11 @@ class TrackingCog(commands.Cog):
                     if not user_settings.bot_enabled: return
                     tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
                     await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+                    try:
+                        reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'lottery')
+                        await reminder.delete()
+                    except exceptions.NoDataFoundError:
+                        pass
                     if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:
                         await message.add_reaction(emojis.NAVI)
 
