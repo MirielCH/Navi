@@ -145,6 +145,7 @@ class WorkCog(commands.Cog):
                 'the next race is in', #English, horse race
                 'la siguiente carrera es en', #Spanish, horse race
                 'próxima corrida é em', #Portuguese, horse race
+                'contribu', #All languages, void contributions
             ]
             search_strings = [
                 '** got ', #English
@@ -303,7 +304,7 @@ class WorkCog(commands.Cog):
                 slash_command = True if interaction is not None else False
                 if interaction is None:
                     user_name = user_command = user_command_message = None
-                    user_name_match = re.search(r'\s\*\*(.+?)\*\*\s(?:cried|fights|sleeps)', message_content)
+                    user_name_match = re.search(r'\s\*\*(.+?)\*\*\s(?:cried|fights|sleeps|ran away)', message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                         user_command_message = (
