@@ -483,6 +483,7 @@ class AutoFlexCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                if user_settings.current_area == 19: return
                 description = (
                     f'**{user.name}** did some coinflipping and **lost the coin**.\n'
                     f'I mean, how hard can it be, seriously? That\'s just embarassing!'
@@ -542,6 +543,7 @@ class AutoFlexCog(commands.Cog):
             search_strings = [
                 "— time travel", #All languages
                 "— super time travel", #All languages
+                "— time jump", #All languages
             ]
             if any(search_string in embed_autor.lower() for search_string in search_strings):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
@@ -1435,7 +1437,7 @@ class AutoFlexCog(commands.Cog):
                     'GODLY lootbox': 'lb_godly_partner',
                     'VOID lootbox': 'lb_void_partner',
                 }
-                description = ''
+                description = event = ''
                 if lootbox_user_found:
                     name, amount = lootbox_user_found
                     event = events_user[name]
@@ -1460,8 +1462,6 @@ class AutoFlexCog(commands.Cog):
                                 f'**{user_name}** just found __**{amount}**__ of them at once!\n'
                                 f'(Well, actually, the horse did all the work)'
                             )
-                        else:
-                            return
                     else:
                         description = (
                             f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
@@ -1474,7 +1474,7 @@ class AutoFlexCog(commands.Cog):
                         f'**{user_name}** just lost **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
                         f'Damn, they really suck at this game.'
                     )
-                if lootbox_partner_found:
+                if lootbox_partner_found and event == '':
                     name, amount = lootbox_partner_found
                     if lootbox_user_found:
                         description = (

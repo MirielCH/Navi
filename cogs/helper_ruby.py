@@ -194,7 +194,6 @@ class HelperRubyCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
                 if user is None:
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
                     if user_name_match:
@@ -224,6 +223,15 @@ class HelperRubyCog(commands.Cog):
                 else:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in ruby training message for ruby counter.', message)
+                    return
+                if not user_settings.inventory.ruby - 5 <= ruby_count <= user_settings.inventory.ruby + 5:
+                    answer = (
+                        f'{emojis.WARNING} Sorry can\'t help you this time, looks like your recorded ruby count is wrong.\n'
+                        f'Please open your inventory to update it.'
+                    )    
+                    if not user_settings.dnd_mode_enabled:
+                        answer = f'{user.mention} {answer}'
+                    await message.reply(answer)
                     return
                 answer = f'You have {user_settings.inventory.ruby:,} {emojis.RUBY}'
                 if user_settings.ruby_counter_button_mode:

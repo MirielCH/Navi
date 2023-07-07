@@ -309,6 +309,7 @@ ACTIVITIES_BOOSTS = (
     'mod-boost',
     'mod-buff',
     'monster-potion',
+    'new-player-boost',
     'party-popper',
     'potion-potion',
     'time-potion',

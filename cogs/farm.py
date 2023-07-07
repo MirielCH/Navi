@@ -124,7 +124,7 @@ class FarmCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         user_command_message = (
                             await messages.find_message(message.channel.id, regex.COMMAND_FARM,
-                                                    user_name=user_name)
+                                                        user_name=user_name)
                         )
                     if not user_name_match or user_command_message is None:
                         await functions.add_warning_reaction(message)

@@ -108,8 +108,12 @@ class HelperHealCog(commands.Cog):
                 health_lost = 100
                 health_remaining = 0
             if health_lost > (health_remaining - (health_lost / 9)):
-                action = await functions.get_slash_command(user_settings, 'heal')
-                warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
+                if user_settings.current_area == 16:
+                    action = await functions.get_slash_command(user_settings, 'buy')
+                    warning = f'Hey! Time to {action} a life boost! ✨'
+                else:
+                    action = await functions.get_slash_command(user_settings, 'heal')
+                    warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'
                 if not user_settings.dnd_mode_enabled:
                     if user_settings.ping_after_message:
                         await message.channel.send(f'{warning} {user.mention}')
