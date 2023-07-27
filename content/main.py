@@ -171,7 +171,7 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         f'{emojis.BP} {round(api_latency.total_seconds() * 1000):,} ms API latency\n'
         f'{emojis.BP} Online for {format_timespan(uptime)}'
     )
-    creator = f'{emojis.BP} Miriel#0001'
+    creator = f'{emojis.BP} miriel.ch'
     dev_stuff = (
         f'{emojis.BP} Version: {settings.VERSION}\n'
         f'{emojis.BP} Language: Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}\n'

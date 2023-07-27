@@ -172,7 +172,7 @@ class FarmCog(commands.Cog):
                     seed_returned_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if seed_returned_match:
                         seed_returned_count = int(seed_returned_match.group(1))
-                        seed_returned_type = seed_returned_match.group(2)
+                        seed_returned_type = seed_returned_match.group(2).lower()
                         if f'inventory_seed_{seed_returned_type}' in kwargs:
                             kwargs[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
                         else:
@@ -262,6 +262,8 @@ class FarmCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'farm', time_left,
                                                             message.channel.id, reminder_message)
                     )
+                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
+                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Farm event slash (all languages)

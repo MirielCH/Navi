@@ -468,12 +468,12 @@ class HuntCog(commands.Cog):
                 # Add reactions
                 if user_settings.reactions_enabled:
                     found_stuff = {
-                        'OMEGA lootbox': emojis.PANDA_SURPRISE,
-                        'GODLY lootbox': emojis.PANDA_SURPRISE,
-                        'VOID lootbox': emojis.PANDA_SURPRISE,
+                        'omega lootbox': emojis.PANDA_SURPRISE,
+                        'godly lootbox': emojis.PANDA_SURPRISE,
+                        'void lootbox': emojis.PANDA_SURPRISE,
                     }
                     for stuff_name, stuff_emoji in found_stuff.items():
-                        if (stuff_name in message_content) and (message_content.rfind(stuff_name) < partner_start):
+                        if (stuff_name in message_content.lower()) and (message_content.lower().rfind(stuff_name) < partner_start):
                             await message.add_reaction(stuff_emoji)
                     search_strings = [
                         f'**{user.name}** lost but ', #English 1
@@ -486,7 +486,7 @@ class HuntCog(commands.Cog):
                         'mais perdeu a luta', #Portuguese 2
                         'ambos perderam a luta', #Portuguese 3, UNCONFIRMED
                     ]
-                    if any(search_string in message_content for search_string in search_strings):
+                    if any(search_string in message_content.lower() for search_string in search_strings):
                         await message.add_reaction(emojis.RIP)
                     if 'horslime' in message_content.lower():
                         await message.add_reaction(emojis.PANDA_EWW)

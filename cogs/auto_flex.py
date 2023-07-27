@@ -1140,7 +1140,8 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 hardmode = together = False
-                old_format = True if '__**' not in message_content.lower() else False
+                new_format_match = re.search(r'^__\*\*', message_content)
+                old_format = False if new_format_match else True
                 search_strings_hardmode = [
                     '(but stronger', #English
                     '(pero más fuerte', #Spanish
@@ -1327,15 +1328,15 @@ class AutoFlexCog(commands.Cog):
                         lootbox_match = re.search(pattern, message_content_user, re.IGNORECASE)
                         if lootbox_match:
                             drop_amount = int(lootbox_match.group(1))
+                            if drop == 'dragon scale' and user_settings.potion_dragon_breath_active:
+                                drop_amount_check = drop_amount / 2
+                            else:
+                                drop_amount_check = drop_amount
                             if (user_settings.current_area == 0
                                 or 'pretending' in message_content_user.lower()
                                 or 'pretendiendo' in message_content_user.lower()
                                 or 'fingindo' in message_content_user.lower()):
-                                drop_amount_check = drop_amount / 3
-                            elif drop == 'dragon scale' and user_settings.potion_dragon_breath_active:
-                                drop_amount_check = drop_amount / 2
-                            else:
-                                drop_amount_check = drop_amount
+                                drop_amount_check = drop_amount_check / 3
                             if drop_amount_check >= mob_drops_thresholds[drop]:
                                 break
                     if drop_amount_check < mob_drops_thresholds[drop]: continue
