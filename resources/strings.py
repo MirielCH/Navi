@@ -1747,6 +1747,8 @@ FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS = [
     'https://media.tenor.com/vUVXRKFtKQEAAAAC/blue-spiral.gif',
     'https://media.tenor.com/Uy3avUOOI_sAAAAd/blue-spiral.gif',
     'https://media.tenor.com/twi6r7OVu6MAAAAd/blue-spiral.gif',
+    'https://media.tenor.com/VrcRpp5urSoAAAAC/time-clock.gif',
+    'https://media.tenor.com/7JwnIw76nRwAAAAC/time-clock.gif',
 ]
 
 FLEX_THUMBNAILS_TIME_TRAVEL_300 = [
