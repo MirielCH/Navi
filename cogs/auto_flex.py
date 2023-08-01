@@ -716,6 +716,11 @@ class AutoFlexCog(commands.Cog):
                     description = (
                         f'**{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}! But why?\n'
                     )
+                    if user.name == 'lanre':
+                        description = (
+                            f'Public Service Alert! **{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
+                            f'(But is still smol)'
+                        )
                 elif time_travel_count_old < 420 and time_travel_count_new >= 420:
                     event = 'time_travel_420'
                     description = (

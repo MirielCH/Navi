@@ -50,6 +50,8 @@ class User():
     alert_hunt: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
+    alert_megarace: UserAlert
+    alert_minirace: UserAlert
     alert_not_so_mini_boss: UserAlert
     alert_partner: UserAlert
     alert_pet_tournament: UserAlert
@@ -88,6 +90,7 @@ class User():
     last_training_command: str
     last_tt: datetime
     last_work_command: str
+    megarace_helper_enabled: bool
     partner_channel_id: int
     partner_donor_tier: int
     partner_hunt_end_time: datetime
@@ -147,6 +150,8 @@ class User():
         self.alert_hunt = new_settings.alert_hunt
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
+        self.alert_megarace = new_settings.alert_megarace
+        self.alert_minirace = new_settings.alert_minirace
         self.alert_not_so_mini_boss = new_settings.alert_not_so_mini_boss
         self.alert_partner = new_settings.alert_partner
         self.alert_pet_tournament = new_settings.alert_pet_tournament
@@ -185,6 +190,7 @@ class User():
         self.last_training_command = new_settings.last_training_command
         self.last_tt = new_settings.last_tt
         self.last_work_command = new_settings.last_work_command
+        self.megarace_helper_enabled = new_settings.megarace_helper_enabled
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_hunt_end_time = new_settings.partner_hunt_end_time
@@ -311,6 +317,12 @@ class User():
             alert_lottery_enabled: bool
             alert_lottery_message: str
             alert_lottery_visible: bool
+            alert_megarace_enabled: bool
+            alert_megarace_message: str
+            alert_megarace_visible: bool
+            alert_minirace_enabled: bool
+            alert_minirace_message: str
+            alert_minirace_visible: bool
             alert_not_so_mini_boss_enabled: bool
             alert_not_so_mini_boss_message: str
             alert_not_so_mini_boss_visible: bool
@@ -376,6 +388,7 @@ class User():
             last_training_command: str
             last_tt: datetime UTC
             last_workt_command: str
+            megarace_helper_enabled: bool
             partner_channel_id: int
             partner_donor_tier: int
             partner_hunt_end_time: datetime
@@ -508,6 +521,14 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_lottery_message'],
                                       multiplier=1.0,
                                       visible=bool(record['alert_lottery_visible'])),
+            alert_megarace = UserAlert(enabled=bool(record['alert_megarace_enabled']),
+                                       message=record['alert_megarace_message'],
+                                       multiplier=1.0,
+                                       visible=bool(record['alert_megarace_visible'])),
+            alert_minirace = UserAlert(enabled=bool(record['alert_minirace_enabled']),
+                                       message=record['alert_minirace_message'],
+                                       multiplier=1.0,
+                                       visible=bool(record['alert_minirace_visible'])),
             alert_not_so_mini_boss = UserAlert(enabled=bool(record['alert_not_so_mini_boss_enabled']),
                                                message=record['alert_not_so_mini_boss_message'],
                                                multiplier=1.0,
@@ -578,6 +599,7 @@ async def _dict_to_user(record: dict) -> User:
             last_training_command = record['last_training_command'],
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
+            megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
             partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
@@ -835,6 +857,12 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_lottery_enabled: bool
         alert_lottery_message: str
         alert_lottery_visible: bool
+        alert_megarace_enabled: bool
+        alert_megarace_message: str
+        alert_megarace_visible: bool
+        alert_minirace_enabled: bool
+        alert_minirace_message: str
+        alert_minirace_visible: bool
         alert_not_so_mini_boss_enabled: bool
         alert_not_so_mini_boss_message: str
         alert_not_so_mini_boss_visible: bool
@@ -900,6 +928,7 @@ async def _update_user(user: User, **kwargs) -> None:
         last_training_command: str
         last_tt: datetime UTC
         last_workt_command: str
+        megarace_helper_enabled: bool
         partner_channel_id: int
         partner_donor_tier: int
         partner_hunt_end_time: datetime

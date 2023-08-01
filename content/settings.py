@@ -781,10 +781,14 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (mostly slash only)._\n'
         f'{emojis.BP} **Heal warning**: {await functions.bool_to_text(user_settings.heal_warning_enabled)}\n'
         f'{emojis.DETAIL} _Warns you when you are about to die._\n'
+        f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
         f'{emojis.BP} **Pet catch helper**: {await functions.bool_to_text(user_settings.pet_helper_enabled)}\n'
         f'{emojis.DETAIL} _Tells you which commands to use when you encounter a pet._\n'
         f'{emojis.BP} **Ruby counter**: {await functions.bool_to_text(user_settings.ruby_counter_enabled)}\n'
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
+    )
+    helpers2 = (
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
         f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'
@@ -805,7 +809,8 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         title = f'{ctx.author.name.upper()}\'S HELPER SETTINGS',
         description = '_Settings to toggle some helpful little features._'
     )
-    embed.add_field(name='HELPERS', value=helpers, inline=False)
+    embed.add_field(name='HELPERS (I)', value=helpers, inline=False)
+    embed.add_field(name='HELPERS (II)', value=helpers2, inline=False)
     embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     return embed
 
@@ -1064,6 +1069,8 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
+        f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
+        f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
@@ -1138,6 +1145,8 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
+        f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
+        f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'

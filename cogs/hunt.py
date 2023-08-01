@@ -132,7 +132,7 @@ class HuntCog(commands.Cog):
                     #if user_settings.christmas_area_enabled:
                     #    time_left_seconds *= 0.9
                     time_left_seconds *= user_settings.alert_hunt.multiplier
-                else:
+                elif together:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier

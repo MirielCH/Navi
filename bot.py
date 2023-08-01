@@ -120,6 +120,7 @@ EXTENSIONS = [
         'cogs.helper_ruby',
         'cogs.helper_training',
         'cogs.horse',
+        'cogs.horse_festival',
         'cogs.horse_race',
         'cogs.hunt',
         'cogs.leaderboards',

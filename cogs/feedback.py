@@ -28,6 +28,7 @@ class FeedbackCog(commands.Cog):
             title = f'**{ctx.author.name}** has a complaint',
             description = message
         )
+        embed.set_footer(text=f'Sent from server {ctx.guild.name}')
 
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(
@@ -67,6 +68,7 @@ class FeedbackCog(commands.Cog):
             title = f'**{ctx.author.name}** has a suggestion',
             description = message
         )
+        embed.set_footer(text=f'Sent from server {ctx.guild.name}')
 
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
         interaction = await ctx.respond(

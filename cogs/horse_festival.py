@@ -1,7 +1,7 @@
 # horse_festival.py
-# This is outdated, needs to be reworked next year
 
 import asyncio
+from datetime import datetime, timedelta
 import re
 
 import discord
@@ -38,39 +38,39 @@ class HorseFestivalCog(commands.Cog):
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 
-            """
             # Minirace embed
             if '— minirace' in message_author.lower():
                 user_name = user_id = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf minirace`'
-                else:
-                    user_command = '`rpg hf minirace`'
+                if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
+                            user_name = user_name_match.group(1)
+                            user = await functions.get_guild_member_by_name(message.guild, user_name)
                         else:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in minirace embed.', message)
                             return
-                    if user_id is not None:
-                        user = message.guild.get_member(user_id)
-                    else:
-                        user = await functions.get_guild_member_by_name(message.guild, user_name)
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in minirace embed.', message)
-                    return
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_HF_MINIRACE,
+                                                        user_name=user_name)
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a command for minirace embed.', message)
+                            return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'minirace')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=6)
@@ -81,7 +81,6 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-            """
 
 
     @commands.Cog.listener()
@@ -100,7 +99,6 @@ class HorseFestivalCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = user = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
                 if user is None:
                     search_patterns = [
                         r'\*\*(.+?)\*\* rides', #English
@@ -124,6 +122,14 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 await reminders.reduce_reminder_time(user.id, 'half', strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
+                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'horse')
+                if user_settings.alert_horse_breed.enabled:
+                    user_command = await functions.get_slash_command(user_settings, 'horse breeding')
+                    reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'horse', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
                 if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled:
@@ -139,10 +145,7 @@ class HorseFestivalCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf megarace action: start`'
-                else:
-                    user_command = '`rpg hf megarace start`'
+                if user is None:
                     if message.mentions:
                         user = message.mentions[0]
                     else:
@@ -154,19 +157,15 @@ class HorseFestivalCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_megarace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'megarace')
                 search_patterns = [
                     r'be there in \*\*(.+?)\*\*', #English
                     r'allí en \*\*(.+?)\*\*', #Spanish
                     r'lá em \*\*(.+?)\*\*', #Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
-                if not timestring_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Timestring not found in megarace start message.', message)
-                    return
-                timestring = timestring_match.group(1)
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                if time_left.total_seconds() == 0: return
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
+                if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_megarace.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'megarace', time_left,
@@ -183,10 +182,7 @@ class HorseFestivalCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf minirace`'
-                else:
-                    user_command = '`rpg hf minirace`'
+                if user is None:
                     if message.mentions:
                         user = message.mentions[0]
                     else:
@@ -202,6 +198,7 @@ class HorseFestivalCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'minirace')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=6)
@@ -211,10 +208,9 @@ class HorseFestivalCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'minirace', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    await functions.call_ready_command(self.bot, message, user)
-
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             search_strings = [
                 'started riding!', #English
@@ -224,27 +220,27 @@ class HorseFestivalCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf minirace`'
-                else:
-                    user_command = '`rpg hf minirace`'
-                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
-                    if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in farm event non-slash message.', message)
-                        return
-                    user = await functions.get_guild_member_by_name(message.guild, user_name)
                 if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in minirace message.', message)
-                    return
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if not user_name_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in minirace start message.', message)
+                        return
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_HF_MINIRACE, user=user,
+                                                    user_name=user_name_match.group(1))
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the minirace start message.', message)
+                        return
+                    user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'minirace')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=6)
@@ -254,10 +250,10 @@ class HorseFestivalCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'minirace', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    await functions.call_ready_command(self.bot, message, user)
-        """
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+            """
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
@@ -283,41 +279,33 @@ class HorseFestivalCog(commands.Cog):
                 and 'megarace' in message_author.lower()):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf megarace action: start`'
-                else:
-                    user_command = '`rpg hf megarace start`'
+                if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
-                        if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                        if not user_name_match:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User name not found in megarace message.', message)
                             return
-                    if user_id is not None:
-                        try:
-                            user = message.guild.get_member(user_id)
-                        except:
-                            pass
-                    else:
-                        guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                        if guild_users:
-                            user = guild_users[1]
-                        else:
-                            user = None
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in megarace message.', message)
-                    return
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_HF_MEGARACE, user=user,
+                                                    user_name=user_name)
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a command for the megarace message.', message)
+                            return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_megarace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'megarace')
                 search_patterns = [
                     r' \*\*(.+?)\*\* ', #English, Spanish, Portuguese
                 ]
@@ -326,8 +314,7 @@ class HorseFestivalCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Timestring not found in megarace message.', message)
                     return
-                timestring = timestring_match.group(1)
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 reminder_message = user_settings.alert_megarace.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'megarace', time_left,
@@ -342,23 +329,23 @@ class HorseFestivalCog(commands.Cog):
             ]
             search_strings_completed = [
                 'megarace completed', #English
+                'megarace not started', #English 2
                 'megacarrera completada', #Spanish
+                'la megacarrera no comenzó', #Spanish 2
                 'megacorrida completa', #Portuguese
+                'a megacorrida não começou', #Portuguese 2
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and not any(search_string in message_field0_value.lower() for search_string in search_strings_completed)):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf megarace action: start`'
-                else:
-                    user_command = '`rpg hf megarace start`'
-                    user_command_message, _ = (
-                        await functions.get_message_from_channel_history(message.channel, r"^(rpg\b|<@!?[0-9]+>)\s+(?:hf\b|horsefestival\b)\s+megarace\b")
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_HF_MEGARACE)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a user command for the megarace message.', message)
+                        await errors.log_error('Couldn\'t find a user command for the megarace overview message.', message)
                         return
                     user = user_command_message.author
                 try:
@@ -366,15 +353,12 @@ class HorseFestivalCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_megarace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'megarace')
                 search_patterns = [
                     r'time remaining\*\*: (.+?)\n', #English
                     r'ti?empo restante\*\*: (.+?)\n', #Spanish, Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
-                if not timestring_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Timestring not found in megarace overview message.', message)
-                    return
                 timestring = timestring_match.group(1)
                 if timestring in ('0d 0h 0m 0s', '0h 0m 0s'): return
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
@@ -393,26 +377,20 @@ class HorseFestivalCog(commands.Cog):
             if any(search_string in message_field0_name.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is not None:
-                    user_command = '`/hf megarace action: start`'
-                else:
-                    user_command = '`rpg hf megarace start`'
+                if user is None:
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_field0_name)
-                    if user_name_match:
-                        user_name = await functions.encode_text(user_name_match.group(1))
-                    else:
+                    if not user_name_match:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in megarace boost message.', message)
                         return
+                    user_name = await functions.encode_text(user_name_match.group(1))    
                     guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if guild_users:
+                    if len(guild_users) == 1:
                         user = guild_users[0]
                     else:
-                        user = None
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in megarace boost message.', message)
-                    return
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found or user not unique in megarace boost message.', message)
+                        return
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -428,8 +406,7 @@ class HorseFestivalCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Timestring not found in megarace boost message.', message)
                     return
-                timestring = timestring_match.group(1)
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 try:
                     reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'megarace')
                 except exceptions.NoDataFoundError:
@@ -457,26 +434,23 @@ class HorseFestivalCog(commands.Cog):
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
                     else:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
-                        if user_name_match:
-                            user_name = await functions.encode_text(user_name_match.group(1))
-                        else:
+                        if not user_name_match:
                             await functions.add_warning_reaction(message)
                             await errors.log_error('User not found in megarace message for megarace helper.', message)
                             return
-                    if user_id is not None:
-                        user = message.guild.get_member(user_id)
-                    else:
-                        guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                        if guild_users:
-                            user = guild_users[0]
-                        else:
-                            user = None
-                if user is None:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('User not found in megarace helper message.', message)
-                    return
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_ADVENTURE, user=user,
+                                                    user_name=user_name)
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a command for the megarace helper message.', message)
+                            return
+                        user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
