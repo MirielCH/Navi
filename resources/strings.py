@@ -851,17 +851,6 @@ MONSTERS_AREA = {
     21: MONSTERS_HUNT_TOP + MONSTERS_ADVENTURE_TOP,
 }
 
-TRACKED_COMMANDS = (
-    'hunt',
-    'work',
-    'farm',
-    'training',
-    'ultraining',
-    'adventure',
-    'epic guard',
-) # Sorted by cooldown length
-
-
 EPIC_NPC_NAMES = [
     'EPIC NPC', #English
     'NPC ÉPICO', #Spanish, Portuguese
@@ -935,11 +924,11 @@ SLASH_COMMANDS = {
     'jail': '</jail:966956629411123201>',
     'ladder': '</ladder:959164278072569936>',
     'lottery': '</lottery:957815874063061072>',
-    'megarace': '</hf megarace:1003530661761663087>',
+    'megarace': '</hf megarace:1135839747810537522>',
     'mine': '</mine:959164539922952263>',
     'miniboss': '</miniboss:960740632400388146>',
     "minintboss": '</minintboss:960362922813575209>',
-    'minirace': '</hf minirace:1003530661761663087>',
+    'minirace': '</hf minirace:1135839747810537522>',
     "multidice": '</multidice:958558816818036776>',
     'net': '</net:959163595428618290>',
     'open': '</open:959164544696070154>',
@@ -1026,6 +1015,7 @@ RPG_COMMANDS = {
     'mine': 'rpg mine',
     'miniboss': 'rpg miniboss',
     "minintboss": 'rpg minintboss join',
+    'minirace': 'rpg hf minirace',
     "multidice": 'rpg multidice',
     'net': 'rpg net',
     'open': 'rpg open',

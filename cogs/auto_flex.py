@@ -52,6 +52,14 @@ FLEX_TITLES = {
     'time_travel_150': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_200': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_300': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_400': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_420': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_500': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_600': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_700': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_800': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_900': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_999': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'work_epicberry': strings.FLEX_TITLES_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
@@ -105,6 +113,14 @@ FLEX_THUMBNAILS = {
     'time_travel_150': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_200': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_300': strings.FLEX_THUMBNAILS_TIME_TRAVEL_300,
+    'time_travel_400': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_420': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_500': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_600': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_700': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_800': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_900': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_999': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'work_epicberry': strings.FLEX_THUMBNAILS_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
@@ -714,13 +730,9 @@ class AutoFlexCog(commands.Cog):
                 elif time_travel_count_old < 400 and time_travel_count_new >= 400:
                     event = 'time_travel_400'
                     description = (
-                        f'**{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}! But why?\n'
+                        f'Public Service Alert! **{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
+                        f'As to why tho... I couldn\'t say.'
                     )
-                    if user.name == 'lanre':
-                        description = (
-                            f'Public Service Alert! **{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
-                            f'(But is still smol)'
-                        )
                 elif time_travel_count_old < 420 and time_travel_count_new >= 420:
                     event = 'time_travel_420'
                     description = (
@@ -760,7 +772,7 @@ class AutoFlexCog(commands.Cog):
                     event = 'time_travel_999'
                     description = (
                         f'**{user.name}** traveled in time for **999** times and thus broke Epic RPG Guide. Good job.\n'
-                        f'Hope your proud. Damn it.'
+                        f'Hope you\'re proud. Damn it.'
                     )
                 else:
                     return

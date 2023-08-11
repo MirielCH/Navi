@@ -2,6 +2,7 @@
 """Contains commands related to command tracking"""
 
 from datetime import datetime, timedelta, timezone
+from humanfriendly import format_timespan
 from typing import Optional, Union
 
 import discord
@@ -78,34 +79,15 @@ async def command_stats(
 async def embed_stats_overview(ctx: commands.Context, user: discord.User,
                                time_left: timedelta = timedelta(0)) -> discord.Embed:
     """Stats overview embed"""
-
-    async def command_count(command: str, timeframe: timedelta) -> str:
-        try:
-            report = await tracking.get_log_report(user.id, command, timeframe)
-            text = f'{emojis.BP} `{report.command}`: {report.command_count:,}'
-        except exceptions.NoDataFoundError:
-            text = f'{emojis.BP} `{command}`: 0'
-
-        return text
-
     user_settings: users.User = await users.get_user(user.id)
-    field_last_1h = field_last_12h = field_last_24h = field_last_7d = field_last_4w = field_last_1y = field_last_tt = ''
     current_time = datetime.utcnow().replace(microsecond=0)
-    for command in strings.TRACKED_COMMANDS:
-        last_1h = await command_count(command, timedelta(hours=1))
-        field_last_1h = f'{field_last_1h}\n{last_1h}'
-        last_12h = await command_count(command, timedelta(hours=12))
-        field_last_12h = f'{field_last_12h}\n{last_12h}'
-        last_24h = await command_count(command, timedelta(hours=24))
-        field_last_24h = f'{field_last_24h}\n{last_24h}'
-        last_7d = await command_count(command, timedelta(days=7))
-        field_last_7d = f'{field_last_7d}\n{last_7d}'
-        last_4w = await command_count(command, timedelta(days=28))
-        field_last_4w = f'{field_last_4w}\n{last_4w}'
-        last_1y = await command_count(command, timedelta(days=365))
-        field_last_1y = f'{field_last_1y}\n{last_1y}'
-        last_tt = await command_count(command, current_time-user_settings.last_tt)
-        field_last_tt = f'{field_last_tt}\n{last_tt}'
+    field_last_1h = await design_field(timedelta(hours=1), user)
+    field_last_12h = await design_field(timedelta(hours=12), user)
+    field_last_24h = await design_field(timedelta(hours=24), user)
+    field_last_7d = await design_field(timedelta(days=7), user)
+    field_last_4w = await design_field(timedelta(days=28), user)
+    field_last_1y = await design_field(timedelta(days=365), user)
+    field_last_tt = await design_field(current_time-user_settings.last_tt, user)
     try:
         timestamp = user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp()
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
@@ -129,31 +111,27 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User,
 
 async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, time_left: timedelta) -> discord.Embed:
     """Stats timeframe embed"""
-    field_timeframe = ''
     user_settings: users.User = await users.get_user(user.id)
-    for command in strings.TRACKED_COMMANDS:
-        try:
-            report = await tracking.get_log_report(user.id, command, time_left)
-            field_timeframe = f'{field_timeframe}\n{emojis.BP} `{report.command}`: {report.command_count:,}'
-        except exceptions.NoDataFoundError:
-            field_timeframe = f'{field_timeframe}\n{emojis.BP} `{command}`: 0'
-
-    time_left_seconds = int(time_left.total_seconds())
-    days = time_left_seconds // 86400
-    hours = (time_left_seconds % 86400) // 3600
-    minutes = (time_left_seconds % 3600) // 60
-    seconds = time_left_seconds % 60
-    timeframe = ''
-    if days > 0: timeframe = f'{days} days'
-    if hours > 0: timeframe = f'{timeframe}, {hours} hours'
-    if minutes > 0: timeframe = f'{timeframe}, {minutes} minutes'
-    if seconds > 0: timeframe = f'{timeframe}, {seconds} seconds'
-    timeframe = timeframe.strip(',').strip()
-
+    field_content = await design_field(time_left, user)
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user.name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
-    embed.add_field(name=f'LAST {timeframe}'.upper(), value=field_timeframe, inline=False)
+    embed.add_field(name=f'Last {format_timespan(time_left)}'.upper(), value=field_content, inline=False)
     return embed
+
+
+# --- Functions ---
+async def design_field(timeframe: timedelta, user: discord.Member) -> str:
+    report: tracking.LogReport = await tracking.get_log_report(user.id, timeframe)
+    field_content = (
+        f'{emojis.BP} `hunt`: {report.hunt_amount:,}\n'
+        f'{emojis.BP} `work`: {report.work_amount:,}\n'
+        f'{emojis.BP} `farm`: {report.farm_amount:,}\n'
+        f'{emojis.BP} `training`: {report.training_amount:,}\n'
+        f'{emojis.BP} `ultraining`: {report.ultraining_amount:,}\n'
+        f'{emojis.BP} `adventure`: {report.adventure_amount:,}\n'
+        f'{emojis.BP} `epic guard`: {report.epic_guard_amount:,}\n'
+    )
+    return field_content

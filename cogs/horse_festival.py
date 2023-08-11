@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import random
 import re
 
 import discord
@@ -73,7 +74,7 @@ class HorseFestivalCog(commands.Cog):
                 user_command = await functions.get_slash_command(user_settings, 'minirace')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                end_time = midnight_today + timedelta(days=1, minutes=6)
+                end_time = midnight_today + timedelta(days=1, minutes=6, seconds=random.randint(60, 300))
                 time_left = end_time - current_time
                 reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -243,7 +244,7 @@ class HorseFestivalCog(commands.Cog):
                 user_command = await functions.get_slash_command(user_settings, 'minirace')
                 current_time = datetime.utcnow().replace(microsecond=0)
                 midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-                end_time = midnight_today + timedelta(days=1, minutes=6)
+                end_time = midnight_today + timedelta(days=1, minutes=6, seconds=random.randint(60, 300))
                 time_left = end_time - current_time
                 reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -383,14 +384,14 @@ class HorseFestivalCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in megarace boost message.', message)
                         return
-                    user_name = await functions.encode_text(user_name_match.group(1))    
+                    user_name = user_name_match.group(1)
                     guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if len(guild_users) == 1:
-                        user = guild_users[0]
-                    else:
+                    if not guild_users: return
+                    if len(guild_users) > 1:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found or user not unique in megarace boost message.', message)
+                        await errors.log_error(f'User {user_name} not unique in megarace boost message. Found {guild_users}.', message)
                         return
+                    user = guild_users[0]
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
@@ -443,8 +444,8 @@ class HorseFestivalCog(commands.Cog):
                             return
                         user_name = user_name_match.group(1)
                         user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_ADVENTURE, user=user,
-                                                    user_name=user_name)
+                            await messages.find_message(message.channel.id, regex.COMMAND_HF_MEGARACE, user=user,
+                                                        user_name=user_name)
                         )
                         if user_command_message is None:
                             await functions.add_warning_reaction(message)

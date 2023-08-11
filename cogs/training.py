@@ -232,6 +232,17 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
+                current_time = datetime.utcnow().replace(microsecond=0)
+                if user_settings.tracking_enabled:
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
+                if not user_settings.alert_training.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'training')
+                await user_settings.update(last_training_command='training')
+                reminder_message = user_settings.alert_training.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'training', timedelta(seconds=1),
+                                                         message.channel.id, reminder_message)
+                )
                 if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)

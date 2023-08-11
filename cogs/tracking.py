@@ -124,10 +124,27 @@ class TrackingCog(commands.Cog):
                         return
                     if not user_settings.bot_enabled: return
                     tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                    await user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+                    kwargs = {
+                        'last_tt': tt_time.isoformat(sep=' '),
+                        'inventory_bread': 0,
+                        'inventory_carrot': 0,
+                        'inventory_potato': 0,
+                        'inventory_seed_bread': 0,
+                        'inventory_seed_potato': 0,
+                        'inventory_seed_carrot': 0,
+                        'inventory_ruby': 0,
+                    }
+                    await user_settings.update(**kwargs)
                     try:
                         reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'lottery')
                         await reminder.delete()
+                    except exceptions.NoDataFoundError:
+                        pass
+                    try:
+                        user_command = await functions.get_slash_command(user_settings, 'farm')
+                        reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
+                        reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'farm')
+                        await reminder.update(message=reminder_message)
                     except exceptions.NoDataFoundError:
                         pass
                     if user_settings.last_tt == tt_time and user_settings.bot_enabled and user_settings.reactions_enabled:

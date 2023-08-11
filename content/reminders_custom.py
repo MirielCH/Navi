@@ -35,14 +35,16 @@ async def command_custom_reminder(ctx: Union[discord.ApplicationContext, command
         await ctx.reply(error)
         return
     if time_left.total_seconds() > 31_536_000:
-            await functions.reply_or_respond(
-                ctx,
+        await functions.reply_or_respond(
+            ctx,
+            (
                 'The maximum time is one year.\n'
-                'Which means you just tried to make a reminder that is longer.\n',
-                'You DO feel at least a bit silly, right?\n',
-                True
-            )
-            return
+                'Which means you just tried to make a reminder that is longer.\n'
+                'You DO feel at least a bit silly, right?\n'
+            ),
+            True
+        )
+        return
     user_id_match = re.search(r'<@!?[0-9]+>', message)
     if user_id_match:
         await functions.reply_or_respond(ctx, 'Nice try.', True)

@@ -73,12 +73,16 @@ class LogEntry():
 
 class LogReport(NamedTuple):
     """Object that represents a report based on a certain amount of log entries."""
-    command: str
-    command_count: int
-    guild_id: int # Set to None if report_type is 'global'
-    report_type: str # Either 'guild' or 'global'
+    adventure_amount: int
+    epic_guard_amount: int
+    farm_amount: int
+    guild_id: int # Set to None if no guild_id was provided
+    hunt_amount: str
     timeframe: timedelta
+    training_amount: int
+    ultraining_amount: int
     user_id: int
+    work_amount: int
 
 @dataclass()
 class LogLeaderboardUser():
@@ -435,9 +439,9 @@ async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
     return tuple(log_entries)
 
 
-async def get_log_report(user_id: int, command: str, timeframe: timedelta,
+async def get_log_report(user_id: int, timeframe: timedelta,
                          guild_id: Optional[int] = None) -> LogReport:
-    """Gets a summary log report for one command for a certain amount of time from a user id.
+    """Gets a summary log report for all commands for a certain amount of time from a user id.
     If the guild_id is specified, the report is limited to that guild.
 
     Returns
@@ -450,19 +454,48 @@ async def get_log_report(user_id: int, command: str, timeframe: timedelta,
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """
-    log_entries = await get_log_entries(user_id, command, timeframe, guild_id)
-    total_command_count = 0
-    for log_entry in log_entries:
-        total_command_count += log_entry.command_count
+    table = 'tracking_log'
+    function_name = 'get_log_report'
+    sql = f'SELECT command, SUM(command_count) FROM {table} WHERE user_id=? AND date_time>=?'
+    date_time = datetime.utcnow() - timeframe
+    if guild_id is not None: sql = f'{sql} AND guild_id=?'
+    sql = f'{sql} GROUP BY command'
+    try:
+        cur = settings.NAVI_DB.cursor()
+        if guild_id is None:
+            cur.execute(sql, (user_id, date_time))
+        else:
+            cur.execute(sql, (user_id, date_time, guild_id))
+        records = cur.fetchall()
+    except sqlite3.Error as error:
+        await errors.log_error(
+            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
+        )
+        raise
+    records_data = {
+        'adventure': 0,
+        'epic guard': 0,
+        'farm': 0,
+        'hunt': 0,
+        'training': 0,
+        'ultraining': 0,
+        'work': 0,
+    }
+    for record in records:
+        record = dict(record)
+        records_data[record['command']] = record['SUM(command_count)']
     log_report = LogReport(
-        command = command,
-        command_count = total_command_count,
+        adventure_amount = records_data['adventure'],
+        epic_guard_amount = records_data['epic guard'],
+        farm_amount = records_data['farm'],
+        hunt_amount = records_data['hunt'],
+        training_amount = records_data['training'],
+        ultraining_amount = records_data['ultraining'],
+        work_amount = records_data['work'],
         guild_id = guild_id,
-        report_type = 'guild' if guild_id is not None else 'global',
         timeframe = timeframe,
         user_id = user_id
     )
-
     return log_report
 
 

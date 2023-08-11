@@ -928,7 +928,7 @@ async def get_megarace_answer(message: discord.Message, slash_command: bool = Fa
                 answer = (
                     f'{answer} (`{answer_lucky}` for gamblers with a {emojis.HORSE_ARMOR} horse armor)'
                 )
-    return f'{answer}\n\n{emojis.WARNING} **THIS ANSWER IS FROM LAST YEAR. IT MIGHT BE WRONG!**'
+    return answer
 
 
 async def get_farm_command(user_settings: users.User, include_prefix: Optional[bool] = True) -> str:

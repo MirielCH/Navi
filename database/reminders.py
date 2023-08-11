@@ -444,7 +444,7 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         raise
 
     if not records:
-        error_message = 'No due user reminders found in database.'
+        error_message = 'No due clan reminders found in database.'
         if clan_name is not None: error_message = f'{error_message} Clan: {clan_name}'
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
@@ -536,7 +536,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         raise
 
     if not records:
-        error_message = 'No old user reminders found in database.'
+        error_message = 'No old clan reminders found in database.'
         if clan_name is not None: error_message = f'{error_message} Clan: {clan_name}'
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
