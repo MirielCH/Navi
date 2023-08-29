@@ -781,8 +781,8 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (mostly slash only)._\n'
         f'{emojis.BP} **Heal warning**: {await functions.bool_to_text(user_settings.heal_warning_enabled)}\n'
         f'{emojis.DETAIL} _Warns you when you are about to die._\n'
-        f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
-        f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
+        #f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
+        #f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
         f'{emojis.BP} **Pet catch helper**: {await functions.bool_to_text(user_settings.pet_helper_enabled)}\n'
         f'{emojis.DETAIL} _Tells you which commands to use when you encounter a pet._\n'
         f'{emojis.BP} **Ruby counter**: {await functions.bool_to_text(user_settings.ruby_counter_enabled)}\n'
@@ -926,38 +926,45 @@ async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationC
 async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
-    partner = partner_partner_channel = user_partner_channel = '`N/A`'
+    partner = partner_partner_channel = user_partner_channel = partner_alert_threshold = '`N/A`'
     if user_settings.partner_channel_id is not None:
         user_partner_channel = f'<#{user_settings.partner_channel_id}>'
     if partner_settings is not None:
         partner = f'<@{user_settings.partner_id}>'
         if partner_settings.partner_channel_id is not None:
             partner_partner_channel = f'<#{partner_settings.partner_channel_id}>'
+        partner_alert_threshold_name = list(strings.LOOTBOXES.keys())[partner_settings.partner_alert_threshold]
+        partner_alert_threshold = f'{strings.LOOTBOXES[partner_alert_threshold_name]} `{partner_alert_threshold_name}`'
+    user_alert_threshold_name = list(strings.LOOTBOXES.keys())[user_settings.partner_alert_threshold]
+    user_partner_alert_threshold = f'{strings.LOOTBOXES[user_alert_threshold_name]} `{user_alert_threshold_name}`'
     partner_donor_tier = strings.DONOR_TIERS[user_settings.partner_donor_tier]
     partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
     partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
+    partner_pocket_watch_reduction = 100 - (100 * user_settings.partner_pocket_watch_multiplier)
     donor_tier = (
         f'{emojis.BP} **Partner donor tier**: {partner_donor_tier}\n'
-        f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
-        f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._'
+        f'{emojis.BP} **Partner pocket watch reduction**: `{partner_pocket_watch_reduction:g}` %\n'
+        f'_You can only change these settings if you have no partner set._\n'
+        f'_If you do, this is synchronized with your partner instead._\n'
     )
     settings_user = (
         f'{emojis.BP} **Partner**: {partner}\n'
         f'{emojis.BP} **Partner alert channel**: {user_partner_channel}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
+        f'{emojis.BP} **Partner alert lootbox threshold**: {user_partner_alert_threshold}\n'
     )
     settings_partner = (
         f'{emojis.BP} **Partner alert channel**: {partner_partner_channel}\n'
+        f'{emojis.BP} **Partner alert lootbox threshold**: {partner_alert_threshold}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx.author.name.upper()}\'S PARTNER SETTINGS',
         description = (
-            f'_Settings for your partner. To add or change your partner, use '
-            f'{await functions.get_navi_slash_command(bot, "settings partner")} `partner: @partner`._\n'
+            f'_Settings for your partner. To add or change your partner, use the menu below._\n'
         )
     )
-    embed.add_field(name='EPIC RPG DONOR TIER', value=donor_tier, inline=False)
+    embed.add_field(name='EPIC RPG DONOR TIER & POCKET WATCH', value=donor_tier, inline=False)
     embed.add_field(name='YOUR SETTINGS', value=settings_user, inline=False)
     embed.add_field(name='YOUR PARTNER\'S SETTINGS', value=settings_partner, inline=False)
     return embed
@@ -974,6 +981,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     else:
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
     auto_ready_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.DISABLED}`Disabled`'
+    ping_user_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.ready_ping_user else f'{emojis.DISABLED}`Disabled`'
     frequency = 'After all commands' if user_settings.ready_after_all_commands else 'After hunt only'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
@@ -989,6 +997,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
         f'{emojis.BP} **Auto-ready frequency**: `{frequency}`\n'
+        f'{emojis.BP} **Auto-ready pings user**: {ping_user_enabled}\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
         f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
@@ -1069,8 +1078,8 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
-        f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
-        f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
+        #f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
+        #f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
@@ -1145,8 +1154,8 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
-        f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
-        f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
+        #f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
+        #f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
@@ -1194,6 +1203,8 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
     auto_flex_alerts_1 = (
         f'{emojis.BP} Alchemy: **Brew electronical potion**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_brew_electronical_enabled)}\n'
+        f'{emojis.BP} Artifacts: **Craft an artifact**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_artifacts_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from work commands**: '
@@ -1202,9 +1213,6 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_enabled)}\n'
         f'{emojis.BP} Drop: **HYPER logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_hyperlog_enabled)}\n'
-        f'{emojis.BP} Drop: **Monster drops from `hunt`**: '
-        f'{await functions.bool_to_text(guild_settings.auto_flex_mob_drops_enabled)}\n'
-        f'{emojis.DETAIL} _`7`+ wolf skins, `5`+ dark energy, `6`+ everything else_\n'
         f'{emojis.BP} Drop: **OMEGA lootbox from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_enabled)}\n'
         f'{emojis.DETAIL} _Hardmode drops only count if it\'s `3` or more._\n'
@@ -1300,6 +1308,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     partner_donor_tier = strings.DONOR_TIERS[user_settings.partner_donor_tier]
     partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
     partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
+    user_pocket_watch_reduction = 100 - (user_settings.user_pocket_watch_multiplier * 100)
+    partner_pocket_watch_reduction = 100 - (user_settings.partner_pocket_watch_multiplier * 100)
 
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
@@ -1310,13 +1320,18 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.DETAIL} _Auto flexing only works if it\'s also enabled in the server settings._\n'
         f'{emojis.DETAIL} _Some flexes are **English only**._\n'
     )
-    donor_tier = (
-        f'{emojis.BP} **Your donor tier**: {user_donor_tier}\n'
-        f'{emojis.BP} **Your partner\'s donor tier**: {partner_donor_tier}\n'
-        f'{emojis.DETAIL} _You can only change this if you have no partner set._\n'
-        f'{emojis.DETAIL} _If you do, this is synchronized with your partner instead._\n'
+    epic_rpg_user = (
+        f'{emojis.BP} **Donor tier**: {user_donor_tier}\n'
+        f'{emojis.BP} **Pocket watch reduction**: `{user_pocket_watch_reduction:g}` %\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
         f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} to update this setting._\n'
+    )
+    epic_rpg_partner = (
+        f'{emojis.BP} **Donor tier**: {partner_donor_tier}\n'
+        f'{emojis.BP} **Pocket watch reduction**: `{partner_pocket_watch_reduction:g}` %\n'
+        f'_You can only change these settings if you have no partner set._\n'
+        f'_If you do, this is synchronized with your partner instead._\n'
     )
     tracking = (
         f'{emojis.BP} **Command tracking**: {await functions.bool_to_text(user_settings.tracking_enabled)}\n'
@@ -1331,6 +1346,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         )
     )
     embed.add_field(name='MAIN', value=bot, inline=False)
-    embed.add_field(name='EPIC RPG RELATED', value=donor_tier, inline=False)
+    embed.add_field(name='YOUR EPIC RPG SETTINGS', value=epic_rpg_user, inline=False)
+    embed.add_field(name='YOUR PARTNER\'S EPIC RPG SETTINGS', value=epic_rpg_partner, inline=False)
     embed.add_field(name='TRACKING', value=tracking, inline=False)
     return embed

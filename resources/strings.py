@@ -175,6 +175,14 @@ DONOR_TIERS_EMOJIS = {
     'ULTIMATE donator': emojis.LOG_ULTIMATE,
 }
 
+ARTIFACTS_EMOJIS = {
+    'top hat': emojis.ARTIFACT_TOP_HAT,
+    'coin ring': emojis.ARTIFACT_COIN_RING,
+    'golden pan': emojis.ARTIFACT_GOLDEN_PAN,
+    'master key': emojis.ARTIFACT_MASTER_KEY,
+    'pocket watch': emojis.ARTIFACT_POCKET_WATCH,
+}
+
 
 # --- Activities ---
 SLEEPY_POTION_AFFECTED_ACTIVITIES = (
@@ -247,7 +255,7 @@ ACTIVITIES = (
     'hunt',
     'lootbox',
     'lottery',
-    'megarace',
+    #'megarace',
     'minintboss',
     #'minirace',
     'partner',
@@ -279,7 +287,7 @@ ACTIVITIES_COMMANDS = (
     'horse',
     'hunt',
     'lootbox',
-    'megarace',
+    #'megarace',
     #'minirace',
     'quest',
     'training',
@@ -523,6 +531,19 @@ ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER = (
 )
 
 
+# --- Lootboxes ---
+LOOTBOXES = {
+    'common lootbox': emojis.LB_COMMON,
+    'uncommon lootbox': emojis.LB_UNCOMMON,
+    'rare lootbox': emojis.LB_RARE,
+    'EPIC lootbox': emojis.LB_EPIC,
+    'EDGY lootbox': emojis.LB_EDGY,
+    'OMEGA lootbox': emojis.LB_OMEGA,
+    'GODLY lootbox': emojis.LB_GODLY,
+    'VOID lootbox': emojis.LB_VOID,
+}
+
+
 # --- Monsters ---
 MONSTERS_ADVENTURE_A1 = (
     '**Bunch of Bees**',
@@ -606,6 +627,7 @@ MONSTERS_ADVENTURE_A14 = (
 
 MONSTERS_ADVENTURE_A15 = (
     '**I Have No More Ideas Dragon**',
+    '**Huh Idk Dragon**',
     '**Mutantest Dragon**',
 )
 
@@ -878,9 +900,10 @@ WORK_COMMANDS = (
 
 SLASH_COMMANDS = {
     'adventure': '</adventure:961046240420855808>',
-    'alchemy': '</alchemy:0>',
+    'alchemy': '</alchemy:1074072459847925810>',
     'area': '</area:956658464879427604>',
     'arena': '</arena:960740633302138920>',
+    'artifacts': '</artifacts:0>',
     'axe': '</axe:959162695909781504>',
     'big arena': '</big arena:960362922029252719>',
     'big dice': '</big dice:960362922029252719>',
@@ -1052,6 +1075,16 @@ RPG_COMMANDS = {
 
 
 # Auto flex headlines
+FLEX_TITLES_ARTIFACTS = [
+    'Hope this thing actually works',
+    'The stuff you find in this game, eh?',
+    'RARE SPECIMEN, DO NOT TOUCH',
+    'Now this looks rather old',
+    'How unique!',
+    'Houston, we found something!',
+    'Are you sure you acquired this legitimately?',
+]
+
 FLEX_TITLES_BREW_ELECTRONICAL = [
     'Now that\'s an expensive drink',
     'Champagne would be cheaper, you know',
@@ -1322,23 +1355,6 @@ FLEX_TITLES_EVENT_COINFLIP = [
     'MY COOOIIIINN NOOOOOOOOOOOOOOOOOOO',
 ]
 
-FLEX_TITLES_MOB_DROPS = [
-    'Not sure I wanna know how this looting looked',
-    'SO MANY?!',
-    'Some people are happy with what they have, and then there\'s this person',
-    'T10 OP, PLS NERF',
-    'Now this is proper looting',
-    'This makes perfect sense',
-]
-
-FLEX_TITLES_MOB_DROPS_PARTNER = [
-    'YOU SHALL NOT... STEAL',
-    'Kinda embarrassing, really',
-    'Sucks to be you tbh',
-    'Easy come easy go',
-    'Get the divorce papers!',
-]
-
 FLEX_TITLES_TIME_TRAVEL_1 = [
     'First time\'s always special',
     'Off to a great start!',
@@ -1432,6 +1448,17 @@ FLEX_TITLES_XMAS_VOID = [
 
 
 # Auto flex thumbnails
+FLEX_THUMBNAILS_ARTIFACTS = [
+    'https://media.tenor.com/zIdCNhI7PrsAAAAC/thats-incredible-national-geographic.gif',
+    'https://media.tenor.com/ggwFe8AmPl8AAAAC/scraping-ancient-china-from-above.gif',
+    'https://media.tenor.com/LPwQVB6FAf8AAAAC/indiana-jones-hmm.gif',
+    'https://media.tenor.com/AfdYK7WD3a0AAAAC/angelina-jolie-wink.gif',
+    'https://media.tenor.com/XntK6PCl5hsAAAAd/this-is-how-we-bingham-treasure-hunt.gif',
+    'https://media.tenor.com/rAwf52N-KAgAAAAC/secrets-of-castle-mcduck-ducktales.gif',
+    'https://media.tenor.com/UKDMIuJCXIYAAAAC/i-found-something-the-investigator.gif',
+    'https://media.tenor.com/wVOgdD9hHrEAAAAC/anime-treasure.gif',
+]
+
 FLEX_THUMBNAILS_BREW_ELECTRONICAL = [
     'https://media.tenor.com/wlpMSYaDoYkAAAAd/tea-time-heure-du-th%C3%A9.gif',
     'https://media.tenor.com/YBIZSm5Hl8YAAAAi/cat-drink.gif',
@@ -1684,24 +1711,6 @@ FLEX_THUMBNAILS_EVENT_COINFLIP = [
     'https://media.tenor.com/Adg8-XpUrEIAAAAd/john-travolta-confused.gif',
     'https://media.giphy.com/media/JQG2I0rQejbRQiDMQZ/giphy.gif',
     'https://media.tenor.com/8yBy9hKYpBkAAAAC/where-is-it-melody-pedras.gif',
-]
-
-FLEX_THUMBNAILS_MOB_DROPS = [
-    'https://media.tenor.com/AIjT_Z2IvQ8AAAAC/loot-gold.gif',
-    'https://media.tenor.com/OQ1HKTY5GKwAAAAC/look-at-that-loot-clash-banging.gif',
-    'https://media.tenor.com/LRifcomETsAAAAAC/1up-uptrennd.gif',
-    'https://media.tenor.com/5mzAxEwD4mUAAAAd/i-have-a-lot-of-loot-klaus.gif',
-    'https://media.tenor.com/Kp0EqMZrdIEAAAAC/legend-of.gif',
-    'https://media.tenor.com/TzCFttJJiakAAAAd/kgf-chapter2.gif',
-    'https://media.tenor.com/yg3y3tL18CUAAAAC/greedy-eating.gif',
-]
-
-FLEX_THUMBNAILS_MOB_DROPS_PARTNER = [
-    'https://media.tenor.com/0isSP3YRK7IAAAAC/truth-train-meme-looting.gif',
-    'https://media.tenor.com/UrGhgb_PnHIAAAAC/looting-stealing.gif',
-    'https://media.tenor.com/fHIje4LvTeYAAAAC/animation-art.gif',
-    'https://media.tenor.com/Jse3JnkVbKIAAAAd/hora-de-aventura-tren.gif',
-    'https://media.tenor.com/bR3QjhHR6-AAAAAC/robbery-robbed.gif',
 ]
 
 FLEX_THUMBNAILS_TIME_TRAVEL_1 = [

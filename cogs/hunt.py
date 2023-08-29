@@ -131,17 +131,27 @@ class HuntCog(commands.Cog):
                     time_left = time_left - time_elapsed
                     #if user_settings.christmas_area_enabled:
                     #    time_left_seconds *= 0.9
-                    time_left_seconds *= user_settings.alert_hunt.multiplier
+                    time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * user_settings.user_pocket_watch_multiplier
                 elif together:
+                    partner_settings = None
+                    if user_settings.partner_id is not None:
+                        try:
+                            partner_settings: users.User = await users.get_user(user_settings.partner_id)
+                        except exceptions.FirstTimeUserError:
+                            pass
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
                     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+                    partner_hunt_multiplier = partner_settings.alert_hunt.multiplier if partner_settings is not None else 1
                     partner_cooldown = (actual_cooldown
-                                        * settings.DONOR_COOLDOWNS[partner_donor_tier])
+                                        * settings.DONOR_COOLDOWNS[partner_donor_tier]
+                                        * partner_hunt_multiplier
+                                        * user_settings.partner_pocket_watch_multiplier)
                     user_cooldown = (actual_cooldown
                                     * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                    * user_settings.alert_hunt.multiplier)
+                                    * user_settings.alert_hunt.multiplier
+                                    * user_settings.user_pocket_watch_multiplier)
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user in embed_users):
                         time_left_seconds = (time_left_seconds
@@ -375,14 +385,21 @@ class HuntCog(commands.Cog):
                 #    time_left_seconds *= 0.9
                 #elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
                 #    time_left_seconds *= 0.9
-                time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier)
-                time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt)
+                partner_hunt_multiplier = partner.alert_hunt.multiplier if partner is not None else 1
+                if together and not user_settings.hunt_rotation_enabled:
+                    pocket_watch_multiplier = user_settings.partner_pocket_watch_multiplier
+                else:
+                    pocket_watch_multiplier = user_settings.user_pocket_watch_multiplier
+                time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
+                                      * pocket_watch_multiplier)
+                time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt * partner_hunt_multiplier
+                                                   * user_settings.partner_pocket_watch_multiplier)
                 if time_left < timedelta(0): return
                 if user_settings.alert_hunt.enabled:
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'hunt', time_left,
-                                                            message.channel.id, reminder_message)
+                                                             message.channel.id, reminder_message)
                     )
                     if user_settings.auto_ready_enabled:
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
@@ -393,15 +410,7 @@ class HuntCog(commands.Cog):
                     if partner_alerts_enabled:
                         partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
                         # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
-                        lootboxes = {
-                            'common lootbox': emojis.LB_COMMON,
-                            'uncommon lootbox': emojis.LB_UNCOMMON,
-                            'rare lootbox': emojis.LB_RARE,
-                            'EPIC lootbox': emojis.LB_EPIC,
-                            'EDGY lootbox': emojis.LB_EDGY,
-                            'OMEGA lootbox': emojis.LB_OMEGA,
-                            'GODLY lootbox': emojis.LB_GODLY,
-                            'VOID lootbox': emojis.LB_VOID,
+                        alert_items = {
                             'MEGA present': emojis.PRESENT_MEGA,
                             'ULTRA present': emojis.PRESENT_ULTRA,
                             'OMEGA present': emojis.PRESENT_OMEGA,
@@ -410,6 +419,8 @@ class HuntCog(commands.Cog):
                             'easter lootbox': emojis.LB_EASTER,
                             'EPIC berry': emojis.EPIC_BERRY,
                         }
+                        for lootbox in list(strings.LOOTBOXES.keys())[partner.partner_alert_threshold:]:
+                            alert_items[lootbox] = strings.LOOTBOXES[lootbox]
                         search_strings = [
                             f'**{user_settings.partner_name}** got ', #English
                             f'**{user_settings.partner_name}** consiguió ', #Spanish
@@ -424,7 +435,7 @@ class HuntCog(commands.Cog):
                             partner_start = partner_loot_start
                         lb_search_content = message_content[partner_start:]
                         lootbox_alert = ''
-                        for lb_name, lb_emoji in lootboxes.items():
+                        for lb_name, lb_emoji in alert_items.items():
                             try:
                                 search_patterns = [
                                     fr"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
@@ -554,7 +565,6 @@ class HuntCog(commands.Cog):
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                     time_elapsed = current_time - bot_answer_time
-                    together = True if user_settings.partner_id is not None else False
                     if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and not user_settings.hunt_rotation_enabled):
                         donor_tier = user_settings.partner_donor_tier
@@ -568,7 +578,8 @@ class HuntCog(commands.Cog):
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     #if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
-                    time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier)
+                    time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
+                                          * user_settings.user_pocket_watch_multiplier)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
@@ -623,7 +634,8 @@ class HuntCog(commands.Cog):
                                             - time_elapsed.total_seconds())
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                    time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier)
+                    time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
+                                          * user_settings.user_pocket_watch_multiplier)
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

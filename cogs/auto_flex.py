@@ -12,6 +12,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 FLEX_TITLES = {
+    'artifacts': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
@@ -36,8 +37,6 @@ FLEX_TITLES = {
     'lb_party_popper': strings.FLEX_TITLES_PARTY_POPPER,
     'lb_void': strings.FLEX_TITLES_LB_VOID,
     'lb_void_partner': strings.FLEX_TITLES_LB_VOID_PARTNER,
-    'mob_drops': strings.FLEX_TITLES_MOB_DROPS,
-    'mob_drops_partner': strings.FLEX_TITLES_MOB_DROPS_PARTNER,
     'pets_catch_epic': strings.FLEX_TITLES_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_TITLES_PETS_CATCH_TT,
     'pets_claim_omega': strings.FLEX_TITLES_PETS_CLAIM_OMEGA,
@@ -73,6 +72,7 @@ FLEX_TITLES = {
 }
 
 FLEX_THUMBNAILS = {
+    'artifacts': strings.FLEX_THUMBNAILS_ARTIFACTS,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
@@ -97,8 +97,6 @@ FLEX_THUMBNAILS = {
     'lb_party_popper': strings.FLEX_THUMBNAILS_PARTY_POPPER,
     'lb_void': strings.FLEX_THUMBNAILS_LB_VOID,
     'lb_void_partner': strings.FLEX_THUMBNAILS_LB_VOID_PARTNER,
-    'mob_drops': strings.FLEX_THUMBNAILS_MOB_DROPS,
-    'mob_drops_partner': strings.FLEX_THUMBNAILS_MOB_DROPS_PARTNER,
     'pets_catch_epic': strings.FLEX_THUMBNAILS_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_THUMBNAILS_PETS_CATCH_TT,
     'pets_claim_omega': strings.FLEX_THUMBNAILS_PETS_CLAIM_OMEGA,
@@ -142,7 +140,6 @@ FLEX_COLUMNS = {
     'lb_omega_no_hardmode': 'lb_omega',
     'lb_omega_partner': 'lb_omega',
     'lb_void_partner': 'lb_void',
-    'mob_drops_partner': 'mob_drops',
     'time_travel_1': 'time_travel',
     'time_travel_3': 'time_travel',
     'time_travel_5': 'time_travel',
@@ -941,6 +938,44 @@ class AutoFlexCog(commands.Cog):
         if not message.embeds:
             message_content = message.content
 
+            # Craft artifacts
+            search_strings_1 = [
+                '** successfully crafted!', #English
+            ]
+            search_strings_2 = [
+                'see `artifacts`', #English
+            ]
+            if (any(search_string in message_content.lower() for search_string in search_strings_1)
+                and any(search_string in message_content.lower() for search_string in search_strings_2)):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_CRAFT_ARTIFACT)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find user for auto flex craft artifact message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                artifact_name_match = re.search(r'\*\*(.+?)\*\* ', message_content.lower())
+                artifact_name = artifact_name_match.group(1)
+                artifact_emoji = strings.ARTIFACTS_EMOJIS.get(artifact_name, '')
+                
+                description = (
+                    f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
+                    f'with them!\n'
+                    f'That thing looks weird, bro.'
+                )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'artifacts',
+                                                  description)
+
             # Loot from work commands
             search_strings = [
                 'this may be the luckiest moment of your life', #English, ultimate logs
@@ -951,6 +986,7 @@ class AutoFlexCog(commands.Cog):
             ]
             search_strings_excluded = [
                 'contribu', #All languages, void contributions
+                'epic bundle', #All languages, void contributions
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in search_strings_excluded)
@@ -1291,22 +1327,11 @@ class AutoFlexCog(commands.Cog):
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                 }
-                mob_drops = {
-                    'wolf skin': emojis.WOLF_SKIN,
-                    'zombie eye': emojis.ZOMBIE_EYE,
-                    'unicorn horn': emojis.UNICORN_HORN,
-                    'mermaid hair': emojis.MERMAID_HAIR,
-                    'chip': emojis.CHIP,
-                    'dragon scale': emojis.DRAGON_SCALE,
-                    'dark energy': emojis.DARK_ENERGY,
-                }
                 lootbox_user_found = []
                 lootbox_user_lost = []
                 lootbox_partner_found = []
                 lootbox_partner_lost = []
-                mob_drops_user_found = []
                 epic_berry_user_found = []
-                mob_drops_partner_found = []
                 epic_berry_partner_found = []
                 search_patterns_together_old_user = [
                     fr"{re.escape(user_name)}\*\* got (.+?) (.+?)", #English
@@ -1385,38 +1410,6 @@ class AutoFlexCog(commands.Cog):
                     lootbox_user_lost.append(lootbox_amount)
                     break
 
-                mob_drops_thresholds = {
-                    'wolf skin': 7,
-                    'zombie eye': 6,
-                    'unicorn horn': 6,
-                    'mermaid hair': 6,
-                    'chip': 6,
-                    'dragon scale': 6,
-                    'dark energy': 5,
-                }
-                for drop in mob_drops.keys():
-                    drop_amount = drop_amount_check = 0
-                    for pattern in search_patterns_user:
-                        pattern = rf'{pattern} {re.escape(drop)}'
-                        lootbox_match = re.search(pattern, message_content_user, re.IGNORECASE)
-                        if lootbox_match:
-                            drop_amount = int(lootbox_match.group(1))
-                            if drop == 'dragon scale' and user_settings.potion_dragon_breath_active:
-                                drop_amount_check = drop_amount / 2
-                            else:
-                                drop_amount_check = drop_amount
-                            if (user_settings.current_area == 0
-                                or 'pretending' in message_content_user.lower()
-                                or 'pretendiendo' in message_content_user.lower()
-                                or 'fingindo' in message_content_user.lower()):
-                                drop_amount_check = drop_amount_check / 3
-                            if drop_amount_check >= mob_drops_thresholds[drop]:
-                                break
-                    if drop_amount_check < mob_drops_thresholds[drop]: continue
-                    mob_drops_user_found.append(drop)
-                    mob_drops_user_found.append(drop_amount)
-                    break
-
                 for pattern in search_patterns_user:
                     pattern = rf'{pattern} epic berry'
                     berry_match = re.search(pattern, message_content_user, re.IGNORECASE)
@@ -1457,28 +1450,6 @@ class AutoFlexCog(commands.Cog):
                         lootbox_partner_lost.append(lootbox_amount)
                         break
 
-                    for drop in mob_drops.keys():
-                        drop_amount = drop_amount_check = 0
-                        for pattern in search_patterns_partner:
-                            pattern = rf'{pattern} {re.escape(drop)}'
-                            lootbox_match = re.search(pattern, message_content_partner, re.IGNORECASE)
-                            if lootbox_match:
-                                drop_amount = int(lootbox_match.group(1))
-                                if ('pretending' in message_content_partner.lower()
-                                    or 'pretendiendo' in message_content_partner.lower()
-                                    or 'fingindo' in message_content_partner.lower()):
-                                    drop_amount_check = drop_amount / 3
-                                elif drop == 'dragon scale' and (drop_amount % 2) == 0:
-                                    drop_amount_check = drop_amount / 2
-                                else:
-                                    drop_amount_check = drop_amount
-                                if drop_amount_check >= mob_drops_thresholds[drop]:
-                                    break
-                        if drop_amount_check < mob_drops_thresholds[drop]: continue
-                        mob_drops_partner_found.append(drop)
-                        mob_drops_partner_found.append(drop_amount)
-                        break
-
                     for pattern in search_patterns_partner:
                         pattern = rf'{pattern} epic berry'
                         berry_match = re.search(pattern, message_content_partner, re.IGNORECASE)
@@ -1495,9 +1466,8 @@ class AutoFlexCog(commands.Cog):
                                 epic_berry_partner_found.append(drop_amount)
                                 break
 
-                if (not lootbox_user_found and not lootbox_partner_found and not mob_drops_user_found
-                    and not mob_drops_partner_found and not epic_berry_user_found and not epic_berry_partner_found
-                    and not lootbox_user_lost and not lootbox_partner_lost):
+                if (not lootbox_user_found and not lootbox_partner_found and not epic_berry_user_found
+                    and not epic_berry_partner_found and not lootbox_user_lost and not lootbox_partner_lost):
                     return
 
                 # Lootboxes
@@ -1587,38 +1557,6 @@ class AutoFlexCog(commands.Cog):
                         f'They just made **{partner_name}** lose  **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
                         f'You should be ashamed, really.'
                     )
-                if description != '':
-                    await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
-
-                # Mob drops
-                description = ''
-                if mob_drops_user_found:
-                    name, amount = mob_drops_user_found
-                    event = 'mob_drops'
-                    description = (
-                        f'**{user_name}** just found **{amount}** {mob_drops[name]} **{name}** in one hunt.\n'
-                        f'Enjoy your totally deserved loot. Better make sure to reward your horse!'
-                    )
-
-                if mob_drops_partner_found:
-                    name, amount = mob_drops_partner_found
-                    if description != '':
-                        event = 'mob_drops'
-                        description = (
-                            f'{description}\n\n'
-                            f'But, believe it or not, that is not all.\n'
-                            f'Their partner **{partner_name}** couldn\'t let this stand and found **{amount}** '
-                            f'{mob_drops[name]} **{name}** of their own. IN THE SAME HUNT.\n'
-                            f'What even is this!'
-                        )
-                    else:
-                        event = 'mob_drops_partner'
-                        description = (
-                            f'What is more embarassing than not finding any {mob_drops[name]} **{name}**?\n'
-                            f'Finding a whopping **{amount}** of them, only to get them stolen by your partner.\n'
-                            f'That\'s what just happened to **{user_name}**. Bwahaha.\n'
-                            f'Well played, **{partner_name}**.'
-                        )
                 if description != '':
                     await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 

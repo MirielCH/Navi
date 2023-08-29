@@ -146,6 +146,11 @@ class WorkCog(commands.Cog):
                 'la siguiente carrera es en', #Spanish, horse race
                 'próxima corrida é em', #Portuguese, horse race
                 'contribu', #All languages, void contributions
+                'epic item refunder', #All languages, void contributions
+                'top hat', #All languages, artifacts
+                'coin ring', #All languages, artifacts
+                'master key', #All languages, artifacts
+                'pocket watch', #All languages, artifacts
             ]
             search_strings = [
                 '** got ', #English
@@ -202,6 +207,7 @@ class WorkCog(commands.Cog):
                     if user_name_match:
                         user_name = user_name_match.group(1)
                     else:
+                        if 'golden pan' in message_content.lower(): return
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User name not found in work message.', message)
                         return
@@ -210,6 +216,7 @@ class WorkCog(commands.Cog):
                                                     user=user, user_name=user_name)
                     )
                     if user_command_message is None:
+                        if 'golden pan' in message_content.lower(): return
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found for work message.', message)
                         return
@@ -233,6 +240,7 @@ class WorkCog(commands.Cog):
                             last_work_command = command
                             break
                 if last_work_command is None:
+                    if 'golden pan' in message_content.lower(): return
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Couldn\'t find a command for work message.', message)
                     return

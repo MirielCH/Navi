@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 7
+NAVI_DB_VERSION = 8
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -369,6 +369,15 @@ if __name__ == '__main__':
             "user1_id INTEGER NOT NULL, user2_id INTEGER NOT NULL)",
             "CREATE UNIQUE INDEX users_unique ON alts (user1_id, user2_id)",
             "ALTER TABLE users ADD reminder_channel_id INTEGER",
+        ]
+        
+    if db_version < 8:
+        sqls += [
+            "ALTER TABLE users ADD user_pocket_watch_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD partner_alert_threshold INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD partner_pocket_watch_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD ready_ping_user INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD auto_flex_artifacts_enabled INTEGER NOT NULL DEFAULT (1)",
         ]
 
     # Run SQLs

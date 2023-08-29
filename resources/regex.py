@@ -28,12 +28,17 @@ COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
     rf"(?:(?:\barea\b|\bmove\b)\s+\b\d\d?\b|(?:\bxmas\b\s+|\bchristmas\b\s+)(?:\buse\b|\beat\b)\s+\bcandy\b\s+\bcane\b)"
 )
 COMMAND_ARENA = re.compile(rf"\barena\b")
+COMMAND_ARTIFACTS = re.compile(rf"\bartifacts?\b")
 COMMAND_BOOSTS = re.compile(rf"\bboosts?\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
 COMMAND_CLAN_BUY_SPECIAL_SEED = re.compile(rf"\bbuy\b\s+\bspecial\b\s+\bseed\b")
 COMMAND_CLAN_RAID = re.compile(rf"\bguild\b\s+\braid\b")
 COMMAND_CLAN_RAID_UPGRADE = re.compile(rf"\bguild\b\s+(?:\braid\b|\bupgrade\b)")
 COMMAND_CLAN_UPGRADE = re.compile(rf"guild\b\s+upgrade\b")
+COMMAND_CRAFT_ARTIFACT = rf"(?:"
+for artifact in strings.ARTIFACTS_EMOJIS.keys():
+    COMMAND_CRAFT_ARTIFACT = fr'{COMMAND_CRAFT_ARTIFACT}\b{artifact}\b|'
+COMMAND_CRAFT_ARTIFACT = re.compile(fr'{COMMAND_CRAFT_ARTIFACT.strip("|")})')
 COMMAND_CRAFT_COIN_SWORD = re.compile(rf"\bcraft\b\s+\bcoin\b\s+\bsword\b")
 COMMAND_CRAFT_RUBY_ARMOR = re.compile(rf"\bcraft\b\s+\bruby\b\s+\barmor\b")
 COMMAND_CRAFT_RUBY_SWORD = re.compile(rf"\bcraft\b\s+\bruby\b\s+\bsword\b")
@@ -88,7 +93,7 @@ COMMAND_SELL_RUBY = re.compile(rf"\bsell\b\s+\bruby\b")
 COMMAND_SLEEPY_POTION = re.compile(rf"\b[a-z]+\b\s+\buse\b\s+\bsleepy\b\s+\bpotion\b")
 COMMAND_TIME_CAPSULE = re.compile(rf"\buse\s+\btime\b\s+\bcapsule\b")
 COMMAND_TIME_TRAVEL = re.compile(rf"(?:(?:\bsuper\b\s+)?\btime\b\s+\btravel\b|\bsuper\b\s+\btravel\b)")
-COMMAND_TRADE_RUBY = re.compile(rf"\btrade\b\s+\b[e-f]\b")
+COMMAND_TRADE_RUBY = re.compile(rf"\btrade\b\s+\b[e-g]\b")
 COMMAND_TRAINING = re.compile(rf"(?:\btr\b|\btraining)")
 COMMAND_TRAINING_ULTRAINING = re.compile(rf"(?:ul)?(?:tr\b|training\b)")
 COMMAND_ULTRAINING = re.compile(rf"(?:ultr\b|ultraining\b)")

@@ -21,6 +21,7 @@ class Guild():
     auto_flex_brew_electronical_enabled: bool
     auto_flex_channel_id: int
     auto_flex_enabled: bool
+    auto_flex_artifacts_enabled: bool
     auto_flex_epic_berry_enabled: bool
     auto_flex_event_coinflip_enabled: bool
     auto_flex_event_enchant_enabled: bool
@@ -42,7 +43,6 @@ class Guild():
     auto_flex_pets_catch_tt_enabled: bool
     auto_flex_pets_claim_omega_enabled: bool
     auto_flex_pr_ascension_enabled: bool
-    auto_flex_mob_drops_enabled: bool
     auto_flex_time_travel_enabled: bool
     auto_flex_work_epicberry_enabled: bool
     auto_flex_work_hyperlog_enabled: bool
@@ -64,6 +64,7 @@ class Guild():
         self.auto_flex_brew_electronical_enabled = new_settings.auto_flex_brew_electronical_enabled
         self.auto_flex_channel_id = new_settings.auto_flex_channel_id
         self.auto_flex_enabled = new_settings.auto_flex_enabled
+        self.auto_flex_artifacts_enabled = new_settings.auto_flex_artifacts_enabled
         self.auto_flex_epic_berry_enabled = new_settings.auto_flex_epic_berry_enabled
         self.auto_flex_event_coinflip_enabled = new_settings.auto_flex_event_coinflip_enabled
         self.auto_flex_event_enchant_enabled = new_settings.auto_flex_event_enchant_enabled
@@ -85,7 +86,6 @@ class Guild():
         self.auto_flex_pets_catch_tt_enabled = new_settings.auto_flex_pets_catch_tt_enabled
         self.auto_flex_pets_claim_omega_enabled = new_settings.auto_flex_pets_claim_omega_enabled
         self.auto_flex_pr_ascension_enabled = new_settings.auto_flex_pr_ascension_enabled
-        self.auto_flex_mob_drops_enabled = new_settings.auto_flex_mob_drops_enabled
         self.auto_flex_time_travel_enabled = new_settings.auto_flex_time_travel_enabled
         self.auto_flex_work_epicberry_enabled = new_settings.auto_flex_work_epicberry_enabled
         self.auto_flex_work_hyperlog_enabled = new_settings.auto_flex_work_hyperlog_enabled
@@ -107,6 +107,7 @@ class Guild():
             auto_flex_brew_electronical_enabled: bool
             auto_flex_channel_id: int
             auto_flex_enabled: bool
+            auto_flex_artifacts_enabled: bool
             auto_flex_epic_berry_enabled: bool
             auto_flex_event_coinflip_enabled: bool
             auto_flex_event_enchant_enabled: bool
@@ -128,7 +129,6 @@ class Guild():
             auto_flex_pets_catch_tt_enabled: bool
             auto_flex_pets_claim_omega_enabled: bool
             auto_flex_pr_ascension_enabled: bool
-            auto_flex_mob_drops_enabled: bool
             auto_flex_time_travel_enabled: bool
             auto_flex_work_epicberry_enabled: bool
             auto_flex_work_hyperlog_enabled: bool
@@ -168,6 +168,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_brew_electronical_enabled = bool(record['auto_flex_brew_electronical_enabled']),
             auto_flex_channel_id = record['auto_flex_channel_id'],
             auto_flex_enabled = bool(record['auto_flex_enabled']),
+            auto_flex_artifacts_enabled = bool(record['auto_flex_artifacts_enabled']),
             auto_flex_epic_berry_enabled = bool(record['auto_flex_epic_berry_enabled']),
             auto_flex_event_coinflip_enabled = bool(record['auto_flex_event_coinflip_enabled']),
             auto_flex_event_enchant_enabled = bool(record['auto_flex_event_enchant_enabled']),
@@ -189,7 +190,6 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_pets_catch_tt_enabled = bool(record['auto_flex_pets_catch_tt_enabled']),
             auto_flex_pets_claim_omega_enabled = bool(record['auto_flex_pets_claim_omega_enabled']),
             auto_flex_pr_ascension_enabled = bool(record['auto_flex_pr_ascension_enabled']),
-            auto_flex_mob_drops_enabled = bool(record['auto_flex_mob_drops_enabled']),
             auto_flex_time_travel_enabled = bool(record['auto_flex_time_travel_enabled']),
             auto_flex_work_epicberry_enabled = bool(record['auto_flex_work_epicberry_enabled']),
             auto_flex_work_hyperlog_enabled = bool(record['auto_flex_work_hyperlog_enabled']),
@@ -342,6 +342,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_brew_electronical_enabled: bool
         auto_flex_channel_id: int
         auto_flex_enabled: bool
+        auto_flex_artifacts_enabled: bool
         auto_flex_epic_berry_enabled: bool
         auto_flex_event_coinflip_enabled: bool
         auto_flex_event_enchant_enabled: bool
@@ -363,7 +364,6 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_pets_catch_tt_enabled: bool
         auto_flex_pets_claim_omega_enabled: bool
         auto_flex_pr_ascension_enabled: bool
-        auto_flex_mob_drops_enabled: bool
         auto_flex_time_travel_enabled: bool
         auto_flex_work_epicberry_enabled: bool
         auto_flex_work_hyperlog_enabled: bool

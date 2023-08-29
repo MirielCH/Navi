@@ -299,6 +299,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
         options = []
         frequency = 'hunt only' if view.user_settings.ready_after_all_commands else 'all commands'
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
+        user_ping_emoji = emojis.ENABLED if view.user_settings.ready_ping_user else emojis.DISABLED
         up_next_reminder_emoji = emojis.ENABLED if view.user_settings.ready_up_next_visible else emojis.DISABLED
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
         if view.user_settings.ready_pets_claim_after_every_pet:
@@ -313,8 +314,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'Auto-ready',
                                             value='toggle_auto_ready', emoji=auto_ready_emoji))
-        options.append(discord.SelectOption(label=f'Show ready commands after {frequency}',
+        options.append(discord.SelectOption(label=f'Show auto-ready after {frequency}',
                                             value='toggle_frequency', emoji=None))
+        options.append(discord.SelectOption(label='Auto-ready pings user',
+                                            value='toggle_user_ping', emoji=user_ping_emoji))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
                                             value='toggle_message_style', emoji=None))
         options.append(discord.SelectOption(label='Change embed color',
@@ -352,6 +355,10 @@ class ManageReadySettingsSelect(discord.ui.Select):
             modal = modals.SetEmbedColorModal(self.view)
             await interaction.response.send_modal(modal)
             return
+        elif select_value == 'toggle_user_ping':
+            await self.view.user_settings.update(
+                ready_ping_user=not self.view.user_settings.ready_ping_user
+            )
         elif select_value == 'toggle_up_next':
             await self.view.user_settings.update(
                 ready_up_next_visible=not self.view.user_settings.ready_up_next_visible
@@ -507,6 +514,9 @@ class ManageUserSettingsSelect(discord.ui.Select):
                                             value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'Auto flex alerts', emoji=auto_flex_emoji,
                                             value='toggle_auto_flex'))
+        if view.user_settings.partner_id is None:
+            options.append(discord.SelectOption(label=f'Change partner pocket watch reduction', emoji=None,
+                                                value='set_partner_pocket_watch_reduction'))
         options.append(discord.SelectOption(label=f'Command tracking', emoji=tracking_emoji,
                                             value='toggle_tracking'))
         options.append(discord.SelectOption(label=f'Change last time travel time',
@@ -522,6 +532,10 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(auto_flex_enabled=not self.view.user_settings.auto_flex_enabled)
         elif select_value == 'toggle_tracking':
             await self.view.user_settings.update(tracking_enabled=not self.view.user_settings.tracking_enabled)
+        elif select_value == 'set_partner_pocket_watch_reduction':
+            modal = modals.SetPartnerPocketWatchReductionModal(self.view)
+            await interaction.response.send_modal(modal)
+            return
         elif select_value == 'set_last_tt':
             modal = modals.SetLastTTModal(self.view)
             await interaction.response.send_modal(modal)
@@ -651,7 +665,7 @@ class RemoveAltSelect(discord.ui.Select):
             if isinstance(child, RemoveAltSelect):
                 self.view.remove_item(child)
                 if self.view.user_settings.alts:
-                    self.view.add_item(ManagePartnerSettingsSelect(self.view))
+                    self.view.add_item(RemoveAltSelect(self.view))
                 break
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         if interaction.response.is_done():
@@ -664,6 +678,9 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
     """Select to change partner settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
+        if view.user_settings.partner_id is None:
+            options.append(discord.SelectOption(label=f'Change partner pocket watch reduction', emoji=None,
+                                                value='set_partner_pocket_watch_reduction'))
         options.append(discord.SelectOption(label='Add this channel as partner channel',
                                             value='set_channel', emoji=emojis.ADD))
         options.append(discord.SelectOption(label='Remove partner channel',
@@ -679,8 +696,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             if self.view.user_settings.partner_id is None:
                 await interaction.response.send_message(
                     f'You need to set a partner first.\n'
-                    f'To set a partner use {await functions.get_navi_slash_command(self.view.bot, "settings partner")} '
-                    f'`partner: @partner`.',
+                    f'To set a partner use the menu `Change partner`.',
                     ephemeral=True
                 )
                 return
@@ -707,6 +723,10 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             else:
                 await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
+        elif select_value == 'set_partner_pocket_watch_reduction':
+            modal = modals.SetPartnerPocketWatchReductionModal(self.view)
+            await interaction.response.send_modal(modal)
+            return
         elif select_value == 'reset_channel':
             if self.view.user_settings.partner_channel_id is None:
                 await interaction.response.send_message(
@@ -747,8 +767,10 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             confirm_view.interaction_message = confirm_interaction
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
-                await self.view.user_settings.update(partner_id=None, partner_donor_tier=0)
-                await self.view.partner_settings.update(partner_id=None, partner_donor_tier=0)
+                await self.view.user_settings.update(partner_id=None, partner_donor_tier=0,
+                                                     partner_pocket_watch_multiplier=1)
+                await self.view.partner_settings.update(partner_id=None, partner_donor_tier=0,
+                                                        partner_pocket_watch_multiplier=1)
                 self.view.partner_settings = None
                 await confirm_interaction.edit_original_response(content='Partner reset.', view=None)
                 for child in self.view.children.copy():
@@ -767,6 +789,28 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             await interaction.message.edit(embed=embed, view=self.view)
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
+
+            
+class SetPartnerAlertThreshold(discord.ui.Select):
+    """Select to change the partner alert threshold"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for index, (name, emoji) in enumerate(strings.LOOTBOXES.items()):
+            options.append(discord.SelectOption(label=name,
+                                                value=str(index), emoji=emoji))
+        super().__init__(placeholder='Change partner alert lootbox threshold', min_values=1, max_values=1, options=options,
+                         row=row, custom_id='set_alert_threshold')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = int(self.values[0])
+        await self.view.user_settings.update(partner_alert_threshold=select_value)
+        for child in self.view.children.copy():
+            if isinstance(child, ManagePartnerSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManagePartnerSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, self.view.partner_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
 
 
 class SetDonorTierSelect(discord.ui.Select):
@@ -990,9 +1034,11 @@ class AddPartnerSelect(discord.ui.Select):
                     await old_partner_settings.update(partner_id=None)
                 except exceptions.NoDataFoundError:
                     pass
-            await self.view.user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier)
+            await self.view.user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier,
+                                                 partner_pocket_watch_multiplier=new_partner_settings.user_pocket_watch_multiplier)
             await new_partner_settings.update(
-                partner_id=interaction.user.id, partner_donor_tier=self.view.user_settings.user_donor_tier
+                partner_id=interaction.user.id, partner_donor_tier=self.view.user_settings.user_donor_tier,
+                partner_pocket_watch_multiplier=self.view.user_settings.user_pocket_watch_multiplier
             )
             if self.view.user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == interaction.user.id:
                 answer = (

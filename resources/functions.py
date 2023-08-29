@@ -11,7 +11,7 @@ from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
-from resources import emojis, exceptions, logs, settings, strings
+from resources import emojis, exceptions, settings, strings
 
 
 # --- Get discord data ---
@@ -174,7 +174,7 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
     #if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
     #    time_left_seconds *= 0.9
     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-    return timedelta(seconds=time_left_seconds * alert_settings.multiplier)
+    return timedelta(seconds=time_left_seconds * alert_settings.multiplier * user_settings.user_pocket_watch_multiplier)
 
 
 async def calculate_time_left_from_timestring(message: discord.Message, timestring: str) -> timedelta:

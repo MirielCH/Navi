@@ -288,3 +288,35 @@ class AddCommandChannelModal(Modal):
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
                                                self.view.clan_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class SetPartnerPocketWatchReductionModal(Modal):
+    def __init__(self, view: discord.ui.View) -> None:
+        super().__init__(title='Change your partner\'s pocket watch reduction')
+        self.view = view
+        self.add_item(
+            InputText(
+                label='New reduction in percent (0.5 - 5.0):',
+                placeholder="Enter reduction ...",
+            )
+        )
+
+    async def callback(self, interaction: discord.Interaction):
+        new_reduction = self.children[0].value
+        try:
+            new_reduction = float(new_reduction)
+        except ValueError:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('That is not a valid number.', ephemeral=True)
+            return
+        if not 0.5 <= new_reduction <= 5.0:
+            await interaction.response.edit_message(view=self.view)
+            await interaction.followup.send('The pocket reduction needs to be between 0.5 and 5.0', ephemeral=True)
+            return
+        await self.view.user_settings.update(partner_pocket_watch_multiplier=(100 - new_reduction) / 100)
+        partner_settings = getattr(self.view, 'partner_settings', None)
+        if partner_settings is not None:
+            embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings, partner_settings)
+        else:
+            embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)

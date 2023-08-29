@@ -423,7 +423,8 @@ class QuestCog(commands.Cog):
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                 #if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
-                time_left = timedelta(seconds=time_left_seconds * user_settings.alert_quest.multiplier)
+                time_left = timedelta(seconds=time_left_seconds * user_settings.alert_quest.multiplier
+                                      * user_settings.user_pocket_watch_multiplier)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

@@ -97,6 +97,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
 EXTENSIONS = [
         'cogs.adventure',
         'cogs.arena',
+        'cogs.artifacts',
         'cogs.ascension',
         'cogs.auto_flex',
         'cogs.boosts',
@@ -120,7 +121,7 @@ EXTENSIONS = [
         'cogs.helper_ruby',
         'cogs.helper_training',
         'cogs.horse',
-        'cogs.horse_festival',
+        #'cogs.horse_festival',
         'cogs.horse_race',
         'cogs.hunt',
         'cogs.leaderboards',

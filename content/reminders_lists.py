@@ -61,11 +61,12 @@ async def command_ready(
     else:
         message = ctx.message
         auto_ready = False
-    if user is not None and user != ctx.author:
-        user_mentioned = True
-    else:
-        user = ctx.author
-        user_mentioned = False
+    user_mentioned = False
+    if not auto_ready:
+        if user is not None and user != ctx.author:
+            user_mentioned = True
+        else:
+            user = ctx.author
     try:
         user_settings: users.User = await users.get_user(user.id)
         ready_as_embed = user_settings.ready_as_embed
@@ -77,7 +78,8 @@ async def command_ready(
     embed, answer = await embed_ready(bot, user, auto_ready)
     if auto_ready:
         if ready_as_embed:
-            await message.channel.send(embed=embed)
+            content = user.mention if user_settings.ready_ping_user else None
+            await message.channel.send(content=content, embed=embed)
         else:
             await message.channel.send(answer)
     else:
@@ -118,7 +120,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
             clan_reminders = list(await reminders.get_active_clan_reminders(user_settings.clan_name))
         except:
             pass
-        
+
     current_time = datetime.utcnow().replace(microsecond=0)
     local_time_difference = datetime.now().replace(microsecond=0) - current_time
     reminders_commands_list = []
@@ -352,7 +354,7 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
         elif activity == 'farm':
             command = await functions.get_farm_command(user_settings, False)
         return command.replace('` `', ' ')
-    
+
     clan_alert_enabled = getattr(clan, 'alert_enabled', False)
     clan_alert_visible = getattr(clan, 'alert_visible', False)
     if clan_alert_enabled and clan_alert_visible:
@@ -417,9 +419,12 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
         )
     embed = discord.Embed(
         color = int(f'0x{user_settings.ready_embed_color}', 16),
-        title = f'{user.name}\'S READY'.upper()
+        title = f'• {user.name}\'S READY • '.upper()
     )
-    answer = f'**{user.name}\'S READY**'.upper()
+    if user_settings.ready_ping_user and auto_ready:
+        answer = f'• **{user.mention}\'s ready** •'
+    else:
+        answer = f'• **{user.name}\'S READY** •'.upper()
     if user_settings.ready_other_on_top and field_other != '':
         embed.add_field(name='OTHER', value=field_other.strip(), inline=False)
         answer = (
@@ -525,7 +530,7 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
     if not ready_commands and not ready_event_activities and (clan_reminders or not clan_alert_enabled):
         answer = (
             f'{answer}\n'
-            f'**COMMANDS**\n'
+            f'**Commands**\n'
             f'{emojis.BP} All done!'
         )
         embed.add_field(name='COMMANDS', value=f'{emojis.BP} All done!', inline=False)

@@ -264,7 +264,7 @@ class PetsCog(commands.Cog):
                         if pet in field.name.lower():
                             pet_emoji = emoji
                             break
-                    pet_action_timestring_match = re.search(r'Status__:\*\* (.+?) \| \*\*(.+?)\*\*', field.value)
+                    pet_action_timestring_match = re.search(r'status__:\*\* (.+?) \| \*\*(.+?)\*\*', field.value.lower())
                     if not pet_id_match: continue
                     pet_id = pet_id_match.group(1)
                     if not pet_action_timestring_match:

@@ -86,6 +86,10 @@ else:
         print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
         sys.exit()
 
+LINK_SUPPORT = None
+LINK_SUPPORT = os.getenv('LINK_SUPPORT')
+if LINK_SUPPORT == '': LINK_SUPPORT = None
+    
 COMPLAINT_CHANNEL_ID = os.getenv('COMPLAINT_CHANNEL_ID')
 if COMPLAINT_CHANNEL_ID != '' and COMPLAINT_CHANNEL_ID is not None:
     try:

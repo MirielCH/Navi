@@ -20,10 +20,14 @@ class LinksView(discord.ui.View):
     """View with link buttons."""
     def __init__(self):
         super().__init__(timeout=None)
+        if settings.LINK_SUPPORT is not None:
+            self.add_item(discord.ui.Button(label="Support", style=discord.ButtonStyle.link,
+                                            url=settings.LINK_SUPPORT, emoji=emojis.NAVI))
         self.add_item(discord.ui.Button(label="Github", style=discord.ButtonStyle.link,
                                         url=strings.LINK_GITHUB, emoji=emojis.GITHUB))
         self.add_item(discord.ui.Button(label="Privacy policy", style=discord.ButtonStyle.link,
                                         url=strings.LINK_PRIVACY_POLICY, emoji=emojis.PRIVACY_POLICY))
+            
 
 
 # --- Commands ---

@@ -91,11 +91,13 @@ class User():
     last_tt: datetime
     last_work_command: str
     megarace_helper_enabled: bool
+    partner_alert_threshold: int
     partner_channel_id: int
     partner_donor_tier: int
     partner_hunt_end_time: datetime
     partner_id: int
     partner_name: str
+    partner_pocket_watch_multiplier: float
     pet_helper_enabled: bool
     pet_helper_icon_mode: bool
     pet_tip_read: bool
@@ -115,6 +117,7 @@ class User():
     ready_pets_claim_active: bool
     ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
+    ready_ping_user: bool
     ready_up_next_as_timestamp: bool
     ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
@@ -128,6 +131,7 @@ class User():
     training_helper_enabled: bool
     user_donor_tier: int
     user_id: int
+    user_pocket_watch_multiplier: float
 
     async def refresh(self) -> None:
         """Refreshes user data from the database."""
@@ -191,11 +195,13 @@ class User():
         self.last_tt = new_settings.last_tt
         self.last_work_command = new_settings.last_work_command
         self.megarace_helper_enabled = new_settings.megarace_helper_enabled
+        self.partner_alert_threshold = new_settings.partner_alert_threshold
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_hunt_end_time = new_settings.partner_hunt_end_time
         self.partner_id = new_settings.partner_id
         self.partner_name = new_settings.partner_name
+        self.partner_pocket_watch_multiplier = new_settings.partner_pocket_watch_multiplier
         self.pet_helper_enabled = new_settings.pet_helper_enabled
         self.pet_helper_icon_mode = new_settings.pet_helper_icon_mode
         self.pet_tip_read = new_settings.pet_tip_read
@@ -215,6 +221,7 @@ class User():
         self.ready_pets_claim_active = new_settings.ready_pets_claim_active
         self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
+        self.ready_ping_user = new_settings.ready_ping_user
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
@@ -227,6 +234,7 @@ class User():
         self.training_helper_button_mode = new_settings.training_helper_button_mode
         self.training_helper_enabled = new_settings.training_helper_enabled
         self.user_donor_tier = new_settings.user_donor_tier
+        self.user_pocket_watch_multiplier = new_settings.user_pocket_watch_multiplier
 
     async def add_alt(self, alt_id: int) -> None:
         """Adds an alt to the database. Also calls refresh().
@@ -389,11 +397,13 @@ class User():
             last_tt: datetime UTC
             last_workt_command: str
             megarace_helper_enabled: bool
+            partner_alert_threshold: int
             partner_channel_id: int
             partner_donor_tier: int
             partner_hunt_end_time: datetime
             partner_id: int
             partner_name: str
+            partner_pocket_watch_multiplier: float
             pet_helper_enabled: bool
             pet_helper_icon_mode: bool
             pet_tip_read: bool
@@ -412,6 +422,7 @@ class User():
             ready_pets_claim_active: bool
             ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
+            ready_ping_user: bool
             ready_up_next_as_timestamp: bool
             ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
@@ -424,6 +435,7 @@ class User():
             training_helper_button_mode: bool
             training_helper_enabled: bool
             user_donor_tier: int
+            user_pocket_watch_multiplier: float
         """
         await _update_user(self, **kwargs)
         await self.refresh()
@@ -600,11 +612,13 @@ async def _dict_to_user(record: dict) -> User:
             last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
+            partner_alert_threshold = record['partner_alert_threshold'],
             partner_channel_id = record['partner_channel_id'],
             partner_donor_tier = record['partner_donor_tier'],
             partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
+            partner_pocket_watch_multiplier = float(record['partner_pocket_watch_multiplier']),
             pet_helper_enabled = record['pet_helper_enabled'],
             pet_helper_icon_mode = bool(record['pet_helper_icon_mode']),
             pet_tip_read = bool(record['pet_tip_read']),
@@ -623,6 +637,7 @@ async def _dict_to_user(record: dict) -> User:
             ready_other_on_top = bool(record['ready_other_on_top']),
             ready_pets_claim_active = bool(record['ready_pets_claim_active']),
             ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
+            ready_ping_user = bool(record['ready_ping_user']),
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
@@ -636,6 +651,7 @@ async def _dict_to_user(record: dict) -> User:
             training_helper_enabled = bool(record['training_helper_enabled']),
             user_donor_tier = record['user_donor_tier'],
             user_id = record['user_id'],
+            user_pocket_watch_multiplier = float(record['user_pocket_watch_multiplier']),
         )
     except Exception as error:
         await errors.log_error(
@@ -929,11 +945,13 @@ async def _update_user(user: User, **kwargs) -> None:
         last_tt: datetime UTC
         last_workt_command: str
         megarace_helper_enabled: bool
+        partner_alert_threshold: int
         partner_channel_id: int
         partner_donor_tier: int
         partner_hunt_end_time: datetime
         partner_id: int
-        partner_name: str
+        partner_name: str$
+        partner_pocket_watch_multiplier: float
         pet_helper_enabled: bool
         pet_helper_icon_mode: bool
         pet_tip_read: bool
@@ -952,6 +970,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_pets_claim_active: bool
         ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool
+        ready_ping_user: bool
         ready_up_next_as_timestamp: bool
         ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
@@ -964,6 +983,7 @@ async def _update_user(user: User, **kwargs) -> None:
         training_helper_button_mode: bool
         training_helper_enabled: bool
         user_donor_tier: int
+        user_pocket_watch_multiplier: float
 
     Raises
     ------

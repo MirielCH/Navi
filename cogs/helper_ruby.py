@@ -72,16 +72,16 @@ class HelperRubyCog(commands.Cog):
                     epic_npc_pos = message_field.find(name)
                     if epic_npc_pos != -1: break
                 ruby_pos = message_field.find('<:ruby')
-                trade_type = 'F' if ruby_pos > epic_npc_pos else 'E'
-                search_pattern = r"603304907650629653> x(.+?) \n"  if trade_type == 'E' else r"603304907650629653> x(.+?)$"
-                ruby_count_match = re.search(search_pattern, message_field)
+                trade_type = 'gained' if ruby_pos > epic_npc_pos else 'lost'
+                ruby_line = message_field.split('\n')[0].strip() if trade_type == 'lost' else message_field.split('\n')[1].strip()
+                ruby_count_match = re.search(r"603304907650629653> x(.+?)$", ruby_line.lower())
                 if ruby_count_match:
                     ruby_count = int(ruby_count_match.group(1).replace(',',''))
                 else:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Ruby count not found in trade message for ruby counter.', message)
                     return
-                if trade_type == 'E': ruby_count *= -1
+                if trade_type == 'lost': ruby_count *= -1
                 ruby_count += user_settings.inventory.ruby
                 if ruby_count < 0: ruby_count == 0
                 await user_settings.update(inventory_ruby=ruby_count)

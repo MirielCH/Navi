@@ -16,6 +16,7 @@ COMMANDS_SETTINGS = {
     'Alts': settings_cmd.command_settings_alts,
     'Guild channel': settings_cmd.command_settings_clan,
     'Helpers': settings_cmd.command_settings_helpers,
+    'Multipliers': settings_cmd.command_settings_multipliers,
     'Partner': settings_cmd.command_settings_partner,
     'Portals': settings_cmd.command_settings_portals,
     'Ready list': settings_cmd.command_settings_ready,
@@ -281,7 +282,7 @@ class SettingsHelpersView(discord.ui.View):
         toggled_settings = {
             'Context helper': 'context_helper_enabled',
             'Heal warning': 'heal_warning_enabled',
-            'Megarace helper': 'megarace_helper_enabled',
+            #'Megarace helper': 'megarace_helper_enabled',
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
             'Training helper': 'training_helper_enabled',
@@ -450,8 +451,8 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
             'Lootbox': 'alert_lootbox',
-            'Megarace': 'alert_megarace',
-            'Minirace': 'alert_minirace',
+            #'Megarace': 'alert_megarace',
+            #'Minirace': 'alert_minirace',
             'Quest': 'alert_quest',
             'Pets claim': 'alert_pets',
             'Training': 'alert_training',
@@ -580,8 +581,8 @@ class SettingsRemindersView(discord.ui.View):
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
-            'Megarace': 'alert_megarace',
-            'Minirace': 'alert_minirace',
+            #'Megarace': 'alert_megarace',
+            #'Minirace': 'alert_minirace',
             'Lootbox': 'alert_lootbox',
             'Partner alert': 'alert_partner',
             'Pets': 'alert_pets',
@@ -753,9 +754,10 @@ class SettingsPartnerView(discord.ui.View):
         self.embed_function = embed_function
         self.add_item(components.AddPartnerSelect(self, "Change partner", row=0))
         self.add_item(components.ManagePartnerSettingsSelect(self, row=1))
+        self.add_item(components.SetPartnerAlertThreshold(self, row=2))
         partner_select_disabled = True if user_settings.partner_id is not None else False
-        self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled, row=2))
-        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=3))
+        self.add_item(components.SetDonorTierSelect(self, 'Change partner donor tier', 'partner', partner_select_disabled, row=3))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS, row=4))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:
@@ -934,11 +936,11 @@ class SettingsServerView(discord.ui.View):
         self.guild_settings = guild_settings
         toggled_auto_flex_alerts_1 = {
             'Brew electronical potion': 'auto_flex_brew_electronical_enabled',
+            'Craft an artifact': 'auto_flex_artifacts_enabled',
             'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
             'EPIC berries from work commands': 'auto_flex_work_epicberry_enabled',
             'GODLY lootbox from hunt or adventure': 'auto_flex_lb_godly_enabled',
             'HYPER logs in work commands': 'auto_flex_work_hyperlog_enabled',
-            'Monster drops from hunt': 'auto_flex_mob_drops_enabled',
             'OMEGA lootbox from hunt or adventure': 'auto_flex_lb_omega_enabled',
             'Lost lootboxes in area 18': 'auto_flex_lb_a18_enabled',
             'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',

@@ -1,4 +1,4 @@
-# party_popper.py
+# boosts.py
 
 from datetime import timedelta
 import re
@@ -12,7 +12,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class BoostsCog(commands.Cog):
-    """Cog that contains the adventure detection commands"""
+    """Cog that contains the boost detection commands"""
     def __init__(self, bot):
         self.bot = bot
 
