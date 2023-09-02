@@ -222,6 +222,7 @@ class PetsCog(commands.Cog):
                     'panda': emojis.PET_PANDA,
                     'snowman': emojis.PET_SNOWMAN,
                     'penguin': emojis.PET_PENGUIN,
+                    'worker': emojis.PET_WORKER,
                 }
                 user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
