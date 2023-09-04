@@ -13,7 +13,7 @@ CURRENT_DIR = Path(__file__).parent
 DB_FILE = CURRENT_DIR / 'navi_db.db'
 NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
 NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 8
+NAVI_DB_VERSION = 9
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
@@ -378,6 +378,26 @@ if __name__ == '__main__':
             "ALTER TABLE users ADD partner_pocket_watch_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD ready_ping_user INTEGER NOT NULL DEFAULT (0)",
             "ALTER TABLE guilds ADD auto_flex_artifacts_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
+        
+    if db_version < 9:
+        sqls += [
+            "ALTER TABLE users ADD alert_cel_dailyquest_enabled INTEGER NOT NULL DEFAULT (1)",
+            "Alter TABLE users ADD alert_cel_dailyquest_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_cel_dailyquest_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_cel_multiply_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_cel_multiply_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_cel_multiply_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_cel_sacrifice_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_cel_sacrifice_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_cel_sacrifice_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_maintenance_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_maintenance_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! Maintenance is over!')",
+            "ALTER TABLE users ADD alert_maintenance_visible INTEGER NOT NULL DEFAULT (1)",
         ]
 
     # Run SQLs

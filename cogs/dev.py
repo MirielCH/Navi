@@ -2,6 +2,7 @@
 """Internal dev commands"""
 
 import importlib
+import re
 import sys
 from typing import List
 
@@ -70,6 +71,56 @@ class DevCog(commands.Cog):
         for action in actions:
             message = f'{message}\n{action}'
         await ctx.respond(f'```diff\n{message}\n```')
+
+    @dev.command(name='emoji-check')
+    async def emoji_check(
+        self,
+        ctx: discord.ApplicationContext,
+    ) -> None:
+        """Checks the availabilty of all emojis in emojis.py"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        all_emojis = {}
+        for attribute_name in dir(emojis):
+            attribute_value = getattr(emojis, attribute_name)
+            if isinstance(attribute_value, str):
+                if attribute_value.startswith('<'):
+                    all_emojis[attribute_name] = attribute_value
+        missing_emojis = {}
+        invalid_emojis = {}
+        for attribute_name, emoji_string in all_emojis.items():
+            emoji_id_match = re.search(r'<a?:.+:(\d+)>', emoji_string)
+            if not emoji_id_match:
+                invalid_emojis[attribute_name] = emoji_string
+                continue
+            emoji = self.bot.get_emoji(int(emoji_id_match.group(1)))
+            if emoji is None:
+                missing_emojis[attribute_name] = emoji_string
+        if not missing_emojis and not invalid_emojis:
+            description = '_All emojis in `emojis.py` are valid and available._'
+        else:
+            description = (
+                '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
+                '- _Missing emojis are valid but not available on Discord. Upload them to a server I can see and set '
+                'the correct IDs in `emojis.py`._'
+            )
+        if invalid_emojis:    
+            description = f'{description}\n\n**Invalid emojis**'
+            for attribute_name, emoji_string in invalid_emojis.items():
+                description = f'{description}\n- `{attribute_name}`'
+        if missing_emojis:
+            description = f'{description}\n\n**Missing emojis**'
+            for attribute_name, emoji_string in missing_emojis.items():
+                description = f'{description}\n- `{attribute_name}`'
+        if len(description) >= 4096:
+            description = f'{description[:4080]}\n- ... too many errors, what are you even doing?'
+        embed = discord.Embed(
+            title = 'Emoji check',
+            description = description,
+        )
+        await ctx.respond(embed=embed)
+
 
     @dev.command(name='event-reductions')
     async def dev_event_reductions(self, ctx: discord.ApplicationContext) -> None:

@@ -46,6 +46,7 @@ class HelperHealCog(commands.Cog):
             event_mobs = [
                 'christmas slime',
                 'bunny slime',
+                'party slime',
             ]
             if any(event_mob in message_content.lower() for event_mob in event_mobs): return
             user_name = user_command_message = None
@@ -130,6 +131,7 @@ class HelperHealCog(commands.Cog):
                 'christmas slime',
                 'pink wolf',
                 'bunny slime',
+                'party slime',
             ]
             if (
                 any(event_mob in message_content.lower() for event_mob in event_mobs)

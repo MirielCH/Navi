@@ -216,6 +216,7 @@ class HuntCog(commands.Cog):
                     'christmas slime',
                     'bunny slime',
                     'pink wolf',
+                    'party slime',
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_event_mobs):
                     search_strings_together = [
@@ -256,7 +257,7 @@ class HuntCog(commands.Cog):
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        if user_name == 'Both players': # Needs to be updated when an event hits that uses this
+                        if user_name.lower() == 'both players': # Needs to be updated when an event hits that uses this
                             user_name = None
                     else:
                         await functions.add_warning_reaction(message)

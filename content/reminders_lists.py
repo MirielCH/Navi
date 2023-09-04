@@ -332,6 +332,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             command = '`custom reminder`'
         elif activity == 'unstuck':
             command = '`chimney unstuck lol`'
+        elif activity == 'maintenance':
+            command = '`maintenance`'
         else:
             command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity], False)
 

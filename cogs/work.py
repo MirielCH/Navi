@@ -151,6 +151,7 @@ class WorkCog(commands.Cog):
                 'coin ring', #All languages, artifacts
                 'master key', #All languages, artifacts
                 'pocket watch', #All languages, artifacts
+                'celebration coins', #All languages, cel event
             ]
             search_strings = [
                 '** got ', #English

@@ -38,6 +38,9 @@ class User():
     alert_big_arena: UserAlert
     alert_boo: UserAlert
     alert_boosts: UserAlert
+    alert_cel_dailyquest: UserAlert
+    alert_cel_multiply: UserAlert
+    alert_cel_sacrifice: UserAlert
     alert_chimney: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
@@ -50,6 +53,7 @@ class User():
     alert_hunt: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
+    alert_maintenance: UserAlert
     alert_megarace: UserAlert
     alert_minirace: UserAlert
     alert_not_so_mini_boss: UserAlert
@@ -141,6 +145,9 @@ class User():
         self.alert_arena = new_settings.alert_arena
         self.alert_boo = new_settings.alert_boo
         self.alert_boosts = new_settings.alert_boosts
+        self.alert_cel_dailyquest = new_settings.alert_cel_dailyquest
+        self.alert_cel_multiply = new_settings.alert_cel_multiply
+        self.alert_cel_sacrifice = new_settings.alert_cel_sacrifice
         self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
         self.alert_daily = new_settings.alert_daily
@@ -154,6 +161,7 @@ class User():
         self.alert_hunt = new_settings.alert_hunt
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
+        self.alert_maintenance = new_settings.alert_maintenance
         self.alert_megarace = new_settings.alert_megarace
         self.alert_minirace = new_settings.alert_minirace
         self.alert_not_so_mini_boss = new_settings.alert_not_so_mini_boss
@@ -282,6 +290,15 @@ class User():
             alert_boosts_enabled: bool
             alert_boosts_message: str
             alert_boosts_visible: bool
+            alert_cel_dailyquest_enabled: bool
+            alert_cel_dailyquest_message: str
+            alert_cel_dailyquest_visible: bool
+            alert_cel_multiply_enabled: bool
+            alert_cel_multiply_message: str
+            alert_cel_multiply_visible: bool
+            alert_cel_sacrifice_enabled: bool
+            alert_cel_sacrifice_message: str
+            alert_cel_sacrifice_visible: bool
             alert_chimney_enabled: bool
             alert_chimney_message: str
             alert_chimney_multiplier: float
@@ -325,6 +342,9 @@ class User():
             alert_lottery_enabled: bool
             alert_lottery_message: str
             alert_lottery_visible: bool
+            alert_maintenance_enabled: bool
+            alert_maintenance_message: str
+            alert_maintenance_visible: bool
             alert_megarace_enabled: bool
             alert_megarace_message: str
             alert_megarace_visible: bool
@@ -489,6 +509,18 @@ async def _dict_to_user(record: dict) -> User:
                                         message=record['alert_big_arena_message'],
                                         multiplier=1.0,
                                         visible=bool(record['alert_big_arena_visible'])),
+            alert_cel_dailyquest = UserAlert(enabled=bool(record['alert_cel_dailyquest_enabled']),
+                                             message=record['alert_cel_dailyquest_message'],
+                                             multiplier=1.0,
+                                             visible=bool(record['alert_cel_dailyquest_visible'])),
+            alert_cel_multiply = UserAlert(enabled=bool(record['alert_cel_multiply_enabled']),
+                                           message=record['alert_cel_multiply_message'],
+                                           multiplier=1.0,
+                                           visible=bool(record['alert_cel_multiply_visible'])),
+            alert_cel_sacrifice = UserAlert(enabled=bool(record['alert_cel_sacrifice_enabled']),
+                                           message=record['alert_cel_sacrifice_message'],
+                                           multiplier=1.0,
+                                           visible=bool(record['alert_cel_sacrifice_visible'])),
             alert_daily = UserAlert(enabled=bool(record['alert_daily_enabled']),
                                     message=record['alert_daily_message'],
                                     multiplier=float(record['alert_daily_multiplier']),
@@ -533,6 +565,10 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_lottery_message'],
                                       multiplier=1.0,
                                       visible=bool(record['alert_lottery_visible'])),
+            alert_maintenance = UserAlert(enabled=bool(record['alert_maintenance_enabled']),
+                                          message=record['alert_maintenance_message'],
+                                          multiplier=1.0,
+                                          visible=False),
             alert_megarace = UserAlert(enabled=bool(record['alert_megarace_enabled']),
                                        message=record['alert_megarace_message'],
                                        multiplier=1.0,
@@ -830,6 +866,15 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boosts_enabled: bool
         alert_boosts_message: str
         alert_boosts_visible: bool
+        alert_cel_dailyquest_enabled: bool
+        alert_cel_dailyquest_message: str
+        alert_cel_dailyquest_visible: bool
+        alert_cel_multiply_enabled: bool
+        alert_cel_multiply_message: str
+        alert_cel_multiply_visible: bool
+        alert_cel_sacrifice_enabled: bool
+        alert_cel_sacrifice_message: str
+        alert_cel_sacrifice_visible: bool
         alert_chimney_enabled: bool
         alert_chimney_message: str
         alert_chimney_multiplier: float
@@ -873,6 +918,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_lottery_enabled: bool
         alert_lottery_message: str
         alert_lottery_visible: bool
+        alert_maintenance_enabled: bool
+        alert_maintenance_message: str
+        alert_maintenance_visible: bool
         alert_megarace_enabled: bool
         alert_megarace_message: str
         alert_megarace_visible: bool

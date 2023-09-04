@@ -34,13 +34,16 @@ class TrainingCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = message_description = message_field1_value = icon_url = ''
+            message_author = message_title = message_description = message_field1_value = icon_url = message_field0_value = ''
             if embed.author:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.title: message_title = str(embed.title)
             if embed.description: message_description = str(embed.description)
-            if len(embed.fields) > 1: message_field1_value = embed.fields[1].value
+            if embed.fields:
+                message_field0_value = embed.fields[0].value
+                if len(embed.fields) > 1:
+                    message_field1_value = embed.fields[1].value
 
             # Training cooldown
             search_strings = [
@@ -110,7 +113,8 @@ class TrainingCog(commands.Cog):
                 '**: muito bem, **', #Portuguese
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
-                and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)):
+                and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)
+                and not 'celebrationcoin' in message_field0_value.lower()):
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False

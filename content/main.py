@@ -78,7 +78,7 @@ async def embed_event_reductions(bot: discord.Bot, all_cooldowns: List[cooldowns
         description = (
             f'_Event reductions are set by your Navi bot admin._\n'
             f'_You can set additional personal multipliers with '
-            f'{await functions.get_navi_slash_command(bot, "settings reminders")}_\n'
+            f'{await functions.get_navi_slash_command(bot, "settings multipliers")}_\n'
         )
     )
     embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
