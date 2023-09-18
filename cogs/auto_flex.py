@@ -1506,6 +1506,8 @@ class AutoFlexCog(commands.Cog):
                                 f'**{user_name}** just found __**{amount}**__ of them at once!\n'
                                 f'(Well, actually, the horse did all the work)'
                             )
+                        else:
+                            event = ''
                     else:
                         description = (
                             f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
@@ -1874,7 +1876,7 @@ class AutoFlexCog(commands.Cog):
                     event = 'time_travel_100'
                     description = (
                         f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
-                        f'Damn, you must really like this game. I just hope you don\'t expect any more flexes after this.\n'
+                        f'Damn, you must really like this game. I just hope you still remember your family.\n'
                         f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
                     )
                 else:

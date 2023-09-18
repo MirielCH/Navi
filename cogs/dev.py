@@ -102,17 +102,17 @@ class DevCog(commands.Cog):
         else:
             description = (
                 '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
-                '- _Missing emojis are valid but not available on Discord. Upload them to a server I can see and set '
-                'the correct IDs in `emojis.py`._'
+                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see and set '
+                'the correct IDs in `emojis.py`._\n'
             )
         if invalid_emojis:    
             description = f'{description}\n\n**Invalid emojis**'
             for attribute_name, emoji_string in invalid_emojis.items():
-                description = f'{description}\n- `{attribute_name}`'
+                description = f'{description}\n- {emoji_string} `{attribute_name}`'
         if missing_emojis:
             description = f'{description}\n\n**Missing emojis**'
             for attribute_name, emoji_string in missing_emojis.items():
-                description = f'{description}\n- `{attribute_name}`'
+                description = f'{description}\n- {emoji_string} `{attribute_name}`'
         if len(description) >= 4096:
             description = f'{description[:4080]}\n- ... too many errors, what are you even doing?'
         embed = discord.Embed(

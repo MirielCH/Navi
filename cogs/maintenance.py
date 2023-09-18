@@ -1,6 +1,7 @@
 # maintenance.py
 
 from datetime import timedelta
+import random
 import re
 
 import discord
@@ -48,6 +49,7 @@ class MaintenanceCog(commands.Cog):
                 timestring_match = re.search(r"in \*\*(.+?)\*\*", message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 if time_left < timedelta(0): return
+                time_left = time_left + timedelta(seconds=random.randint(0, 5))
                 reminder_message = user_settings.alert_maintenance.message
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'maintenance', time_left,

@@ -155,6 +155,7 @@ class HelperContextCog(commands.Cog):
                     answer = (
                         f"➜ {strings.SLASH_COMMANDS['pets adventure']}\n"
                         f"➜ {strings.SLASH_COMMANDS['pets list']}\n"
+                        f"➜ {strings.SLASH_COMMANDS['pets summary']}\n"
                     )
                     await message.reply(answer)
 
