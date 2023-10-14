@@ -300,6 +300,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
         frequency = 'hunt only' if view.user_settings.ready_after_all_commands else 'all commands'
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
         user_ping_emoji = emojis.ENABLED if view.user_settings.ready_ping_user else emojis.DISABLED
+        trade_daily_emoji = emojis.ENABLED if view.user_settings.ready_trade_daily_visible else emojis.DISABLED
+        trade_daily_done_emoji = emojis.ENABLED if view.user_settings.ready_trade_daily_completed_visible else emojis.DISABLED
         up_next_reminder_emoji = emojis.ENABLED if view.user_settings.ready_up_next_visible else emojis.DISABLED
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
         if view.user_settings.ready_pets_claim_after_every_pet:
@@ -322,20 +324,24 @@ class ManageReadySettingsSelect(discord.ui.Select):
                                             value='toggle_message_style', emoji=None))
         options.append(discord.SelectOption(label='Change embed color',
                                             value='change_embed_color', emoji=None))
-        options.append(discord.SelectOption(label=f'"Up next" reminder',
-                                            value='toggle_up_next', emoji=up_next_reminder_emoji))
-        options.append(discord.SelectOption(label=f'Show "up next" reminder with {up_next_style}',
-                                            value='toggle_up_next_timestamp'))
-        options.append(discord.SelectOption(label=f'Hidden reminders in "up next"',
-                                            value='toggle_up_next_hidden_reminders', emoji=up_next_hidden_emoji))
-        options.append(discord.SelectOption(label=f'Show "/pets claim" {pets_claim_type}',
-                                                value='toggle_pets_claim'))
         if view.clan_settings is not None:
             clan_reminder_action = 'Hide' if view.clan_settings.alert_visible else 'Show'
             options.append(discord.SelectOption(label=f'{clan_reminder_action} guild channel reminder',
                                                 value='toggle_alert'))
+        options.append(discord.SelectOption(label=f'Show "/pets claim" {pets_claim_type}',
+                                                value='toggle_pets_claim'))
         options.append(discord.SelectOption(label=f'Show "other commands" {other_position}',
                                             value='toggle_other_position', emoji=None))
+        options.append(discord.SelectOption(label='Daily trades',
+                                            value='toggle_trade_daily', emoji=trade_daily_emoji))
+        options.append(discord.SelectOption(label='Daily trades when done',
+                                            value='toggle_trade_done', emoji=trade_daily_done_emoji))
+        options.append(discord.SelectOption(label='"Up next" reminder',
+                                            value='toggle_up_next', emoji=up_next_reminder_emoji))
+        options.append(discord.SelectOption(label=f'Show "up next" reminder with {up_next_style}',
+                                            value='toggle_up_next_timestamp'))
+        options.append(discord.SelectOption(label='Hidden reminders in "up next"',
+                                            value='toggle_up_next_hidden_reminders', emoji=up_next_hidden_emoji))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_ready_settings')
 
@@ -358,6 +364,14 @@ class ManageReadySettingsSelect(discord.ui.Select):
         elif select_value == 'toggle_user_ping':
             await self.view.user_settings.update(
                 ready_ping_user=not self.view.user_settings.ready_ping_user
+            )
+        elif select_value == 'toggle_trade_daily':
+            await self.view.user_settings.update(
+                ready_trade_daily_visible=not self.view.user_settings.ready_trade_daily_visible
+            )
+        elif select_value == 'toggle_trade_done':
+            await self.view.user_settings.update(
+                ready_trade_daily_completed_visible=not self.view.user_settings.ready_trade_daily_completed_visible
             )
         elif select_value == 'toggle_up_next':
             await self.view.user_settings.update(

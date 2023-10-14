@@ -2,7 +2,7 @@
 """Contains reminder list commands"""
 
 from datetime import datetime, timedelta
-from typing import List, Optional, Union
+from typing import Optional, Union
 
 import discord
 from discord.ext import commands
@@ -543,6 +543,31 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             f'**OTHER**\n'
             f'{field_other.strip()}'
         )
+    if user_settings.ready_trade_daily_visible and user_settings.top_hat_unlocked:
+        if user_settings.trade_daily_total == 0:
+            trade_daily_total = trade_daily_total_str = '?'
+            trade_daily_left = ''
+        else:
+            trade_daily_total = user_settings.trade_daily_total
+            trade_daily_total_str = f'{trade_daily_total:,}'
+            trade_daily_left = f'(`{user_settings.trade_daily_total - user_settings.trade_daily_done:,}` left)'
+        if (user_settings.trade_daily_done != trade_daily_total
+            or user_settings.trade_daily_done == trade_daily_total and user_settings.ready_trade_daily_completed_visible):
+            field_trade_daily = (
+                f'{emojis.BP} `{user_settings.trade_daily_done:,}`/`{trade_daily_total_str}` {trade_daily_left}'
+            ).strip()
+            if user_settings.trade_daily_total == 0:
+                trade_command = await functions.get_slash_command(user_settings, 'trade list')
+                field_trade_daily = (
+                    f'{field_trade_daily}\n'
+                    f'{emojis.DETAIL} _Total amount unknown. Use {trade_command} to update._'
+                )
+            embed.add_field(name='DAILY TRADES', value=field_trade_daily.strip(), inline=False)
+            answer = (
+                f'{answer}\n'
+                f'**DAILY TRADES**\n'
+                f'{field_trade_daily.strip()}'
+            )
     if user_settings.ready_up_next_visible:
         try:
             active_reminders = await reminders.get_active_user_reminders(user.id)

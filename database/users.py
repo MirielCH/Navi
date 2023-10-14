@@ -122,6 +122,8 @@ class User():
     ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
     ready_ping_user: bool
+    ready_trade_daily_completed_visible: bool
+    ready_trade_daily_visible: bool
     ready_up_next_as_timestamp: bool
     ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
@@ -130,7 +132,10 @@ class User():
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
     time_travel_count: int
+    top_hat_unlocked: bool
     tracking_enabled: bool
+    trade_daily_done: int
+    trade_daily_total: int
     training_helper_button_mode: bool
     training_helper_enabled: bool
     user_donor_tier: int
@@ -230,6 +235,8 @@ class User():
         self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
         self.ready_ping_user = new_settings.ready_ping_user
+        self.ready_trade_daily_completed_visible = new_settings.ready_trade_daily_completed_visible
+        self.ready_trade_daily_visible = new_settings.ready_trade_daily_visible
         self.ready_up_next_as_timestamp = new_settings.ready_up_next_as_timestamp
         self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
@@ -238,7 +245,10 @@ class User():
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
         self.time_travel_count = new_settings.time_travel_count
+        self.top_hat_unlocked = new_settings.top_hat_unlocked
         self.tracking_enabled = new_settings.tracking_enabled
+        self.trade_daily_done = new_settings.trade_daily_done
+        self.trade_daily_total = new_settings.trade_daily_total
         self.training_helper_button_mode = new_settings.training_helper_button_mode
         self.training_helper_enabled = new_settings.training_helper_enabled
         self.user_donor_tier = new_settings.user_donor_tier
@@ -443,6 +453,8 @@ class User():
             ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
             ready_ping_user: bool
+            ready_trade_daily_completed_visible: bool
+            ready_trade_daily_visible: bool
             ready_up_next_as_timestamp: bool
             ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
@@ -451,7 +463,10 @@ class User():
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
             time_travel_count: int
+            top_hat_unlocked: bool
             tracking_enabled: bool
+            trade_daily_done: int
+            trade_daily_total: int
             training_helper_button_mode: bool
             training_helper_enabled: bool
             user_donor_tier: int
@@ -674,6 +689,8 @@ async def _dict_to_user(record: dict) -> User:
             ready_pets_claim_active = bool(record['ready_pets_claim_active']),
             ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
             ready_ping_user = bool(record['ready_ping_user']),
+            ready_trade_daily_completed_visible = bool(record['ready_trade_daily_completed_visible']),
+            ready_trade_daily_visible = bool(record['ready_trade_daily_visible']),
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
@@ -682,8 +699,11 @@ async def _dict_to_user(record: dict) -> User:
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
             time_travel_count = record['time_travel_count'],
-            training_helper_button_mode = bool(record['training_helper_button_mode']),
+            top_hat_unlocked = bool(record['top_hat_unlocked']),
             tracking_enabled = bool(record['tracking_enabled']),
+            trade_daily_done = record['trade_daily_done'],
+            trade_daily_total = record['trade_daily_total'],
+            training_helper_button_mode = bool(record['training_helper_button_mode']),
             training_helper_enabled = bool(record['training_helper_enabled']),
             user_donor_tier = record['user_donor_tier'],
             user_id = record['user_id'],
@@ -1019,6 +1039,8 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool
         ready_ping_user: bool
+        ready_trade_daily_completed_visible: bool
+        ready_trade_daily_visible: bool
         ready_up_next_as_timestamp: bool
         ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
@@ -1027,7 +1049,10 @@ async def _update_user(user: User, **kwargs) -> None:
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
         time_travel_count: int
+        top_hat_unlocked: bool
         tracking_enabled: bool
+        trade_daily_done: int
+        trade_daily_total: int
         training_helper_button_mode: bool
         training_helper_enabled: bool
         user_donor_tier: int

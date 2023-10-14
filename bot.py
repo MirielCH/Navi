@@ -8,27 +8,30 @@ import traceback
 import discord
 from discord.ext import commands
 
-from database import errors, guilds
+from database import errors, guilds, update_database
 from database import settings as settings_db
-from database.update_database import NAVI_DB_VERSION
 from resources import functions, settings
 
 
 #Check if database is up to date
 try:
     cur = settings.NAVI_DB.cursor()
-    cur.execute('PRAGMA user_version')
-    record = cur.fetchone()
-    db_version = int(dict(record)['user_version'])
-    if db_version != NAVI_DB_VERSION:
-        print(
-            'Your database structure is outdated. Please run "database/update_database.py" first.'
-        )
-        sys.exit()
+    db_version = update_database.get_user_version()
+    if db_version != settings.NAVI_DB_VERSION:
+        update_database.logger.info('Database structure is outdated. Running update...')
+        correct_version = update_database.update_database()
+        if not correct_version:
+            db_version = update_database.get_user_version()
+            error_message = f'Database version mismatch after update, should be {settings.NAVI_DB_VERSION}, '
+            f'is {db_version}. Exiting. Please check the database manually.'
+            update_database.logger.error(f'{error_message}')
+            print(error_message)
+            sys.exit()
+        update_database.logger.info('Database updated.')
 except sqlite3.Error as error:
-    print(
-        f'Got an error while trying to determine database version: {error}'
-    )
+    error_message = f'Got an error while trying to determine database version and/or updating the database: {error}'
+    print(error_message)
+    update_database.logger.error(f'{error_message}')
     sys.exit()
 
 
@@ -144,6 +147,7 @@ EXTENSIONS = [
         'cogs.tasks',
         'cogs.time_cookie',
         'cogs.tracking',
+        'cogs.trade',
         'cogs.training',
         'cogs.vote',
         'cogs.weekly',

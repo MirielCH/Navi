@@ -133,6 +133,7 @@ class TrackingCog(commands.Cog):
                         'inventory_seed_potato': 0,
                         'inventory_seed_carrot': 0,
                         'inventory_ruby': 0,
+                        'trade_daily_total': 0,
                     }
                     await user_settings.update(**kwargs)
                     try:

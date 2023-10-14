@@ -78,6 +78,9 @@ class ArtifactsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
+                top_hat_active_match = re.search(r'✅ \| <:tophat', embed_field0.lower())
+                top_hat_unlocked = True if top_hat_active_match else False
+                await user_settings.update(top_hat_unlocked=top_hat_unlocked)
                 pocket_watch_active_match = re.search(r'✅ \| <:pocketwatch', embed_field0.lower())
                 if not pocket_watch_active_match: return
                 search_patterns = [

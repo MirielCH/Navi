@@ -177,6 +177,7 @@ class TasksCog(commands.Cog):
         self.schedule_tasks.start()
         self.consolidate_tracking_log.start()
         self.delete_old_messages_from_cache.start()
+        self.reset_trade_daily_done.start()
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -298,7 +299,7 @@ class TasksCog(commands.Cog):
     async def consolidate_tracking_log(self) -> None:
         """Task that consolidates tracking log entries older than 28 days into summaries"""
         start_time = datetime.utcnow().replace(microsecond=0)
-        if start_time.hour == 0 and start_time.minute == 0:
+        if start_time.hour == 0 and start_time.minute == 15:
             start_time = datetime.utcnow().replace(microsecond=0)
             log_entry_count = 0
             try:
@@ -333,6 +334,15 @@ class TasksCog(commands.Cog):
             end_time = datetime.utcnow().replace(microsecond=0)
             time_passed = end_time - start_time
             logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
+            
+    @tasks.loop(seconds=60)
+    async def reset_trade_daily_done(self) -> None:
+        """Task that resets the daily trade amounts to 0"""
+        current_time = datetime.utcnow().replace(microsecond=0)
+        if current_time.hour == 0 and current_time.minute == 0:
+            all_user_settings = await users.get_all_users()
+            for user_settings in all_user_settings:
+                if user_settings.trade_daily_done != 0: await user_settings.update(trade_daily_done=0)
 
     @tasks.loop(minutes=2)
     async def delete_old_messages_from_cache(self) -> None:

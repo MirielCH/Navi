@@ -130,7 +130,7 @@ dmypy.json
 .pyre/
 
 # Database
-database/navi_db.db
+database/navi_db*.db
 
 # Visual Studio Code
 .vscode/

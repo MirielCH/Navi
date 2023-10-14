@@ -1,49 +1,41 @@
-# update_databae.py
-"""Migrates the database to the newest version.
+# update_database.py
+"""Migrates the database to the newest version."""
 
-This file needs to be run directly. Only required when the bot tells you on startup.
-
-BACK UP YOUR DATABASE BEFORE RUNNING THIS!
-"""
-
+import os
 import sqlite3
-from pathlib import Path
 
-CURRENT_DIR = Path(__file__).parent
-DB_FILE = CURRENT_DIR / 'navi_db.db'
-NAVI_DB = sqlite3.connect(DB_FILE, isolation_level=None, detect_types=sqlite3.PARSE_DECLTYPES)
-NAVI_DB.row_factory = sqlite3.Row
-NAVI_DB_VERSION = 9
+from resources import logs, settings
+
+logger = logs.get_logger('database')
 
 def get_user_version() -> int:
     """Returns the current user version from the database"""
     try:
-        cur = NAVI_DB.cursor()
+        cur = settings.NAVI_DB.cursor()
         cur.execute('PRAGMA user_version')
         record = cur.fetchone()
         return int(dict(record)['user_version'])
     except sqlite3.Error as error:
-        print(f'Unable to read database version. Error: {error}')
+        error_message = f'Unable to read database version. Error: {error}'
+        print(error_message)
+        logger.error(f'Unable to read database version. Error: {error}')
         raise
 
-if __name__ == '__main__':
-    cur = NAVI_DB.cursor()
+def update_database() -> bool:
+    """Updates the database. Returns True if the db_version after the update equals NACVI_DB_VERSION."""
+    cur = settings.NAVI_DB.cursor()
     db_version = get_user_version()
-    print(
-        f'Current database version: {db_version}\n'
-        f'Target database version: {NAVI_DB_VERSION}\n'
-    )
-    if db_version == NAVI_DB_VERSION:
-        print('Nothing to do.')
-        quit()
-    user_input = input(
-        f'MAKE A BACKUP OF YOUR DATABASE. You have been warned.\n'
-        f'Continue update? [y/n]\n'
-    )
-    if user_input.lower() not in ['y','yes']:
-        print('Aborted. No changes were made.')
-        quit()
-    print('Updating database...')
+    logger.info(f'Current database version: {db_version}')
+    logger.info(f'Target database version: {settings.NAVI_DB_VERSION}')
+    if db_version == settings.NAVI_DB_VERSION:
+        logger.info('Nothing to do, exiting.')
+        return True
+    logger.info('Backing up database to /database/navi_db_backup.db...')
+    backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
+    navi_backup_db = sqlite3.connect(backup_db_file)
+    settings.NAVI_DB.backup(navi_backup_db)
+    navi_backup_db.close()
+    logger.info('Starting database update...')
 
     # Recreate users table if database was never updated yet to make sure everything is as it should be
     if db_version == 0:
@@ -383,7 +375,7 @@ if __name__ == '__main__':
     if db_version < 9:
         sqls += [
             "ALTER TABLE users ADD alert_cel_dailyquest_enabled INTEGER NOT NULL DEFAULT (1)",
-            "Alter TABLE users ADD alert_cel_dailyquest_message TEXT NOT NULL DEFAULT "
+            "ALTER TABLE users ADD alert_cel_dailyquest_message TEXT NOT NULL DEFAULT "
             "('{name} Hey! It''s time for {command}!')",
             "ALTER TABLE users ADD alert_cel_dailyquest_visible INTEGER NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_cel_multiply_enabled INTEGER NOT NULL DEFAULT (1)",
@@ -398,6 +390,14 @@ if __name__ == '__main__':
             "ALTER TABLE users ADD alert_maintenance_message TEXT NOT NULL DEFAULT "
             "('{name} Hey! Maintenance is over!')",
             "ALTER TABLE users ADD alert_maintenance_visible INTEGER NOT NULL DEFAULT (1)",
+        ]
+    if db_version < 10:
+        sqls += [
+            "ALTER TABLE users ADD top_hat_unlocked INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD trade_daily_done INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD trade_daily_total INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD ready_trade_daily_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD ready_trade_daily_completed_visible INTEGER NOT NULL DEFAULT (1)",
         ]
 
     # Run SQLs
@@ -414,16 +414,13 @@ if __name__ == '__main__':
                 raise
 
     # Set DB version, vaccum, integrity check
-    cur.execute(f'PRAGMA user_version = {NAVI_DB_VERSION}')
+    cur.execute(f'PRAGMA user_version = {settings.NAVI_DB_VERSION}')
     db_version = get_user_version()
-    print(
-        f'Updated database to version {db_version}.\n\n'
-        f'Vacuuming...'
-    )
+    logger.info(f'Updated database to version {db_version}.')
+    logger.info('Vacuuming...')
     cur.execute('VACUUM')
-    print(
-        f'Done.\n\n'
-        f'Running integrity check...'
-    )
+    logger.info('Running integrity check...')
     cur.execute('PRAGMA integrity_check')
-    print(f"Check result: {dict(cur.fetchone())['integrity_check']}")
+    logger.info(f"Check result: {dict(cur.fetchone())['integrity_check']}")
+
+    return db_version == settings.NAVI_DB_VERSION
