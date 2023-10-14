@@ -8,7 +8,7 @@ from discord.ext import commands
 from datetime import timedelta
 
 from cache import messages
-from database import errors, reminders, users
+from database import alts, errors, reminders, users
 from database import cooldowns as cooldowns_db
 from resources import emojis, exceptions, functions, regex, settings, strings
 
@@ -74,7 +74,15 @@ class CooldownsCog(commands.Cog):
                 if not user_name_match or not embed_users:
                     await functions.add_warning_reaction(message)
                     return
-            if interaction_user not in embed_users: return
+            if interaction_user not in embed_users:
+                user_alts = await alts.get_alts(interaction_user.id)
+                alt_found = False
+                if user_alts:
+                    for embed_user in embed_users:
+                        if embed_user.id in user_alts:
+                            interaction_user = message.guild.get_member(embed_user.id)
+                            alt_found = True
+                if not alt_found: return
             try:
                 user_settings: users.User = await users.get_user(interaction_user.id)
             except exceptions.FirstTimeUserError:

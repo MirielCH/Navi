@@ -34,28 +34,29 @@ class FeedbackCog(commands.Cog):
         interaction = await ctx.respond(
             'Send the following complaint to the dev?',
             view=view,
-            embed=embed
+            embed=embed,
+            ephemeral=True
         )
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.', ephemeral=True)
         elif view.value == 'confirm':
             await self.bot.wait_until_ready()
             complaint_channel = await self.bot.fetch_channel(settings.COMPLAINT_CHANNEL_ID)
             if complaint_channel is None:
-                await ctx.followup.send('Whoops, can\'t reach the complaint channel. Please tell the dev.')
+                await ctx.followup.send('Whoops, can\'t reach the complaint channel. Please tell the dev.', ephemeral=True)
                 return
             try:
                 await complaint_channel.send(embed=embed)
             except:
-                await ctx.followup.send('Whoops, can\'t reach the complaint channel. Please tell the dev.')
+                await ctx.followup.send('Whoops, can\'t reach the complaint channel. Please tell the dev.', ephemeral=True)
                 return
             await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Complaint sent.')
+            await ctx.followup.send('Complaint sent.', ephemeral=True)
         else:
             await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Complaining aborted. Can\'t have been that important then, heh.')
+            await ctx.followup.send('Complaining aborted. Can\'t have been that important then, heh.', ephemeral=True)
             
     @slash_command()
     async def suggestion(
@@ -74,28 +75,29 @@ class FeedbackCog(commands.Cog):
         interaction = await ctx.respond(
             'Send the following suggestion to the dev?',
             view=view,
-            embed=embed
+            embed=embed,
+            ephemeral=True
         )
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.', ephemeral=True)
         elif view.value == 'confirm':
             await self.bot.wait_until_ready()
             suggestion_channel = await self.bot.fetch_channel(settings.SUGGESTION_CHANNEL_ID)
             if suggestion_channel is None:
-                await ctx.followup.send('Whoops, can\'t reach the suggestion channel. Please tell the dev.')
+                await ctx.followup.send('Whoops, can\'t reach the suggestion channel. Please tell the dev.', ephemeral=True)
                 return
             try:
                 await suggestion_channel.send(embed=embed)
             except:
-                await ctx.followup.send('Whoops, can\'t reach the suggestion channel. Please tell the dev.')
+                await ctx.followup.send('Whoops, can\'t reach the suggestion channel. Please tell the dev.', ephemeral=True)
                 return
             await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Suggestion sent.')
+            await ctx.followup.send('Suggestion sent.', ephemeral=True)
         else:
             await functions.edit_interaction(interaction, view=None)
-            await ctx.followup.send('Sending suggestion aborted. Can\'t have been that important then, heh.')
+            await ctx.followup.send('Sending suggestion aborted. Can\'t have been that important then, heh.', ephemeral=True)
 
 
 # Initialization

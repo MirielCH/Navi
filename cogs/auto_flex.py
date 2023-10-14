@@ -1879,6 +1879,71 @@ class AutoFlexCog(commands.Cog):
                         f'Damn, you must really like this game. I just hope you still remember your family.\n'
                         f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
                     )
+                elif time_travel_count_new == 150:
+                    event = 'time_travel_150'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 150**!\n'
+                        f'I\'m starting to question your life choices.\n'
+                        f'You can stop playing now btw, there will be no more backgrounds.\n'
+                    )
+                elif time_travel_count_new == 200:
+                    event = 'time_travel_200'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 200**!\n'
+                        f'What on earth made you do this 200 times? You mad?\n'
+                    )
+                elif time_travel_count_new == 300:
+                    event = 'time_travel_300'
+                    description = (
+                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **SPARTA**!\n'
+                    )
+                elif time_travel_count_new == 400:
+                    event = 'time_travel_400'
+                    description = (
+                        f'Public Service Alert! **{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
+                        f'As to why tho... I couldn\'t say.'
+                    )
+                elif time_travel_count_new == 420:
+                    event = 'time_travel_420'
+                    description = (
+                        f'**4:20 {user.name}**. The usual place.'
+                    )
+                elif time_travel_count_new == 500:
+                    event = 'time_travel_500'
+                    description = (
+                        f'Did you see that? It\'s **{user.name}** plopping through time. For the freaking **500**th time.\n'
+                        f'{emojis.TIME_TRAVEL}\n'
+                    )
+                elif time_travel_count_new == 600:
+                    event = 'time_travel_600'
+                    description = (
+                        f'Pretty sury **{user.name}** forgot by now which time they actually belong to after '
+                        f'**600** {emojis.TIME_TRAVEL} time travels.\n'
+                    )
+                elif time_travel_count_new == 700:
+                    event = 'time_travel_700'
+                    description = (
+                        f'Did you know that there is such a thing as playing a game too much? **{user.name}** can.\n'
+                        f'They just reached **700** {emojis.TIME_TRAVEL} time travels, and it scares me.\n'
+                    )
+                elif time_travel_count_new == 800:
+                    event = 'time_travel_800'
+                    description = (
+                        f'**800** {emojis.TIME_TRAVEL} time travels. It\'s rather crazy. But I get it now - '
+                        f'**{user.name}** is probably training for the time olympics on Galifrey.'
+                    )
+                elif time_travel_count_new == 900:
+                    event = 'time_travel_900'
+                    description = (
+                        f'Ted just called **{user.name}** and wanted his phone booth back. After learning it was '
+                        f'used for **900** {emojis.TIME_TRAVEL} time travels, he was too scared to take it back tho.'
+                    )
+                elif time_travel_count_new == 999:
+                    event = 'time_travel_999'
+                    description = (
+                        f'**{user.name}** traveled in time for **999** times and thus broke Epic RPG Guide. Good job.\n'
+                        f'Hope you\'re proud. Damn it.'
+                    )
                 else:
                     return
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,

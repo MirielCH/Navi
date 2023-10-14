@@ -130,7 +130,7 @@ class SetPrefixModal(Modal):
         )
 
     async def callback(self, interaction: discord.Interaction):
-        new_prefix = self.children[0].value
+        new_prefix = self.children[0].value.strip('"')
         await self.view.guild_settings.update(prefix=new_prefix)
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
@@ -143,7 +143,7 @@ class SetMultiplierModal(Modal):
         self.activity = activity
         self.add_item(
             InputText(
-                label='New multiplier (0.01 - 2.00):',
+                label='New multiplier (0.01 - 5.00):',
                 placeholder="Enter multiplier ...",
             )
         )
@@ -156,9 +156,9 @@ class SetMultiplierModal(Modal):
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('That is not a valid number.', ephemeral=True)
             return
-        if not 0.01 <= new_multiplier <= 2.0:
+        if not 0.01 <= new_multiplier <= 5.0:
             await interaction.response.edit_message(view=self.view)
-            await interaction.followup.send('The multiplier needs to be between 0.01 and 2.00', ephemeral=True)
+            await interaction.followup.send('The multiplier needs to be between 0.01 and 5.00', ephemeral=True)
             return
         kwargs = {}
         if self.activity == 'all':

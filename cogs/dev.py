@@ -1,14 +1,18 @@
 # dev.py
 """Internal dev commands"""
 
+from datetime import datetime
 import importlib
+import os
 import re
+import sqlite3
 import sys
 from typing import List
 
 import discord
 from discord.commands import SlashCommandGroup, Option
 from discord.ext import commands
+from humanfriendly import format_timespan
 
 from database import cooldowns
 from resources import emojis, exceptions, functions, logs, settings, views
@@ -133,6 +137,36 @@ class DevCog(commands.Cog):
         embed = await embed_dev_event_reductions(all_cooldowns)
         interaction = await ctx.respond(embed=embed, view=view)
         view.interaction = interaction
+
+    @dev.command(name='backup')
+    async def dev_dump(self, ctx: discord.ApplicationContext) -> None:
+        """Manually backups the database to navi_db_backup.db"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(
+            f'This will back up the database to `navi_db_backup.db`. You can continue using Navi while doing this.\n'
+            f'**If the target file exists, it will be overwritten!**\n\n'
+            f'Proceed?',
+            view=view,
+        )
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+        elif view.value != 'confirm':
+            await functions.edit_interaction(interaction, view=None)
+            await ctx.followup.send('Backup aborted.')
+        else:    
+            start_time = datetime.utcnow()
+            interaction = await ctx.respond('Starting backup...')
+            backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
+            navi_backup_db = sqlite3.connect(backup_db_file)
+            settings.NAVI_DB.backup(navi_backup_db)
+            navi_backup_db.close()
+            time_taken = datetime.utcnow() - start_time
+            await functions.edit_interaction(interaction, content=f'Backup finished after {format_timespan(time_taken)}')
 
     @dev.command(name='post-message')
     async def post_message(

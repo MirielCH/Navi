@@ -1210,6 +1210,7 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         auto_flex_channel = '`N/A`'
     server_settings = (
         f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
+        f'{emojis.DETAIL} _If you want to have a space after the prefix, you need to input it as `"prefix "`._'
         f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
         f'{emojis.BP} **Auto flex channel**: {auto_flex_channel}\n'
     )
