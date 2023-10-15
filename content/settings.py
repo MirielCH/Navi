@@ -1005,6 +1005,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
     )
     trade_daily = (
+        f'_Daily trades will only show up if you have a top hat!_\n'
         f'{emojis.BP} **Daily trades**: {await bool_to_text(user_settings.ready_trade_daily_visible)}\n'
         f'{emojis.BP} **When daily trades are done**: {await bool_to_text(user_settings.ready_trade_daily_completed_visible)}\n'
     )

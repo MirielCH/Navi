@@ -47,7 +47,7 @@ class TradeCog(commands.Cog):
             ]
             if any(search_string in message_description.lower() for search_string in search_strings):
                 user_name = user_command_message = None
-                trade_from, trade_to = message_field.split('\n')
+                trade_from, trade_to = message_field.split('\n')[:2]
                 user_name_match = re.search(r"\*\*(.+?)\*\*:", trade_from)
                 user_name = user_name_match.group(1)
                 if user_name in strings.EPIC_NPC_NAMES: return
@@ -68,7 +68,7 @@ class TradeCog(commands.Cog):
                 if (trade_from_item == 'woodenlog' and trade_to_item == 'ruby'
                     and trade_from_amount / trade_to_amount == 25):
                     trade_daily_found = True
-                    amount_traded = trade_to_amount
+                    traded_amount = trade_to_amount
                 if (trade_from_item == 'normiefish' and trade_to_item == 'woodenlog'
                     and trade_to_amount / trade_from_amount == 12):
                     trade_daily_found = True
