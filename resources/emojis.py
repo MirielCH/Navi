@@ -37,6 +37,7 @@ ARTIFACT_GOLDEN_PAN = '<:artifact_golden_pan:1143232936108376254>'
 ARTIFACT_MASTER_KEY = '<:artifact_master_key:1143232943209316473>'
 ARTIFACT_POCKET_WATCH = '<:artifact_pocket_watch:1143233164492419225>'
 ARTIFACT_TOP_HAT = '<:artifact_top_hat:1143233077599027251>'
+ARTIFACT_VAMPIRE_TEETH = '<:vampireteeth:1163350885972312165>'
 
 # EPIC RPG event items
 COIN_CELEBRATION = '<:coin_celebration:936912877791629312>'
@@ -194,28 +195,28 @@ MONSTER_DROP_AREAS_EMOJIS = {
 }
 
 
-BOOST_ITEMS_EMOJIS = {
-    'banana potion': POTION_BANANA,
-    'cookie potion': POTION_COOKIE,
-    'dev boost': DEV_BUFF,
-    'dev buff': DEV_BUFF,
-    'dragon breath potion': POTION_DRAGON_BREATH,
-    'electronical potion': POTION_ELECTRONICAL,
-    'fish potion': POTION_FISH,
-    'inverted potion': POTION_INVERTED,
-    'juice potion': POTION_JUICE,
-    'jumpy potion': POTION_JUMPY,
-    'king potion': POTION_KING,
-    'liquid hair potion': POTION_LIQUID_HAIR,
-    'lootbox potion': POTION_LOOTBOX,
-    'mod boost': MOD_BUFF,
-    'mod buff': MOD_BUFF,
-    'monster potion': POTION_MONSTER,
-    'party popper': PARTY_POPPER,
-    'potion potion': POTION_POTION,
-    'time potion': POTION_TIME,
-    'triple potion': POTION_TRIPLE,
-    'valentine boost': '❤️',
-    'void potion': POTION_VOID,
-    'wood potion': POTION_WOOD,
+BOOSTS_EMOJIS = {
+    'banana-potion': POTION_BANANA,
+    'cookie-potion': POTION_COOKIE,
+    'dev-boost': DEV_BUFF,
+    'dev-buff': DEV_BUFF,
+    'dragon-breath-potion': POTION_DRAGON_BREATH,
+    'electronical-potion': POTION_ELECTRONICAL,
+    'fish-potion': POTION_FISH,
+    'inverted-potion': POTION_INVERTED,
+    'juice-potion': POTION_JUICE,
+    'jumpy-potion': POTION_JUMPY,
+    'king-potion': POTION_KING,
+    'liquid-hair-potion': POTION_LIQUID_HAIR,
+    'lootbox-potion': POTION_LOOTBOX,
+    'mod-boost': MOD_BUFF,
+    'mod-buff': MOD_BUFF,
+    'monster-potion': POTION_MONSTER,
+    'party-popper': PARTY_POPPER,
+    'potion-potion': POTION_POTION,
+    'time-potion': POTION_TIME,
+    'triple-potion': POTION_TRIPLE,
+    'valentine-boost': '❤️',
+    'void-potion': POTION_VOID,
+    'wood-potion': POTION_WOOD,
 }

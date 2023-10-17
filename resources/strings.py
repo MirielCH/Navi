@@ -185,6 +185,7 @@ ARTIFACTS_EMOJIS = {
     'golden pan': emojis.ARTIFACT_GOLDEN_PAN,
     'master key': emojis.ARTIFACT_MASTER_KEY,
     'pocket watch': emojis.ARTIFACT_POCKET_WATCH,
+    'vampire teeth': emojis.ARTIFACT_VAMPIRE_TEETH,
 }
 
 
@@ -283,7 +284,7 @@ ACTIVITIES_COMMANDS = (
     #'advent-calendar',
     'adventure',
     'arena',
-    #'boo',
+    'boo',
     #'cel-dailyquest',
     #'cel-multiply',
     #'cel-sacrifice',
@@ -316,7 +317,7 @@ ACTIVITIES_EVENTS = (
 
 ACTIVITIES_BOOSTS = (
     'banana-potion',
-    'celebration',
+    'celebration-boost',
     'cookie-potion',
     'dev-boost',
     'dev-buff',
@@ -325,7 +326,8 @@ ACTIVITIES_BOOSTS = (
     'egg-blessing',
     'electronical-potion',
     'fish-potion',
-    'horse-festival',
+    'halloween-boost',
+    'horse-festival-boost',
     'inverted-potion',
     'juice-potion',
     'jumpy-potion',
@@ -340,11 +342,18 @@ ACTIVITIES_BOOSTS = (
     'potion-potion',
     'time-potion',
     'triple-potion',
-    'unepic',
+    'unepic-boost',
     'valentine-boost',
     'void-potion',
     'wood-potion',
 )
+
+BOOSTS_ALIASES = {
+    'celebration': 'celebration-boost',
+    'halloween': 'halloween-boost',
+    'horse-festival': 'horse-festival-boost',
+    'unepic': 'unepic-boost',
+}
 
 ACTIVITIES_SLASH_COMMANDS = {
     'advent-calendar': 'xmas calendar',
@@ -961,7 +970,8 @@ SLASH_COMMANDS = {
     'guild raid': '</guild raid:961046237753257994>',
     'guild stats': '</guild stats:961046237753257994>',
     'guild upgrade': '</guild upgrade:961046237753257994>',
-    'hal boo': '</hal boo:1031664514250330192>',
+    #'hal boo': '</hal boo:1031664514250330192>',
+    'hal boo': '`rpg hal boo`',
     'heal': '</heal:959915737777061928>',
     'horse breeding': '</horse breeding:966961638378987540>',
     'horse race': '</horse race:966961638378987540>',

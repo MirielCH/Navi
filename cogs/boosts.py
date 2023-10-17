@@ -94,7 +94,8 @@ class BoostsCog(commands.Cog):
                         try:
                             active_reminders = await reminders.get_active_user_reminders(user.id)
                             for active_reminder in active_reminders:
-                                if active_reminder.activity in strings.ACTIVITIES_BOOSTS:
+                                if (active_reminder.activity in strings.ACTIVITIES_BOOSTS
+                                    or active_reminder.activity in strings.BOOSTS_ALIASES):
                                     await active_reminder.delete()
                         except exceptions.NoDataFoundError:
                             pass
@@ -104,23 +105,23 @@ class BoostsCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Active item not found in boosts message.', message)
                         return
-                    active_item = active_item_match.group(1)
-                    active_item_activity = active_item.replace(' ','-')
+                    active_item_activity = active_item_match.group(1).replace(' ','-')
+                    active_item_activity = strings.BOOSTS_ALIASES.get(active_item_activity, active_item_activity)
                     if active_item_activity in all_boosts: all_boosts.remove(active_item_activity)
-                    if active_item == 'dragon breath potion':
+                    if active_item_activity == 'dragon-breath-potion':
                         potion_dragon_breath_active = True
                         if not user_settings.potion_dragon_breath_active:
                             await user_settings.update(potion_dragon_breath_active=True)
                         if not user_settings.alert_boosts.enabled: return
                     if not user_settings.alert_boosts.enabled: continue
-                    active_item_emoji = emojis.BOOST_ITEMS_EMOJIS.get(active_item, '')
+                    active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
                     time_left = await functions.calculate_time_left_from_timestring(message, time_string)
                     if time_left < timedelta(0): return
                     reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', active_item_emoji)
-                        .replace('{boost_item}', active_item)
+                        .replace('{boost_item}', active_item_activity.replace('-', ' '))
                         .replace('  ', ' ')
                     )
                     reminder: reminders.Reminder = (
@@ -211,27 +212,28 @@ class BoostsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                item_name_match = re.search(r'a (.+?) \*\*(.+?)\*\*, ', message_content.lower())
+                item_activity_match = re.search(r'a (.+?) \*\*(.+?)\*\*, ', message_content.lower())
                 timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
-                if not item_name_match:
+                if not item_activity_match:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Couldn\'t find the item name in the alchemy message.',
                                             message)
                     return
-                item_name = item_name_match.group(2)
-                if item_name == 'dragon breath potion':
+                item_activity = item_activity_match.group(2).replace(' ','-')
+                item_activity = strings.BOOSTS_ALIASES.get(item_activity, item_activity)
+                if item_activity == 'dragon-breath-potion':
                     await user_settings.update(potion_dragon_breath_active=True)
                     if not user_settings.alert_boosts.enabled: return
-                item_emoji = emojis.BOOST_ITEMS_EMOJIS.get(item_name, '')
+                item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', item_emoji)
-                        .replace('{boost_item}', item_name)
+                        .replace('{boost_item}', item_activity.replace('-',' '))
                         .replace('  ', ' ')
                     )
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, item_name.replace(' ','-'), time_left,
+                    await reminders.insert_user_reminder(user.id, item_activity, time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)

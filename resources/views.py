@@ -22,7 +22,6 @@ COMMANDS_SETTINGS = {
     'Ready list': settings_cmd.command_settings_ready,
     'Reminders': settings_cmd.command_settings_reminders,
     'Reminder messages': settings_cmd.command_settings_messages,
-    'Reminder multipliers': settings_cmd.command_settings_multipliers,
     'User': settings_cmd.command_settings_user,
 }
 
@@ -286,7 +285,7 @@ class SettingsHelpersView(discord.ui.View):
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
             'Training helper': 'training_helper_enabled',
-            #'Pumpkin bat helper': 'halloween_helper_enabled',
+            'Pumpkin bat helper': 'halloween_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
         self.add_item(components.SetFarmHelperModeSelect(self))
@@ -440,10 +439,10 @@ class SettingsReadyRemindersView(discord.ui.View):
             #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
-            #'Boo': 'alert_boo',
-            'Cel dailyquest': 'alert_cel_dailyquest',
-            'Cel multiply': 'alert_cel_multiply',
-            'Cel sacrifice': 'alert_cel_sacrifice',
+            'Boo': 'alert_boo',
+            #'Cel dailyquest': 'alert_cel_dailyquest',
+            #'Cel multiply': 'alert_cel_multiply',
+            #'Cel sacrifice': 'alert_cel_sacrifice',
             #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
@@ -573,11 +572,11 @@ class SettingsRemindersView(discord.ui.View):
             #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
-            #'Boo': 'alert_boo',
+            'Boo': 'alert_boo',
             'Boost items': 'alert_boosts',
-            'Cel dailyquest': 'alert_cel_dailyquest',
-            'Cel multiply': 'alert_cel_multiply',
-            'Cel sacrifice': 'alert_cel_sacrifice',
+            #'Cel dailyquest': 'alert_cel_dailyquest',
+            #'Cel multiply': 'alert_cel_multiply',
+            #'Cel sacrifice': 'alert_cel_sacrifice',
             #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',

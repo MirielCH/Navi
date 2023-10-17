@@ -967,12 +967,20 @@ class AutoFlexCog(commands.Cog):
                 artifact_name_match = re.search(r'\*\*(.+?)\*\* ', message_content.lower())
                 artifact_name = artifact_name_match.group(1)
                 artifact_emoji = strings.ARTIFACTS_EMOJIS.get(artifact_name, '')
-                
-                description = (
-                    f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
-                    f'with them!\n'
-                    f'That thing looks weird, bro.'
-                )
+
+                if artifact_name == 'vampire teeth':
+                    description = (
+                        f'**{user.name}** found, uh... well. Some {artifact_emoji} **{artifact_name}**.\n'
+                        f'In 3 parts.\n'
+                        f'And then reassembled them.\n'
+                        f'... yes.'
+                    )
+                else:
+                    description = (
+                        f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
+                        f'with them!\n'
+                        f'That thing looks weird, bro.'
+                    )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'artifacts',
                                                   description)
 

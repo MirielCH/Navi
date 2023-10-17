@@ -45,8 +45,8 @@ class ArtifactsCog(commands.Cog):
             # Artifacts overview
             search_strings = [
                 'you can find parts of the artifacts across', #English
-                'you can find parts of the artifacts across', #Spanish, MISSING
-                'you can find parts of the artifacts across', #Portuguese, MISSING
+                'puedes encontrar partes de los artefactos en muchos', #Spanish
+                'você pode encontrar partes dos artefatos em muitos', #Portuguese
             ]
             if (any(search_string in embed_description.lower() for search_string in search_strings)):
                 user_id = user_name = user_command_message = None

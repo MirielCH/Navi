@@ -793,9 +793,9 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
         f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'
         f'{emojis.DETAIL} _Changes your farm reminder according to the mode and your inventory._\n'
-        #f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
-        #f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
-        #f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
+        f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
+        f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
     )
     helper_settings = (
         f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'

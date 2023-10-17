@@ -135,7 +135,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
             reminders_custom_list.append(reminder)
         elif reminder.activity in strings.ACTIVITIES_EVENTS:
             reminders_events_list.append(reminder)
-        elif reminder.activity in strings.ACTIVITIES_BOOSTS:
+        elif reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES:
             reminders_boosts_list.append(reminder)
         else:
             reminders_commands_list.append(reminder)
@@ -578,7 +578,7 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             current_time = datetime.utcnow().replace(microsecond=0)
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
-                if reminder.activity in strings.ACTIVITIES_BOOSTS: continue
+                if reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES: continue
                 if not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity:
                     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
                     if not alert_settings.visible: continue

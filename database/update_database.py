@@ -1,10 +1,18 @@
 # update_database.py
 """Migrates the database to the newest version."""
 
+import sys
+
+if __name__ == '__main__':
+    print('As of 2.39.0, database is automatically updated on startup. Please start the bot normally.')
+    sys.exit()
+
+    
 import os
 import sqlite3
 
 from resources import logs, settings
+
 
 logger = logs.get_logger('database')
 
