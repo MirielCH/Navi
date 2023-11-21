@@ -14,8 +14,6 @@ import sqlite3
 from resources import logs, settings
 
 
-logger = logs.get_logger('database')
-
 def get_user_version() -> int:
     """Returns the current user version from the database"""
     try:
@@ -26,24 +24,24 @@ def get_user_version() -> int:
     except sqlite3.Error as error:
         error_message = f'Unable to read database version. Error: {error}'
         print(error_message)
-        logger.error(f'Unable to read database version. Error: {error}')
+        logs.logger.error(f'Database: Unable to read database version. Error: {error}')
         raise
 
 def update_database() -> bool:
     """Updates the database. Returns True if the db_version after the update equals NACVI_DB_VERSION."""
     cur = settings.NAVI_DB.cursor()
     db_version = get_user_version()
-    logger.info(f'Current database version: {db_version}')
-    logger.info(f'Target database version: {settings.NAVI_DB_VERSION}')
+    logs.logger.info(f'Database: Current database version: {db_version}')
+    logs.logger.info(f'Database: Target database version: {settings.NAVI_DB_VERSION}')
     if db_version == settings.NAVI_DB_VERSION:
-        logger.info('Nothing to do, exiting.')
+        logs.logger.info('Database Update: Nothing to do, exiting.')
         return True
-    logger.info('Backing up database to /database/navi_db_backup.db...')
+    logs.logger.info('Database: Backing up database to /database/navi_db_backup.db...')
     backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
     navi_backup_db = sqlite3.connect(backup_db_file)
     settings.NAVI_DB.backup(navi_backup_db)
     navi_backup_db.close()
-    logger.info('Starting database update...')
+    logs.logger.info('Database: Starting database update...')
 
     # Recreate users table if database was never updated yet to make sure everything is as it should be
     if db_version == 0:
@@ -424,11 +422,11 @@ def update_database() -> bool:
     # Set DB version, vaccum, integrity check
     cur.execute(f'PRAGMA user_version = {settings.NAVI_DB_VERSION}')
     db_version = get_user_version()
-    logger.info(f'Updated database to version {db_version}.')
-    logger.info('Vacuuming...')
+    logs.logger.info(f'Database: Updated database to version {db_version}.')
+    logs.logger.info('Database: Vacuuming...')
     cur.execute('VACUUM')
-    logger.info('Running integrity check...')
+    logs.logger.info('Database: Running integrity check...')
     cur.execute('PRAGMA integrity_check')
-    logger.info(f"Check result: {dict(cur.fetchone())['integrity_check']}")
+    logs.logger.info(f"Database: Check result: {dict(cur.fetchone())['integrity_check']}")
 
     return db_version == settings.NAVI_DB_VERSION

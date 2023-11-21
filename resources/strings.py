@@ -190,6 +190,20 @@ ARTIFACTS_EMOJIS = {
 
 
 # --- Activities ---
+POCKET_WATCH_AFFECTED_ACTIVITIES = (
+    'adventure',
+    'arena',
+    'dungeon-miniboss',
+    'farm',
+    'farm',
+    'horse',
+    'hunt',
+    'quest',
+    'training',
+    'work',
+)
+
+
 SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
@@ -246,7 +260,7 @@ ACTIVITIES = (
     'adventure',
     'arena',
     'big-arena',
-    'boo',
+     #'boo',
     'boosts',
     'cel-dailyquest',
     'cel-multiply',
@@ -284,7 +298,7 @@ ACTIVITIES_COMMANDS = (
     #'advent-calendar',
     'adventure',
     'arena',
-    'boo',
+    #'boo',
     #'cel-dailyquest',
     #'cel-multiply',
     #'cel-sacrifice',

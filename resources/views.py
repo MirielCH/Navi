@@ -157,9 +157,11 @@ class TrainingAnswerView(discord.ui.View):
                         style = discord.ButtonStyle.red
                     else:
                         style = discord.ButtonStyle.green
+                    disabled = False
                 else:
                     style = discord.ButtonStyle.grey
-                self.add_item(components.DisabledButton(style=style, label=label, row=row, emoji=emoji))
+                    disabled = True
+                self.add_item(components.TrainingButton(style=style, label=label, row=row, emoji=emoji, disabled=disabled))
         self.stop()
 
 

@@ -1,5 +1,6 @@
 # auto_flex.py
 
+from math import floor
 import random
 import re
 
@@ -661,7 +662,8 @@ class AutoFlexCog(commands.Cog):
                 if extra_tt_match: added_tts += int(extra_tt_match.group(1))
                 time_travel_count_old = user_settings.time_travel_count
                 time_travel_count_new = time_travel_count_old + added_tts
-                await user_settings.update(time_travel_count=time_travel_count_new)
+                trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
+                await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
                 if time_travel_count_old < 1 and time_travel_count_new >= 1:
                     event = 'time_travel_1'
                     description = (
@@ -994,7 +996,7 @@ class AutoFlexCog(commands.Cog):
             ]
             search_strings_excluded = [
                 'contribu', #All languages, void contributions
-                'epic bundle', #All languages, void contributions
+                'epic bundle', #All languages, halloween shop
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in search_strings_excluded)
@@ -1528,9 +1530,9 @@ class AutoFlexCog(commands.Cog):
                         f'**{user_name}** just lost **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
                         f'Damn, they really suck at this game.'
                     )
-                if lootbox_partner_found and event == '':
+                if lootbox_partner_found:
                     name, amount = lootbox_partner_found
-                    if lootbox_user_found:
+                    if lootbox_user_found and event != '':
                         description = (
                             f'{description}\n\n'
                             f'Ah yes, also... as if that wasn\'t OP enough, they also found their partner '
@@ -1842,7 +1844,8 @@ class AutoFlexCog(commands.Cog):
                 if (not user_settings.bot_enabled or not user_settings.auto_flex_enabled
                     or user_settings.time_travel_count is None): return
                 time_travel_count_new = user_settings.time_travel_count + 1
-                await user_settings.update(time_travel_count=time_travel_count_new)
+                trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
+                await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
                 if time_travel_count_new == 1:
                     event = 'time_travel_1'
                     description = (

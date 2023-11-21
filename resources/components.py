@@ -58,10 +58,10 @@ class CustomButton(discord.ui.Button):
             pass
 
 
-class DisabledButton(discord.ui.Button):
+class TrainingButton(discord.ui.Button):
     """Disabled button with no callback"""
-    def __init__(self, style: discord.ButtonStyle, label: str, row: int, emoji: Optional[discord.PartialEmoji] = None):
-        super().__init__(style=style, label=label, emoji=emoji, disabled=True, row=row)
+    def __init__(self, style: discord.ButtonStyle, label: str, row: int, disabled: bool, emoji: Optional[discord.PartialEmoji] = None):
+        super().__init__(style=style, label=label, emoji=emoji, disabled=disabled, row=row)
 
 
 class ToggleUserSettingsSelect(discord.ui.Select):

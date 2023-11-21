@@ -174,7 +174,10 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
     #if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
     #    time_left_seconds *= 0.9
     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
-    return timedelta(seconds=time_left_seconds * alert_settings.multiplier * user_settings.user_pocket_watch_multiplier)
+    time_left_seconds *= alert_settings.multiplier
+    if activity in strings.POCKET_WATCH_AFFECTED_ACTIVITIES:
+        time_left_seconds *= user_settings.user_pocket_watch_multiplier
+    return timedelta(seconds=time_left_seconds)
 
 
 async def calculate_time_left_from_timestring(message: discord.Message, timestring: str) -> timedelta:

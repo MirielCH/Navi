@@ -462,13 +462,14 @@ class HuntCog(commands.Cog):
                         lootbox_alert = lootbox_alert.strip()
                         if lootbox_alert != '':
                             try:
-                                if partner.dnd_mode_enabled:
-                                    lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.name}**')
-                                else:
-                                    lb_message = lootbox_alert.replace('{name}', partner_discord.mention)
                                 channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
-                                await channel.send(lb_message)
-                                if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
+                                if channel is not None:
+                                    if partner.dnd_mode_enabled:
+                                        lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.name}**')
+                                    else:
+                                        lb_message = lootbox_alert.replace('{name}', partner_discord.mention)
+                                    await channel.send(lb_message)
+                                    if user_settings.reactions_enabled: await message.add_reaction(emojis.PARTNER_ALERT)
                             except discord.errors.Forbidden:
                                 return
                             except Exception as error:

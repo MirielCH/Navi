@@ -296,7 +296,7 @@ class SetPartnerPocketWatchReductionModal(Modal):
         self.view = view
         self.add_item(
             InputText(
-                label='New reduction in percent (0.5 - 5.0):',
+                label='New reduction in percent (0 - 5):',
                 placeholder="Enter reduction ...",
             )
         )
@@ -309,9 +309,9 @@ class SetPartnerPocketWatchReductionModal(Modal):
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('That is not a valid number.', ephemeral=True)
             return
-        if not 0.5 <= new_reduction <= 5.0:
+        if not 0 <= new_reduction <= 5.0:
             await interaction.response.edit_message(view=self.view)
-            await interaction.followup.send('The pocket reduction needs to be between 0.5 and 5.0', ephemeral=True)
+            await interaction.followup.send('The pocket reduction needs to be between 0 and 5', ephemeral=True)
             return
         await self.view.user_settings.update(partner_pocket_watch_multiplier=(100 - new_reduction) / 100)
         partner_settings = getattr(self.view, 'partner_settings', None)

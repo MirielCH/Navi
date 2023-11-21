@@ -84,9 +84,9 @@ class ArtifactsCog(commands.Cog):
                 pocket_watch_active_match = re.search(r'✅ \| <:pocketwatch', embed_field0.lower())
                 if not pocket_watch_active_match: return
                 search_patterns = [
-                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #English
-                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Spanish, MISSING
-                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Portuguese, MISSING
+                    r'adds a cooldown reduction of ([0-9\.]+)%, ability', #English
+                    r'adds a cooldown reduction of ([0-9\.]+)%, ability', #Spanish, MISSING
+                    r'adds a cooldown reduction of ([0-9\.]+)%, ability', #Portuguese, MISSING
                 ]
                 pocket_watch_cooldown_match = await functions.get_match_from_patterns(search_patterns, embed_field0)
                 pocket_watch_cooldown = float(pocket_watch_cooldown_match.group(1))

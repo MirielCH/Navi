@@ -10,7 +10,7 @@ from discord.ext import commands
 
 from database import errors, guilds, update_database
 from database import settings as settings_db
-from resources import functions, settings
+from resources import functions, logs, settings
 
 
 #Check if database is up to date
@@ -18,20 +18,20 @@ try:
     cur = settings.NAVI_DB.cursor()
     db_version = update_database.get_user_version()
     if db_version != settings.NAVI_DB_VERSION:
-        update_database.logger.info('Database structure is outdated. Running update...')
+        logs.logger.info('Database: Database structure is outdated. Running update...')
         correct_version = update_database.update_database()
         if not correct_version:
             db_version = update_database.get_user_version()
-            error_message = f'Database version mismatch after update, should be {settings.NAVI_DB_VERSION}, '
+            error_message = f'Database: Database version mismatch after update, should be {settings.NAVI_DB_VERSION}, '
             f'is {db_version}. Exiting. Please check the database manually.'
-            update_database.logger.error(f'{error_message}')
+            logs.logger.error(error_message)
             print(error_message)
             sys.exit()
-        update_database.logger.info('Database updated.')
+        logs.logger.info('Database: Database updated.')
 except sqlite3.Error as error:
-    error_message = f'Got an error while trying to determine database version and/or updating the database: {error}'
+    error_message = f'Database: Got an error while trying to determine database version and/or updating the database: {error}'
     print(error_message)
-    update_database.logger.error(f'{error_message}')
+    logs.logger.error(error_message)
     sys.exit()
 
 
