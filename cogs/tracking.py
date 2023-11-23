@@ -90,7 +90,7 @@ class TrackingCog(commands.Cog):
             if message.embeds:
                 # Last time travel
                 try:
-                    message_content = str(message.embeds[0].description)
+                    embed_description = str(message.embeds[0].description)
                 except:
                     return
                 search_strings = [
@@ -98,7 +98,7 @@ class TrackingCog(commands.Cog):
                     'viajou no tempo', #Spanish
                     'tempo de viagem', #Portuguese
                 ]
-                if any(search_string in message_content.lower() for search_string in search_strings):
+                if any(search_string in embed_description.lower() for search_string in search_strings):
                     user_command_message = None
                     user = await functions.get_interaction_user(message)
                     if user is None:
@@ -107,7 +107,7 @@ class TrackingCog(commands.Cog):
                             r'\*\*(.+?)\*\* viajó', #English
                             r'\*\*(.+?)\*\* tempo', #Portuguese
                         ]
-                        user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                        user_name_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                         if user_name_match:
                             user_name = user_name_match.group(1)
                             user_command_message = (

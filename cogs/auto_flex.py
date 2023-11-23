@@ -658,6 +658,13 @@ class AutoFlexCog(commands.Cog):
                 if (not user_settings.bot_enabled or not user_settings.auto_flex_enabled
                     or user_settings.time_travel_count is None): return
                 added_tts = 1
+                search_strings = [
+                    r'managed to jump out', #English
+                    r'managed to jump out', #Spanish, MISSING
+                    r'managed to jump out', #Portuguese, MISSING
+                ]
+                if any(search_string in embed_description.lower() for search_string in search_strings):
+                    added_tts += 1
                 extra_tt_match = re.search(r'\+(\d+?) <', embed_description)
                 if extra_tt_match: added_tts += int(extra_tt_match.group(1))
                 time_travel_count_old = user_settings.time_travel_count
