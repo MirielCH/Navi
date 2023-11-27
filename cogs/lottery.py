@@ -36,7 +36,7 @@ class LotteryCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_description = message_field = ''
-            if embed.description: message_description = embed.description
+            if embed.description is not None: message_description = embed.description
             if embed.fields: message_field = embed.fields[0].value
 
             # Lottery event check

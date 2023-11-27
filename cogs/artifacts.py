@@ -33,11 +33,11 @@ class ArtifactsCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_author = embed_title = icon_url = embed_description = ''
-            if embed.author:
+            if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.title: embed_title = str(embed.title)
-            if embed.description: embed_description = str(embed.description)
+            if embed.title is not None: embed_title = str(embed.title)
+            if embed.description is not None: embed_description = str(embed.description)
             embed_field0 = ''
             if embed.fields:
                 embed_field0 = embed.fields[0].value
@@ -84,9 +84,9 @@ class ArtifactsCog(commands.Cog):
                 pocket_watch_active_match = re.search(r'✅ \| <:pocketwatch', embed_field0.lower())
                 if not pocket_watch_active_match: return
                 search_patterns = [
-                    r'adds a cooldown reduction of ([0-9\.]+)%, ability', #English
-                    r'adds a cooldown reduction of ([0-9\.]+)%, ability', #Spanish, MISSING
-                    r'adds a cooldown reduction of ([0-9\.]+)%, ability', #Portuguese, MISSING
+                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #English
+                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Spanish, MISSING
+                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Portuguese, MISSING
                 ]
                 pocket_watch_cooldown_match = await functions.get_match_from_patterns(search_patterns, embed_field0)
                 pocket_watch_cooldown = float(pocket_watch_cooldown_match.group(1))

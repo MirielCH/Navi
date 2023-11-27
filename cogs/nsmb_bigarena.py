@@ -34,7 +34,7 @@ class NotSoMiniBossBigArenaCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_title = message_field0_value = message_field1_name = ''
-            if embed.title: message_title = embed.title
+            if embed.title is not None: message_title = embed.title
             if embed.fields:
                 message_field0_value = embed.fields[0].value
                 if len(embed.fields) > 1:

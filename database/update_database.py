@@ -405,6 +405,11 @@ def update_database() -> bool:
             "ALTER TABLE users ADD ready_trade_daily_visible INTEGER NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD ready_trade_daily_completed_visible INTEGER NOT NULL DEFAULT (1)",
         ]
+    if db_version < 11:
+        sqls += [
+            "ALTER TABLE guilds ADD auto_flex_card_slots_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_card_drop_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
 
     # Run SQLs
     for sql in sqls:

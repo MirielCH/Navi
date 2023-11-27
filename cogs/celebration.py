@@ -36,7 +36,7 @@ class CelebrationCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_field0_value = embed_field0_name = ''
-            if embed.description: embed_description = str(embed.description)
+            if embed.description is not None: embed_description = str(embed.description)
             if embed.fields:
                 embed_field0_name = embed.fields[0].name
                 embed_field0_value = embed.fields[0].value

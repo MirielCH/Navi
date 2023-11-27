@@ -30,6 +30,7 @@ COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
 COMMAND_ARENA = re.compile(rf"\barena\b")
 COMMAND_ARTIFACTS = re.compile(rf"\bartifacts?\b")
 COMMAND_BOOSTS = re.compile(rf"\bboosts?\b")
+COMMAND_CARD_SLOTS = re.compile(rf"\bcards?\b\s+\bslots\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
 COMMAND_CLAN_BUY_SPECIAL_SEED = re.compile(rf"\bbuy\b\s+\bspecial\b\s+\bseed\b")
 COMMAND_CLAN_RAID = re.compile(rf"\bguild\b\s+\braid\b")

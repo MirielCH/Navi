@@ -25,8 +25,9 @@ class HelperPetsCog(commands.Cog):
             if embed.fields:
                 message_field_name = str(embed.fields[0].name)
                 message_field_value = str(embed.fields[0].value)
-                message_author = str(embed.author.name)
-            if embed.author:
+                if embed.author is not None:
+                    message_author = str(embed.author.name)
+            if embed.author is not None:
                 icon_url = str(embed.author.icon_url)
 
             # Pet catch

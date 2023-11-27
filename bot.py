@@ -67,7 +67,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         if message.channel.type.name == 'private': return
         embed = discord.Embed(title='An error occured')
         error = sys.exc_info()
-        if isinstance(error, discord.errors.Forbidden): return
+        if isinstance(error[1], discord.errors.Forbidden): return
         traceback_str = "".join(traceback.format_tb(error[2]))
         traceback_message = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Event', value=f'`{event}`', inline=False)

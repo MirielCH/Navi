@@ -64,16 +64,16 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.C
         message_content = f'---Message content---\n{message.content}'
         if message.embeds:
             embed = message.embeds[0]
-            if embed.author:
+            if embed.author is not None:
                 message_content = f'{message_content}\n\n---Embed author---\n{embed.author.name}'
-            if embed.title:
+            if embed.title is not None:
                 message_content = f'{message_content}\n\n---Embed title---\n{embed.title}'
-            if embed.description:
+            if embed.description is not None:
                 message_content = f'{message_content}\n\n---Embed description---\n{embed.description}'
             for field_no, field in enumerate(embed.fields):
                 message_content = f'{message_content}\n\n---Embed field {field_no} name---\n{field.name}'
                 message_content = f'{message_content}\n\n---Embed field {field_no} value---\n{field.value}'
-            if embed.footer:
+            if embed.footer is not None:
                 message_content = f'{message_content}\n\n---Embed footer---\n{embed.footer.text}'
         if not message.author.bot:
             try:

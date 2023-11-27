@@ -33,9 +33,9 @@ class TradeCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_description = message_field = message_author = ''
-            if embed.description: message_description = str(embed.description)
+            if embed.description is not None: message_description = str(embed.description)
             if embed.fields: message_field = str(embed.fields[0].value)
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 

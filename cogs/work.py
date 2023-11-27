@@ -35,10 +35,10 @@ class WorkCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_title = icon_url = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.title: message_title = str(embed.title)
+            if embed.title is not None: message_title = str(embed.title)
 
             # Work cooldown
             search_strings = [
@@ -108,7 +108,12 @@ class WorkCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if not message.embeds:
-            message_content = message.content
+            message_content = ''
+            for line in message.content.split('\n'):
+                if not 'card' in line:
+                    message_content = f'{message_content}\n{line}'
+            message_content = message_content.strip()
+            
             # Work
             excluded_strings = [
                 'hunting together', #English, hunt

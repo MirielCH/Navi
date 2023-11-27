@@ -83,11 +83,11 @@ class PetsTournamentCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_footer = embed_author = ''
-            if embed.description: embed_description = str(embed.description)
-            if embed.author:
+            if embed.description is not None: embed_description = str(embed.description)
+            if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.footer: embed_footer = str(embed.footer.text)
+            if embed.footer is not None: embed_footer = str(embed.footer.text)
 
             # Pet list
             search_strings = [

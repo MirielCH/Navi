@@ -35,14 +35,14 @@ class CooldownsCog(commands.Cog):
         if not message.embeds: return
         embed: discord.Embed = message.embeds[0]
         message_author = message_footer = message_fields = icon_url = message_description = ''
-        if embed.description:
+        if embed.description is not None:
             message_description = embed.description
-        if embed.author:
+        if embed.author is not None:
             message_author = str(embed.author.name)
             icon_url = embed.author.icon_url
         for field in embed.fields:
             message_fields = f'{message_fields}\n{str(field.value)}'.strip()
-        if embed.footer: message_footer = str(embed.footer.text)
+        if embed.footer is not None: message_footer = str(embed.footer.text)
 
         # Cooldown
         search_strings = [

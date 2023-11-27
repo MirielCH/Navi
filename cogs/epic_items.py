@@ -35,10 +35,10 @@ class EpicItemsCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_title = icon_url = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.title: message_title = str(embed.title)
+            if embed.title is not None: message_title = str(embed.title)
 
             # EPIC item cooldown
             search_strings = [

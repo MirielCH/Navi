@@ -34,12 +34,12 @@ class HalloweenCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_title = embed_field0_name = embed_field0_value = embed_autor = icon_url = ''
-            if embed.description: embed_description = embed.description
-            if embed.title: embed_title = embed.title
+            if embed.description is not None: embed_description = embed.description
+            if embed.title is not None: embed_title = embed.title
             if embed.fields:
                 embed_field0_name = embed.fields[0].name
                 embed_field0_value = embed.fields[0].value
-            if embed.author:
+            if embed.author is not None:
                 embed_author = embed.author.name
                 icon_url = embed.author.icon_url
 

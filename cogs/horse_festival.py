@@ -35,7 +35,7 @@ class HorseFestivalCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 
@@ -260,8 +260,8 @@ class HorseFestivalCog(commands.Cog):
             embed: discord.Embed = message.embeds[0]
             message_field0_name = message_field1_name = message_field0_value = message_field1_value = message_author = ''
             message_description = ''
-            if embed.description: message_description = str(embed.description)
-            if embed.author:
+            if embed.description is not None: message_description = str(embed.description)
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.fields:

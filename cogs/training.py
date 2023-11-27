@@ -35,11 +35,11 @@ class TrainingCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_title = message_description = message_field1_value = icon_url = message_field0_value = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.title: message_title = str(embed.title)
-            if embed.description: message_description = str(embed.description)
+            if embed.title is not None: message_title = str(embed.title)
+            if embed.description is not None: message_description = str(embed.description)
             if embed.fields:
                 message_field0_value = embed.fields[0].value
                 if len(embed.fields) > 1:

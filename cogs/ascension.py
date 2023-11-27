@@ -33,13 +33,13 @@ class AscensionCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_author = embed_footer = embed_field_names = embed_field_values = ''
-            if embed.description: embed_description = str(embed.description)
+            if embed.description is not None: embed_description = str(embed.description)
             if embed.fields:
                 for field in embed.fields:
                     embed_field_names = f'{embed_field_names}\n{str(field.name)}'
                     embed_field_values = f'{embed_field_values}\n{str(field.value)}'
-            if embed.footer: embed_footer = embed.footer.text
-            if embed.author:
+            if embed.footer is not None: embed_footer = embed.footer.text
+            if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 

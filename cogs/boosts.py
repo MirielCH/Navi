@@ -34,11 +34,11 @@ class BoostsCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_author = embed_title = icon_url = embed_description = ''
-            if embed.author:
+            if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.title: embed_title = str(embed.title)
-            if embed.description: embed_description = str(embed.description)
+            if embed.title is not None: embed_title = str(embed.title)
+            if embed.description is not None: embed_description = str(embed.description)
             embed_potion_fields = ''
             if embed.fields:
                 embed_potion_fields = embed.fields[0].value

@@ -34,7 +34,7 @@ class HelperTrainingCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_description = ''
-            if embed.description: message_description = embed.description
+            if embed.description is not None: message_description = embed.description
             # Void area unseal times
             search_strings = [
                 'help us unseal the next areas!', #English

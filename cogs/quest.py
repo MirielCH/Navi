@@ -35,14 +35,14 @@ class QuestCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_title = message_description = icon_url = field_value = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.fields:
                 field_name = embed.fields[0].name
                 field_value = embed.fields[0].value
-            if embed.title: message_title = str(embed.title)
-            if embed.description: message_description = embed.description
+            if embed.title is not None: message_title = str(embed.title)
+            if embed.description is not None: message_description = embed.description
 
             # Guild quest check
             search_strings_guild_raid = [

@@ -15,6 +15,9 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 FLEX_TITLES = {
     'artifacts': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
+    'card_drop': strings.FLEX_TITLES_CARD_DROP,
+    'card_drop_partner': strings.FLEX_TITLES_CARD_DROP_PARTNER,
+    'card_slots': strings.FLEX_TITLES_CARD_SLOTS,
     'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
     'event_coinflip': strings.FLEX_TITLES_EVENT_COINFLIP,
@@ -75,6 +78,9 @@ FLEX_TITLES = {
 FLEX_THUMBNAILS = {
     'artifacts': strings.FLEX_THUMBNAILS_ARTIFACTS,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
+    'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
+    'card_drop_partner': strings.FLEX_THUMBNAILS_CARD_DROP_PARTNER,
+    'card_slots': strings.FLEX_THUMBNAILS_CARD_SLOTS,
     'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
     'event_coinflip': strings.FLEX_THUMBNAILS_EVENT_COINFLIP,
@@ -134,6 +140,7 @@ FLEX_THUMBNAILS = {
 
 # Auto flexes that have a column name that differs from the event name
 FLEX_COLUMNS = {
+    'card_drop_partner': 'card_drop',
     'epic_berry_partner': 'epic_berry',
     'lb_a18_partner': 'lb_a18',
     'lb_godly_partner': 'lb_godly',
@@ -229,13 +236,13 @@ class AutoFlexCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
-        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID, settings.OWNER_ID]: return
+        if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_title = embed_field0_name = embed_field0_value = embed_autor = icon_url = ''
             embed_field1_value = embed_field1_name = embed_fields = ''
-            if embed.description: embed_description = embed.description
-            if embed.title: embed_title = embed.title
+            if embed.description is not None: embed_description = embed.description
+            if embed.title is not None: embed_title = embed.title
             if embed.fields:
                 for field in embed.fields:
                     embed_fields = f'{embed_fields}\n{field.value}'
@@ -244,7 +251,7 @@ class AutoFlexCog(commands.Cog):
             if len(embed.fields) > 1:
                 embed_field1_name = embed.fields[1].name
                 embed_field1_value = embed.fields[1].value
-            if embed.author:
+            if embed.author is not None:
                 embed_autor = embed.author.name
                 icon_url = embed.author.icon_url
 
@@ -944,6 +951,49 @@ class AutoFlexCog(commands.Cog):
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'xmas_snowball', description)
 
+            # Cards from card slots
+            search_strings = [
+                "— card slots", #All languages
+            ]
+            if (any(search_string in embed_autor.lower() for search_string in search_strings)
+                and not 'cardroll' in embed_description.lower()):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_CARD_SLOTS, user_name=user_name)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in auto flex card slots message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                card_name_match = re.search(r'\*\*(.+?)\*\*', embed_title.lower())
+                if not card_name_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Card not found in auto flex card slots message.', message)
+                    return
+                card_name = card_name_match.group(1)
+                description = (
+                    f'**{user.name}** just found a **{card_name}**!\n'
+                    f'I didn\'t know slot machines work with cards, but sure, have it your way.'
+                )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_slots', description)
+
         if not message.embeds:
             message_content = message.content
 
@@ -1483,131 +1533,130 @@ class AutoFlexCog(commands.Cog):
                                 epic_berry_partner_found.append(drop_amount)
                                 break
 
-                if (not lootbox_user_found and not lootbox_partner_found and not epic_berry_user_found
-                    and not epic_berry_partner_found and not lootbox_user_lost and not lootbox_partner_lost):
-                    return
+                if (lootbox_user_found or lootbox_partner_found or epic_berry_user_found
+                    or epic_berry_partner_found or lootbox_user_lost or lootbox_partner_lost):
 
-                # Lootboxes
-                events_user = {
-                    'OMEGA lootbox': 'lb_omega',
-                    'GODLY lootbox': 'lb_godly',
-                    'VOID lootbox': 'lb_void',
-                }
-                events_partner = {
-                    'OMEGA lootbox': 'lb_omega_partner',
-                    'GODLY lootbox': 'lb_godly_partner',
-                    'VOID lootbox': 'lb_void_partner',
-                }
-                description = event = ''
-                if lootbox_user_found:
-                    name, amount = lootbox_user_found
-                    event = events_user[name]
-                    if event == 'lb_void':
-                        description = (
-                            f'Everbody rejoice because **{user_name}** did something almost impossible and found '
-                            f'**{amount}** {lootboxes_user[name]} **{name}**!\n'
-                            f'We are all so happy for you and not at all jealous.'
-                        )
-                    elif event == 'lb_omega':
-                        if not hardmode:
-                            event = 'lb_omega_no_hardmode'
+                    # Lootboxes
+                    events_user = {
+                        'OMEGA lootbox': 'lb_omega',
+                        'GODLY lootbox': 'lb_godly',
+                        'VOID lootbox': 'lb_void',
+                    }
+                    events_partner = {
+                        'OMEGA lootbox': 'lb_omega_partner',
+                        'GODLY lootbox': 'lb_godly_partner',
+                        'VOID lootbox': 'lb_void_partner',
+                    }
+                    description = event = ''
+                    if lootbox_user_found:
+                        name, amount = lootbox_user_found
+                        event = events_user[name]
+                        if event == 'lb_void':
                             description = (
-                                f'**{user_name}** found an {lootboxes_user[name]} **{name}** just like that.\n'
-                                f'And by "just like that" I mean **without hardmoding**!\n'
-                                f'See, hardmoders, that\'s how it\'s done!'
+                                f'Everbody rejoice because **{user_name}** did something almost impossible and found '
+                                f'**{amount}** {lootboxes_user[name]} **{name}**!\n'
+                                f'We are all so happy for you and not at all jealous.'
                             )
-                        elif int(amount) > 2:
-                            event = 'lb_omega_multiple'
-                            description = (
-                                f'While an {lootboxes_user[name]} **{name}** isn\'t very exciting, '
-                                f'**{user_name}** just found __**{amount}**__ of them at once!\n'
-                                f'(Well, actually, the horse did all the work)'
-                            )
-                        else:
-                            event = ''
-                    else:
-                        description = (
-                            f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
-                            f'~~They should be banned!~~ We are so happy for you!'
-                        )
-                if lootbox_user_lost:
-                    name, amount = lootbox_user_lost
-                    event = 'lb_a18'
-                    description = (
-                        f'**{user_name}** just lost **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
-                        f'Damn, they really suck at this game.'
-                    )
-                if lootbox_partner_found:
-                    name, amount = lootbox_partner_found
-                    if lootbox_user_found and event != '':
-                        description = (
-                            f'{description}\n\n'
-                            f'Ah yes, also... as if that wasn\'t OP enough, they also found their partner '
-                            f'**{partner_name}** **{amount}** {lootboxes_partner[name]} **{name}** ON TOP OF THAT!\n'
-                            f'I am really not sure why this much luck is even allowed.'
-                        )
-                    else:
-                        event = events_partner[name]
-                        if event == 'lb_godly_partner':
-                            description = (
-                                f'If you ever wanted to see what true love looks like, here\'s an example:\n'
-                                f'**{user_name}** just got their partner **{partner_name}** **{amount}** '
-                                f'{lootboxes_partner[name]} **{name}**!\n'
-                                f'We\'re all jealous.'
-                            )
-                        elif event == 'lb_void_partner':
-                            description = (
-                                f'I am speechless because what we are seeing here is one of the rarest things ever.\n'
-                                f'**{user_name}** just found their partner **{partner_name}**... **{amount}** '
-                                f'{lootboxes_partner[name]} **{name}**.\n'
-                                f'Yes, you read that right.'
-                            )
+                        elif event == 'lb_omega':
+                            if not hardmode:
+                                event = 'lb_omega_no_hardmode'
+                                description = (
+                                    f'**{user_name}** found an {lootboxes_user[name]} **{name}** just like that.\n'
+                                    f'And by "just like that" I mean **without hardmoding**!\n'
+                                    f'See, hardmoders, that\'s how it\'s done!'
+                                )
+                            elif int(amount) > 2:
+                                event = 'lb_omega_multiple'
+                                description = (
+                                    f'While an {lootboxes_user[name]} **{name}** isn\'t very exciting, '
+                                    f'**{user_name}** just found __**{amount}**__ of them at once!\n'
+                                    f'(Well, actually, the horse did all the work)'
+                                )
+                            else:
+                                event = ''
                         else:
                             description = (
-                                f'**{user_name}** ordered **{amount}** {lootboxes_partner[name]} **{name}** and it '
-                                f'just got delivered.\n'
-                                f'...to **{partner_name}**\'s address lol.'
+                                f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
+                                f'~~They should be banned!~~ We are so happy for you!'
                             )
-                if lootbox_partner_lost:
-                    name, amount = lootbox_partner_lost
-                    event = 'lb_a18_partner'
-                    description = (
-                        f'**{user_name}** turns out to be the worst partner you can image.\n'
-                        f'They just made **{partner_name}** lose  **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
-                        f'You should be ashamed, really.'
-                    )
-                if description != '':
-                    await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
-
-                # EPIC berries
-                description = ''
-                if epic_berry_user_found:
-                    name, amount = epic_berry_user_found
-                    event = 'epic_berry'
-                    description = (
-                        f'**{user_name}** found **{amount}** {emojis.EPIC_BERRY} **EPIC berries**!\n'
-                        f'I can see a drooling horse approaching in the distance. Better get out of the way.'
-                    )
-
-                if epic_berry_partner_found:
-                    name, amount = epic_berry_partner_found
+                    if lootbox_user_lost:
+                        name, amount = lootbox_user_lost
+                        event = 'lb_a18'
+                        description = (
+                            f'**{user_name}** just lost **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
+                            f'Damn, they really suck at this game.'
+                        )
+                    if lootbox_partner_found:
+                        name, amount = lootbox_partner_found
+                        if lootbox_user_found and event != '':
+                            description = (
+                                f'{description}\n\n'
+                                f'Ah yes, also... as if that wasn\'t OP enough, they also found their partner '
+                                f'**{partner_name}** **{amount}** {lootboxes_partner[name]} **{name}** ON TOP OF THAT!\n'
+                                f'I am really not sure why this much luck is even allowed.'
+                            )
+                        else:
+                            event = events_partner[name]
+                            if event == 'lb_godly_partner':
+                                description = (
+                                    f'If you ever wanted to see what true love looks like, here\'s an example:\n'
+                                    f'**{user_name}** just got their partner **{partner_name}** **{amount}** '
+                                    f'{lootboxes_partner[name]} **{name}**!\n'
+                                    f'We\'re all jealous.'
+                                )
+                            elif event == 'lb_void_partner':
+                                description = (
+                                    f'I am speechless because what we are seeing here is one of the rarest things ever.\n'
+                                    f'**{user_name}** just found their partner **{partner_name}**... **{amount}** '
+                                    f'{lootboxes_partner[name]} **{name}**.\n'
+                                    f'Yes, you read that right.'
+                                )
+                            else:
+                                description = (
+                                    f'**{user_name}** ordered **{amount}** {lootboxes_partner[name]} **{name}** and it '
+                                    f'just got delivered.\n'
+                                    f'...to **{partner_name}**\'s address lol.'
+                                )
+                    if lootbox_partner_lost:
+                        name, amount = lootbox_partner_lost
+                        event = 'lb_a18_partner'
+                        description = (
+                            f'**{user_name}** turns out to be the worst partner you can image.\n'
+                            f'They just made **{partner_name}** lose  **{amount}** {lootboxes_user_lost[name]} **{name}**!\n'
+                            f'You should be ashamed, really.'
+                        )
                     if description != '':
+                        await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
+
+                    # EPIC berries
+                    description = ''
+                    if epic_berry_user_found:
+                        name, amount = epic_berry_user_found
                         event = 'epic_berry'
                         description = (
-                            f'{description}\n\n'
-                            f'Because **{user_name}** is such a nice person and likes to share, '
-                            f'their partner **{partner_name}** also got **{amount}**!\n'
-                            f'What a lovely marriage.'
+                            f'**{user_name}** found **{amount}** {emojis.EPIC_BERRY} **EPIC berries**!\n'
+                            f'I can see a drooling horse approaching in the distance. Better get out of the way.'
                         )
-                    else:
-                        event = 'epic_berry_partner'
-                        description = (
-                            f'What do you get when you marry? Love? Happiness? Gifts?\n'
-                            f'Your **{amount}** {emojis.EPIC_BERRY} **EPIC berries** stolen, that\'s what.\n'
-                            f'If you don\'t believe me, look at what **{partner_name}** just did to **{user_name}**!'
-                        )
-                if description != '':
-                    await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
+
+                    if epic_berry_partner_found:
+                        name, amount = epic_berry_partner_found
+                        if description != '':
+                            event = 'epic_berry'
+                            description = (
+                                f'{description}\n\n'
+                                f'Because **{user_name}** is such a nice person and likes to share, '
+                                f'their partner **{partner_name}** also got **{amount}**!\n'
+                                f'What a lovely marriage.'
+                            )
+                        else:
+                            event = 'epic_berry_partner'
+                            description = (
+                                f'What do you get when you marry? Love? Happiness? Gifts?\n'
+                                f'Your **{amount}** {emojis.EPIC_BERRY} **EPIC berries** stolen, that\'s what.\n'
+                                f'If you don\'t believe me, look at what **{partner_name}** just did to **{user_name}**!'
+                            )
+                    if description != '':
+                        await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
 
             # Lootbox event
@@ -2052,6 +2101,77 @@ class AutoFlexCog(commands.Cog):
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'brew_electronical',
                                                   description)
+
+            # Card drops
+            search_strings = [
+                'rare card',
+                'epic card',
+                'omega card',
+                'godly card',
+                'void card',
+                'eternal card',
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for autoflex card drop message.', message)
+                        return
+                    if 'together' in message.content.lower() or 'found a' in message.content.lower():
+                        regex_pattern = regex.COMMAND_HUNT_ADVENTURE
+                    else:
+                        regex_pattern = regex.COMMAND_WORK
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex_pattern,
+                                                    user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the autoflex card drop message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                card_recipient_name_match = re.search(
+                    r'\n\*\*(.+?)\*\* (?:recebeu|conseguiu|consiguió|got) 1 (.+?) \*\*(.+?) card\*\*',
+                    message_content
+                )
+                if not card_recipient_name_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Couldn\'t find card recipient for autoflex card drop message.', message)
+                    return
+                card_recipient_name = card_recipient_name_match.group(1)
+                card_name = card_recipient_name_match.group(3)
+                card_emoji = getattr(emojis, f'CARD_{card_name.upper()}', '')
+                if await functions.encode_text(user.name) == await functions.encode_text(card_recipient_name):
+                    event = 'card_drop'
+                else:
+                    event = 'card_drop_partner'
+                if event == 'card_drop':
+                    description = (
+                        f'**{user.name}** hacked the game and got a {card_emoji} **{card_name} card**.\n'
+                        f'I would argue that being this lucky justifies an instant ban, really.'
+                    )
+                elif event == 'card_drop_partner':
+                    description = (
+                        f'**{user.name}** just came up VERY close with a {card_emoji} **{card_name} card**.\n'
+                        f'Too bad it got snatched away by their partner **{card_recipient_name}** right after.\n'
+                        f'What a loser, lol.'
+                    )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
+                                                  description)
+                    
+
 
 # Initialization
 def setup(bot):

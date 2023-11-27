@@ -33,9 +33,9 @@ class HelperRubyCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_description = message_field = message_author = ''
-            if embed.description: message_description = str(embed.description)
+            if embed.description is not None: message_description = str(embed.description)
             if embed.fields: message_field = str(embed.fields[0].value)
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 
@@ -139,7 +139,7 @@ class HelperRubyCog(commands.Cog):
                 "— inventory", #All languages
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
-                if icon_url == embed.Empty: return
+                if icon_url is None: return
                 user_id = user_name = user_command_message = None
                 embed_users = []
                 interaction_user = await functions.get_interaction_user(message)

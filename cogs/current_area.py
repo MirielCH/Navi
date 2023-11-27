@@ -33,9 +33,9 @@ class CurrentAreaCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_field = embed_author = ''
-            if embed.description: embed_description = str(embed.description)
+            if embed.description is not None: embed_description = str(embed.description)
             if embed.fields: embed_field = str(embed.fields[0].value)
-            if embed.author:
+            if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
 

@@ -406,9 +406,9 @@ async def encode_message(bot_message: discord.Message) -> str:
     else:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_title = ''
-        if embed.author: message_author = await encode_text(str(embed.author))
-        if embed.description: message_description = await encode_text(str(embed.description))
-        if embed.title: message_title = str(embed.title)
+        if embed.author is not None: message_author = await encode_text(str(embed.author))
+        if embed.description is not None: message_description = await encode_text(str(embed.description))
+        if embed.title is not None: message_title = str(embed.title)
         if embed.fields: message_fields = str(embed.fields)
         message = f'{message_author}{message_description}{message_fields}{message_title}'
 
@@ -422,9 +422,9 @@ def encode_message_non_async(bot_message: discord.Message) -> str:
     else:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_title = ''
-        if embed.author: message_author = encode_text_non_async(str(embed.author))
-        if embed.description: message_description = encode_text_non_async(str(embed.description))
-        if embed.title: message_title = str(embed.title)
+        if embed.author is not None: message_author = encode_text_non_async(str(embed.author))
+        if embed.description is not None: message_description = encode_text_non_async(str(embed.description))
+        if embed.title is not None: message_title = str(embed.title)
         if embed.fields: message_fields = str(embed.fields)
         message = f'{message_author}{message_description}{message_fields}{message_title}'
 
@@ -438,10 +438,10 @@ async def encode_message_clan(bot_message: discord.Message) -> str:
     else:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_footer = message_title = ''
-        if embed.author: message_author = await encode_text(str(embed.author))
-        if embed.description: message_description = await encode_text(str(embed.description))
-        if embed.title: message_title = await encode_text(str(embed.title))
-        if embed.footer: message_footer = await encode_text(str(embed.footer))
+        if embed.author is not None: message_author = await encode_text(str(embed.author))
+        if embed.description is not None: message_description = await encode_text(str(embed.description))
+        if embed.title is not None: message_title = await encode_text(str(embed.title))
+        if embed.footer is not None: message_footer = await encode_text(str(embed.footer))
         if embed.fields: message_fields = str(embed.fields)
         message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
 
@@ -456,9 +456,9 @@ async def encode_message_with_fields(bot_message: discord.Message) -> str:
     else:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_title = ''
-        if embed.author: message_author = await encode_text(str(embed.author))
-        if embed.description: message_description = await encode_text(str(embed.description))
-        if embed.title: message_title = str(embed.title)
+        if embed.author is not None: message_author = await encode_text(str(embed.author))
+        if embed.description is not None: message_description = await encode_text(str(embed.description))
+        if embed.title is not None: message_title = str(embed.title)
         if embed.fields: message_fields = await encode_text(str(embed.fields))
         message = f'{message_author}{message_description}{message_fields}{message_title}'
 
@@ -473,10 +473,10 @@ def encode_message_clan_non_async(bot_message: discord.Message) -> str:
     else:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_footer = message_title = ''
-        if embed.author: message_author = encode_text_non_async(str(embed.author))
-        if embed.description: message_description = encode_text_non_async(str(embed.description))
-        if embed.title: message_title = encode_text_non_async(str(embed.title))
-        if embed.footer: message_footer = encode_text_non_async(str(embed.footer))
+        if embed.author is not None: message_author = encode_text_non_async(str(embed.author))
+        if embed.description is not None: message_description = encode_text_non_async(str(embed.description))
+        if embed.title is not None: message_title = encode_text_non_async(str(embed.title))
+        if embed.footer is not None: message_footer = encode_text_non_async(str(embed.footer))
         if embed.fields: message_fields = str(embed.fields)
         message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
 
@@ -491,9 +491,9 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
     else:
         embed: discord.Embed = bot_message.embeds[0]
         message_author = message_description = message_fields = message_title = ''
-        if embed.author: message_author = encode_text_non_async(str(embed.author))
-        if embed.description: message_description = encode_text_non_async(str(embed.description))
-        if embed.title: message_title = str(embed.title)
+        if embed.author is not None: message_author = encode_text_non_async(str(embed.author))
+        if embed.description is not None: message_description = encode_text_non_async(str(embed.description))
+        if embed.title is not None: message_title = str(embed.title)
         if embed.fields: message_fields = encode_text_non_async(str(embed.fields))
         message = f'{message_author}{message_description}{message_fields}{message_title}'
 

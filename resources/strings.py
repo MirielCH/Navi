@@ -1147,6 +1147,30 @@ FLEX_TITLES_BREW_ELECTRONICAL = [
     'Seriously, why would ANYONE brew that?',
 ]
 
+FLEX_TITLES_CARD_DROP = [
+    'Where are these even coming from',
+    'Okay, so, what is this doing in... there',
+    'IT\'S A CARD WOOH',
+    'So, what do I do with this now?',
+    'What do you mean, I need another 2 of those',
+]
+
+FLEX_TITLES_CARD_DROP_PARTNER = [
+    'CALL THE POLICE',
+    'Hello support, I\'d like to replace my partner',
+    'This is what I get for loving you?',
+    'Heartbreaking, really. Also, funny.',
+    'Maybe it was an act of kindness? Just kidding.',
+]
+
+FLEX_TITLES_CARD_SLOTS = [
+    'But... do you have a full set yet?',
+    'That looks like a straight full house double pair',
+    'Almost there, only 7 billion cards to go',
+    'Where do these cards even come from?',
+    'Once you got them all, you can play solitaire',
+]
+
 FLEX_TITLES_WORK_EPICBERRY = [
     'Insalata epica',
     'Feel free to share',
@@ -1519,6 +1543,31 @@ FLEX_THUMBNAILS_BREW_ELECTRONICAL = [
     'https://media.tenor.com/AQlLOEyD-xoAAAAd/swag-potion.gif',
     'https://media.tenor.com/n5ikt7jBRh0AAAAM/green-smoothie-messy-dog-slurp.gif',
     'https://media.tenor.com/dSjPLLjh5FYAAAAC/i-love-expensive-things-luxury.gif',
+]
+
+FLEX_THUMBNAILS_CARD_DROP = [
+    'https://media.tenor.com/3-YewQ7i6HYAAAAC/wow-surprised-face.gif',
+    'https://media.tenor.com/vVGDwU5vHWYAAAAd/wow-gif.gif',
+    'https://media.tenor.com/O45wQ8fW9qsAAAAC/if-you-cheat-you-will-win-qotd.gif',
+    'https://media.tenor.com/nZDQaGBpSpIAAAAC/cast-them-out-hiram-epps.gif',
+    'https://media.tenor.com/wZIJPJMG6cQAAAAC/star-citizen-aurora-get-this-man-a-ban.gif',
+]
+
+FLEX_THUMBNAILS_CARD_DROP_PARTNER = [
+    'https://media.tenor.com/jfcWpXpbTCwAAAAC/kto-kounotori.gif',
+    'https://media.tenor.com/HtYPa_A9lWkAAAAC/sahovet-aura-fortnite-take-the-l-aura-fortnite.gif',
+    'https://media.tenor.com/Cu00dHuwNw4AAAAC/loser-losers.gif',
+    'https://media.tenor.com/d_wXE6yg8gMAAAAd/laser-cat.gif',
+    'https://media.tenor.com/a4qDuOMfC4IAAAAC/its-mine-lotr.gif',
+    
+]
+
+FLEX_THUMBNAILS_CARD_SLOTS = [
+    'https://media.tenor.com/S593fyjCciAAAAAi/monkey-chimp.gif',
+    'https://media.tenor.com/NZB5RaiKFcAAAAAC/poker-face-poker.gif',
+    'https://media.tenor.com/RL1cXtVWQ74AAAAC/brandy-and-mr-whiskers-wanna-play-cards.gif',
+    'https://media.tenor.com/d6OIKbtU88sAAAAC/maverick-cards.gif',
+    'https://media.tenor.com/8OUzmyLh2JsAAAAd/game-catch.gif',
 ]
 
 FLEX_THUMBNAILS_WORK_EPICBERRY = [

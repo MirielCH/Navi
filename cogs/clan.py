@@ -37,17 +37,17 @@ class ClanCog(commands.Cog):
             embed: discord.Embed = message.embeds[0]
             message_author = message_title = icon_url = message_footer = message_field0_name = message_field0_value = ''
             message_field1 = message_description = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.title: message_title = str(embed.title)
+            if embed.title is not None: message_title = str(embed.title)
             if embed.fields:
                 message_field0_name = embed.fields[0].name
                 message_field0_value = embed.fields[0].value
                 if len(embed.fields) > 1:
                     message_field1 = embed.fields[1].value
-            if embed.description: message_description = str(embed.description)
-            if embed.footer: message_footer = str(embed.footer.text)
+            if embed.description is not None: message_description = str(embed.description)
+            if embed.footer is not None: message_footer = str(embed.footer.text)
 
             # Clan cooldown
             search_strings = [

@@ -1225,6 +1225,10 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_brew_electronical_enabled)}\n'
         f'{emojis.BP} Artifacts: **Craft an artifact**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_artifacts_enabled)}\n'
+        f'{emojis.BP} Cards: **Drop a rare or higher card**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_card_drop_enabled)}\n'
+        f'{emojis.BP} Cards: **Get a card from `card slots`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_card_slots_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from `hunt` or `adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from work commands**: '
@@ -1284,7 +1288,7 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_pr_ascension_enabled)}\n'
         f'{emojis.BP} Progress: **Time travel milestones**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_time_travel_enabled)}\n'
-        f'{emojis.DETAIL} _TT `1`, `3`, `5`, `10`, `25`, `50`, `100`, `150`, `200`, `250` and `300`_\n'
+        f'{emojis.DETAIL} _TT `1`, `3`, `5`, `10`, `25`, `50`, `100`, `150`, `200`, `250`, `300`, ..., `999`_\n'
     )
     auto_flex_alerts_seasonal = (
         f'{emojis.BP} Christmas: **Get stuck in `xmas chimney`**: '

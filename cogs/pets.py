@@ -192,11 +192,11 @@ class PetsCog(commands.Cog):
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
             message_author = message_description = icon_url = message_title = ''
-            if embed.author:
+            if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
-            if embed.description: message_description = str(embed.description)
-            if embed.title: message_title = embed.title
+            if embed.description is not None: message_description = str(embed.description)
+            if embed.title is not None: message_title = embed.title
             if len(embed.fields) > 1:
                 message_field_1_name = embed.fields[1].name
                 message_field_1_value = embed.fields[1].value

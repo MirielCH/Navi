@@ -944,11 +944,13 @@ class SettingsServerView(discord.ui.View):
         self.guild_settings = guild_settings
         toggled_auto_flex_alerts_1 = {
             'Brew electronical potion': 'auto_flex_brew_electronical_enabled',
-            'Craft an artifact': 'auto_flex_artifacts_enabled',
+            'Artifact crafting': 'auto_flex_artifacts_enabled',
+            'Cards from drop': 'auto_flex_card_drop_enabled',
+            'Cards from card slots': 'auto_flex_card_slots_enabled',
             'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
             'EPIC berries from work commands': 'auto_flex_work_epicberry_enabled',
             'GODLY lootbox from hunt or adventure': 'auto_flex_lb_godly_enabled',
-            'HYPER logs in work commands': 'auto_flex_work_hyperlog_enabled',
+            'HYPER logs from work commands': 'auto_flex_work_hyperlog_enabled',
             'OMEGA lootbox from hunt or adventure': 'auto_flex_lb_omega_enabled',
             'Lost lootboxes in area 18': 'auto_flex_lb_a18_enabled',
             'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
