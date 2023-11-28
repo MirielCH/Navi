@@ -280,7 +280,7 @@ class HelperContextCog(commands.Cog):
                     else:
                         await message.channel.send(f'{user.mention} {warning}')
                 else:
-                    await message.channel.send(f'**{user.name}**, {warning}')
+                    await message.channel.send(f'**{user.display_name}**, {warning}')
 
             search_strings = [
                 ':mag:', #Ruby dragon event, all languages
@@ -315,7 +315,7 @@ class HelperContextCog(commands.Cog):
                     else:
                         await message.channel.send(f'{user.mention} {warning}')
                 else:
-                    await message.channel.send(f'**{user.name}**, {warning}')
+                    await message.channel.send(f'**{user.display_name}**, {warning}')
 
 
 # Initialization

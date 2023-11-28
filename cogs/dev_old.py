@@ -87,7 +87,7 @@ class DevOldCog(commands.Cog):
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            await ctx.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
             return
         if not answer.content.lower() in ['yes','y']:
             await ctx.send('Aborted')
@@ -104,11 +104,11 @@ class DevOldCog(commands.Cog):
         if ctx.author.id not in settings.DEV_IDS: return
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        await ctx.reply(f'**{ctx.author.name}**, are you **SURE**? `[yes/no]`')
+        await ctx.reply(f'**{ctx.author.display_name}**, are you **SURE**? `[yes/no]`')
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
-            await ctx.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            await ctx.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
         if answer.content.lower() in ['yes','y']:
             await ctx.send('Shutting down.')
             await self.bot.close()

@@ -457,7 +457,7 @@ class HuntCog(commands.Cog):
                                 )
                                 return
                             partner_message = (partner.alert_partner.message
-                                               .replace('{partner}', user.name)
+                                               .replace('{partner}', user.display_name)
                                                .replace('{loot}', f'{lb_amount} {lb_emoji} {lb_name}'))
                             if lootbox_alert == '':
                                 lootbox_alert = partner_message
@@ -469,7 +469,7 @@ class HuntCog(commands.Cog):
                                 channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
                                 if channel is not None:
                                     if partner.dnd_mode_enabled:
-                                        lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.name}**')
+                                        lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.display_name}**')
                                     else:
                                         lb_message = lootbox_alert.replace('{name}', partner_discord.mention)
                                     await channel.send(lb_message)

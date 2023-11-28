@@ -147,7 +147,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         color = settings.EMBED_COLOR,
         title = 'NAVI',
         description =   (
-            f'_Hey! **{ctx.author.name}**! Hello!_\n'
+            f'_Hey! **{ctx.author.display_name}**! Hello!_\n'
             f'_May I interest you in some settings?_'
         )
     )

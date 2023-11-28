@@ -126,7 +126,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
     try:
         user: users.User = await users.get_user(ctx.author.id)
         if user.bot_enabled:
-            await ctx.respond(f'**{ctx.author.name}**, I\'m already turned on.', ephemeral=True)
+            await ctx.respond(f'**{ctx.author.display_name}**, I\'m already turned on.', ephemeral=True)
             return
     except exceptions.FirstTimeUserError:
         user = await users.insert_user(ctx.author.id)
@@ -136,7 +136,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         await ctx.respond(strings.MSG_ERROR, ephemeral=True)
         return
     if not first_time_user:
-        await ctx.respond(f'Hey! **{ctx.author.name}**! Welcome back!')
+        await ctx.respond(f'Hey! **{ctx.author.display_name}**! Welcome back!')
     else:
         field_settings = (
             f'You may want to have a look at my settings. You can also set your EPIC RPG donor tier there.\n'
@@ -161,7 +161,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
         image_url = 'attachment://navi.png'
         embed = discord.Embed(
-            title = f'Hey! {ctx.author.name}! Hello!'.upper(),
+            title = f'Hey! {ctx.author.display_name}! Hello!'.upper(),
             description = (
                 f'I am here to help you with your EPIC RPG commands!\n'
                 f'Have a look at {await functions.get_navi_slash_command(bot, "help")} for a list of my own commands.'
@@ -186,10 +186,10 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
     """Off command"""
     user: users.User = await users.get_user(ctx.author.id)
     if not user.bot_enabled:
-        await ctx.respond(f'**{ctx.author.name}**, I\'m already turned off.', ephemeral=True)
+        await ctx.respond(f'**{ctx.author.display_name}**, I\'m already turned off.', ephemeral=True)
         return
     answer = (
-        f'**{ctx.author.name}**, turning me off will disable me completely. This includes all helpers, the command '
+        f'**{ctx.author.display_name}**, turning me off will disable me completely. This includes all helpers, the command '
         f'tracking, auto flexing and the reminders. It will also delete all of your active reminders.\n'
         f'Are you sure?'
     )
@@ -199,7 +199,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
     await view.wait()
     if view.value is None:
         await functions.edit_interaction(
-            interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.', view=None)
+            interaction, content=f'**{ctx.author.display_name}**, you didn\'t answer in time.', view=None)
     elif view.value == 'confirm':
         await user.update(bot_enabled=False)
         try:
@@ -210,7 +210,7 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
             pass
         if not user.bot_enabled:
             answer = (
-                f'**{ctx.author.name}**, I\'m now turned off.\n'
+                f'**{ctx.author.display_name}**, I\'m now turned off.\n'
                 f'All active reminders were deleted.'
             )
             await functions.edit_interaction(interaction, content=answer, view=None)
@@ -224,10 +224,10 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
 async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
     """Purge data command"""
     user_settings: users.User = await users.get_user(ctx.author.id)
-    answer_aborted = f'**{ctx.author.name}**, phew, was worried there for a second.'
-    answer_timeout = f'**{ctx.author.name}**, you didn\'t answer in time.'
+    answer_aborted = f'**{ctx.author.display_name}**, phew, was worried there for a second.'
+    answer_timeout = f'**{ctx.author.display_name}**, you didn\'t answer in time.'
     answer = (
-        f'{emojis.WARNING} **{ctx.author.name}**, this will purge your user data from Navi **completely** {emojis.WARNING}\n\n'
+        f'{emojis.WARNING} **{ctx.author.display_name}**, this will purge your user data from Navi **completely** {emojis.WARNING}\n\n'
         f'This includes the following:\n'
         f'{emojis.BP} Your alts\n'
         f'{emojis.BP} All reminders\n'
@@ -251,7 +251,7 @@ async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) 
     elif view.value == 'confirm':
         await functions.edit_interaction(interaction, view=None)
         answer = (
-            f'{emojis.WARNING} **{ctx.author.name}**, just a friendly final warning {emojis.WARNING}\n'
+            f'{emojis.WARNING} **{ctx.author.display_name}**, just a friendly final warning {emojis.WARNING}\n'
             f'**ARE YOU SURE?**'
         )
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
@@ -314,7 +314,7 @@ async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) 
             await asyncio.sleep(1)
             await functions.edit_interaction(
                 interaction,
-                content=f'{emojis.ENABLED} **{ctx.author.name}**, you are now gone and forgotton. Thanks for using me!',
+                content=f'{emojis.ENABLED} **{ctx.author.display_name}**, you are now gone and forgotton. Thanks for using me!',
                 view=None
             )   
         else:
@@ -598,7 +598,7 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
     if 'all' in settings:
         if not enabled:
             answer_delete = (
-                f'**{ctx.author.name}**, this will turn off all reminders which will also delete all of your active '
+                f'**{ctx.author.display_name}**, this will turn off all reminders which will also delete all of your active '
                 f'reminders. Are you sure?'
             )
             view = views.ConfirmCancelView(ctx, [discord.ButtonStyle.red, discord.ButtonStyle.grey])
@@ -702,7 +702,7 @@ async def embed_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext,
             alt_count += 1
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S ALTS',
+        title = f'{ctx.author.display_name.upper()}\'S ALTS',
         description = (
             f'_You can ping alts in reminders and quickly view their status in '
             f'{await functions.get_navi_slash_command(bot, "ready")}, '
@@ -806,7 +806,7 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S HELPER SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S HELPER SETTINGS',
         description = '_Settings to toggle some helpful little features._'
     )
     embed.add_field(name='HELPERS (I)', value=helpers, inline=False)
@@ -829,7 +829,7 @@ async def embed_settings_portals(bot: discord.Bot, ctx: discord.ApplicationConte
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S PORTAL SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S PORTAL SETTINGS',
         description = '_Portals will take you to another channel. You can add up to 20 portals._'
     )
     embed.add_field(name='PORTALS', value=portal_list, inline=False)
@@ -846,7 +846,7 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
     if activity == 'all':
         description = ''
         for activity in strings.ACTIVITIES:
-            title = f'{ctx.author.name.upper()}\'S REMINDER MESSAGES'
+            title = f'{ctx.author.display_name.upper()}\'S REMINDER MESSAGES'
             activity_column = strings.ACTIVITIES_COLUMNS[activity]
             alert = getattr(user_settings, activity_column)
             alert_message = (
@@ -911,7 +911,7 @@ async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationC
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S REMINDER MULTIPLIERS',
+        title = f'{ctx.author.display_name.upper()}\'S REMINDER MULTIPLIERS',
         description = (
             f'_Multipliers are applied to all reminder times._\n'
             f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
@@ -959,7 +959,7 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S PARTNER SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S PARTNER SETTINGS',
         description = (
             f'_Settings for your partner. To add or change your partner, use the menu below._\n'
         )
@@ -1030,7 +1030,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S READY LIST SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S READY LIST SETTINGS',
         description = (
             f'_General settings for the {await functions.get_navi_slash_command(bot, "ready")} list._\n'
             f'_Note that the ready list does not list commands for reminders that are turned off._'
@@ -1115,7 +1115,7 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S READY LIST REMINDER SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S READY LIST REMINDER SETTINGS',
         description = (
             f'_Settings to toggle visibility of reminders in {await functions.get_navi_slash_command(bot, "ready")}._\n'
             f'_Hiding a reminder removes it from the ready list but does **not** disable the reminder itself._'
@@ -1194,7 +1194,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S REMINDER SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S REMINDER SETTINGS',
         description = (
             f'_Settings to toggle your reminders._\n'
             f'_Note that disabling a reminder also deletes the reminder from my database._'
@@ -1304,7 +1304,7 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.guild.name.upper()} SERVER SETTINGS',
+        title = f'{ctx.guild.display_name.upper()} SERVER SETTINGS',
         description = (
             f'_Serverwide settings._\n'
             f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
@@ -1364,7 +1364,7 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.author.name.upper()}\'S USER SETTINGS',
+        title = f'{ctx.author.display_name.upper()}\'S USER SETTINGS',
         description = (
             f'_Various user settings. If you are married, also check out `Partner settings`._\n'
         )

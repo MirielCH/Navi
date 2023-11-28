@@ -40,7 +40,7 @@ class FeedbackCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.', ephemeral=True)
+            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.', ephemeral=True)
         elif view.value == 'confirm':
             await self.bot.wait_until_ready()
             complaint_channel = await self.bot.fetch_channel(settings.COMPLAINT_CHANNEL_ID)
@@ -81,7 +81,7 @@ class FeedbackCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.', ephemeral=True)
+            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.', ephemeral=True)
         elif view.value == 'confirm':
             await self.bot.wait_until_ready()
             suggestion_channel = await self.bot.fetch_channel(settings.SUGGESTION_CHANNEL_ID)

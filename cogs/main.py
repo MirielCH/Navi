@@ -96,7 +96,7 @@ class MainCog(commands.Cog):
             )
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.respond(
-                f'Hey! **{ctx.author.name}**, looks like I don\'t know you yet.\n'
+                f'Hey! **{ctx.author.display_name}**, looks like I don\'t know you yet.\n'
                 f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
                 ephemeral=True
             )
@@ -129,7 +129,7 @@ class MainCog(commands.Cog):
             return
         elif isinstance(error, commands.CommandOnCooldown):
             await ctx.reply(
-                f'**{ctx.author.name}**, you can only use this command every '
+                f'**{ctx.author.display_name}**, you can only use this command every '
                 f'{int(error.cooldown.per)} seconds.\n'
                 f'You have to wait another **{error.retry_after:.1f}s**.'
             )
@@ -147,13 +147,13 @@ class MainCog(commands.Cog):
                 await send_error()
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.reply(
-                f'**{ctx.author.name}**, looks like I don\'t know you yet.\n'
+                f'**{ctx.author.display_name}**, looks like I don\'t know you yet.\n'
                 f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
             await ctx.reply(
-                f'**{ctx.author.name}**, whatever you just entered contained invalid characters I can\'t process.\n'
+                f'**{ctx.author.display_name}**, whatever you just entered contained invalid characters I can\'t process.\n'
                 f'Please try that again.'
             )
             await errors.log_error(error, ctx)

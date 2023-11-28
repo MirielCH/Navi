@@ -96,7 +96,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User,
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{user.name}\'s stats'.upper(),
+        title = f'{user.display_name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
     embed.add_field(name='LAST HOUR', value=field_last_1h, inline=True)
@@ -115,7 +115,7 @@ async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, tim
     field_content = await design_field(time_left, user)
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{user.name}\'s stats'.upper(),
+        title = f'{user.display_name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
     embed.add_field(name=f'Last {format_timespan(time_left)}'.upper(), value=field_content, inline=False)

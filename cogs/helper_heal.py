@@ -121,7 +121,7 @@ class HelperHealCog(commands.Cog):
                     else:
                         await message.channel.send(f'{user.mention} {warning}')
                 else:
-                    await message.channel.send(f'**{user.name}**, {warning}')
+                    await message.channel.send(f'**{user.display_name}**, {warning}')
 
         # Hunt solo and adventure
         elif any(search_string in message_content.lower() for search_string in search_strings_hunt_adv):
@@ -197,7 +197,7 @@ class HelperHealCog(commands.Cog):
                     else:
                         await message.channel.send(f'{user.mention} {warning}')
                 else:
-                    await message.channel.send(f'**{user.name}**, {warning}')
+                    await message.channel.send(f'**{user.display_name}**, {warning}')
 
         # Heal after crafting omega sword
         search_strings = [
@@ -229,7 +229,7 @@ class HelperHealCog(commands.Cog):
                 else:
                     await message.channel.send(f'{user.mention} {warning}')
             else:
-                await message.channel.send(f'**{user.name}**, {warning}')
+                await message.channel.send(f'**{user.display_name}**, {warning}')
 
         # Heal after brewing dragon breath potion
         search_strings = [
@@ -261,7 +261,7 @@ class HelperHealCog(commands.Cog):
                 else:
                     await message.channel.send(f'{user.mention} {warning}')
             else:
-                await message.channel.send(f'**{user.name}**, {warning}')
+                await message.channel.send(f'**{user.display_name}**, {warning}')
 
 
 # Initialization

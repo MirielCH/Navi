@@ -161,7 +161,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{user.name}\'S REMINDERS'.upper()
+        title = f'{user.display_name}\'S REMINDERS'.upper()
     )
     if not user_reminders and not clan_reminders:
         embed.description = f'{emojis.BP} You have no active reminders'
@@ -421,12 +421,12 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
         )
     embed = discord.Embed(
         color = int(f'0x{user_settings.ready_embed_color}', 16),
-        title = f'• {user.name}\'S READY • '.upper()
+        title = f'• {user.display_name}\'S READY • '.upper()
     )
     if user_settings.ready_ping_user and auto_ready:
         answer = f'• **{user.mention}\'s ready** •'
     else:
-        answer = f'• **{user.name}\'S READY** •'.upper()
+        answer = f'• **{user.display_name}\'S READY** •'.upper()
     if user_settings.ready_other_on_top and field_other != '':
         embed.add_field(name='OTHER', value=field_other.strip(), inline=False)
         answer = (

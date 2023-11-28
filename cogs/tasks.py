@@ -50,13 +50,13 @@ class TasksCog(commands.Cog):
                     if reminder.activity == 'custom':
                         reminder_message = strings.DEFAULT_MESSAGE_CUSTOM_REMINDER.format(message=reminder.message)
                         if user_settings.dnd_mode_enabled:
-                            message = f'**{user.name}** {reminder_message}\n'
+                            message = f'**{user.display_name}** {reminder_message}\n'
                         else:
                             message = f'{user.mention} {reminder_message}\n'
                     else:
                         reminder_message = reminder.message
                         if user_settings.dnd_mode_enabled:
-                            message = f'{reminder_message.replace("{name}", f"**{user.name}**")}\n'
+                            message = f'{reminder_message.replace("{name}", f"**{user.display_name}**")}\n'
                         else:
                             message = f'{reminder_message.replace("{name}", user.mention)}\n'
                         mob_drop_emoji = emojis.MONSTER_DROP_AREAS_EMOJIS.get(user_settings.current_area, '')
@@ -273,7 +273,7 @@ class TasksCog(commands.Cog):
                     message = f'{message}{emojis.BP} There were no cool raids. Not cool.\n'
                 else:
                     best_user = await functions.get_discord_user(self.bot, weekly_report.best_raid.user_id)
-                    best_user_praise = weekly_report.praise.format(username=best_user.name)
+                    best_user_praise = weekly_report.praise.format(username=best_user.display_name)
                     message = (
                         f'{message}{emojis.BP} '
                         f'{best_user_praise} (_Best raid: {weekly_report.best_raid.energy:,}_ {emojis.ENERGY})\n'
@@ -282,7 +282,7 @@ class TasksCog(commands.Cog):
                     message = f'{message}{emojis.BP} There were no lame raids. How lame.\n'
                 else:
                     worst_user = await functions.get_discord_user(self.bot, weekly_report.worst_raid.user_id)
-                    worst_user_roast = weekly_report.roast.format(username=worst_user.name)
+                    worst_user_roast = weekly_report.roast.format(username=worst_user.display_name)
                     message = (
                         f'{message}{emojis.BP} '
                         f'{worst_user_roast} (_Worst raid: {weekly_report.worst_raid.energy:,}_ {emojis.ENERGY})\n'

@@ -154,7 +154,7 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
         elif view.value != 'confirm':
             await functions.edit_interaction(interaction, view=None)
             await ctx.followup.send('Backup aborted.')
@@ -218,7 +218,7 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.')
+            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
         elif view.value == 'confirm':
             await channel.send(embed=embed)
             await functions.edit_interaction(interaction, view=None)
@@ -245,11 +245,11 @@ class DevCog(commands.Cog):
             await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-        interaction = await ctx.respond(f'**{ctx.author.name}**, are you **SURE**?', view=view)
+        interaction = await ctx.respond(f'**{ctx.author.display_name}**, are you **SURE**?', view=view)
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await functions.edit_interaction(interaction, content=f'**{ctx.author.name}**, you didn\'t answer in time.',
+            await functions.edit_interaction(interaction, content=f'**{ctx.author.display_name}**, you didn\'t answer in time.',
                                              view=None)
         elif view.value == 'confirm':
             await functions.edit_interaction(interaction, content='Shutting down.', view=None)
