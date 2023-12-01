@@ -3,7 +3,7 @@
 from argparse import ArgumentError
 from datetime import datetime, timedelta
 import re
-from typing import List, Optional, Union
+from typing import Dict, List, Optional, Union
 
 import discord
 from discord.ext import commands
@@ -171,8 +171,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
                              - time_elapsed.total_seconds())
     else:
         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-    #if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
-    #    time_left_seconds *= 0.9
+    if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
+        time_left_seconds *= 0.9
     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
     time_left_seconds *= alert_settings.multiplier
     if activity in strings.POCKET_WATCH_AFFECTED_ACTIVITIES:
@@ -1031,3 +1031,69 @@ async def reply_or_respond(ctx: Union[discord.ApplicationContext, commands.Conte
         return await ctx.reply(answer)
     else:
         return await ctx.respond(answer, ephemeral=ephemeral)
+
+
+async def parse_embed(message: discord.Message) -> Dict[str, str]:
+    """Parses all data from an embed into a dictionary.
+    All keys are guaranteed to exist and have an empty string as value if not set in the embed.
+    """
+    embed_data = {
+        'author': {'icon_url': '', 'name': ''},
+        'description': '',
+        'field0': {'name': '', 'value': ''},
+        'field1': {'name': '', 'value': ''},
+        'field2': {'name': '', 'value': ''},
+        'field3': {'name': '', 'value': ''},
+        'field4': {'name': '', 'value': ''},
+        'field5': {'name': '', 'value': ''},
+        'footer': {'icon_url': '', 'text': ''},
+        'title': '',
+    }
+    if message.embeds:
+        embed = message.embeds[0]
+        if embed.author is not None:
+            if embed.author.icon_url is not None:
+                embed_data['author']['icon_url'] = embed.author.icon_url
+            if embed.author.name is not None:
+                embed_data['author']['name'] = embed.author.name
+        if embed.description is not None:
+            embed_data['description'] = embed.description
+        if embed.fields:
+            try:
+                embed_data['field0']['name'] = embed.fields[0].name
+                embed_data['field0']['value'] = embed.fields[0].value
+            except IndexError:
+                pass
+            try:
+                embed_data['field1']['name'] = embed.fields[1].name
+                embed_data['field1']['value'] = embed.fields[1].value
+            except IndexError:
+                pass
+            try:
+                embed_data['field2']['name'] = embed.fields[2].name
+                embed_data['field2']['value'] = embed.fields[2].value
+            except IndexError:
+                pass
+            try:
+                embed_data['field3']['name'] = embed.fields[3].name
+                embed_data['field3']['value'] = embed.fields[3].value
+            except IndexError:
+                pass
+            try:
+                embed_data['field4']['name'] = embed.fields[4].name
+                embed_data['field4']['value'] = embed.fields[4].value
+            except IndexError:
+                pass
+            try:
+                embed_data['field5']['name'] = embed.fields[5].name
+                embed_data['field5']['value'] = embed.fields[5].value
+            except IndexError:
+                pass
+        if embed.footer is not None:
+            if embed.footer.icon_url is not None:
+                embed_data['footer']['icon_url'] = embed.footer.icon_url
+            if embed.footer.text is not None:
+                embed_data['footer']['text'] = embed.footer.text
+        if embed.title is not None:
+            embed_data['title'] = embed.title
+    return embed_data

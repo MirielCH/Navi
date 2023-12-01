@@ -141,6 +141,7 @@ class DevCog(commands.Cog):
     @dev.command(name='backup')
     async def dev_dump(self, ctx: discord.ApplicationContext) -> None:
         """Manually backups the database to navi_db_backup.db"""
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         if ctx.author.id not in settings.DEV_IDS:
             await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
@@ -154,7 +155,7 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
+            await ctx.followup.send(f'**{ctx_author_name}**, you didn\'t answer in time.')
         elif view.value != 'confirm':
             await functions.edit_interaction(interaction, view=None)
             await ctx.followup.send('Backup aborted.')
@@ -180,6 +181,7 @@ class DevCog(commands.Cog):
         if ctx.author.id not in settings.DEV_IDS:
             await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         await self.bot.wait_until_ready()
         try:
             message_id = int(message_id)
@@ -218,7 +220,7 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
+            await ctx.followup.send(f'**{ctx_author_name}**, you didn\'t answer in time.')
         elif view.value == 'confirm':
             await channel.send(embed=embed)
             await functions.edit_interaction(interaction, view=None)
@@ -244,12 +246,13 @@ class DevCog(commands.Cog):
         if ctx.author.id not in settings.DEV_IDS:
             await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-        interaction = await ctx.respond(f'**{ctx.author.display_name}**, are you **SURE**?', view=view)
+        interaction = await ctx.respond(f'**{ctx_author_name}**, are you **SURE**?', view=view)
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await functions.edit_interaction(interaction, content=f'**{ctx.author.display_name}**, you didn\'t answer in time.',
+            await functions.edit_interaction(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.',
                                              view=None)
         elif view.value == 'confirm':
             await functions.edit_interaction(interaction, content='Shutting down.', view=None)

@@ -56,6 +56,7 @@ COMMAND_FORGE_OMEGA_SWORD = re.compile(rf"\bforge\b\s+\bomega\b\s+\bsword\b")
 COMMAND_FORGE_ULTRAEDGY_ARMOR = re.compile(rf"\bforge\b\s+\bultra-edgy\b\s+\barmor\b")
 COMMAND_FORGE_GODLY_COOKIE = re.compile(rf"\bforge\b\s+\bgodly\b\s+\bcookie\b")
 COMMAND_HAL_BOO = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bboo\b")
+COMMAND_HAL_BUY_HALLOWEEN_BOOST = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bbuy\b\s+\bhalloween\b\s+\bboost\b")
 COMMAND_HAL_CRAFT_SPOOKY_SCROLL = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bcraft\b\s+\bspooky\b\s+\bscroll\b")
 COMMAND_HEAL = re.compile(rf"\bheal\b")
 COMMAND_HF_LIGHTSPEED = re.compile(rf"\b(?:hf\b|horsefestival\b)\s+lightspeed\b")
@@ -116,7 +117,9 @@ COMMAND_WORK = rf"(?:"
 for command in strings.WORK_COMMANDS:
     COMMAND_WORK = fr'{COMMAND_WORK}\b{command}\b|'
 COMMAND_WORK = re.compile(fr'{COMMAND_WORK.strip("|")})')
+COMMAND_XMAS_BUY_CHRISTMAS_BOOST = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bbuy\b\s+\bchristmas\b\s+\bboost\b")
 COMMAND_XMAS_CALENDAR = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bcalendar\b")
 COMMAND_XMAS_CHIMNEY = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bchimney\b")
 COMMAND_XMAS_CRAFT_COOKIES_AND_MILK = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bcraft\b\s+\bcookies\b\s+\band\b\s+\bmilk\b")
 COMMAND_XMAS_EAT_GINGERBREAD = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+(?:\beat\b|\buse\b)\s+\bgingerbread\b")
+COMMAND_XMAS_OPEN_ETERNAL = re.compile(rf"(?:\bxmas\b|\bchristmas\b)\s+\bopen\b\s+\beternal\b")

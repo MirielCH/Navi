@@ -438,18 +438,19 @@ class SettingsReadyRemindersView(discord.ui.View):
         self.clan_settings = clan_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            #'Advent calendar': 'alert_advent',
+            'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
             #'Cel dailyquest': 'alert_cel_dailyquest',
             #'Cel multiply': 'alert_cel_multiply',
             #'Cel sacrifice': 'alert_cel_sacrifice',
-            #'Chimney': 'alert_chimney',
+            'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
+            'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
@@ -571,7 +572,7 @@ class SettingsRemindersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            #'Advent calendar': 'alert_advent',
+            'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             #'Boo': 'alert_boo',
@@ -579,11 +580,12 @@ class SettingsRemindersView(discord.ui.View):
             #'Cel dailyquest': 'alert_cel_dailyquest',
             #'Cel multiply': 'alert_cel_multiply',
             #'Cel sacrifice': 'alert_cel_sacrifice',
-            #'Chimney': 'alert_chimney',
+            'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
+            'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
@@ -982,6 +984,7 @@ class SettingsServerView(discord.ui.View):
         toggled_auto_flex_alerts_seasonal = {
             'Get stuck in xmas chimney': 'auto_flex_xmas_chimney_enabled',
             'Drop EPIC snowballs': 'auto_flex_xmas_snowball_enabled',
+            'Drop ETERNAL presents': 'auto_flex_xmas_eternal_enabled',
             'Drop GODLY presents': 'auto_flex_xmas_godly_enabled',
             'Drop VOID presents': 'auto_flex_xmas_void_enabled',
             'Drop sleepy potion or suspicious broom in hal boo': 'auto_flex_hal_boo_enabled',

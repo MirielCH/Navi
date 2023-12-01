@@ -24,6 +24,7 @@ class UserInventory(NamedTuple):
     bread: int
     carrot: int
     potato: int
+    present_eternal: int
     ruby: int
     seed_bread: int
     seed_carrot: int
@@ -46,6 +47,7 @@ class User():
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
     alert_epic: UserAlert
+    alert_eternal_present: UserAlert
     alert_farm: UserAlert
     alert_guild: UserAlert
     alert_horse_breed: UserAlert
@@ -159,6 +161,7 @@ class User():
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
         self.alert_epic = new_settings.alert_epic
+        self.alert_eternal_present = new_settings.alert_eternal_present
         self.alert_farm = new_settings.alert_farm
         self.alert_guild = new_settings.alert_guild
         self.alert_horse_breed = new_settings.alert_horse_breed
@@ -328,6 +331,9 @@ class User():
             alert_epic_message: str
             alert_epic_multiplier: float
             alert_epic_visible: bool
+            alert_eternal_present_enabled: bool
+            alert_eternal_present_message: str
+            alert_eternal_present_visible: bool
             alert_farm_enabled: bool
             alert_farm_message: str
             alert_farm_multiplier: float
@@ -414,6 +420,7 @@ class User():
             inventory_bread: int
             inventory_carrot: int
             inventory_potato: int
+            inventory_present_eternal: int
             inventory_ruby: int
             inventory_seed_bread: int
             inventory_seed_carrot: int
@@ -552,6 +559,10 @@ async def _dict_to_user(record: dict) -> User:
                                                message=record['alert_epic_message'],
                                                multiplier=float(record['alert_epic_multiplier']),
                                                visible=bool(record['alert_epic_visible'])),
+            alert_eternal_present = UserAlert(enabled=bool(record['alert_eternal_present_enabled']),
+                                              message=record['alert_eternal_present_message'],
+                                              multiplier=1.0,
+                                              visible=bool(record['alert_eternal_present_visible'])),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
                                    message=record['alert_farm_message'],
                                    multiplier=float(record['alert_farm_multiplier']),
@@ -651,6 +662,7 @@ async def _dict_to_user(record: dict) -> User:
             hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
             inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
                                       potato=(record['inventory_potato']),
+                                      present_eternal=(record['inventory_present_eternal']),
                                       ruby=(record['inventory_ruby']), seed_bread=(record['inventory_seed_bread']),
                                       seed_carrot=(record['inventory_seed_carrot']),
                                       seed_potato=(record['inventory_seed_potato'])),
@@ -914,6 +926,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_epic_message: str
         alert_epic_multiplier: float
         alert_epic_visible: bool
+        alert_eternal_present_enabled: bool
+        alert_eternal_present_message: str
+        alert_eternal_present_visible: bool
         alert_farm_enabled: bool
         alert_farm_message: str
         alert_farm_multiplier: float
@@ -1000,6 +1015,7 @@ async def _update_user(user: User, **kwargs) -> None:
         inventory_bread: int
         inventory_carrot: int
         inventory_potato: int
+        inventory_present_eternal: int
         inventory_ruby: int
         inventory_seed_bread: int
         inventory_seed_carrot: int

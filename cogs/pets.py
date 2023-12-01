@@ -20,6 +20,10 @@ class PetsCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -59,10 +63,11 @@ class PetsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_pets.enabled: return
+                user_global_name = user.global_name if user.global_name is not None else user.name
                 if not user_settings.pet_tip_read:
                     command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     pet_message = (
-                        f"**{user.display_name}**, please use {command_pets_list} "
+                        f"**{user_global_name}**, please use {command_pets_list} "
                         f'or `rpg pets` to create pet reminders.'
                     )
                     pet_message = (
@@ -100,9 +105,10 @@ class PetsCog(commands.Cog):
                         user_settings: users.User = await users.get_user(user.id)
                     except exceptions.FirstTimeUserError:
                         return
+                    user_global_name = user.global_name if user.global_name is not None else user.name
                     command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     await message.reply(
-                        f"**{user.display_name}**, please use {command_pets_list}"
+                        f"**{user_global_name}**, please use {command_pets_list}"
                         f' to update your pet reminders.'
                     )
                     return

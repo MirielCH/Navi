@@ -9,7 +9,7 @@ from discord.ext import commands
 
 from cache import messages
 from database import errors, reminders, users
-from resources import exceptions, functions, regex, settings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class HalloweenCog(commands.Cog):
@@ -21,6 +21,10 @@ class HalloweenCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -201,6 +205,7 @@ class HalloweenCog(commands.Cog):
                 if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
 
 # Initialization
 def setup(bot):

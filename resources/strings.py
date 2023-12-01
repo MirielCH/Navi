@@ -115,6 +115,7 @@ DEFAULT_MESSAGES = {
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
     'epic': '{name} Hey! Your EPIC item cooldown is ready!',
+    'eternal-presents': '{name} Hey! It''s time to {command} your ETERNAL presents! Make sure you open all of them in **one** command!',
     'farm': DEFAULT_MESSAGE,
     'guild': DEFAULT_MESSAGE,
     'horse': DEFAULT_MESSAGE,
@@ -180,11 +181,12 @@ DONOR_TIERS_EMOJIS = {
 }
 
 ARTIFACTS_EMOJIS = {
-    'top hat': emojis.ARTIFACT_TOP_HAT,
+    'claus belt': emojis.ARTIFACT_CLAUS_BELT,
     'coin ring': emojis.ARTIFACT_COIN_RING,
     'golden pan': emojis.ARTIFACT_GOLDEN_PAN,
     'master key': emojis.ARTIFACT_MASTER_KEY,
     'pocket watch': emojis.ARTIFACT_POCKET_WATCH,
+    'top hat': emojis.ARTIFACT_TOP_HAT,
     'vampire teeth': emojis.ARTIFACT_VAMPIRE_TEETH,
 }
 
@@ -207,8 +209,8 @@ POCKET_WATCH_AFFECTED_ACTIVITIES = (
 SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
-    'boo',
-    #'chimney',
+    #'boo',
+    'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -256,19 +258,20 @@ XMAS_AREA_AFFECTED_ACTIVITIES = (
 )
 
 ACTIVITIES = (
-    #'advent-calendar',
+    'advent-calendar',
     'adventure',
     'arena',
     'big-arena',
-     #'boo',
+    'boo',
     'boosts',
     'cel-dailyquest',
     'cel-multiply',
-    #'chimney',
+    'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
     'epic',
+    'eternal-presents',
     'farm',
     'guild',
     'horse',
@@ -295,18 +298,19 @@ ACTIVITIES_ALL.sort()
 ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
-    #'advent-calendar',
+    'advent-calendar',
     'adventure',
     'arena',
     #'boo',
     #'cel-dailyquest',
     #'cel-multiply',
     #'cel-sacrifice',
-    #'chimney',
+    'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
     'epic',
+    'eternal-presents',
     'farm',
     'guild',
     'horse',
@@ -331,6 +335,7 @@ ACTIVITIES_EVENTS = (
 
 ACTIVITIES_BOOSTS = (
     'banana-potion',
+    'christmas-boost',
     'celebration-boost',
     'cookie-potion',
     'dev-boost',
@@ -363,6 +368,7 @@ ACTIVITIES_BOOSTS = (
 )
 
 BOOSTS_ALIASES = {
+    'christmas': 'christmas-boost',
     'celebration': 'celebration-boost',
     'halloween': 'halloween-boost',
     'horse-festival': 'horse-festival-boost',
@@ -385,6 +391,7 @@ ACTIVITIES_SLASH_COMMANDS = {
     'dragon-breath-potion': 'alchemy',
     'duel': 'duel',
     'dungeon-miniboss': 'dungeon',
+    'eternal-presents': 'xmas open',
     'electronical-potion': 'alchemy',
     'farm': 'farm',
     'fish-potion': 'alchemy',
@@ -484,6 +491,7 @@ ACTIVITIES_COLUMNS = {
     'big-arena': 'alert_big_arena',
     'boo': 'alert_boo',
     'boosts': 'alert_boosts',
+    'christmas-boost': 'alert_boosts',
     'cel-dailyquest': 'alert_cel_dailyquest',
     'cel-multiply': 'alert_cel_multiply',
     'cel-sacrifice': 'alert_cel_sacrifice',
@@ -497,9 +505,11 @@ ACTIVITIES_COLUMNS = {
     'dungeon-miniboss': 'alert_dungeon_miniboss',
     'electronical-potion': 'alert_boosts',
     'epic': 'alert_epic',
+    'eternal-presents': 'alert_eternal_present',
     'farm': 'alert_farm',
     'fish-potion': 'alert_boosts',
     'guild': 'alert_guild',
+    'halloween-boost': 'alert_boosts',
     'horse': 'alert_horse_breed',
     'horse-race': 'alert_horse_race',
     'hunt': 'alert_hunt',
@@ -539,10 +549,11 @@ ACTIVITIES_WITH_COOLDOWN = (
     'adventure',
     'arena',
     'clan',
-    #'chimney',
+    'chimney',
     'daily',
     'duel',
     'epic',
+    'eternal-presents',
     'farm',
     'horse',
     'hunt',
@@ -560,7 +571,6 @@ ACTIVITIES_WITH_COOLDOWN_ALL.insert(0, 'all')
 
 ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER = (
     'adventure',
-    #'chimney',
     'daily',
     'duel',
     'epic',
@@ -1032,8 +1042,12 @@ SLASH_COMMANDS = {
     'weekly': '</weekly:956658465185603645>',
     'wheel': '</wheel:959916179525341194>',
     'world status': '</world status:953370104236761108>',
-    'xmas calendar': '</xmas calendar:1048310047865852005>',
-    'xmas chimney': '</xmas chimney:1048310047865852005>',
+    #'xmas calendar': '</xmas calendar:1048310047865852005>',
+    'xmas calendar': '`rpg xmas calendar`',
+    #'xmas chimney': '</xmas chimney:1048310047865852005>',
+    'xmas chimney': '`rpg xmas chimney`',
+    #'xmas open': '</xmas open:1048310047865852005>',
+    'xmas open': '`rpg xmas open`',
 }
 
 RPG_COMMANDS = {
@@ -1125,6 +1139,7 @@ RPG_COMMANDS = {
     'world status': 'rpg world',
     'xmas calendar': 'rpg xmas calendar',
     'xmas chimney': 'rpg xmas chimney',
+    'xmas open': 'rpg xmas open',
 }
 
 
@@ -1500,6 +1515,15 @@ FLEX_TITLES_XMAS_CHIMNEY = [
     'We are not laughing, I swear',
 ]
 
+FLEX_TITLES_XMAS_ETERNAL = [
+    'The gift that keeps on giving',
+    'This is some dubious magic stuff',
+    'I tried opening it once... twice... thrice... aaah',
+    'I don\'t understand this type of present',
+    'Did they deserved this? But of course.',
+    'Wdym I need to wait 24h after opening it? What the hell',
+]
+
 FLEX_TITLES_XMAS_GODLY = [
     'Oh thank you Santa!',
     'Ho ho ho',
@@ -1535,6 +1559,14 @@ FLEX_THUMBNAILS_ARTIFACTS = [
     'https://media.tenor.com/rAwf52N-KAgAAAAC/secrets-of-castle-mcduck-ducktales.gif',
     'https://media.tenor.com/UKDMIuJCXIYAAAAC/i-found-something-the-investigator.gif',
     'https://media.tenor.com/wVOgdD9hHrEAAAAC/anime-treasure.gif',
+]
+
+FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT = [
+    'https://media.tenor.com/Gz-aSR82810AAAAd/theodoros.gif',
+    'https://media.tenor.com/N_vsbVvbeH4AAAAC/santa-claus-fat.gif',
+    'https://media.tenor.com/biHQOhu31rAAAAAC/santa-belly.gif',
+    'https://media.tenor.com/EBWqm5qIocgAAAAd/santa-dancing.gif',
+    'https://media.tenor.com/rpnFMRgGHsgAAAAi/vodafone-vodafone-xmas.gif',
 ]
 
 FLEX_THUMBNAILS_BREW_ELECTRONICAL = [
@@ -1880,6 +1912,15 @@ FLEX_THUMBNAILS_XMAS_CHIMNEY = [
     'https://media.tenor.com/lr8W5AadieAAAAAd/smile-laughing.gif',
     'https://media.tenor.com/REqgDts8CVgAAAAC/futurenostlgia-laughing.gif',
     'https://media.tenor.com/Lot4htkwha8AAAAd/adventures-of-oliver-twist-stuck.gif',
+]
+
+FLEX_THUMBNAILS_XMAS_ETERNAL = [
+    'https://media.tenor.com/_JV_Y_9X3fAAAAAi/petsure-cat.gif',
+    'https://media.tenor.com/ika5BN6eB_UAAAAi/spinning-gif-spinning.gif',
+    'https://media.tenor.com/3ViKggOJ8PAAAAAC/spongebob-empty-box.gif',
+    'https://media.tenor.com/MUD10DgrG9cAAAAd/monero-xmr.gif',
+    'https://media.tenor.com/KQztQwZSDU4AAAAi/whats-in-the-box-surprise.gif',
+    'https://media.tenor.com/fXHJquBk8VAAAAAd/cat-box.gif',
 ]
 
 FLEX_THUMBNAILS_XMAS_GODLY = [

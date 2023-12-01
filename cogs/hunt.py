@@ -21,6 +21,10 @@ class HuntCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -129,8 +133,8 @@ class HuntCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
-                    #if user_settings.christmas_area_enabled:
-                    #    time_left_seconds *= 0.9
+                    if user_settings.christmas_area_enabled:
+                        time_left_seconds *= 0.9
                     time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * user_settings.user_pocket_watch_multiplier
                 elif together:
                     partner_settings = None
@@ -158,7 +162,7 @@ class HuntCog(commands.Cog):
                                             + (partner_cooldown - user_cooldown)
                                             - time_elapsed.total_seconds()
                                             + 1)
-                        #if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                        if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                 time_left = timedelta(seconds=time_left_seconds)
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 overwrite_message = False if user_settings.hunt_rotation_enabled else True
@@ -291,6 +295,7 @@ class HuntCog(commands.Cog):
                     if partner.partner_channel_id is not None and partner.alert_partner.enabled and partner.bot_enabled:
                         partner_alerts_enabled = True
                 if not user_settings.alert_hunt.enabled and not partner_alerts_enabled: return
+                user_global_name = user.global_name if user.global_name is not None else user.name
                 if user_settings.alert_hunt.enabled:
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
                     last_hunt_mode = ''
@@ -380,16 +385,16 @@ class HuntCog(commands.Cog):
                                                     - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
-                #if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                #    and user_settings.partner_donor_tier < 3 and partner_christmas_area):
-                #    time_left_seconds *= 0.9
-                #elif user_settings.christmas_area_enabled and not found_together:
-                #    time_left_seconds *= 0.9
-                #elif (user_settings.christmas_area_enabled and not partner_christmas_area
-                #      and user_settings.hunt_rotation_enabled and found_together):
-                #    time_left_seconds *= 0.9
-                #elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
-                #    time_left_seconds *= 0.9
+                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
+                    and user_settings.partner_donor_tier < 3 and partner_christmas_area):
+                    time_left_seconds *= 0.9
+                elif user_settings.christmas_area_enabled and not found_together:
+                    time_left_seconds *= 0.9
+                elif (user_settings.christmas_area_enabled and not partner_christmas_area
+                      and user_settings.hunt_rotation_enabled and found_together):
+                    time_left_seconds *= 0.9
+                elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
+                    time_left_seconds *= 0.9
                 partner_hunt_multiplier = partner.alert_hunt.multiplier if partner is not None else 1
                 if together and not user_settings.hunt_rotation_enabled:
                     pocket_watch_multiplier = user_settings.partner_pocket_watch_multiplier
@@ -414,6 +419,7 @@ class HuntCog(commands.Cog):
                     await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
                     if partner_alerts_enabled:
                         partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
+                        partner_global_name = partner_discord.global_name if partner_discord.global_name is not None else partner_discord.name
                         # Check for lootboxes, hardmode and send alert. This checks for the set partner, NOT for the automatically detected partner, to prevent shit from happening
                         alert_items = {
                             'MEGA present': emojis.PRESENT_MEGA,
@@ -457,7 +463,7 @@ class HuntCog(commands.Cog):
                                 )
                                 return
                             partner_message = (partner.alert_partner.message
-                                               .replace('{partner}', user.display_name)
+                                               .replace('{partner}', user_global_name)
                                                .replace('{loot}', f'{lb_amount} {lb_emoji} {lb_name}'))
                             if lootbox_alert == '':
                                 lootbox_alert = partner_message
@@ -469,7 +475,7 @@ class HuntCog(commands.Cog):
                                 channel = await functions.get_discord_channel(self.bot, partner.partner_channel_id)
                                 if channel is not None:
                                     if partner.dnd_mode_enabled:
-                                        lb_message = lootbox_alert.replace('{name}', f'**{partner_discord.display_name}**')
+                                        lb_message = lootbox_alert.replace('{name}', f'**{partner_global_name}**')
                                     else:
                                         lb_message = lootbox_alert.replace('{name}', partner_discord.mention)
                                     await channel.send(lb_message)
@@ -583,7 +589,7 @@ class HuntCog(commands.Cog):
                                             - time_elapsed.total_seconds())
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                    #if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                    if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                     time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
                                           * user_settings.user_pocket_watch_multiplier)
                     if time_left < timedelta(0): return

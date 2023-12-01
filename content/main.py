@@ -143,11 +143,12 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.BP} :flag_es: Spanish\n'
         f'{emojis.BP} :flag_br: Portuguese\n'
     )
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'NAVI',
         description =   (
-            f'_Hey! **{ctx.author.display_name}**! Hello!_\n'
+            f'_Hey! **{ctx_author_name}**! Hello!_\n'
             f'_May I interest you in some settings?_'
         )
     )

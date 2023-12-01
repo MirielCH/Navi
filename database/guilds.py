@@ -53,6 +53,7 @@ class Guild():
     auto_flex_work_superfish_enabled: bool
     auto_flex_work_watermelon_enabled: bool
     auto_flex_xmas_chimney_enabled: bool
+    auto_flex_xmas_eternal_enabled: bool
     auto_flex_xmas_godly_enabled: bool
     auto_flex_xmas_snowball_enabled: bool
     auto_flex_xmas_void_enabled: bool
@@ -98,6 +99,7 @@ class Guild():
         self.auto_flex_work_superfish_enabled = new_settings.auto_flex_work_superfish_enabled
         self.auto_flex_work_watermelon_enabled = new_settings.auto_flex_work_watermelon_enabled
         self.auto_flex_xmas_chimney_enabled = new_settings.auto_flex_xmas_chimney_enabled
+        self.auto_flex_xmas_eternal_enabled = new_settings.auto_flex_xmas_eternal_enabled
         self.auto_flex_xmas_godly_enabled = new_settings.auto_flex_xmas_godly_enabled
         self.auto_flex_xmas_snowball_enabled = new_settings.auto_flex_xmas_snowball_enabled
         self.auto_flex_xmas_void_enabled = new_settings.auto_flex_xmas_void_enabled
@@ -143,6 +145,7 @@ class Guild():
             auto_flex_work_superfish_enabled: bool
             auto_flex_work_watermelon_enabled: bool
             auto_flex_xmas_chimney_enabled: bool
+            auto_flex_xmas_eternal_enabled: bool
             auto_flex_xmas_godly_enabled: bool
             auto_flex_xmas_snowball_enabled: bool
             auto_flex_xmas_void_enabled: bool
@@ -206,6 +209,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_work_superfish_enabled = bool(record['auto_flex_work_superfish_enabled']),
             auto_flex_work_watermelon_enabled = bool(record['auto_flex_work_watermelon_enabled']),
             auto_flex_xmas_chimney_enabled = bool(record['auto_flex_xmas_chimney_enabled']),
+            auto_flex_xmas_eternal_enabled = bool(record['auto_flex_xmas_eternal_enabled']),
             auto_flex_xmas_godly_enabled = bool(record['auto_flex_xmas_godly_enabled']),
             auto_flex_xmas_snowball_enabled = bool(record['auto_flex_xmas_snowball_enabled']),
             auto_flex_xmas_void_enabled = bool(record['auto_flex_xmas_void_enabled']),
@@ -382,6 +386,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_work_superfish_enabled: bool
         auto_flex_work_watermelon_enabled: bool
         auto_flex_xmas_chimney_enabled: bool
+        auto_flex_xmas_eternal_enabled: bool
         auto_flex_xmas_godly_enabled: bool
         auto_flex_xmas_snowball_enabled: bool
         auto_flex_xmas_void_enabled: bool

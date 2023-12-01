@@ -21,6 +21,10 @@ class QuestCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -273,7 +277,7 @@ class QuestCog(commands.Cog):
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                #if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
@@ -422,7 +426,7 @@ class QuestCog(commands.Cog):
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                #if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
                 time_left = timedelta(seconds=time_left_seconds * user_settings.alert_quest.multiplier
                                       * user_settings.user_pocket_watch_multiplier)
                 if time_left < timedelta(0): return

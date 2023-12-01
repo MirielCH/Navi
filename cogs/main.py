@@ -95,8 +95,9 @@ class MainCog(commands.Cog):
                 ephemeral=True
             )
         elif isinstance(error, exceptions.FirstTimeUserError):
+            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.respond(
-                f'Hey! **{ctx.author.display_name}**, looks like I don\'t know you yet.\n'
+                f'Hey! **{ctx_author_name}**, looks like I don\'t know you yet.\n'
                 f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
                 ephemeral=True
             )
@@ -128,8 +129,9 @@ class MainCog(commands.Cog):
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.CommandOnCooldown):
+            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
-                f'**{ctx.author.display_name}**, you can only use this command every '
+                f'**{ctx_author_name}**, you can only use this command every '
                 f'{int(error.cooldown.per)} seconds.\n'
                 f'You have to wait another **{error.retry_after:.1f}s**.'
             )
@@ -146,14 +148,16 @@ class MainCog(commands.Cog):
             else:
                 await send_error()
         elif isinstance(error, exceptions.FirstTimeUserError):
+            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
-                f'**{ctx.author.display_name}**, looks like I don\'t know you yet.\n'
+                f'**{ctx_author_name}**, looks like I don\'t know you yet.\n'
                 f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
+            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
-                f'**{ctx.author.display_name}**, whatever you just entered contained invalid characters I can\'t process.\n'
+                f'**{ctx_author_name}**, whatever you just entered contained invalid characters I can\'t process.\n'
                 f'Please try that again.'
             )
             await errors.log_error(error, ctx)

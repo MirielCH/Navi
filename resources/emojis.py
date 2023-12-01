@@ -209,12 +209,14 @@ MONSTER_DROP_AREAS_EMOJIS = {
 
 BOOSTS_EMOJIS = {
     'banana-potion': POTION_BANANA,
+    'christmas-boost': PRESENT,
     'cookie-potion': POTION_COOKIE,
     'dev-boost': DEV_BUFF,
     'dev-buff': DEV_BUFF,
     'dragon-breath-potion': POTION_DRAGON_BREATH,
     'electronical-potion': POTION_ELECTRONICAL,
     'fish-potion': POTION_FISH,
+    'halloween-boost': PUMPKIN,
     'inverted-potion': POTION_INVERTED,
     'juice-potion': POTION_JUICE,
     'jumpy-potion': POTION_JUMPY,

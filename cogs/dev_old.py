@@ -40,6 +40,7 @@ class DevOldCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def post_message(self, ctx: commands.Context, message_id: int, channel_id: int, *embed_title: str) -> None:
         """Post an embed to a channel"""
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
         if ctx.author.id not in settings.DEV_IDS: return
@@ -87,7 +88,7 @@ class DevOldCog(commands.Cog):
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
-            await ctx.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
+            await ctx.send(f'**{ctx_author_name}**, you didn\'t answer in time.')
             return
         if not answer.content.lower() in ['yes','y']:
             await ctx.send('Aborted')
@@ -99,16 +100,17 @@ class DevOldCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, read_message_history=True)
     async def shutdown(self, ctx: commands.Context) -> None:
         """Shut down the bot"""
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
         if ctx.author.id not in settings.DEV_IDS: return
         prefix = ctx.prefix
         if prefix.lower() == 'rpg ': return
-        await ctx.reply(f'**{ctx.author.display_name}**, are you **SURE**? `[yes/no]`')
+        await ctx.reply(f'**{ctx_author_name}**, are you **SURE**? `[yes/no]`')
         try:
             answer = await self.bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
-            await ctx.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.')
+            await ctx.send(f'**{ctx_author_name}**, you didn\'t answer in time.')
         if answer.content.lower() in ['yes','y']:
             await ctx.send('Shutting down.')
             await self.bot.close()

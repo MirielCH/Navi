@@ -19,6 +19,10 @@ class HelperContextCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -272,6 +276,7 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
+                user_global_name = user.global_name if user.global_name is not None else user.name
                 action = await functions.get_slash_command(user_settings, 'area')
                 warning = f'Hey! Don\'t forget to use {action} to go back to your previous area!'
                 if not user_settings.dnd_mode_enabled:
@@ -280,7 +285,7 @@ class HelperContextCog(commands.Cog):
                     else:
                         await message.channel.send(f'{user.mention} {warning}')
                 else:
-                    await message.channel.send(f'**{user.display_name}**, {warning}')
+                    await message.channel.send(f'**{user_global_name}**, {warning}')
 
             search_strings = [
                 ':mag:', #Ruby dragon event, all languages
@@ -307,6 +312,7 @@ class HelperContextCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.training_helper_enabled: return
+                user_global_name = user.global_name if user.global_name is not None else user.name
                 action = await functions.get_slash_command(user_settings, 'area')
                 warning = f'Hey! Don\'t forget to use {action} to go back to your previous area!'
                 if not user_settings.dnd_mode_enabled:
@@ -315,7 +321,7 @@ class HelperContextCog(commands.Cog):
                     else:
                         await message.channel.send(f'{user.mention} {warning}')
                 else:
-                    await message.channel.send(f'**{user.display_name}**, {warning}')
+                    await message.channel.send(f'**{user_global_name}**, {warning}')
 
 
 # Initialization

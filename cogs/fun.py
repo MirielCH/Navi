@@ -21,6 +21,10 @@ class FunCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -76,14 +80,25 @@ class FunCog(commands.Cog):
                 await message.reply('https://media.tenor.com/kcMj0Wfo3j8AAAAC/young-link-fly.gif')
             if message_content.lower() in ['navi good', 'navi great', 'navi nice', 'navi amazing', 'navi useful',
                                            'navi best', 'navi good bot', 'navi best bot', 'navi better', 'navi good good',
-                                           'navi nice bot', 'navi pro', 'navi smart', 'navi love', 'navi op', 'navi hug']:
-                await message.reply('https://media.tenor.com/3EBDKiYgw4kAAAAC/zelda-botw.gif')
+                                           'navi nice bot', 'navi pro', 'navi smart', 'navi love', 'navi op', 'navi hug',
+                                           'navi gud', 'navi gud gud', 'navi pro pro',]:
+                gifs = [
+                    'https://media.tenor.com/3EBDKiYgw4kAAAAC/zelda-botw.gif',
+                    'https://media.tenor.com/J7mhG4v0y4QAAAAd/zelda-lasagneman-lasagneman.gif',
+                    'https://media.tenor.com/xaasBJILRhMAAAAd/zelda-oot.gif',
+                    'https://media.tenor.com/rjQ6lnlWWtEAAAAC/the-legend-of-zelda-the-wind-waker.gif',
+                ]
+                await message.reply(random.choice(gifs))
             if message_content.lower() in ['navi bad', 'navi trash', 'navi bad!', 'navi trash!', 'navi bad bot',
                                            'navi trash bot', 'navi stupid', 'navi dumb', 'navi useless', 'navi bad bad']:
                 gifs = [
                     'https://media.tenor.com/wwql567dp98AAAAC/link-zelda.gif',
                     'https://media.tenor.com/yfFdPms-9AMAAAAC/zelda-angry.gif',
                     'https://media.tenor.com/gUp7zjyngykAAAAd/zelda.gif',
+                    'https://media.tenor.com/D7fbSrPJm10AAAAd/legend-of-zelda-breath-of-the-wild.gif',
+                    'https://tenor.com/view/chickens-link-gif-5763752',
+                    'https://media.tenor.com/qOmVSXsUp6gAAAAd/ezlo-minish.gif',
+                    'https://media.tenor.com/qOmVSXsUp6gAAAAd/ezlo-minish.gif',
                 ]
                 await message.reply(random.choice(gifs))
             if message_content.lower() in ['navi shut up', 'navi shut it', 'navi shut up!', 'navi shut']:

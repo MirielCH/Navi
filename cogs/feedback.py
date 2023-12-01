@@ -24,6 +24,7 @@ class FeedbackCog(commands.Cog):
         message: Option(str, 'Complaint you want to send', max_length=2000),
     ) -> None:
         """Sends a complaint about Navi to the dev."""
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         embed = discord.Embed(
             title = f'**{ctx.author.name}** has a complaint',
             description = message
@@ -40,7 +41,7 @@ class FeedbackCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.', ephemeral=True)
+            await ctx.followup.send(f'**{ctx_author_name}**, you didn\'t answer in time.', ephemeral=True)
         elif view.value == 'confirm':
             await self.bot.wait_until_ready()
             complaint_channel = await self.bot.fetch_channel(settings.COMPLAINT_CHANNEL_ID)
@@ -65,6 +66,7 @@ class FeedbackCog(commands.Cog):
         message: Option(str, 'Suggestion you want to send', max_length=2000),
     ) -> None:
         """Sends a suggestion about Navi to the dev."""
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         embed = discord.Embed(
             title = f'**{ctx.author.name}** has a suggestion',
             description = message
@@ -81,7 +83,7 @@ class FeedbackCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await ctx.followup.send(f'**{ctx.author.display_name}**, you didn\'t answer in time.', ephemeral=True)
+            await ctx.followup.send(f'**{ctx_author_name}**, you didn\'t answer in time.', ephemeral=True)
         elif view.value == 'confirm':
             await self.bot.wait_until_ready()
             suggestion_channel = await self.bot.fetch_channel(settings.SUGGESTION_CHANNEL_ID)

@@ -20,6 +20,10 @@ class BoostsCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -261,7 +265,9 @@ class BoostsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
-                time_left = timedelta(hours=1)
+                time_left_hours = 1
+                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', '❤️')
@@ -274,6 +280,83 @@ class BoostsCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+
+            # Halloween boost
+            search_strings = [
+                '`halloween boost` successfully bought', #English
+                '`halloween boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_HAL_BUY_HALLOWEEN_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the hal boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 2.5
+                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.PUMPKIN)
+                        .replace('{boost_item}', 'halloween boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'halloween-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+            # Christmas boost
+            search_strings = [
+                '`christmas boost` successfully bought', #English
+                '`christmas boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_BUY_CHRISTMAS_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the xmas boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 4
+                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.PRESENT)
+                        .replace('{boost_item}', 'christmas boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'christmas-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
 
 # Initialization
 def setup(bot):

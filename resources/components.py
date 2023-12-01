@@ -219,9 +219,10 @@ class ManageClanSettingsSelect(discord.ui.Select):
                          custom_id='manage_clan_settings')
 
     async def callback(self, interaction: discord.Interaction):
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         if interaction.user.id != self.view.clan_settings.leader_id:
             await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, you are not registered as the guild owner. Only the guild owner can '
+                f'**{user_global_name}**, you are not registered as the guild owner. Only the guild owner can '
                 f'change these settings.\n'
                 f'If you _are_ the guild owner, run {strings.SLASH_COMMANDS["guild list"]} to update '
                 f'your guild in my database.\n',
@@ -243,7 +244,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to set `{interaction.channel.name}` as the alert channel '
+                f'**{user_global_name}**, do you want to set `{interaction.channel.name}` as the alert channel '
                 f'for the guild `{self.view.clan_settings.clan_name}`?',
                 view=confirm_view,
                 ephemeral=True
@@ -265,7 +266,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
                 return
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to reset the guild alert channel '
+                f'**{user_global_name}**, do you want to reset the guild alert channel '
                 f'for the guild `{self.view.clan_settings.clan_name}`?\n\n'
                 f'Note that this will also disable the reminder if enabled.',
                 view=confirm_view,
@@ -408,10 +409,12 @@ class SwitchReadyAltSelect(discord.ui.Select):
     """Select to switch between alts in /ready"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         emoji = emojis.BP if view.user.id == view.active_alt_id else None
-        options = [discord.SelectOption(label=view.user.display_name, value=str(view.user.id), emoji=emoji),]
+        user_global_name = view.user.global_name if view.user.global_name is not None else view.user.name
+        options = [discord.SelectOption(label=user_global_name, value=str(view.user.id), emoji=emoji),]
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            label = str(alt_id) if alt is None else alt.display_name
+            alt_name = alt.global_name if alt.global_name is not None else alt.name
+            label = str(alt_id) if alt is None else alt_name
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
@@ -441,10 +444,12 @@ class SwitchStatsAltSelect(discord.ui.Select):
     """Select to switch between alts in /stats"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         emoji = emojis.BP if view.user.id == view.active_alt_id else None
-        options = [discord.SelectOption(label=view.user.display_name, value=str(view.user.id), emoji=emoji),]
+        user_global_name = view.user.global_name if view.user.global_name is not None else view.user.name
+        options = [discord.SelectOption(label=user_global_name, value=str(view.user.id), emoji=emoji),]
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            label = str(alt_id) if alt is None else alt.display_name
+            alt_name = alt.global_name if alt.global_name is not None else alt.name
+            label = str(alt_id) if alt is None else alt_name
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
@@ -470,10 +475,12 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
     """Select to switch between alts in /list"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         emoji = emojis.BP if view.user.id == view.active_alt_id else None
-        options = [discord.SelectOption(label=view.user.display_name, value=str(view.user.id), emoji=emoji),]
+        user_global_name = view.user.global_name if view.user.global_name is not None else view.user.name
+        options = [discord.SelectOption(label=user_global_name, value=str(view.user.id), emoji=emoji),]
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            label = str(alt_id) if alt is None else alt.display_name
+            alt_name = alt.global_name if alt.global_name is not None else alt.name
+            label = str(alt_id) if alt is None else alt_name
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
@@ -591,6 +598,7 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         if select_value == 'toggle_dnd':
             await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
         elif select_value == 'toggle_hunt':
@@ -600,7 +608,7 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to set `{interaction.channel.name}` as the reminder '
+                f'**{user_global_name}**, do you want to set `{interaction.channel.name}` as the reminder '
                 f'channel?\n'
                 f'If a reminder channel is set, all reminders will be sent to that channel\n',
                 view=confirm_view,
@@ -623,7 +631,7 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
                 return
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to reset your reminder channel?\n\n'
+                f'**{user_global_name}**, do you want to reset your reminder channel?\n\n'
                 f'If you do this, reminders will be sent to where you create them.',
                 view=confirm_view,
                 ephemeral=True
@@ -654,7 +662,7 @@ class RemoveAltSelect(discord.ui.Select):
         options = []
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            label = str(alt_id) if alt is None else alt.display_name
+            label = str(alt_id) if alt is None else alt.global_name
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emojis.REMOVE))
         super().__init__(placeholder='Remove alts', min_values=1, max_values=1,
                          options=options, row=row,
@@ -662,9 +670,10 @@ class RemoveAltSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         alt_id = int(self.values[0])
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         confirm_interaction = await interaction.response.send_message(
-            f'**{interaction.user.display_name}**, do you want to remove <@{alt_id}> as your alt?',
+            f'**{user_global_name}**, do you want to remove <@{alt_id}> as your alt?',
             view=confirm_view,
             ephemeral=True
         )
@@ -706,6 +715,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         if select_value == 'set_channel':
             if self.view.user_settings.partner_id is None:
                 await interaction.response.send_message(
@@ -716,7 +726,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 return
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to set `{interaction.channel.name}` as the partner alert '
+                f'**{user_global_name}**, do you want to set `{interaction.channel.name}` as the partner alert '
                 f'channel?\n'
                 f'The partner alert channel is where you will be sent lootbox alerts from your '
                 f'partner. You can toggle partner alerts in `Reminder settings`.',
@@ -750,7 +760,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 return
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to reset your partner alert channel?\n\n'
+                f'**{user_global_name}**, do you want to reset your partner alert channel?\n\n'
                 f'If you do this, partner alerts will not work even if turned on.',
                 view=confirm_view,
                 ephemeral=True
@@ -772,7 +782,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
                 return
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to reset your partner?\n\n'
+                f'**{user_global_name}**, do you want to reset your partner?\n\n'
                 f'This will also reset your partner\'s partner (which is you, heh) and set the '
                 f'partner donor tiers back to `Non-donator`.',
                 view=confirm_view,
@@ -879,6 +889,7 @@ class AddAltSelect(discord.ui.Select):
             await interaction.message.edit(view=self.view)
 
         new_alt = self.values[0]
+        alt_global_name = new_alt.global_name if new_alt.global_name is not None else new_alt.name
         if new_alt == interaction.user:
             await interaction.response.send_message(
                 f'You want to add **yourself** as an alt? Are you **that** lonely?',
@@ -887,7 +898,7 @@ class AddAltSelect(discord.ui.Select):
             await update_message()
             return
         if new_alt.id in self.view.user_settings.alts:
-            await interaction.response.send_message(f'**{new_alt.display_name}** is already set as an alt.', ephemeral=True)
+            await interaction.response.send_message(f'**{alt_global_name}** is already set as an alt.', ephemeral=True)
             await update_message()
             return
         if new_alt.bot:
@@ -908,7 +919,7 @@ class AddAltSelect(discord.ui.Select):
             new_alt_settings = await users.get_user(new_alt.id)
         except exceptions.FirstTimeUserError:
             await interaction.response.send_message(
-                f'**{new_alt.display_name}** is not registered with Navi yet. They need to do '
+                f'**{alt_global_name}** is not registered with Navi yet. They need to do '
                 f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
@@ -916,14 +927,15 @@ class AddAltSelect(discord.ui.Select):
             return
         if len(new_alt_settings.alts) >= 24:
             await interaction.response.send_message(
-                f'**{new_alt.display_name}** already has 24 alts and no space left. They need to remove one first.',
+                f'**{alt_global_name}** already has 24 alts and no space left. They need to remove one first.',
                 ephemeral=True
             )
             await update_message()
             return
         view = views.ConfirmUserView(new_alt, 'Sure', 'Ugh, no')
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         interaction = await interaction.response.send_message(
-            f'{new_alt.mention}, **{interaction.user.display_name}** wants to set you as their alt. '
+            f'{new_alt.mention}, **{user_global_name}** wants to set you as their alt. '
             f'Do you want to allow that?\n\n'
             f'_Alts have the following benefits:_\n'
             f'{emojis.BP} _Alts are allowed to ping each other in reminders_\n'
@@ -938,21 +950,21 @@ class AddAltSelect(discord.ui.Select):
         if view.value is None:
             await functions.edit_interaction(
                 interaction,
-                content=f'**{interaction.user.display_name}**, the user didn\'t answer in time.',
+                content=f'**{user_global_name}**, the user didn\'t answer in time.',
                 view=None
             )
         elif view.value == 'confirm':
             await self.view.user_settings.add_alt(new_alt.id)
             await functions.edit_interaction(
                 interaction,
-                content=f'**{interaction.user.display_name}** and **{new_alt.display_name}** are now alts of each other.',
+                content=f'**{user_global_name}** and **{alt_global_name}** are now alts of each other.',
                 view=None
             )
         else:
             await functions.edit_interaction(
                 interaction,
                 content=(
-                    f'**{new_alt.display_name}** doesn\'t want to be an alt. Oh no.\n'
+                    f'**{alt_global_name}** doesn\'t want to be an alt. Oh no.\n'
                     f'Guess they don\'t like you. Oh well. Happens.'
                 ),
                 view=None
@@ -984,6 +996,8 @@ class AddPartnerSelect(discord.ui.Select):
             await interaction.message.edit(embed=embed, view=self.view)
         
         new_partner = self.values[0]
+        partner_global_name = new_partner.global_name if new_partner.global_name is not None else new_partner.name
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         if new_partner == interaction.user:
             await interaction.response.send_message('Marrying yourself? Now that\'s just sad.', ephemeral=True)
             await update_message()
@@ -992,7 +1006,7 @@ class AddPartnerSelect(discord.ui.Select):
             new_partner_settings: users.User = await users.get_user(new_partner.id)
         except exceptions.FirstTimeUserError:
             await interaction.response.send_message(
-                f'**{new_partner.display_name}** is not registered with Navi yet. They need to do '
+                f'**{partner_global_name}** is not registered with Navi yet. They need to do '
                 f'{await functions.get_navi_slash_command(self.view.bot, "on")} first.',
                 ephemeral=True
             )
@@ -1001,7 +1015,7 @@ class AddPartnerSelect(discord.ui.Select):
         if self.view.user_settings.partner_id is not None:
             view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             replace_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, you already have a partner set.\n'
+                f'**{user_global_name}**, you already have a partner set.\n'
                 f'Setting a new partner will remove your old partner. Do you want to continue?',
                 view=view,
                 ephemeral=True
@@ -1011,7 +1025,7 @@ class AddPartnerSelect(discord.ui.Select):
             if view.value is None:
                 await functions.edit_interaction(
                     replace_interaction,
-                    content=f'**{interaction.user.display_name}**, you didn\'t answer in time.',
+                    content=f'**{user_global_name}**, you didn\'t answer in time.',
                     view=None
                 )
                 await update_message()
@@ -1024,7 +1038,7 @@ class AddPartnerSelect(discord.ui.Select):
                 return
         view = views.ConfirmUserView(new_partner, 'I do!', 'Forever alone')
         partner_answer = (
-            f'{new_partner.mention}, **{interaction.user.display_name}** wants to set you as their partner.\n'
+            f'{new_partner.mention}, **{user_global_name}** wants to set you as their partner.\n'
             f'Do you want to grind together until... idk, drama?'
         )
         if interaction.response.is_done():
@@ -1036,7 +1050,7 @@ class AddPartnerSelect(discord.ui.Select):
         if view.value is None:
             await functions.edit_interaction(
                 partner_interaction,
-                content=f'**{interaction.user.display_name}**, your lazy partner didn\'t answer in time.',
+                content=f'**{user_global_name}**, your lazy partner didn\'t answer in time.',
                 view=None
             )
             await update_message()
@@ -1056,10 +1070,10 @@ class AddPartnerSelect(discord.ui.Select):
             )
             if self.view.user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == interaction.user.id:
                 answer = (
-                    f'{emojis.BP} **{interaction.user.display_name}**, {new_partner.display_name} is now set as your partner!\n'
-                    f'{emojis.BP} **{new_partner.display_name}**, {interaction.user.display_name} is now set as your partner!\n'
-                    f'{emojis.BP} **{interaction.user.display_name}**, {interaction.user.display_name} is now set as your partner\'s partner!\n'
-                    f'{emojis.BP} **{new_partner.display_name}**, ... wait what?\n\n'
+                    f'{emojis.BP} **{user_global_name}**, {partner_global_name} is now set as your partner!\n'
+                    f'{emojis.BP} **{partner_global_name}**, {user_global_name} is now set as your partner!\n'
+                    f'{emojis.BP} **{user_global_name}**, {user_global_name} is now set as your partner\'s partner!\n'
+                    f'{emojis.BP} **{partner_global_name}**, ... wait what?\n\n'
                     f'Anyway, you may now kiss the brides.'
                 )
                 await functions.edit_interaction(partner_interaction, view=None)
@@ -1072,7 +1086,7 @@ class AddPartnerSelect(discord.ui.Select):
             await functions.edit_interaction(
                 partner_interaction,
                 content=(
-                    f'**{new_partner.display_name}** prefers to be forever alone.\n'
+                    f'**{partner_global_name}** prefers to be forever alone.\n'
                     f'Stood up at the altar, that\'s gotta hurt, rip.'
                 ),
                 view=None
@@ -1130,13 +1144,14 @@ class SetReminderMessageButton(discord.ui.Button):
                          disabled=disabled, row=row)
 
     async def callback(self, interaction: discord.Interaction) -> None:
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         def check(m: discord.Message) -> bool:
             return m.author == interaction.user and m.channel == interaction.channel
 
         if self.custom_id == 'reset_all':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, this will reset **all** messages to the default one. '
+                f'**{user_global_name}**, this will reset **all** messages to the default one. '
                 f'Are you sure?',
                 view=confirm_view,
                 ephemeral=True
@@ -1164,12 +1179,12 @@ class SetReminderMessageButton(discord.ui.Button):
                 return
         elif self.custom_id == 'set_message':
             await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, please send the new reminder message to this channel (or `abort` to abort):',
+                f'**{user_global_name}**, please send the new reminder message to this channel (or `abort` to abort):',
             )
             try:
                 answer = await self.view.bot.wait_for('message', check=check, timeout=60)
             except asyncio.TimeoutError:
-                await interaction.edit_original_response(content=f'**{interaction.user.display_name}**, you didn\'t answer in time.')
+                await interaction.edit_original_response(content=f'**{user_global_name}**, you didn\'t answer in time.')
                 return
             for found_id in re.findall(r'<@!?(\d{16,20})>', answer.content.lower()):
                 if int(found_id) != interaction.user.id and int(found_id) not in self.view.user_settings.alts:
@@ -1421,6 +1436,7 @@ class ManageServerSettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
+        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
         if select_value == 'toggle_auto_flex':
             if not self.view.guild_settings.auto_flex_enabled and self.view.guild_settings.auto_flex_channel_id is None:
                 await interaction.response.send_message('You need to set an auto flex channel first.', ephemeral=True)
@@ -1433,7 +1449,7 @@ class ManageServerSettingsSelect(discord.ui.Select):
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to set `{interaction.channel.name}` as the auto flex channel?',
+                f'**{user_global_name}**, do you want to set `{interaction.channel.name}` as the auto flex channel?',
                 view=confirm_view,
                 ephemeral=True
             )
@@ -1454,7 +1470,7 @@ class ManageServerSettingsSelect(discord.ui.Select):
                 return
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
-                f'**{interaction.user.display_name}**, do you want to reset the auto flex channel?\n\n'
+                f'**{user_global_name}**, do you want to reset the auto flex channel?\n\n'
                 f'Note that this will also disable the auto flex alerts if enabled.',
                 view=confirm_view,
                 ephemeral=True

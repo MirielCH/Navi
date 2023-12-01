@@ -158,10 +158,10 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
             else:
                 field_pets_list[time_left.total_seconds()] = pet_id
                 counter += 1
-
+    user_global_name = user.global_name if user.global_name is not None else user.name
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{user.display_name}\'S REMINDERS'.upper()
+        title = f'{user_global_name}\'S REMINDERS'.upper()
     )
     if not user_reminders and not clan_reminders:
         embed.description = f'{emojis.BP} You have no active reminders'
@@ -353,6 +353,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
                 command = f"{command} `mode: {user_settings.last_hunt_mode}`"
             else:
                 command = f"{command} `{user_settings.last_hunt_mode}`"
+        elif activity == 'eternal-presents':
+            command = f"{command} `eternal present`"
         elif activity == 'farm':
             command = await functions.get_farm_command(user_settings, False)
         return command.replace('` `', ' ')
@@ -389,6 +391,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
         ready_command_activities.remove('training')
     if 'guild' in ready_command_activities and clan_reminders:
         ready_command_activities.remove('guild')
+    if 'eternal-presents' in ready_command_activities and user_settings.inventory.present_eternal < 1:
+        ready_command_activities.remove('eternal-presents')
     for activity in ready_command_activities.copy():
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:
@@ -419,14 +423,15 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             f'{field_other}\n'
             f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")}'
         )
+    user_global_name = user.global_name if user.global_name is not None else user.name
     embed = discord.Embed(
         color = int(f'0x{user_settings.ready_embed_color}', 16),
-        title = f'• {user.display_name}\'S READY • '.upper()
+        title = f'• {user_global_name}\'S READY • '.upper()
     )
     if user_settings.ready_ping_user and auto_ready:
         answer = f'• **{user.mention}\'s ready** •'
     else:
-        answer = f'• **{user.display_name}\'S READY** •'.upper()
+        answer = f'• **{user_global_name}\'S READY** •'.upper()
     if user_settings.ready_other_on_top and field_other != '':
         embed.add_field(name='OTHER', value=field_other.strip(), inline=False)
         answer = (

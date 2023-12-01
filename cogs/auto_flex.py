@@ -14,6 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 FLEX_TITLES = {
     'artifacts': strings.FLEX_TITLES_ARTIFACTS,
+    'artifacts_claus_belt': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_TITLES_CARD_DROP,
     'card_drop_partner': strings.FLEX_TITLES_CARD_DROP_PARTNER,
@@ -70,6 +71,7 @@ FLEX_TITLES = {
     'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
     'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_TITLES_XMAS_CHIMNEY,
+    'xmas_eternal': strings.FLEX_TITLES_XMAS_ETERNAL,
     'xmas_godly': strings.FLEX_TITLES_XMAS_GODLY,
     'xmas_snowball': strings.FLEX_TITLES_XMAS_SNOWBALL,
     'xmas_void': strings.FLEX_TITLES_XMAS_VOID,
@@ -77,6 +79,7 @@ FLEX_TITLES = {
 
 FLEX_THUMBNAILS = {
     'artifacts': strings.FLEX_THUMBNAILS_ARTIFACTS,
+    'artifacts_claus_belt': strings.FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
     'card_drop_partner': strings.FLEX_THUMBNAILS_CARD_DROP_PARTNER,
@@ -133,6 +136,7 @@ FLEX_THUMBNAILS = {
     'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
     'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_THUMBNAILS_XMAS_CHIMNEY,
+    'xmas_eternal': strings.FLEX_THUMBNAILS_XMAS_ETERNAL,
     'xmas_godly': strings.FLEX_THUMBNAILS_XMAS_GODLY,
     'xmas_snowball': strings.FLEX_THUMBNAILS_XMAS_SNOWBALL,
     'xmas_void': strings.FLEX_THUMBNAILS_XMAS_VOID,
@@ -140,6 +144,7 @@ FLEX_THUMBNAILS = {
 
 # Auto flexes that have a column name that differs from the event name
 FLEX_COLUMNS = {
+    'artifacts_claus_belt': 'artifacts',
     'card_drop_partner': 'card_drop',
     'epic_berry_partner': 'epic_berry',
     'lb_a18_partner': 'lb_a18',
@@ -227,6 +232,10 @@ class AutoFlexCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -1023,6 +1032,7 @@ class AutoFlexCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                event = 'artifacts'
                 artifact_name_match = re.search(r'\*\*(.+?)\*\* ', message_content.lower())
                 artifact_name = artifact_name_match.group(1)
                 artifact_emoji = strings.ARTIFACTS_EMOJIS.get(artifact_name, '')
@@ -1034,13 +1044,21 @@ class AutoFlexCog(commands.Cog):
                         f'And then reassembled them.\n'
                         f'... yes.'
                     )
+                elif artifact_name == 'claus belt':
+                    description = (
+                        f'HO HO HOOOOOO... **{user.name}** found... Santa\'s {artifact_emoji} **{artifact_name}**?\n'
+                        f'If you fold it in half, it might just about fit you.\n'
+                        f'Go eat something.\n'
+                        f'Also, thank you for helping our effort to lessen the stuck-in-chimney-spam.'
+                    )
+                    event = 'artifacts_claus_belt'
                 else:
                     description = (
                         f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
                         f'with them!\n'
                         f'That thing looks weird, bro.'
                     )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'artifacts',
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)
 
             # Loot from work commands
@@ -1147,6 +1165,7 @@ class AutoFlexCog(commands.Cog):
             search_strings = [
                 'godly present', #All languages, godly present
                 'void present', #All languages, void present
+                'eternal present', #All languages, eternal present
                 'epic snowball', #All languages, void present
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)):
@@ -1154,13 +1173,14 @@ class AutoFlexCog(commands.Cog):
                 if not guild_settings.auto_flex_enabled: return
                 user = await functions.get_interaction_user(message)
                 search_patterns = [
-                    r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #English
-                    r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(\bgodly\b \bpresent\b|\bvoid\b \bpresent\b)\*\*', #English godly and void present, chimney
-                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
+                    r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #English
+                    r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b)\*\*', #English godly and void present, chimney
+                    r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
                 ]
                 item_events = {
                     'godly present': 'xmas_godly',
                     'void present': 'xmas_void',
+                    'eternal present': 'xmas_eternal',
                     'epic snowball': 'xmas_snowball',
                 }
                 match = await functions.get_match_from_patterns(search_patterns, message_content)
@@ -1199,6 +1219,12 @@ class AutoFlexCog(commands.Cog):
                         f'Wdym "love, family and friends"? I\'m talking about {item_amount} {emojis.PRESENT_VOID} '
                         f'**VOID present**, duh.'
                     )
+                elif event == 'xmas_eternal':
+                    description = (
+                        f'**{user_name}** found {item_amount} {emojis.PRESENT_ETERNAL} **ETERNAL present**!\n'
+                        f'Totally deserved, too, they were nice all year, never complaining about their lousy RNG.'
+                    )
+                    await user_settings.update(inventory_present_eternal=user_settings.inventory.present_eternal + int(item_amount))
                 elif event == 'xmas_snowball':
                     description = (
                         f'**{user_name}** just found {item_amount} {emojis.SNOWBALL_EPIC} **EPIC snowball**!\n'

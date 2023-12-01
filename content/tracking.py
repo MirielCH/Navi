@@ -79,6 +79,7 @@ async def command_stats(
 async def embed_stats_overview(ctx: commands.Context, user: discord.User,
                                time_left: timedelta = timedelta(0)) -> discord.Embed:
     """Stats overview embed"""
+    user_global_name = user.global_name if user.global_name is not None else user.name
     user_settings: users.User = await users.get_user(user.id)
     current_time = datetime.utcnow().replace(microsecond=0)
     field_last_1h = await design_field(timedelta(hours=1), user)
@@ -96,7 +97,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User,
 
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{user.display_name}\'s stats'.upper(),
+        title = f'{user_global_name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
     embed.add_field(name='LAST HOUR', value=field_last_1h, inline=True)
@@ -111,11 +112,12 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User,
 
 async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, time_left: timedelta) -> discord.Embed:
     """Stats timeframe embed"""
+    user_global_name = user.global_name if user.global_name is not None else user.name
     user_settings: users.User = await users.get_user(user.id)
     field_content = await design_field(time_left, user)
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{user.display_name}\'s stats'.upper(),
+        title = f'{user_global_name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
     )
     embed.add_field(name=f'Last {format_timespan(time_left)}'.upper(), value=field_content, inline=False)

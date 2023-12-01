@@ -45,6 +45,10 @@ class ChristmasCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:
@@ -59,11 +63,14 @@ class ChristmasCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = ''
+            message_author = message_title = message_footer = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.title is not None: message_title = str(embed.title)
+            if embed.footer is not None:
+                if embed.footer.text is not None:
+                    message_footer = embed.footer.text
 
             # Chimney cooldown
             search_strings = [
@@ -166,6 +173,83 @@ class ChristmasCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+
+            # Opening eternal presents
+            search_strings = [
+                'you can open up to 10 presents', #English
+                'you can open up to 10 presents', #Spanish, MISSING
+                'you can open up to 10 presents', #Portuguese, MISSING
+            ]
+            if any(search_string in message_footer.lower() for search_string in search_strings):
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_OPEN_ETERNAL)
+                    )
+                    if user_command_message is None: return
+                    if user is None: user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_eternal_present.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'xmas open')
+                reminder_message = user_settings.alert_eternal_present.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'eternal-presents', timedelta(hours=24),
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+            # ETERNAL presents from inventory
+            search_strings = [
+                "— inventory", #All languages
+            ]
+            if any(search_string in message_author.lower() for search_string in search_strings):
+                if icon_url is None: return
+                user_id = user_name = user_command_message = None
+                embed_users = []
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_MENU)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        return
+                    interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    embed_users.append(message.guild.get_member(user_id))
+                else:
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or not embed_users:
+                        await functions.add_warning_reaction(message)
+                        return
+                if interaction_user not in embed_users: return
+                if not user_settings.bot_enabled: return
+                field_values = ''
+                for field in embed.fields:
+                    field_values = f'{field_values}\n{field.value}'
+                present_eternal_count = 0
+                present_eternal_match = re.search(r"eternal present\*\*: ([0-9,]+)", field_values, re.IGNORECASE)
+                
+                if present_eternal_match:
+                    present_eternal_count = int(present_eternal_match.group(1).replace(',',''))
+                if user_settings.inventory.present_eternal != present_eternal_count:
+                    await user_settings.update(inventory_present_eternal=present_eternal_count)
+
+
         if not message.embeds:
             message_content = message.content
 
@@ -223,7 +307,7 @@ class ChristmasCog(commands.Cog):
                                                              message.channel.id,
                                                              '{name} Hey! Good news! You got unstuck from that chimney!')
                     )
-            """
+
             # Turn on christmas area mode, gingerbread
             search_strings = [
                 'has teleported to the **christmas area**', #English
@@ -406,7 +490,7 @@ class ChristmasCog(commands.Cog):
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
-            """
+
             # Cookies and milk
             search_strings = [
                 '`cookies and milk` successfully crafted!', #English
@@ -453,6 +537,32 @@ class ChristmasCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error(f'Had an error deleting the reminder with activity "{activity}".', message)
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+
+
+            # Eternal present cooldown
+            search_strings = [
+                'you cannot open eternal presents', #English
+                'you cannot open eternal presents', #Spanish, MISSING
+                'you cannot open eternal presents', #Portuguese, MISSING
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = message.mentions[0]
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_eternal_present.enabled: return
+                timestring_match = re.search(r"for \*\*(.+?)\*\*", message_content.lower())
+                time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
+                if time_left < timedelta(0): return
+                user_command = await functions.get_slash_command(user_settings, 'xmas open')
+                reminder_message = user_settings.alert_eternal_present.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'eternal-presents', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+                
 
 
 # Initialization
