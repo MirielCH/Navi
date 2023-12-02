@@ -196,6 +196,7 @@ class CurrentAreaCog(commands.Cog):
                     r"encontró un (.+?) \*\*(.+?)\*\*(?:, | \(pero| \(mucho|\n)", #Spanish
                     r"encontró y mató (.+?) \*\*(.+?)\*\*(?:, | \(pero| \(mucho|\n)", #Spanish
                     r"encontrou e matou (.+?) \*\*(.+?)\*\*(?:, | \(só| \(muito|\n)", #Portuguese
+                    r"encontrou um (.+?) \*\*(.+?)\*\*, mas", #Portuguese
                 ]
                 mob_name_match = await functions.get_match_from_patterns(search_patterns_mob_name, message_content)
                 if not mob_name_match:

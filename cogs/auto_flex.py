@@ -1559,6 +1559,9 @@ class AutoFlexCog(commands.Cog):
                                 epic_berry_partner_found.append(drop_amount)
                                 break
 
+                lb_omega_non_hm_amount = 2 if message.guild.id == 713541415099170836 else 1
+                lb_omega_hm_amount = 3
+                lb_omega_partner_amount = 2 if message.guild.id == 713541415099170836 else 1
                 if (lootbox_user_found or lootbox_partner_found or epic_berry_user_found
                     or epic_berry_partner_found or lootbox_user_lost or lootbox_partner_lost):
 
@@ -1584,14 +1587,14 @@ class AutoFlexCog(commands.Cog):
                                 f'We are all so happy for you and not at all jealous.'
                             )
                         elif event == 'lb_omega':
-                            if not hardmode:
+                            if not hardmode and int(amount) >= lb_omega_non_hm_amount:
                                 event = 'lb_omega_no_hardmode'
                                 description = (
-                                    f'**{user_name}** found an {lootboxes_user[name]} **{name}** just like that.\n'
+                                    f'**{user_name}** found {amount} {lootboxes_user[name]} **{name}** just like that.\n'
                                     f'And by "just like that" I mean **without hardmoding**!\n'
                                     f'See, hardmoders, that\'s how it\'s done!'
                                 )
-                            elif int(amount) > 2:
+                            elif int(amount) >= lb_omega_hm_amount:
                                 event = 'lb_omega_multiple'
                                 description = (
                                     f'While an {lootboxes_user[name]} **{name}** isn\'t very exciting, '
@@ -1637,7 +1640,7 @@ class AutoFlexCog(commands.Cog):
                                     f'{lootboxes_partner[name]} **{name}**.\n'
                                     f'Yes, you read that right.'
                                 )
-                            else:
+                            elif int(amount) >= lb_omega_partner_amount:
                                 description = (
                                     f'**{user_name}** ordered **{amount}** {lootboxes_partner[name]} **{name}** and it '
                                     f'just got delivered.\n'

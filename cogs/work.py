@@ -113,8 +113,12 @@ class WorkCog(commands.Cog):
 
         if not message.embeds:
             message_content = ''
+            filter_strings = [
+                'card',
+                'present',
+            ]
             for line in message.content.split('\n'):
-                if not 'card' in line:
+                if all(string not in line.lower() for string in filter_strings):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
             
