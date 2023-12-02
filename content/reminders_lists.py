@@ -584,7 +584,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
                 if reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES: continue
-                if not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity:
+                if (not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity
+                    and not reminder.activity == 'unstuck'):
                     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[reminder.activity])
                     if not alert_settings.visible: continue
                 if user_settings.ready_up_next_as_timestamp:
