@@ -219,7 +219,7 @@ class ManageClanSettingsSelect(discord.ui.Select):
                          custom_id='manage_clan_settings')
 
     async def callback(self, interaction: discord.Interaction):
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         if interaction.user.id != self.view.clan_settings.leader_id:
             await interaction.response.send_message(
                 f'**{user_global_name}**, you are not registered as the guild owner. Only the guild owner can '
@@ -598,7 +598,7 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         if select_value == 'toggle_dnd':
             await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
         elif select_value == 'toggle_hunt':
@@ -670,7 +670,7 @@ class RemoveAltSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         alt_id = int(self.values[0])
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         confirm_interaction = await interaction.response.send_message(
             f'**{user_global_name}**, do you want to remove <@{alt_id}> as your alt?',
@@ -715,7 +715,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         if select_value == 'set_channel':
             if self.view.user_settings.partner_id is None:
                 await interaction.response.send_message(
@@ -933,7 +933,7 @@ class AddAltSelect(discord.ui.Select):
             await update_message()
             return
         view = views.ConfirmUserView(new_alt, 'Sure', 'Ugh, no')
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         interaction = await interaction.response.send_message(
             f'{new_alt.mention}, **{user_global_name}** wants to set you as their alt. '
             f'Do you want to allow that?\n\n'
@@ -997,7 +997,7 @@ class AddPartnerSelect(discord.ui.Select):
         
         new_partner = self.values[0]
         partner_global_name = new_partner.global_name if new_partner.global_name is not None else new_partner.name
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         if new_partner == interaction.user:
             await interaction.response.send_message('Marrying yourself? Now that\'s just sad.', ephemeral=True)
             await update_message()
@@ -1144,7 +1144,7 @@ class SetReminderMessageButton(discord.ui.Button):
                          disabled=disabled, row=row)
 
     async def callback(self, interaction: discord.Interaction) -> None:
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         def check(m: discord.Message) -> bool:
             return m.author == interaction.user and m.channel == interaction.channel
 
@@ -1436,7 +1436,7 @@ class ManageServerSettingsSelect(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
-        user_global_name = interaction.global_name if interaction.global_name is not None else interaction.name
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         if select_value == 'toggle_auto_flex':
             if not self.view.guild_settings.auto_flex_enabled and self.view.guild_settings.auto_flex_channel_id is None:
                 await interaction.response.send_message('You need to set an auto flex channel first.', ephemeral=True)
