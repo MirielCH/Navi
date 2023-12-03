@@ -120,7 +120,7 @@ class ChristmasCog(commands.Cog):
                 reminder_message = user_settings.alert_chimney.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'chimney', time_left,
-                                                        message.channel.id, reminder_message)
+                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -463,7 +463,6 @@ class ChristmasCog(commands.Cog):
                     '**Elf**',
                     '**Christmas Reindeer**',
                     '**Snowman**',
-                    'Krampus',
                     '**Krampus**',
                     '**Yeti**',
                     '**Hyper Giant Ice Block**',

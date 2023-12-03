@@ -525,7 +525,7 @@ async def _dict_to_user(record: dict) -> User:
                                      visible=bool(record['alert_boosts_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
-                                      multiplier=float(record['alert_chimney_multiplier']),
+                                      multiplier=1.0,
                                       visible=bool(record['alert_chimney_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],

@@ -352,7 +352,6 @@ class HuntCog(commands.Cog):
                         '**Elf**',
                         '**Christmas Reindeer**',
                         '**Snowman**',
-                        'Krampus',
                         '**Krampus**',
                         '**Yeti**',
                         '**Hyper Giant Ice Block**',
