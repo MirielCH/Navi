@@ -188,6 +188,11 @@ class EpicItemsCog(commands.Cog):
                 if not user_settings.alert_epic.enabled: return
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'epic')
                 if time_left < timedelta(0): return
+                try:
+                    reminder_arena = await reminders.get_user_reminder(user.id, 'arena')
+                    await reminder_arena.delete()
+                except exceptions.NoDataFoundError:
+                    pass
                 reminder_message = user_settings.alert_epic.message
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'epic', time_left,
