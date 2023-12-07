@@ -355,7 +355,7 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
                 command = f"{command} `{user_settings.last_hunt_mode}`"
         elif activity == 'eternal-presents':
             if user_settings.slash_mentions_enabled:
-                command = f"{command} `present: eternal`"
+                command = f"{command} `eternal`"
             else:
                 command = f"{command} `eternal`"
         elif activity == 'farm':
