@@ -183,12 +183,12 @@ class ChristmasCog(commands.Cog):
             if any(search_string in message_footer.lower() for search_string in search_strings):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_XMAS_OPEN_ETERNAL)
-                    )
-                    if user_command_message is None: return
-                    if user is None: user = user_command_message.author
+                if user is not None: return
+                user_command_message = (
+                    await messages.find_message(message.channel.id, regex.COMMAND_XMAS_OPEN_ETERNAL)
+                )
+                if user_command_message is None: return
+                if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

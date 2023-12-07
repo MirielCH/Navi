@@ -1042,12 +1042,12 @@ SLASH_COMMANDS = {
     'weekly': '</weekly:956658465185603645>',
     'wheel': '</wheel:959916179525341194>',
     'world status': '</world status:953370104236761108>',
-    #'xmas calendar': '</xmas calendar:1048310047865852005>',
-    'xmas calendar': '`rpg xmas calendar`',
-    #'xmas chimney': '</xmas chimney:1048310047865852005>',
-    'xmas chimney': '`rpg xmas chimney`',
-    #'xmas open': '</xmas open:1048310047865852005>',
-    'xmas open': '`rpg xmas open`',
+    'xmas calendar': '</xmas calendar:1182167516022313060>',
+    #'xmas calendar': '`rpg xmas calendar`',
+    'xmas chimney': '</xmas chimney:1182167516022313060>',
+    #'xmas chimney': '`rpg xmas chimney`',
+    #'xmas open': '</xmas open:1182167516022313060>', # This is intentional. Opening presents has no indication what present was opened.
+    'xmas open': '`rpg xmas open`', # This is intentional. Opening presents has no indication what present was opened.
 }
 
 RPG_COMMANDS = {

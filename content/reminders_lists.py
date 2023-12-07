@@ -354,7 +354,10 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
             else:
                 command = f"{command} `{user_settings.last_hunt_mode}`"
         elif activity == 'eternal-presents':
-            command = f"{command} `eternal present`"
+            if user_settings.slash_mentions_enabled:
+                command = f"{command} `present: eternal`"
+            else:
+                command = f"{command} `eternal`"
         elif activity == 'farm':
             command = await functions.get_farm_command(user_settings, False)
         return command.replace('` `', ' ')
