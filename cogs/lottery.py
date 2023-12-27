@@ -39,9 +39,12 @@ class LotteryCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_description = message_field = ''
+            message_description = message_field = message_author = icon_url = ''
             if embed.description is not None: message_description = embed.description
             if embed.fields: message_field = embed.fields[0].value
+            if embed.author is not None:
+                message_author = str(embed.author.name)
+                icon_url = embed.author.icon_url
 
             # Lottery event check
             search_strings = [
@@ -97,6 +100,75 @@ class LotteryCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            search_strings = [
+                "— inventory", #All languages
+            ]
+            if any(search_string in message_author.lower() for search_string in search_strings):
+                if icon_url is None: return
+                field_values = ''
+                for field in embed.fields:
+                    field_values = f'{field_values}\n{field.value}'
+                lottery_ticket_count = 0
+                lottery_ticket_match = re.search(r"lottery ticket\*\*: ([0-9,]+)", field_values)
+                if lottery_ticket_match: lottery_ticket_count = int(lottery_ticket_match.group(1).replace(',',''))
+                if lottery_ticket_count < 200: return
+                user_id = user_name = user_command_message = None
+                embed_users = []
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_MENU)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        return
+                    interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    embed_users.append(message.guild.get_member(user_id))
+                else:
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or not embed_users:
+                        await functions.add_warning_reaction(message)
+                        return
+                if interaction_user not in embed_users: return
+                if not user_settings.bot_enabled or not user_settings.alert_lottery.enabled: return
+                try:
+                    active_reminder = await reminders.get_user_reminder(interaction_user.id, 'lottery')
+                    return
+                except exceptions.NoDataFoundError:
+                    pass
+                current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
+                today_12pm = datetime.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
+                today_12am = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                tomorrow_12am = today_12am + timedelta(days=1)
+                if today_12am > current_time:
+                    time_left = today_12am - current_time
+                elif today_12pm > current_time:
+                    time_left = today_12pm - current_time
+                else:
+                    time_left = tomorrow_12am - current_time
+                time_left = time_left + timedelta(seconds=random.randint(0, 120))
+                user_command = await functions.get_slash_command(user_settings, 'lottery')
+                if user_settings.slash_mentions_enabled:
+                    user_command = f"{user_command} `amount: [1-200]`"
+                else:
+                    user_command = f"{user_command} `buy [1-200]`".replace('` `', ' ')
+                reminder_message = user_settings.alert_lottery.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(interaction_user.id, 'lottery', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                
 
         if not message.embeds:
             message_content = message.content
@@ -156,9 +228,9 @@ class LotteryCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             search_strings = [
-                'you cannot buy more than 10 tickets per lottery', #English
-                'no puedes comprar más de 10 tickets por lotería', #Spanish
-                'você não pode comprar mais de 10 bilhetes por loteria', #Portuguese
+                'you cannot buy more than 200 tickets per lottery', #English
+                'no puedes comprar más de 200 tickets por lotería', #Spanish
+                'você não pode comprar mais de 200 bilhetes por loteria', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

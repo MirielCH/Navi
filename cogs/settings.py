@@ -279,7 +279,7 @@ class SettingsCog(commands.Cog):
                 if clan_leader.isnumeric():
                     clan_leader_id = int(clan_leader)
                 else:
-                    user_name_match = re.search(r'^(.+?)#(\d+?)$', clan_leader)
+                    user_name_match = re.search(r'^(.+?)(?:#(\d+?))?$', clan_leader)
                     if not user_name_match:
                         await functions.add_warning_reaction(message_after)
                         await errors.log_error(f'Couldn\'t find user ID or name for guild list owner "{clan_leader}".',
@@ -287,15 +287,19 @@ class SettingsCog(commands.Cog):
                         return
                     username = user_name_match.group(1)
                     discriminator = user_name_match.group(2)
-                    clan_leader = discord.utils.get(message_before.guild.members,
-                                                    name=username, discriminator=discriminator)
+                    if discriminator is not None:
+                        clan_leader = discord.utils.get(message_before.guild.members,
+                                                        name=username, discriminator=discriminator)
+                    else:
+                        clan_leader = discord.utils.get(message_before.guild.members,
+                                                        name=username)
                     clan_leader_id = clan_leader.id
                 for member in clan_members:
                     user_id_match = re.search(r'^ID: \*\*(\d+?)\*\*$', member)
                     if user_id_match:
                         member_id = int(user_id_match.group(1))
                     else:
-                        user_name_match = re.search(r'^\*\*(.+?)#(\d+?)\*\*$', member)
+                        user_name_match = re.search(r'^\*\*(.+?)(?:#(\d+?))?\*\*$', member)
                         if not user_name_match:
                             await functions.add_warning_reaction(message_after)
                             await errors.log_error(f'Couldn\'t find user ID or name for guild list member "{member}".',
@@ -303,8 +307,12 @@ class SettingsCog(commands.Cog):
                             return
                         username = user_name_match.group(1)
                         discriminator = user_name_match.group(2)
-                        member = discord.utils.get(message_before.guild.members,
-                                                   name=username, discriminator=discriminator)
+                        if discriminator is not None:
+                            member = discord.utils.get(message_before.guild.members,
+                                                    name=username, discriminator=discriminator)
+                        else:
+                            member = discord.utils.get(message_before.guild.members,
+                                                    name=username)
                         member_id = member.id
                     clan_member_ids.append(member_id)
                 if len(clan_member_ids) < 10:

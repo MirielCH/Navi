@@ -1176,6 +1176,7 @@ class AutoFlexCog(commands.Cog):
                     r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #English
                     r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b)\*\*', #English godly and void present, chimney
                     r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
+                    r'\*\*(.+?)\*\* se metió.+encontró (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
                 ]
                 item_events = {
                     'godly present': 'xmas_godly',
@@ -1406,20 +1407,22 @@ class AutoFlexCog(commands.Cog):
                     'VOID lootbox': emojis.LB_VOID,
                 }
                 lootboxes_user_lost = {
-                    'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                 }
+                if message.guild.id != 713541415099170836:
+                    lootboxes_user_lost['OMEGA lootbox'] = emojis.LB_OMEGA
                 lootboxes_partner = {
                     'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                 }
                 lootboxes_partner_lost = {
-                    'OMEGA lootbox': emojis.LB_OMEGA,
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                 }
+                if message.guild.id != 713541415099170836:
+                    lootboxes_partner_lost['OMEGA lootbox'] = emojis.LB_OMEGA
                 lootbox_user_found = []
                 lootbox_user_lost = []
                 lootbox_partner_found = []

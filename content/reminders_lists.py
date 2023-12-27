@@ -396,6 +396,8 @@ async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) ->
         ready_command_activities.remove('guild')
     if 'eternal-presents' in ready_command_activities and user_settings.inventory.present_eternal < 1:
         ready_command_activities.remove('eternal-presents')
+    if 'advent-calendar' in ready_command_activities and (current_time.month != 12 or current_time.day > 25):
+        ready_command_activities.remove('advent-calendar')
     for activity in ready_command_activities.copy():
         alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
         if not alert_settings.enabled:

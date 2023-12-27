@@ -33,12 +33,12 @@ VERSION_FILE = os.path.join(BOT_DIR, 'VERSION')
 # Load .env variables
 load_dotenv()
 
-TOKEN = os.getenv('DISCORD_TOKEN')
+TOKEN = os.getenv('DISCORD_TOKEN').strip('" ')
 if TOKEN == '':
     print(ENV_VARIABLE_MISSING.format(var='DISCORD_TOKEN'))
     sys.exit()
 
-OWNER_ID = os.getenv('OWNER_ID')
+OWNER_ID = os.getenv('OWNER_ID').strip('" ')
 if OWNER_ID == '':
     print(ENV_VARIABLE_MISSING.format(var='OWNER_ID'))
     sys.exit()
@@ -56,7 +56,7 @@ if DEV_IDS is None or DEV_IDS == '':
 else:
     DEV_IDS = DEV_IDS.split(',')
     try:
-        DEV_IDS = [int(dev_id.strip()) for dev_id in DEV_IDS]
+        DEV_IDS = [int(dev_id.strip('" ')) for dev_id in DEV_IDS]
     except:
         print('At least one id in the .env variable DEV_IDS is not a number.')
         sys.exit()
@@ -72,7 +72,7 @@ if DEV_GUILDS == '':
 else:
     DEV_GUILDS = DEV_GUILDS.split(',')
     try:
-        DEV_GUILDS = [int(guild_id.strip()) for guild_id in DEV_GUILDS]
+        DEV_GUILDS = [int(guild_id.strip('" ')) for guild_id in DEV_GUILDS]
     except:
         print('At least one id in the .env variable DEV_GUILDS is not a number.')
         sys.exit()
@@ -82,16 +82,16 @@ if EMBED_COLOR is None:
     EMBED_COLOR = 0x000000
 else:
     try:
-        EMBED_COLOR = int(EMBED_COLOR.strip('#'), base=16)
+        EMBED_COLOR = int(EMBED_COLOR.strip('# '), base=16)
     except:
         print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
         sys.exit()
 
 LINK_SUPPORT = None
-LINK_SUPPORT = os.getenv('LINK_SUPPORT')
+LINK_SUPPORT = os.getenv('LINK_SUPPORT').strip('" ')
 if LINK_SUPPORT == '': LINK_SUPPORT = None
     
-COMPLAINT_CHANNEL_ID = os.getenv('COMPLAINT_CHANNEL_ID')
+COMPLAINT_CHANNEL_ID = os.getenv('COMPLAINT_CHANNEL_ID').strip('" ')
 if COMPLAINT_CHANNEL_ID != '' and COMPLAINT_CHANNEL_ID is not None:
     try:
         COMPLAINT_CHANNEL_ID = int(COMPLAINT_CHANNEL_ID)
@@ -101,7 +101,7 @@ if COMPLAINT_CHANNEL_ID != '' and COMPLAINT_CHANNEL_ID is not None:
 else:
     COMPLAINT_CHANNEL_ID = None
         
-SUGGESTION_CHANNEL_ID = os.getenv('SUGGESTION_CHANNEL_ID')
+SUGGESTION_CHANNEL_ID = os.getenv('SUGGESTION_CHANNEL_ID').strip('" ')
 if SUGGESTION_CHANNEL_ID != '' and SUGGESTION_CHANNEL_ID is not None:
     try:
         SUGGESTION_CHANNEL_ID = int(SUGGESTION_CHANNEL_ID)
