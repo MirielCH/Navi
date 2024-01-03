@@ -1,4 +1,4 @@
 humanfriendly>=10.0
 psutil>=5.9.4
-py-cord-dev==2.5.0rc5
+py-cord @ git+https://github.com/Pycord-Development/pycord
 python-dotenv>=1.0.0
