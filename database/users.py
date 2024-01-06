@@ -70,6 +70,7 @@ class User():
     alts: Tuple[int]
     ascended: bool
     auto_flex_enabled: bool
+    auto_flex_ping_enabled: bool
     auto_flex_tip_read: bool
     auto_ready_enabled: bool
     bot_enabled: bool
@@ -184,6 +185,7 @@ class User():
         self.alts = new_settings.alts
         self.ascended = new_settings.ascended
         self.auto_flex_enabled = new_settings.auto_flex_enabled
+        self.auto_flex_ping_enabled = new_settings.auto_flex_ping_enabled
         self.auto_flex_tip_read = new_settings.auto_flex_tip_read
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
@@ -399,6 +401,7 @@ class User():
             alert_work_visible: bool
             ascended: bool
             auto_flex_enabled: bool
+            auto_flex_ping_enabled: bool
             auto_flex_tip_read: bool
             auto_ready_enabled: bool
             bot_enabled: bool
@@ -642,6 +645,7 @@ async def _dict_to_user(record: dict) -> User:
             alts = record['alts'],
             ascended = bool(record['ascended']),
             auto_flex_enabled = bool(record['auto_flex_enabled']),
+            auto_flex_ping_enabled = bool(record['auto_flex_ping_enabled']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
@@ -994,6 +998,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_work_visible: bool
         ascended: bool
         auto_flex_enabled: bool
+        auto_flex_ping_enabled: bool
         auto_flex_tip_read: bool
         auto_ready_enabled: bool
         bot_enabled: bool

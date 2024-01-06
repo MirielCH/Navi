@@ -1008,7 +1008,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
         f'{emojis.BP} **Auto-ready frequency**: `{frequency}`\n'
-        f'{emojis.BP} **Auto-ready pings user**: {ping_user_enabled}\n'
+        f'{emojis.BP} **Auto-ready ping**: {ping_user_enabled}\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
         f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
@@ -1162,12 +1162,12 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.DETAIL} _Reduces your reminders by 10%. Toggled automatically as you play._\n'
     )
     command_reminders = (
-        f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
+        #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
         f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
-        f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
+        #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
         f'{emojis.BP} **Boost items**: {await functions.bool_to_text(user_settings.alert_boosts.enabled)}\n'
         #f'{emojis.BP} **Cel dailyquest** {emojis.COIN_CELEBRATION}: '
         #f'{await functions.bool_to_text(user_settings.alert_cel_dailyquest.enabled)}\n'
@@ -1178,7 +1178,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **Duel**: {await functions.bool_to_text(user_settings.alert_duel.enabled)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await functions.bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}\n'
-        f'{emojis.BP} **ETERNAL presents** {emojis.PRESENT_ETERNAL}: '
+        #f'{emojis.BP} **ETERNAL presents** {emojis.PRESENT_ETERNAL}: '
         f'{await functions.bool_to_text(user_settings.alert_eternal_present.enabled)}\n'
         f'{emojis.BP} **EPIC items**: {await functions.bool_to_text(user_settings.alert_epic.enabled)}\n'
         f'{emojis.BP} **Farm**: {await functions.bool_to_text(user_settings.alert_farm.enabled)}\n'
@@ -1362,7 +1362,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
         f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
         f'{emojis.DETAIL} _Auto flexing only works if it\'s also enabled in the server settings._\n'
-        f'{emojis.DETAIL} _Some flexes are **English only**._\n'
+        f'{emojis.DETAIL} _Most flexes are **English only**._\n'
+        f'{emojis.BP} **Auto flex ping**: {await functions.bool_to_text(user_settings.auto_flex_ping_enabled)}\n'
     )
     epic_rpg_user = (
         f'{emojis.BP} **Donor tier**: {user_donor_tier}\n'

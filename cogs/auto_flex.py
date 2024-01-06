@@ -212,18 +212,21 @@ class AutoFlexCog(commands.Cog):
         embed.set_author(icon_url=user.display_avatar.url, name=author)
         embed.set_thumbnail(url=random.choice(FLEX_THUMBNAILS[event]))
         embed.set_footer(text='Use \'/settings user\' to enable or disable auto flex.')
+        content = None
+        if user_settings.auto_flex_ping_enabled:
+            content = f'<@{user_settings.user_id}>'
         auto_flex_channel = await functions.get_discord_channel(self.bot, guild_settings.auto_flex_channel_id)
         if auto_flex_channel is None:
             await functions.add_warning_reaction(message)
             await errors.log_error('Couldn\'t find auto flex channel.', message)
             return
-        await auto_flex_channel.send(embed=embed)
+        await auto_flex_channel.send(content=content, embed=embed)
         if user_settings.reactions_enabled: await message.add_reaction(emojis.PANDA_LUCKY)
         if not user_settings.auto_flex_tip_read:
             await message.reply(
                 f'{user.mention} Nice! You just did something flex worthy. Because you have auto flex enabled, '
                 f'this was automatically posted to the channel <#{guild_settings.auto_flex_channel_id}>.\n'
-                f'If you don\'t like this, you can turn it off in '
+                f'If you don\'t like this, you can disable auto flex and/or auto flex pings in '
                 f'{await functions.get_navi_slash_command(self.bot, "settings user")}.'
             )
             await user_settings.update(auto_flex_tip_read=True)
@@ -1176,7 +1179,7 @@ class AutoFlexCog(commands.Cog):
                     r'\*\*(.+?)\*\* got (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #English
                     r'\*\*(.+?)\*\*\ went.+?found (.+?) (.+?) \*\*(\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b)\*\*', #English godly and void present, chimney
                     r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
-                    r'\*\*(.+?)\*\* se metió.+encontró (.+?) (.+?) (\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)', #Spanish/Portuguese
+                    r'\*\*(.+?)\*\* se metió.+encontró (.+?) (.+?) \*\*(\bgodly\b \bpresent\b|\bvoid\b \bpresent\b|\beternal\b \bpresent\b|\bepic\b \bsnowball\b)\*\*', #Spanish/Portuguese, chimney
                 ]
                 item_events = {
                     'godly present': 'xmas_godly',
@@ -1805,11 +1808,24 @@ class AutoFlexCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
 
-                description = (
-                    f'**{user.name}** fought a seed (why) by hitting the floor with their fists (what) '
-                    f'and **leveled up 20 times** (??).\n'
-                    f'Yeah, that totally makes sense.'
-                )
+                search_patterns = [
+                    r'up (\d?) times', #English
+                ]
+                levels_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                levels = int(levels_match.group(1))
+                if levels > 0:
+                    description = (
+                        f'**{user.name}** fought a seed (why) by hitting the floor with their fists (what) '
+                        f'and **leveled up {levels:,} times** (??).\n'
+                        f'Yeah, that totally makes sense.'
+                    )
+                else:
+                    description = (
+                        f'**{user.name}** fought a seed by smashing the floor with their bare hands.\n'
+                        f'Not only does this not make any sense whatsoever, they didn\'t even get a single level out of '
+                        f'it.\n'
+                        f'Embarassing, really.'
+                    )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_farm',
                                                   description)
 

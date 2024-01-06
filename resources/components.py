@@ -319,7 +319,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
                                             value='toggle_auto_ready', emoji=auto_ready_emoji))
         options.append(discord.SelectOption(label=f'Show auto-ready after {frequency}',
                                             value='toggle_frequency', emoji=None))
-        options.append(discord.SelectOption(label='Auto-ready pings user',
+        options.append(discord.SelectOption(label='Auto-ready ping',
                                             value='toggle_user_ping', emoji=user_ping_emoji))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
                                             value='toggle_message_style', emoji=None))
@@ -530,11 +530,14 @@ class ManageUserSettingsSelect(discord.ui.Select):
         options = []
         reactions_emoji = emojis.ENABLED if view.user_settings.reactions_enabled else emojis.DISABLED
         auto_flex_emoji = emojis.ENABLED if view.user_settings.auto_flex_enabled else emojis.DISABLED
+        auto_flex_ping_emoji = emojis.ENABLED if view.user_settings.auto_flex_ping_enabled else emojis.DISABLED
         tracking_emoji = emojis.ENABLED if view.user_settings.tracking_enabled else emojis.DISABLED
         options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
                                             value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'Auto flex alerts', emoji=auto_flex_emoji,
                                             value='toggle_auto_flex'))
+        options.append(discord.SelectOption(label=f'Auto flex ping', emoji=auto_flex_ping_emoji,
+                                            value='toggle_auto_flex_ping'))
         if view.user_settings.partner_id is None:
             options.append(discord.SelectOption(label=f'Change partner pocket watch reduction', emoji=None,
                                                 value='set_partner_pocket_watch_reduction'))
@@ -551,6 +554,8 @@ class ManageUserSettingsSelect(discord.ui.Select):
             await self.view.user_settings.update(reactions_enabled=not self.view.user_settings.reactions_enabled)
         elif select_value == 'toggle_auto_flex':
             await self.view.user_settings.update(auto_flex_enabled=not self.view.user_settings.auto_flex_enabled)
+        elif select_value == 'toggle_auto_flex_ping':
+            await self.view.user_settings.update(auto_flex_ping_enabled=not self.view.user_settings.auto_flex_ping_enabled)
         elif select_value == 'toggle_tracking':
             await self.view.user_settings.update(tracking_enabled=not self.view.user_settings.tracking_enabled)
         elif select_value == 'set_partner_pocket_watch_reduction':
@@ -1525,7 +1530,6 @@ class ManageEventReductionsSelect(discord.ui.Select):
         for cooldown in all_cooldowns:
             options.append(discord.SelectOption(label=cooldown.activity.capitalize(),
                                                 value=cooldown.activity))
-            cooldown.update()
         placeholders = {
             'slash': 'Change slash event reductions',
             'text': 'Change text event reductions',

@@ -165,18 +165,20 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
     time_elapsed = current_time - bot_answer_time
     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
+    if activity in strings.POCKET_WATCH_AFFECTED_ACTIVITIES:
+        pocket_watch_multiplier = user_settings.user_pocket_watch_multiplier
+    else:
+        pocket_watch_multiplier = 1
     if cooldown.donor_affected:
         time_left_seconds = (actual_cooldown
-                             * settings.DONOR_COOLDOWNS[user_donor_tier]
+                             * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - pocket_watch_multiplier))
                              - time_elapsed.total_seconds())
     else:
-        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+        time_left_seconds = (actual_cooldown - time_elapsed.total_seconds()) * pocket_watch_multiplier
     if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
-        time_left_seconds *= 0.9
+        time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
     time_left_seconds *= alert_settings.multiplier
-    if activity in strings.POCKET_WATCH_AFFECTED_ACTIVITIES:
-        time_left_seconds *= user_settings.user_pocket_watch_multiplier
     return timedelta(seconds=time_left_seconds)
 
 

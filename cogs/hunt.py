@@ -134,8 +134,8 @@ class HuntCog(commands.Cog):
                 if user_settings.hunt_rotation_enabled:
                     time_left = time_left - time_elapsed
                     if user_settings.christmas_area_enabled:
-                        time_left_seconds *= 0.9
-                    time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * user_settings.user_pocket_watch_multiplier
+                        time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                    time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier)))
                 elif together:
                     partner_settings = None
                     if user_settings.partner_id is not None:
@@ -149,20 +149,18 @@ class HuntCog(commands.Cog):
                     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                     partner_hunt_multiplier = partner_settings.alert_hunt.multiplier if partner_settings is not None else 1
                     partner_cooldown = (actual_cooldown
-                                        * settings.DONOR_COOLDOWNS[partner_donor_tier]
-                                        * partner_hunt_multiplier
-                                        * user_settings.partner_pocket_watch_multiplier)
+                                        * (settings.DONOR_COOLDOWNS[partner_donor_tier] - (1 - user_settings.partner_pocket_watch_multiplier))
+                                        * partner_hunt_multiplier)
                     user_cooldown = (actual_cooldown
-                                    * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                    * user_settings.alert_hunt.multiplier
-                                    * user_settings.user_pocket_watch_multiplier)
+                                    * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - user_settings.user_pocket_watch_multiplier))
+                                    * user_settings.alert_hunt.multiplier)
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user in embed_users):
                         time_left_seconds = (time_left_seconds
                                             + (partner_cooldown - user_cooldown)
                                             - time_elapsed.total_seconds()
                                             + 1)
-                        if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                        if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 time_left = timedelta(seconds=time_left_seconds)
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 overwrite_message = False if user_settings.hunt_rotation_enabled else True
@@ -386,23 +384,23 @@ class HuntCog(commands.Cog):
                     time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
                 if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
                     and user_settings.partner_donor_tier < 3 and partner_christmas_area):
-                    time_left_seconds *= 0.9
+                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 elif user_settings.christmas_area_enabled and not found_together:
-                    time_left_seconds *= 0.9
+                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 elif (user_settings.christmas_area_enabled and not partner_christmas_area
                       and user_settings.hunt_rotation_enabled and found_together):
-                    time_left_seconds *= 0.9
+                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
-                    time_left_seconds *= 0.9
+                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 partner_hunt_multiplier = partner.alert_hunt.multiplier if partner is not None else 1
                 if together and not user_settings.hunt_rotation_enabled:
-                    pocket_watch_multiplier = user_settings.partner_pocket_watch_multiplier
+                    pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))
                 else:
-                    pocket_watch_multiplier = user_settings.user_pocket_watch_multiplier
+                    pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))
                 time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
                                       * pocket_watch_multiplier)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt * partner_hunt_multiplier
-                                                   * user_settings.partner_pocket_watch_multiplier)
+                                                   * (1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))))
                 if time_left < timedelta(0): return
                 if user_settings.alert_hunt.enabled:
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
@@ -588,9 +586,9 @@ class HuntCog(commands.Cog):
                                             - time_elapsed.total_seconds())
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                    if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                    if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                     time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
-                                          * user_settings.user_pocket_watch_multiplier)
+                                          * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))))
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
@@ -646,7 +644,7 @@ class HuntCog(commands.Cog):
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
-                                          * user_settings.user_pocket_watch_multiplier)
+                                          * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))))
                     if time_left < timedelta(0): return
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (

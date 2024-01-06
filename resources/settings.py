@@ -14,7 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
-NAVI_DB_VERSION = 12
+NAVI_DB_VERSION = 13
 
 # Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -138,3 +138,5 @@ class ClanReset(NamedTuple):
     minute: int = 59
 
 CLAN_DEFAULT_STEALTH_THRESHOLD = 90
+
+CHRISTMAS_AREA_MULTIPLIER = 1 # Set this to 0.9 during christmas event and to 1 during the rest of the year

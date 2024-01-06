@@ -277,7 +277,7 @@ class QuestCog(commands.Cog):
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
@@ -426,9 +426,9 @@ class QuestCog(commands.Cog):
                                         - time_elapsed.total_seconds())
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
-                if user_settings.christmas_area_enabled: time_left_seconds *= 0.9
+                if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 time_left = timedelta(seconds=time_left_seconds * user_settings.alert_quest.multiplier
-                                      * user_settings.user_pocket_watch_multiplier)
+                                      * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))))
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

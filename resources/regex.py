@@ -14,7 +14,7 @@ PATTERNS_COOLDOWN_TIMESTRING = [
 
 
 # --- User data extraction ---
-USER_ID_FROM_ICON_URL = re.compile(r"avatars\/(.+?)\/")
+USER_ID_FROM_ICON_URL = re.compile(r"(?:avatars|users)\/(.+?)\/")
 USERNAME_FROM_EMBED_AUTHOR = re.compile(r"^(.+?) — ")
 NAME_FROM_MESSAGE = re.compile(r"\s\*\*(.+?)\*\*\s")
 NAME_FROM_MESSAGE_START = re.compile(r"^\*\*(.+?)\*\*\s")

@@ -298,7 +298,7 @@ ACTIVITIES_ALL.sort()
 ACTIVITIES_ALL.insert(0, 'all')
 
 ACTIVITIES_COMMANDS = (
-    'advent-calendar',
+    #'advent-calendar',
     'adventure',
     'arena',
     #'boo',
@@ -481,6 +481,10 @@ ACTIVITIES_ALIASES = {
     'breeding': 'horse',
     'dueling': 'duel',
     'duelling': 'duel',
+    'advent': 'advent-calendar',
+    'calendar': 'advent-calendar',
+    'xmas-calendar': 'advent-calendar',
+    'xmas-chimney': 'chimney',
 }
 
 ACTIVITIES_COLUMNS = {

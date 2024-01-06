@@ -419,6 +419,10 @@ def update_database() -> bool:
             "ALTER TABLE users ADD alert_eternal_present_visible INTEGER NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD inventory_present_eternal INTEGER NOT NULL DEFAULT (0)",
         ]
+    if db_version < 13:
+        sqls += [
+            "ALTER TABLE users ADD auto_flex_ping_enabled INTEGER DEFAULT (0) NOT NULL",
+        ]
 
     # Run SQLs
     for sql in sqls:

@@ -6,7 +6,7 @@ import discord
 from discord.ext import commands
 
 from cache import messages
-from database import errors, users
+from database import errors, reminders, users
 from resources import emojis, functions, exceptions, regex, settings, strings
 
 
@@ -79,6 +79,11 @@ class HelperHealCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            try:
+                potion_potion_reminder = await reminders.get_user_reminder(user.id, 'potion-potion')
+                return
+            except exceptions.NoDataFoundError:
+                pass
             user_global_name = user.global_name if user.global_name is not None else user.name
             if message_content.startswith('__'):
                 partner_start = message_content.rfind(partner_name)
@@ -165,6 +170,11 @@ class HelperHealCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            try:
+                potion_potion_reminder = await reminders.get_user_reminder(user.id, 'potion-potion')
+                return
+            except exceptions.NoDataFoundError:
+                pass
             user_global_name = user.global_name if user.global_name is not None else user.name
             search_patterns = [
                 r'lost (.+?) hp, remaining hp is (.+?)/', #English
@@ -227,6 +237,11 @@ class HelperHealCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            try:
+                potion_potion_reminder = await reminders.get_user_reminder(user.id, 'potion-potion')
+                return
+            except exceptions.NoDataFoundError:
+                pass
             user_global_name = user.global_name if user.global_name is not None else user.name
             action = await functions.get_slash_command(user_settings, 'heal')
             warning = f'Hey! Time to {action}! {emojis.LIFE_POTION}'

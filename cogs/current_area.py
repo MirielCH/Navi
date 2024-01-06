@@ -206,6 +206,7 @@ class CurrentAreaCog(commands.Cog):
                 mob_name = mob_name_match.group(2)
                 current_area = await functions.get_area(f'**{mob_name}**')
                 if user_settings.current_area != current_area:
+                    if current_area == 20 and user_settings.current_area != 19: return
                     await user_settings.update(current_area=current_area)
 
             # Set current area from move command
