@@ -131,11 +131,14 @@ class HuntCog(commands.Cog):
                 bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
                 current_time = datetime.utcnow().replace(microsecond=0)
                 time_elapsed = current_time - bot_answer_time
-                if user_settings.hunt_rotation_enabled:
+                if user_settings.hunt_rotation_enabled: # This doesn't make much sense?
                     time_left = time_left - time_elapsed
-                    if user_settings.christmas_area_enabled:
-                        time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                    if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                     time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier)))
+                    if not together and user_settings.round_card_active:
+                        time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+                    if not together and user_settings.potion_flask_active:
+                        time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                 elif together:
                     partner_settings = None
                     if user_settings.partner_id is not None:
@@ -387,6 +390,10 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 elif user_settings.christmas_area_enabled and not found_together:
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                elif user_settings.round_card_active and not found_together:
+                    time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+                elif user_settings.potion_flask_active and not found_together:
+                    time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                 elif (user_settings.christmas_area_enabled and not partner_christmas_area
                       and user_settings.hunt_rotation_enabled and found_together):
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
@@ -587,6 +594,8 @@ class HuntCog(commands.Cog):
                     else:
                         time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                     if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                    if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+                    if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                     time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
                                           * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))))
                     if time_left < timedelta(0): return

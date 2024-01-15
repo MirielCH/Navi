@@ -105,6 +105,7 @@ DEFAULT_MESSAGES = {
     'adventure': DEFAULT_MESSAGE,
     'arena': DEFAULT_MESSAGE,
     'big-arena': DEFAULT_MESSAGE_EVENT,
+    'card-hand': DEFAULT_MESSAGE,
     'cel-dailyquest': DEFAULT_MESSAGE,
     'cel-multiply': DEFAULT_MESSAGE,
     'cel-sacrifice': DEFAULT_MESSAGE,
@@ -206,6 +207,39 @@ POCKET_WATCH_AFFECTED_ACTIVITIES = (
 )
 
 
+ROUND_CARD_AFFECTED_ACTIVITIES = (
+    'adventure',
+    'arena',
+    'daily',
+    'duel',
+    'dungeon-miniboss',
+    'farm',
+    'horse',
+    'hunt',
+    'lootbox',
+    'quest',
+    'training',
+    'weekly',
+    'work'
+)
+
+POTION_FLASK_AFFECTED_ACTIVITIES = (
+    'adventure',
+    'arena',
+    'card-hand',
+    'daily',
+    'duel',
+    'dungeon-miniboss',
+    'farm',
+    'horse',
+    'hunt',
+    'lootbox',
+    'quest',
+    'training',
+    'weekly'
+    'work'
+)
+
 SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
@@ -227,6 +261,7 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES = (
 TIME_COOKIE_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
+    'card-hand',
     'daily',
     'duel',
     'dungeon-miniboss',
@@ -264,6 +299,7 @@ ACTIVITIES = (
     'big-arena',
     'boo',
     'boosts',
+    'card-hand',
     'cel-dailyquest',
     'cel-multiply',
     'chimney',
@@ -305,12 +341,13 @@ ACTIVITIES_COMMANDS = (
     #'cel-dailyquest',
     #'cel-multiply',
     #'cel-sacrifice',
-    'chimney',
+    'card-hand',
+    #'chimney',
     'daily',
     'duel',
     'dungeon-miniboss',
     'epic',
-    'eternal-presents',
+    #'eternal-presents',
     'farm',
     'guild',
     'horse',
@@ -345,6 +382,7 @@ ACTIVITIES_BOOSTS = (
     'egg-blessing',
     'electronical-potion',
     'fish-potion',
+    'flask-potion',
     'halloween-boost',
     'horse-festival-boost',
     'inverted-potion',
@@ -357,8 +395,11 @@ ACTIVITIES_BOOSTS = (
     'mod-buff',
     'monster-potion',
     'new-player-boost',
+    'p2w-potion',
     'party-popper',
     'potion-potion',
+    'round-card',
+    'smol-potion',
     'time-potion',
     'triple-potion',
     'unepic-boost',
@@ -382,6 +423,7 @@ ACTIVITIES_SLASH_COMMANDS = {
     'banana-potion': 'alchemy',
     'big-arena': 'big arena',
     'boo': 'hal boo',
+    'card-hand': 'card hand',
     'cel-dailyquest': 'cel dailyquest',
     'cel-multiply': 'cel multiply',
     'cel-sacrifice': 'cel sacrifice',
@@ -496,6 +538,7 @@ ACTIVITIES_COLUMNS = {
     'boo': 'alert_boo',
     'boosts': 'alert_boosts',
     'christmas-boost': 'alert_boosts',
+    'card-hand': 'alert_card_hand',
     'cel-dailyquest': 'alert_cel_dailyquest',
     'cel-multiply': 'alert_cel_multiply',
     'cel-sacrifice': 'alert_cel_sacrifice',
@@ -538,6 +581,7 @@ ACTIVITIES_COLUMNS = {
     'pets': 'alert_pets',
     'potion-potion': 'alert_boosts',
     'quest': 'alert_quest',
+    'round-card': 'alert_boosts',
     'time-potion': 'alert_boosts',
     'training': 'alert_training',
     'triple-potion': 'alert_boosts',
@@ -970,6 +1014,7 @@ SLASH_COMMANDS = {
     'boat': '</boat:959163596087111780>',
     'bowsaw': '</bowsaw:959162696371146883>',
     'buy': '</buy:964351964651601961>',
+    'card hand': '`rpg card hand`',
     'cd': '</cd:958554802038636654>',
     'cel dailyquest': '`rpg cel dailyquest`',
     'cel multiply': '`rpg cel multiply`',
@@ -1067,6 +1112,7 @@ RPG_COMMANDS = {
     'boat': 'rpg boat',
     'bowsaw': 'rpg bowsaw',
     'buy': 'rpg buy',
+    'card hand': 'rpg card hand',
     'cd': 'rpg cd',
     'cel dailyquest': 'rpg cel dailyquest',
     'cel multiply': 'rpg cel multiply',
@@ -1182,9 +1228,17 @@ FLEX_TITLES_CARD_DROP_PARTNER = [
     'Maybe it was an act of kindness? Just kidding.',
 ]
 
+FLEX_TITLES_CARD_HAND = [
+    'I thought this was an RPG?',
+    'Did they just rob the casino?',
+    'Quite the impressive card trick there',
+    'Congratulations, your cheat worked',
+    'Oh look, it\'s Danny Ocean',
+]
+
 FLEX_TITLES_CARD_SLOTS = [
     'But... do you have a full set yet?',
-    'That looks like a straight full house double pair',
+    'You sure this card is legit?',
     'Almost there, only 7 billion cards to go',
     'Where do these cards even come from?',
     'Once you got them all, you can play solitaire',
@@ -1596,6 +1650,14 @@ FLEX_THUMBNAILS_CARD_DROP_PARTNER = [
     'https://media.tenor.com/d_wXE6yg8gMAAAAd/laser-cat.gif',
     'https://media.tenor.com/a4qDuOMfC4IAAAAC/its-mine-lotr.gif',
     
+]
+
+FLEX_THUMBNAILS_CARD_HAND = [
+    'https://media1.tenor.com/m/sN90GsIvQaMAAAAd/joker-card-with-v-for-vendetta2005-card.gif',
+    'https://media1.tenor.com/m/IS9iZvS1zp4AAAAC/%E0%A4%87%E0%A4%95%E0%A5%8D%E0%A4%95%E0%A4%BE-utkarsh.gif',
+    'https://media1.tenor.com/m/SGwiW6exaA8AAAAC/fringe-joshuajackson.gif',
+    'https://media1.tenor.com/m/_kvMjbg2F9gAAAAC/snoopy-poker.gif',
+    'https://media1.tenor.com/m/Nc5wxoSpLY0AAAAC/cat-money.gif',
 ]
 
 FLEX_THUMBNAILS_CARD_SLOTS = [

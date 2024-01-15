@@ -23,6 +23,7 @@ class Guild():
     auto_flex_enabled: bool
     auto_flex_artifacts_enabled: bool
     auto_flex_card_drop_enabled: bool
+    auto_flex_card_hand_enabled: bool
     auto_flex_card_slots_enabled: bool
     auto_flex_epic_berry_enabled: bool
     auto_flex_event_coinflip_enabled: bool
@@ -69,6 +70,7 @@ class Guild():
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_artifacts_enabled = new_settings.auto_flex_artifacts_enabled
         self.auto_flex_card_drop_enabled = new_settings.auto_flex_card_drop_enabled
+        self.auto_flex_card_hand_enabled = new_settings.auto_flex_card_hand_enabled
         self.auto_flex_card_slots_enabled = new_settings.auto_flex_card_slots_enabled
         self.auto_flex_epic_berry_enabled = new_settings.auto_flex_epic_berry_enabled
         self.auto_flex_event_coinflip_enabled = new_settings.auto_flex_event_coinflip_enabled
@@ -115,6 +117,7 @@ class Guild():
             auto_flex_enabled: bool
             auto_flex_artifacts_enabled: bool
             auto_flex_card_drop_enabled: bool
+            auto_flex_card_hand_enabled: bool
             auto_flex_card_slots_enabled: bool
             auto_flex_epic_berry_enabled: bool
             auto_flex_event_coinflip_enabled: bool
@@ -180,6 +183,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_artifacts_enabled = bool(record['auto_flex_artifacts_enabled']),
             auto_flex_card_drop_enabled = bool(record['auto_flex_card_drop_enabled']),
             auto_flex_card_slots_enabled = bool(record['auto_flex_card_slots_enabled']),
+            auto_flex_card_hand_enabled = bool(record['auto_flex_card_hand_enabled']),
             auto_flex_epic_berry_enabled = bool(record['auto_flex_epic_berry_enabled']),
             auto_flex_event_coinflip_enabled = bool(record['auto_flex_event_coinflip_enabled']),
             auto_flex_event_enchant_enabled = bool(record['auto_flex_event_enchant_enabled']),
@@ -356,6 +360,7 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         auto_flex_enabled: bool
         auto_flex_artifacts_enabled: bool
         auto_flex_card_drop_enabled: bool
+        auto_flex_card_hand_enabled: bool
         auto_flex_card_slots_enabled: bool
         auto_flex_epic_berry_enabled: bool
         auto_flex_event_coinflip_enabled: bool

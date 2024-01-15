@@ -821,7 +821,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
             await reminder.update(end_time=new_end_time)
 
 
-async def reduce_reminder_time_percentage(user_id: int, percentage: int, activities: List[str], user_settings) -> None:
+async def reduce_reminder_time_percentage(user_id: int, percentage: float, activities: List[str], user_settings) -> None:
     """Reduces the end time of user reminders by a certain percentage of the cooldown.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -829,7 +829,7 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: int, activit
 
     Arguments
     ---------
-    time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
+    percentage: Percentage to reduce (1-100)
     for half of their remaining amount.
     activities: List with the affected activities
     user_settings: The user settings
@@ -868,14 +868,14 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: int, activit
             await reminder.update(end_time=new_end_time)
 
 
-async def increase_reminder_time_percentage(user_id: int, percentage: int, activities: List[str], user_settings) -> None:
+async def increase_reminder_time_percentage(user_id: int, percentage: float, activities: List[str], user_settings) -> None:
     """Increases the end time of user reminders by a certain percentage of the cooldown.
     Doesn't affect reminders already scheduled.
     Note that the percentage is calculated based on the full cooldown.
 
     Arguments
     ---------
-    reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
+    percentage: Percentage to increase (1-100)
     for half of their remaining amount.
     activities: List with the affected activities
     user_settings: The user settings

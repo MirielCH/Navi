@@ -101,6 +101,10 @@ class TasksCog(commands.Cog):
                         await user_settings.update(ready_pets_claim_active=True)
                     if reminder.activity == 'dragon-breath-potion':
                         await user_settings.update(potion_dragon_breath_active=False)
+                    elif reminder.activity == 'round-card':
+                        await reminders.increase_reminder_time_percentage(user.id, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
+                                                                          user_settings)
+                        await user_settings.update(round_card_active=False)
                     for message in messages.values():
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
@@ -347,10 +351,10 @@ class TasksCog(commands.Cog):
             for user_settings in all_user_settings:
                 if user_settings.trade_daily_done != 0: await user_settings.update(trade_daily_done=0)
 
-    @tasks.loop(minutes=2)
+    @tasks.loop(minutes=5)
     async def delete_old_messages_from_cache(self) -> None:
-        """Task that deletes messages from the message cache that are older than 2 minutes"""
-        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=2))
+        """Task that deletes messages from the message cache that are older than 5 minutes"""
+        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=5))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
 

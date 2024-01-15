@@ -177,6 +177,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
         time_left_seconds = (actual_cooldown - time_elapsed.total_seconds()) * pocket_watch_multiplier
     if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
         time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+    if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+    if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
     alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
     time_left_seconds *= alert_settings.multiplier
     return timedelta(seconds=time_left_seconds)

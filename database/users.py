@@ -39,6 +39,7 @@ class User():
     alert_big_arena: UserAlert
     alert_boo: UserAlert
     alert_boosts: UserAlert
+    alert_card_hand: UserAlert
     alert_cel_dailyquest: UserAlert
     alert_cel_multiply: UserAlert
     alert_cel_sacrifice: UserAlert
@@ -113,6 +114,7 @@ class User():
     portals_spacing_enabled: bool
     guild_quest_prompt_active: bool
     potion_dragon_breath_active: bool
+    potion_flask_active: bool
     reactions_enabled: bool
     ready_after_all_commands: bool
     ready_as_embed: bool
@@ -131,6 +133,7 @@ class User():
     ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
     reminder_channel_id: int
+    round_card_active: bool
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
@@ -153,6 +156,7 @@ class User():
         self.alert_arena = new_settings.alert_arena
         self.alert_boo = new_settings.alert_boo
         self.alert_boosts = new_settings.alert_boosts
+        self.alert_card_hand = new_settings.alert_card_hand
         self.alert_cel_dailyquest = new_settings.alert_cel_dailyquest
         self.alert_cel_multiply = new_settings.alert_cel_multiply
         self.alert_cel_sacrifice = new_settings.alert_cel_sacrifice
@@ -227,6 +231,7 @@ class User():
         self.portals_as_embed = new_settings.portals_as_embed
         self.portals_spacing_enabled = new_settings.portals_spacing_enabled
         self.potion_dragon_breath_active = new_settings.potion_dragon_breath_active
+        self.potion_flask_active = new_settings.potion_flask_active
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_after_all_commands = new_settings.ready_after_all_commands
@@ -246,6 +251,7 @@ class User():
         self.ready_up_next_show_hidden_reminders = new_settings.ready_up_next_show_hidden_reminders
         self.ready_up_next_visible = new_settings.ready_up_next_visible
         self.reminder_channel_id = new_settings.reminder_channel_id
+        self.round_card_active = new_settings.round_card_active
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
@@ -305,6 +311,9 @@ class User():
             alert_boosts_enabled: bool
             alert_boosts_message: str
             alert_boosts_visible: bool
+            alert_card_hand_enabled: bool
+            alert_card_hand_message: str
+            alert_card_hand_visible: bool
             alert_cel_dailyquest_enabled: bool
             alert_cel_dailyquest_message: str
             alert_cel_dailyquest_visible: bool
@@ -451,6 +460,7 @@ class User():
             portals_as_embed: bool
             portals_spacing_enabled: bool
             potion_dragon_breath_active: bool
+            potion_flask_active: bool
             reactions_enabled: bool
             ready_after_all_commands: bool
             ready_as_embed: bool
@@ -469,6 +479,7 @@ class User():
             ready_up_next_show_hidden_reminders: bool
             ready_up_next_visible: bool
             reminder_channel_id: int
+            round_card_active: bool
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
@@ -526,6 +537,10 @@ async def _dict_to_user(record: dict) -> User:
                                      message=record['alert_boosts_message'],
                                      multiplier=1.0,
                                      visible=bool(record['alert_boosts_visible'])),
+            alert_card_hand = UserAlert(enabled=bool(record['alert_card_hand_enabled']),
+                                        message=record['alert_card_hand_message'],
+                                        multiplier=1.0,
+                                        visible=bool(record['alert_card_hand_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
                                       multiplier=1.0,
@@ -693,6 +708,7 @@ async def _dict_to_user(record: dict) -> User:
             portals_as_embed = bool(record['portals_as_embed']),
             portals_spacing_enabled = bool(record['portals_spacing_enabled']),
             potion_dragon_breath_active = bool(record['potion_dragon_breath_active']),
+            potion_flask_active = bool(record['potion_flask_active']),
             reactions_enabled = bool(record['reactions_enabled']),
             ready_after_all_commands = bool(record['ready_after_all_commands']),
             ready_as_embed = bool(record['ready_as_embed']),
@@ -711,6 +727,7 @@ async def _dict_to_user(record: dict) -> User:
             ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
             reminder_channel_id = record['reminder_channel_id'],
+            round_card_active = bool(record['round_card_active']),
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
@@ -902,6 +919,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boosts_enabled: bool
         alert_boosts_message: str
         alert_boosts_visible: bool
+        alert_card_hand_enabled: bool
+        alert_card_hand_message: str
+        alert_card_hand_visible: bool
         alert_cel_dailyquest_enabled: bool
         alert_cel_dailyquest_message: str
         alert_cel_dailyquest_visible: bool
@@ -1048,6 +1068,7 @@ async def _update_user(user: User, **kwargs) -> None:
         portals_as_embed: bool
         portals_spacing_enabled: bool
         potion_dragon_breath_active: bool
+        potion_flask_active: bool
         reactions_enabled: bool
         ready_after_all_commands: bool
         ready_as_embed: bool
@@ -1066,6 +1087,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_up_next_show_hidden_reminders: bool
         ready_up_next_visible: bool
         reminder_channel_id: int
+        round_card_active: bool
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool

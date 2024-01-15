@@ -18,6 +18,7 @@ FLEX_TITLES = {
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_TITLES_CARD_DROP,
     'card_drop_partner': strings.FLEX_TITLES_CARD_DROP_PARTNER,
+    'card_hand': strings.FLEX_TITLES_CARD_HAND,
     'card_slots': strings.FLEX_TITLES_CARD_SLOTS,
     'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
@@ -64,6 +65,16 @@ FLEX_TITLES = {
     'time_travel_800': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_900': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_999': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1100': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1200': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1300': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1400': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1500': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1600': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1700': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1800': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1900': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_2000': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'work_epicberry': strings.FLEX_TITLES_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
@@ -83,6 +94,7 @@ FLEX_THUMBNAILS = {
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
     'card_drop_partner': strings.FLEX_THUMBNAILS_CARD_DROP_PARTNER,
+    'card_hand': strings.FLEX_THUMBNAILS_CARD_HAND,
     'card_slots': strings.FLEX_THUMBNAILS_CARD_SLOTS,
     'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
@@ -129,6 +141,16 @@ FLEX_THUMBNAILS = {
     'time_travel_800': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_900': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_999': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1100': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1200': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1300': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1400': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1500': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1600': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1700': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1800': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1900': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_2000': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'work_epicberry': strings.FLEX_THUMBNAILS_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
@@ -171,6 +193,16 @@ FLEX_COLUMNS = {
     'time_travel_800': 'time_travel',
     'time_travel_900': 'time_travel',
     'time_travel_999': 'time_travel',
+    'time_travel_1100': 'time_travel',
+    'time_travel_1200': 'time_travel',
+    'time_travel_1300': 'time_travel',
+    'time_travel_1400': 'time_travel',
+    'time_travel_1500': 'time_travel',
+    'time_travel_1600': 'time_travel',
+    'time_travel_1700': 'time_travel',
+    'time_travel_1800': 'time_travel',
+    'time_travel_1900': 'time_travel',
+    'time_travel_2000': 'time_travel',
 }
 
 class AutoFlexCog(commands.Cog):
@@ -1006,6 +1038,56 @@ class AutoFlexCog(commands.Cog):
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_slots', description)
 
+            # High winning hand in card hand
+            search_strings = [
+                "— card hand", #All languages
+            ]
+            search_strings_hand = [
+                'full house',
+                'game of kings',
+                'four of a kind',
+                'straight flush',
+                'ace gala',
+                'royal flush',
+                'royal hearted flush',
+                'ace extravaganza',
+            ]
+            if (any(search_string in embed_autor.lower() for search_string in search_strings)
+                and any(search_string in embed_field0_name.lower() for search_string in search_strings_hand)
+                and '`hands`' in embed_description.lower()):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    else:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_CARD_HAND, user_name=user_name)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in auto flex card hand message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                hand_name = re.search(r'(.+?) \|', embed_field0_name).group(1)
+                description = (
+                    f'**{user.name}** played ~~video poker~~ `card hand` and got a **{hand_name}**!\n'
+                    f'It\'s all rather sus, really.\n'
+                    f'Did you know they used to tar and feather people cheating at cards back in the day?'
+                )
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_hand', description)
+
         if not message.embeds:
             message_content = message.content
 
@@ -1809,7 +1891,7 @@ class AutoFlexCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
 
                 search_patterns = [
-                    r'up (\d?) times', #English
+                    r'up (\d+?) times', #English
                 ]
                 levels_match = await functions.get_match_from_patterns(search_patterns, message_content)
                 levels = int(levels_match.group(1))
@@ -2056,8 +2138,80 @@ class AutoFlexCog(commands.Cog):
                 elif time_travel_count_new == 999:
                     event = 'time_travel_999'
                     description = (
-                        f'**{user.name}** traveled in time for **999** times and thus broke Epic RPG Guide. Good job.\n'
+                        f'**{user.name}** traveled in time **999** times and thus broke Epic RPG Guide. Good job.\n'
                         f'Hope you\'re proud. Damn it.'
+                    )
+                elif time_travel_count_new == 1_100:
+                    event = 'time_travel_1100'
+                    description = (
+                        f'**{user.name}** needs therapy. I mean time traveled **1,100** times.'
+                    )
+                elif time_travel_count_new == 1_200:
+                    event = 'time_travel_1200'
+                    description = (
+                        f'**{user.name}** time traveled **1,200** times which makes them rather smol if you ask me.'
+                    )
+                elif time_travel_count_new == 1_300:
+                    event = 'time_travel_1300'
+                    description = (
+                        f'**{user.name}** is increasing their time travel count to **1,300**.\n'
+                        f'Now, some people would call a doctor at this point. Maybe even **the** doctor.'
+                    )
+                elif time_travel_count_new == 1_400:
+                    event = 'time_travel_1400'
+                    description = (
+                        f'La laaa laaaah, dee daaaahh, running out of ideas, shoo beee dooo...\n'
+                        f'What happened, you ask? Well, **{user.name}** reached TT **1,400**. The usual.'
+                    )
+                elif time_travel_count_new == 1_500:
+                    event = 'time_travel_1500'
+                    description = (
+                        f'One thousand five hundred time travels.\n'
+                        f'**{user.name}** seems to quite mad.'
+                    )
+                elif time_travel_count_new == 1_600:
+                    event = 'time_travel_1600'
+                    description = (
+                        f'Ah. Time. A beautiful concept. Some even travel through it.\n'
+                        f'And then there\'s **{user.name}**, doing it freaking **1,600** times.'
+                    )
+                elif time_travel_count_new == 1_700:
+                    event = 'time_travel_1700'
+                    description = (
+                        f'Did you hear that? I think some fuse blew.\n'
+                        f'Ah yes. Must be **{user.name}**\'s time machine, it finally broke after **1,700** time travels.'
+                    )
+                elif time_travel_count_new == 1_800:
+                    event = 'time_travel_1800'
+                    description = (
+                        f'Let me introduce you to **{user.name}**, the person who time traveled **1,800** times.\n'
+                        f'I\'m afraid they got quite a few screws loose.'
+                    )
+                elif time_travel_count_new == 1_900:
+                    event = 'time_travel_1900'
+                    description = (
+                        f'If you see this, then someone triggered it. **{user.name}**, to be exact.\n'
+                        f'The problem is, it requires **1,900** time travels to trigger this.\n'
+                        f'Make of that what you will.'
+                    )
+                elif time_travel_count_new == 2_000:
+                    event = 'time_travel_2000'
+                    description = (
+                        f'Once upon a time, **{user.name}** found a game called EPIC RPG.\n'
+                        f'It was quite a nice little game, so they decided to play a bit, maybe even TT once or thrice.\n'
+                        f'They happened to like it, so they kept going a bit longer.\n'
+                        f'They kept going.\n'
+                        f'And going.\n'
+                        f'They grew older.\n'
+                        f'Still going.\n'
+                        f'Jesus, why don\'t they stop.\n'
+                        f'Call an ambulance.\n'
+                        f'Is this normal?\n'
+                        f'SOMEONE HELP THEM.\n'
+                        f'Oh lord.\n'
+                        f'STILL GOING.\n'
+                        f'Oh god. They reached **2,000** time travels.\n'
+                        f'Stawp.'
                     )
                 else:
                     return
@@ -2171,13 +2325,8 @@ class AutoFlexCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Couldn\'t find a user for autoflex card drop message.', message)
                         return
-                    if 'together' in message.content.lower() or 'found a' in message.content.lower():
-                        regex_pattern = regex.COMMAND_HUNT_ADVENTURE
-                    else:
-                        regex_pattern = regex.COMMAND_WORK
                     user_command_message = (
-                        await messages.find_message(message.channel.id, regex_pattern,
-                                                    user_name=user_name)
+                        await messages.find_message(message.channel.id, user_name=user_name)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
@@ -2191,7 +2340,7 @@ class AutoFlexCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
                 card_recipient_name_match = re.search(
-                    r'\n\*\*(.+?)\*\* (?:recebeu|conseguiu|consiguió|got) 1 (.+?) \*\*(.+?) card\*\*',
+                    r'\*\*(.+?)\*\* (?:recebeu|conseguiu|consiguió|got) 1 (.+?) \*\*(.+?) card\*\*',
                     message_content
                 )
                 if not card_recipient_name_match:

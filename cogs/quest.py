@@ -278,6 +278,8 @@ class QuestCog(commands.Cog):
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                 if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+                if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
@@ -427,6 +429,8 @@ class QuestCog(commands.Cog):
                 else:
                     time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
                 if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
+                if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                 time_left = timedelta(seconds=time_left_seconds * user_settings.alert_quest.multiplier
                                       * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))))
                 if time_left < timedelta(0): return

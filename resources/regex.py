@@ -30,6 +30,7 @@ COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
 COMMAND_ARENA = re.compile(rf"\barena\b")
 COMMAND_ARTIFACTS = re.compile(rf"\bartifacts?\b")
 COMMAND_BOOSTS = re.compile(rf"\bboosts?\b")
+COMMAND_CARD_HAND = re.compile(rf"\bcards?\b\s+\bhand\b")
 COMMAND_CARD_SLOTS = re.compile(rf"\bcards?\b\s+\bslots\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
 COMMAND_CLAN_BUY_SPECIAL_SEED = re.compile(rf"\bbuy\b\s+\bspecial\b\s+\bseed\b")
@@ -110,6 +111,7 @@ COMMAND_USE_EPIC_ITEM_ARENA_TOKEN = re.compile(
     rf"use\s+(?:\bepic\b\s+\bseed\b|\bultra\b\s+\bbait\b|\bcoin\b\s+\btrumpet\b|\blegendary\b\s+\btoothbrush\b|\barena\b\s+\btoken\b)"
 )
 COMMAND_USE_PARTY_POPPER = re.compile(rf"use\s+\bparty\b\s+\bpopper\b")
+COMMAND_USE_ROUND_CARD = re.compile(rf"use\s+\bround\b\s+\bcard\b")
 COMMAND_USE_TIME_COOKIE = re.compile(rf"use\s+\btime\b\s+\bcookie\b")
 COMMAND_VOTE = re.compile(rf"\bvote\b")
 COMMAND_WEEKLY = re.compile(rf"\bweekly\b")

@@ -12,6 +12,8 @@ from database import errors, guilds, update_database
 from database import settings as settings_db
 from resources import functions, logs, settings
 
+from datetime import timedelta
+
 
 #Check if database is up to date
 try:
@@ -104,6 +106,7 @@ EXTENSIONS = [
         'cogs.ascension',
         'cogs.auto_flex',
         'cogs.boosts',
+        'cogs.cards',
         'cogs.celebration',
         'cogs.cooldowns',
         'cogs.cache',

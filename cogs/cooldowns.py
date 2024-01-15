@@ -157,6 +157,15 @@ class CooldownsCog(commands.Cog):
                     cooldowns.append(['lootbox', lb_timestring.lower(), lb_message])
                 else:
                     ready_commands.append('lootbox')
+            if user_settings.alert_card_hand.enabled:
+                card_hand_match = re.search(r"hand`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+                if card_hand_match:
+                    card_hand_timestring = card_hand_match.group(1)
+                    user_command = await functions.get_slash_command(user_settings, 'card hand')
+                    card_hand_message = user_settings.alert_card_hand.message.replace('{command}', user_command)
+                    cooldowns.append(['card-hand', card_hand_timestring.lower(), card_hand_message])
+                else:
+                    ready_commands.append('card-hand')
             if user_settings.alert_hunt.enabled:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
@@ -367,6 +376,8 @@ class CooldownsCog(commands.Cog):
                 ready_commands.append('weekly')
             if user_settings.alert_lootbox.enabled and 'lootbox`**' in message_fields.lower():
                 ready_commands.append('lootbox')
+            if user_settings.alert_card_hand.enabled and 'hand`**' in message_fields.lower():
+                ready_commands.append('card-hand')
             if user_settings.alert_hunt.enabled:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\*', message_fields.lower())
                 if hunt_match: ready_commands.append('hunt')

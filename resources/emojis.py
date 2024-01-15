@@ -18,6 +18,7 @@ POTION_COOKIE = '<:potion_cookie:1067883889252651049>'
 POTION_DRAGON_BREATH = '<:potion_dragon_breath:1067883890741612635>'
 POTION_ELECTRONICAL = '<:potion_electronical:1067883891614027907>'
 POTION_FISH = '<:potion_fish:1067883894113837076>'
+POTION_FLASK = '<:potion_flask:1196004691453149184>'
 POTION_INVERTED = '<:potion_inverted:1067883895829319751>'
 POTION_JUICE = '<:potion_juice:1067883897951621120>'
 POTION_JUMPY = '<:potion_jumpy:1067883899205722152>'
@@ -25,7 +26,9 @@ POTION_KING = '<:potion_king:1067883901139304480>'
 POTION_LIQUID_HAIR = '<:potion_liquid_hair:1067883903530053713>'
 POTION_LOOTBOX = '<:potion_lootbox:1067883904796733471>'
 POTION_MONSTER = '<:potion_monster:1067884437712425072>'
+POTION_P2W = '<:potion_p2w:1196004693684531270>'
 POTION_POTION = '<:potion_potion:1067883908127002755>'
+POTION_SMOL = '<:potion_smol:1196004695181885501>'
 POTION_TIME = '<:potion_time:1067884276714057768>'
 POTION_TRIPLE = '<:potion_triple:1067883911532793968>'
 POTION_VOID = '<:potion_void:1067884199618547723>'
@@ -47,6 +50,7 @@ CARD_ETERNAL = '<a:card_eternal:1177277002345099374>'
 CARD_GODLY = '<:card_godly:1177277034012102726>'
 CARD_OMEGA = '<:card_omega:1177277035408789524>'
 CARD_RARE = '<:card_rare:1177277039032680499>'
+CARD_ROUND = '<:card_round:1195101214635995176>'
 CARD_UNCOMMON = '<:card_uncommon:1177277040915906571>'
 CARD_VOID = '<:card_void:1177277031285796874>'
 
@@ -216,6 +220,7 @@ BOOSTS_EMOJIS = {
     'dragon-breath-potion': POTION_DRAGON_BREATH,
     'electronical-potion': POTION_ELECTRONICAL,
     'fish-potion': POTION_FISH,
+    'flask-potion': POTION_FLASK,
     'halloween-boost': PUMPKIN,
     'inverted-potion': POTION_INVERTED,
     'juice-potion': POTION_JUICE,
@@ -226,8 +231,11 @@ BOOSTS_EMOJIS = {
     'mod-boost': MOD_BUFF,
     'mod-buff': MOD_BUFF,
     'monster-potion': POTION_MONSTER,
+    'p2w-potion': POTION_P2W,
     'party-popper': PARTY_POPPER,
     'potion-potion': POTION_POTION,
+    'smol-potion': POTION_SMOL,
+    'round_card': CARD_ROUND,
     'time-potion': POTION_TIME,
     'triple-potion': POTION_TRIPLE,
     'valentine-boost': '❤️',

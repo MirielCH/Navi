@@ -423,16 +423,29 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE users ADD auto_flex_ping_enabled INTEGER DEFAULT (0) NOT NULL",
         ]
+    if db_version < 14:
+        sqls += [
+            "ALTER TABLE users ADD alert_card_hand_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_card_hand_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_card_hand_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD round_card_active INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD potion_flask_active INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD auto_flex_card_hand_enabled INTEGER NOT NULL DEFAULT (1)",
+            "INSERT INTO cooldowns (activity, cooldown, donor_affected) VALUES ('card-hand', 86400, 0)",
+        ]
 
     # Run SQLs
     for sql in sqls:
         try:
             cur.execute(sql)
         except sqlite3.Error as error:
-            error_msg = error.args[0]
-            if 'duplicate column name' in error.args[0]:
+            error_msg = error.args[0].lower()
+            if 'duplicate column name' in error_msg:
                 continue
-            elif 'no such column' in error.args[0]:
+            elif 'no such column' in error_msg:
+                continue
+            elif 'cooldowns.activity' in error_msg:
                 continue
             else:
                 raise

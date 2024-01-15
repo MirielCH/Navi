@@ -58,7 +58,7 @@ class BoostsCog(commands.Cog):
             ]
             if (any(search_string in embed_description.lower() for search_string in search_strings)):
                 user_id = user_name = user_command_message = None
-                potion_dragon_breath_active = False
+                potion_dragon_breath_active = round_card_active = potion_flask_active = False
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
@@ -117,6 +117,16 @@ class BoostsCog(commands.Cog):
                         if not user_settings.potion_dragon_breath_active:
                             await user_settings.update(potion_dragon_breath_active=True)
                         if not user_settings.alert_boosts.enabled: return
+                    if active_item_activity == 'round-card':
+                        round_card_active = True
+                        if not user_settings.round_card_active:
+                            await user_settings.update(round_card_active=True)
+                        if not user_settings.alert_boosts.enabled: return
+                    if active_item_activity == 'flask-potion':
+                        potion_flask_active = True
+                        if not user_settings.potion_flask_active:
+                            await user_settings.update(potion_flask_active=True)
+                        if not user_settings.alert_boosts.enabled: return
                     if not user_settings.alert_boosts.enabled: continue
                     active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
@@ -140,6 +150,10 @@ class BoostsCog(commands.Cog):
                         continue
                 if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
                     await user_settings.update(potion_dragon_breath_active=potion_dragon_breath_active)
+                if user_settings.round_card_active != round_card_active:
+                    await user_settings.update(round_card_active=round_card_active)
+                if user_settings.potion_flask_active != potion_flask_active:
+                    await user_settings.update(potion_flask_active=potion_flask_active)
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
@@ -227,7 +241,9 @@ class BoostsCog(commands.Cog):
                 item_activity = strings.BOOSTS_ALIASES.get(item_activity, item_activity)
                 if item_activity == 'dragon-breath-potion':
                     await user_settings.update(potion_dragon_breath_active=True)
-                    if not user_settings.alert_boosts.enabled: return
+                if item_activity == 'round-card':
+                    await user_settings.update(round_card_active=True)
+                if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
                 reminder_message = (
@@ -354,6 +370,58 @@ class BoostsCog(commands.Cog):
                     )
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'christmas-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+            # Round card
+            search_strings = [
+                '** eats a <:roundcard', #English
+                '** eats a <:roundcard', #Spanish, MISSING
+                '** eats a <:roundcard', #Portuguese, MISSING
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for round card message.',
+                                               message)
+                        return
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_USE_ROUND_CARD,
+                                                    user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the round card message.',
+                                               message)
+                        return
+                    if user is None: user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                await user_settings.update(round_card_active=True)
+                if not user_settings.alert_boosts.enabled: return
+                timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
+                time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                await reminders.reduce_reminder_time_percentage(user.id, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
+                                                                user_settings)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.CARD_ROUND)
+                        .replace('{boost_item}', 'round card')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'round-card', time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)

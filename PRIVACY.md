@@ -25,7 +25,7 @@ This data does usually not get stored and is immediately discarded.
 
 ## Storing message data
 
-The bot caches all messages sent by users that either mention the EPIC RPG bot or start with `rpg `. They are used to reduce API calls and increase performance. These messages are discarded after 2 minutes and not stored permanently.  
+The bot caches all messages sent by users that either mention the EPIC RPG bot or start with `rpg `. They are used to reduce API calls and increase performance. These messages are discarded after 5 minutes and not stored permanently.  
 
 If there is an error, the following data is stored permanently in the error log:  
 • Content of the **EPIC RPG** message that couldn’t get processed correctly (but never messages by **you**).  
