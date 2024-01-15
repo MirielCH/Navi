@@ -464,7 +464,7 @@ class SwitchStatsAltSelect(discord.ui.Select):
         for child in self.view.children.copy():
             if isinstance(child, SwitchStatsAltSelect):
                 self.view.remove_item(child)
-                self.view.add_item(SwitchReadyAltSelect(self.view))
+                self.view.add_item(SwitchStatsAltSelect(self.view))
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
