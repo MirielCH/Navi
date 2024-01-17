@@ -267,14 +267,20 @@ class AutoFlexCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
+        allow_disabled_components = False
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
-        for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+        if message_after.embeds:
+            if message_after.embeds[0].author is not None:
+                if 'card hand' in message_after.embeds[0].author.name.lower():
+                    allow_disabled_components = True
+        if not allow_disabled_components:
+            for row in message_after.components:
+                for component in row.children:
+                    if component.disabled:
+                        return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -1033,7 +1039,7 @@ class AutoFlexCog(commands.Cog):
                     return
                 card_name = card_name_match.group(1)
                 description = (
-                    f'**{user.name}** just found a **{card_name}**!\n'
+                    f'**{user.name}** just found a **{card_name.capitalize()}**!\n'
                     f'I didn\'t know slot machines work with cards, but sure, have it your way.'
                 )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_slots', description)
