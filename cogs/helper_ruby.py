@@ -173,7 +173,7 @@ class HelperRubyCog(commands.Cog):
                         return
                 if interaction_user not in embed_users: return
                 if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
-                if  '<:ruby' not in message_field.lower():
+                if  '**ruby**' not in message_field.lower():
                     ruby_count = 0
                 else:
                     ruby_count_match = re.search(r"ruby\*\*: ([0-9,]+)", message_field)

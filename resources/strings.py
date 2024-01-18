@@ -619,6 +619,7 @@ ACTIVITIES_WITH_COOLDOWN_ALL.insert(0, 'all')
 
 ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER = (
     'adventure',
+    'card-hand',
     'daily',
     'duel',
     'epic',

@@ -313,6 +313,7 @@ class User():
             alert_boosts_visible: bool
             alert_card_hand_enabled: bool
             alert_card_hand_message: str
+            alert_card_hand_multiplier: float
             alert_card_hand_visible: bool
             alert_cel_dailyquest_enabled: bool
             alert_cel_dailyquest_message: str
@@ -539,7 +540,7 @@ async def _dict_to_user(record: dict) -> User:
                                      visible=bool(record['alert_boosts_visible'])),
             alert_card_hand = UserAlert(enabled=bool(record['alert_card_hand_enabled']),
                                         message=record['alert_card_hand_message'],
-                                        multiplier=1.0,
+                                        multiplier=float(record['alert_card_hand_multiplier']),
                                         visible=bool(record['alert_card_hand_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
@@ -921,6 +922,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_boosts_visible: bool
         alert_card_hand_enabled: bool
         alert_card_hand_message: str
+        alert_card_hand_multiplier: float
         alert_card_hand_visible: bool
         alert_cel_dailyquest_enabled: bool
         alert_cel_dailyquest_message: str

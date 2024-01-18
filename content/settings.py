@@ -906,7 +906,7 @@ async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationC
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     multipliers = (
         f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
-        #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: `{user_settings.alert_chimney.multiplier}`\n'
+        f'{emojis.BP} **Card hand**: `{user_settings.alert_card_hand.multiplier}`\n'
         f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
         f'{emojis.BP} **Duel**: `{user_settings.alert_duel.multiplier}`\n'
         f'{emojis.BP} **EPIC items**: `{user_settings.alert_epic.multiplier}`\n'

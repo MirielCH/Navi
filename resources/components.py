@@ -1507,7 +1507,7 @@ class ManageMultipliersSelect(discord.ui.Select):
         options.append(discord.SelectOption(label=f'All',
                                             value='all'))
         for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-            options.append(discord.SelectOption(label=activity.capitalize(),
+            options.append(discord.SelectOption(label=activity.replace("-"," ").capitalize(),
                                                 value=activity))
         super().__init__(placeholder='Change multipliers', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_multipliers')

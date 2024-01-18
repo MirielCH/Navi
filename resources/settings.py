@@ -14,7 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
-NAVI_DB_VERSION = 14
+NAVI_DB_VERSION = 15
 
 # Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

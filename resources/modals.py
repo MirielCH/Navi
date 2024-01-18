@@ -163,9 +163,9 @@ class SetMultiplierModal(Modal):
         kwargs = {}
         if self.activity == 'all':
             for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-                kwargs[f'alert_{activity}_multiplier'] = new_multiplier
+                kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = new_multiplier
         else:
-            kwargs[f'alert_{self.activity}_multiplier'] = new_multiplier
+            kwargs[f'alert_{self.activity.replace("-","_")}_multiplier'] = new_multiplier
         await self.view.user_settings.update(**kwargs)
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)

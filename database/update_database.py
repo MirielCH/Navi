@@ -434,6 +434,10 @@ def update_database() -> bool:
             "ALTER TABLE guilds ADD auto_flex_card_hand_enabled INTEGER NOT NULL DEFAULT (1)",
             "INSERT INTO cooldowns (activity, cooldown, donor_affected) VALUES ('card-hand', 86400, 0)",
         ]
+    if db_version < 15:
+        sqls += [
+            "ALTER TABLE users ADD alert_card_hand_multiplier REAL NOT NULL DEFAULT (1)",
+        ]
 
     # Run SQLs
     for sql in sqls:
