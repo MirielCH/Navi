@@ -710,26 +710,31 @@ MONSTERS_ADVENTURE_A10 = (
 MONSTERS_ADVENTURE_A11 = (
     '**Mutant Dragon**',
     '**Ancient Dragon**',
+    '**Another Ancient Dragon**',
 )
 
 MONSTERS_ADVENTURE_A12 = (
     '**Even More Ancient Dragon**',
+    '**Another Even More Ancient Dragon**',
     '**Hyper Giant Dragon**',
 )
 
 MONSTERS_ADVENTURE_A13 = (
     '**Ancientest Dragon**',
+    '**Another Ancientest Dragon**',
     '**Another Mutant Dragon Like In Area 11 But Stronger**',
 )
 
 MONSTERS_ADVENTURE_A14 = (
     '**Yes, As You Expected, Another Hyper Giant Dragon But OP etc**',
     '**Just Purple Dragon**',
+    '**Another Just Purple Dragon**',
 )
 
 MONSTERS_ADVENTURE_A15 = (
     '**I Have No More Ideas Dragon**',
     '**Huh Idk Dragon**',
+    '**Another Huh Idk Dragon**',
     '**Mutantest Dragon**',
 )
 
