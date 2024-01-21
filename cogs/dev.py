@@ -294,7 +294,7 @@ class DevCog(commands.Cog):
                 description = f'{description}\n{emojis.BP} ... and more'
                 break
             else:
-                description = f'{description}\n{emojis.BP} {guild.name}'
+                description = f'{description}\n{emojis.BP} {guild.name} (`{guild.id}`)'
 
         embed = discord.Embed(
             color = settings.EMBED_COLOR,
@@ -342,6 +342,48 @@ class DevCog(commands.Cog):
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
+    @dev.command()
+    async def leave_server(
+        self,
+        ctx: discord.ApplicationContext,
+        guild_id: Option(str, 'ID of the server you want to leave'),
+    ) -> None:
+        """Removes Navi from a specific guild"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        try:
+            guild_id = int(guild_id)
+        except:
+            await ctx.respond('Invalid ID.')
+            return
+        guild_to_leave = self.bot.get_guild(guild_id)
+        if guild_to_leave is None:
+            await ctx.respond('No server found with that ID.')
+            return
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(
+            f'Remove Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`)?',
+            view=view
+        )
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await ctx.followup.send(f'**{ctx.author.name}**, you didn\'t answer in time.', ephemeral=True)
+        elif view.value == 'confirm':
+            try:
+                await guild_to_leave.leave()
+            except Exception as error:
+                await ctx.respond(
+                    f'Leaving the server failed with the following error:\n'
+                    f'```\n{error}\n```'
+                )
+            await functions.edit_interaction(interaction,
+                                             content=f'Removed Navi from **{guild_to_leave.name}** (`{guild_to_leave.id}`).',
+                                             view=None)
+        else:
+            await functions.edit_interaction(interaction, content='Aborted.', view=None)
+        
 
 def setup(bot):
     bot.add_cog(DevCog(bot))
