@@ -432,7 +432,6 @@ class HuntCog(commands.Cog):
                             'GODLY present': emojis.PRESENT_GODLY,
                             'VOID present': emojis.PRESENT_VOID,
                             'easter lootbox': emojis.LB_EASTER,
-                            'EPIC berry': emojis.EPIC_BERRY,
                         }
                         for lootbox in list(strings.LOOTBOXES.keys())[partner.partner_alert_threshold:]:
                             alert_items[lootbox] = strings.LOOTBOXES[lootbox]
