@@ -438,6 +438,15 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE users ADD alert_card_hand_multiplier REAL NOT NULL DEFAULT (1)",
         ]
+    if db_version < 16:
+        sqls += [
+            "ALTER TABLE users ADD chocolate_box_unlocked INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD partner_chocolate_box_unlocked INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD alert_epic_shop_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_epic_shop_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! The {epic_shop_emoji} **{epic_shop_item}** is back on sale in the {command}!')",
+            "ALTER TABLE users ADD alert_epic_shop_visible INTEGER NOT NULL DEFAULT (1)",
+        ]
 
     # Run SQLs
     for sql in sqls:

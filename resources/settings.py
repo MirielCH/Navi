@@ -14,7 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
-NAVI_DB_VERSION = 15
+NAVI_DB_VERSION = 16
 
 # Files and directories
 BOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -141,6 +141,7 @@ class ClanReset(NamedTuple):
 
 CLAN_DEFAULT_STEALTH_THRESHOLD = 90
 
+CHOCOLATE_BOX_MULTIPLIER = 0.98
 CHRISTMAS_AREA_MULTIPLIER = 1 # Set this to 0.9 during christmas event and to 1 during the rest of the year
-ROUND_CARD_MULTIPLIER = 0.05
 POTION_FLASK_MULTIPLIER = 0.9999 # Why did I even do this
+ROUND_CARD_MULTIPLIER = 0.05

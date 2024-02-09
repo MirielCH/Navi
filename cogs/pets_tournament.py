@@ -114,7 +114,7 @@ class PetsTournamentCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)

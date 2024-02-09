@@ -35,6 +35,7 @@ POTION_VOID = '<:potion_void:1067884199618547723>'
 POTION_WOOD = '<:potion_wood:1067884339523751937>'
 
 # EPIC RPG artifacts
+ARTIFACT_CHOCOLATE_BOX = '<:chocolatebox:1205040307620814868>'
 ARTIFACT_CLAUS_BELT = '<:clausbelt:1177906681489936445>'
 ARTIFACT_COIN_RING = '<:artifact_coin_ring:1143232931024863363>'
 ARTIFACT_GOLDEN_PAN = '<:artifact_golden_pan:1143232936108376254>'
@@ -105,6 +106,7 @@ RUBY = '<:ruby:770324898168963144>'
 SEED_BREAD = '<:seed_bread:835165887606292520>'
 SEED_CARROT = '<:seed_carrot:835165887580864512>'
 SEED_POTATO = '<:seed_potato:835165887564218468>'
+TIME_COOKIE = '<:timecookie:1028963787790876702>'
 UNICORN_HORN = '<:unicorn_horn:770324898450636850>'
 WATERMELON = '<:watermelon:931088046265360404>'
 WOLF_SKIN = '<:wolf_skin:770324898127151165>'
@@ -115,6 +117,7 @@ ASCENSION = '🌟'
 DEV_BUFF = '<:devbuff:1071442813541175378>'
 MOD_BUFF = '💠'
 GODLY_COOKIE = '<:godlycookie:879251636806098975>'
+MEGA_BOOST = '<:mega_boost:1205064627159965716>'
 MOB_ANCIENT_DRAGON = '<:ancientdragon:818542002332893204>'
 SWORD_GODLY = '<:godlysword:799388569688211536>'
 TIME_CAPSULE = '<:timecapsule:1020280105668456458>'
@@ -228,6 +231,7 @@ BOOSTS_EMOJIS = {
     'king-potion': POTION_KING,
     'liquid-hair-potion': POTION_LIQUID_HAIR,
     'lootbox-potion': POTION_LOOTBOX,
+    'mega-boost': MEGA_BOOST,
     'mod-boost': MOD_BUFF,
     'mod-buff': MOD_BUFF,
     'monster-potion': POTION_MONSTER,
@@ -235,10 +239,19 @@ BOOSTS_EMOJIS = {
     'party-popper': PARTY_POPPER,
     'potion-potion': POTION_POTION,
     'smol-potion': POTION_SMOL,
-    'round_card': CARD_ROUND,
+    'round-card': CARD_ROUND,
     'time-potion': POTION_TIME,
     'triple-potion': POTION_TRIPLE,
     'valentine-boost': '❤️',
     'void-potion': POTION_VOID,
     'wood-potion': POTION_WOOD,
+}
+
+EPIC_SHOP_EMOJIS = {
+    'edgy-lootbox': LB_EDGY,
+    'epic-berry': EPIC_BERRY,
+    'special-deal': '✨',
+    'rare-lootbox': LB_RARE,
+    'time-cookie': TIME_COOKIE,
+    'mega-boost': MEGA_BOOST,
 }

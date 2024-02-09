@@ -117,6 +117,7 @@ EXTENSIONS = [
         'cogs.duel',
         'cogs.dungeon_miniboss',
         'cogs.epic_items',
+        'cogs.epic_shop',
         'cogs.events',
         'cogs.farm',
         'cogs.fun',

@@ -48,6 +48,7 @@ class User():
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
     alert_epic: UserAlert
+    alert_epic_shop: UserAlert
     alert_eternal_present: UserAlert
     alert_farm: UserAlert
     alert_guild: UserAlert
@@ -75,6 +76,7 @@ class User():
     auto_flex_tip_read: bool
     auto_ready_enabled: bool
     bot_enabled: bool
+    chocolate_box_unlocked: bool
     clan_name: str
     christmas_area_enabled: bool
     cmd_cd_visible: bool
@@ -101,6 +103,7 @@ class User():
     megarace_helper_enabled: bool
     partner_alert_threshold: int
     partner_channel_id: int
+    partner_chocolate_box_unlocked: bool
     partner_donor_tier: int
     partner_hunt_end_time: datetime
     partner_id: int
@@ -166,6 +169,7 @@ class User():
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
         self.alert_epic = new_settings.alert_epic
+        self.alert_epic_shop = new_settings.alert_epic_shop
         self.alert_eternal_present = new_settings.alert_eternal_present
         self.alert_farm = new_settings.alert_farm
         self.alert_guild = new_settings.alert_guild
@@ -193,6 +197,7 @@ class User():
         self.auto_flex_tip_read = new_settings.auto_flex_tip_read
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
+        self.chocolate_box_unlocked = new_settings.chocolate_box_unlocked
         self.clan_name = new_settings.clan_name
         self.christmas_area_enabled = new_settings.christmas_area_enabled
         self.cmd_cd_visible = new_settings.cmd_cd_visible
@@ -219,6 +224,7 @@ class User():
         self.megarace_helper_enabled = new_settings.megarace_helper_enabled
         self.partner_alert_threshold = new_settings.partner_alert_threshold
         self.partner_channel_id = new_settings.partner_channel_id
+        self.partner_chocolate_box_unlocked = new_settings.partner_chocolate_box_unlocked
         self.partner_donor_tier = new_settings.partner_donor_tier
         self.partner_hunt_end_time = new_settings.partner_hunt_end_time
         self.partner_id = new_settings.partner_id
@@ -343,6 +349,9 @@ class User():
             alert_epic_message: str
             alert_epic_multiplier: float
             alert_epic_visible: bool
+            alert_epic_shop_enabled: bool
+            alert_epic_shop_message: str
+            alert_epic_shop_visible: bool
             alert_eternal_present_enabled: bool
             alert_eternal_present_message: str
             alert_eternal_present_visible: bool
@@ -415,6 +424,7 @@ class User():
             auto_flex_tip_read: bool
             auto_ready_enabled: bool
             bot_enabled: bool
+            chocolate_box_unlocked: bool
             clan_name: str
             cmd_cd_visible: bool
             cmd_inventory_visible: bool
@@ -449,6 +459,7 @@ class User():
             megarace_helper_enabled: bool
             partner_alert_threshold: int
             partner_channel_id: int
+            partner_chocolate_box_unlocked: bool
             partner_donor_tier: int
             partner_hunt_end_time: datetime
             partner_id: int
@@ -575,9 +586,13 @@ async def _dict_to_user(record: dict) -> User:
                                                multiplier=1.0,
                                                visible=bool(record['alert_dungeon_miniboss_visible'])),
             alert_epic = UserAlert(enabled=bool(record['alert_epic_enabled']),
-                                               message=record['alert_epic_message'],
-                                               multiplier=float(record['alert_epic_multiplier']),
-                                               visible=bool(record['alert_epic_visible'])),
+                                   message=record['alert_epic_message'],
+                                   multiplier=float(record['alert_epic_multiplier']),
+                                   visible=bool(record['alert_epic_visible'])),
+            alert_epic_shop = UserAlert(enabled=bool(record['alert_epic_shop_enabled']),
+                                        message=record['alert_epic_shop_message'],
+                                        multiplier=1,
+                                        visible=bool(record['alert_epic_shop_visible'])),
             alert_eternal_present = UserAlert(enabled=bool(record['alert_eternal_present_enabled']),
                                               message=record['alert_eternal_present_message'],
                                               multiplier=1.0,
@@ -665,6 +680,7 @@ async def _dict_to_user(record: dict) -> User:
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
+            chocolate_box_unlocked = bool(record['chocolate_box_unlocked']),
             clan_name = record['clan_name'],
             christmas_area_enabled = bool(record['christmas_area_enabled']),
             cmd_cd_visible = record['cmd_cd_visible'],
@@ -697,6 +713,7 @@ async def _dict_to_user(record: dict) -> User:
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             partner_alert_threshold = record['partner_alert_threshold'],
             partner_channel_id = record['partner_channel_id'],
+            partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
             partner_donor_tier = record['partner_donor_tier'],
             partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
             partner_id = record['partner_id'],
@@ -952,6 +969,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_epic_message: str
         alert_epic_multiplier: float
         alert_epic_visible: bool
+        alert_epic_shop_enabled: bool
+        alert_epic_shop_message: str
+        alert_epic_shop_visible: bool
         alert_eternal_present_enabled: bool
         alert_eternal_present_message: str
         alert_eternal_present_visible: bool
@@ -1024,6 +1044,7 @@ async def _update_user(user: User, **kwargs) -> None:
         auto_flex_tip_read: bool
         auto_ready_enabled: bool
         bot_enabled: bool
+        chocolate_box_unlocked: bool
         clan_name: str
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
@@ -1058,6 +1079,7 @@ async def _update_user(user: User, **kwargs) -> None:
         megarace_helper_enabled: bool
         partner_alert_threshold: int
         partner_channel_id: int
+        partner_chocolate_box_unlocked: bool
         partner_donor_tier: int
         partner_hunt_end_time: datetime
         partner_id: int

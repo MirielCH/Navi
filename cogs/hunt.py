@@ -139,6 +139,8 @@ class HuntCog(commands.Cog):
                         time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
                     if not together and user_settings.potion_flask_active:
                         time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
+                    if not together and user_settings.chocolate_box_unlocked:
+                        time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER
                 elif together:
                     partner_settings = None
                     if user_settings.partner_id is not None:
@@ -154,9 +156,13 @@ class HuntCog(commands.Cog):
                     partner_cooldown = (actual_cooldown
                                         * (settings.DONOR_COOLDOWNS[partner_donor_tier] - (1 - user_settings.partner_pocket_watch_multiplier))
                                         * partner_hunt_multiplier)
+                    if user_settings.partner_chocolate_box_unlocked:
+                        partner_cooldown *= settings.CHOCOLATE_BOX_MULTIPLIER
                     user_cooldown = (actual_cooldown
                                     * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - user_settings.user_pocket_watch_multiplier))
                                     * user_settings.alert_hunt.multiplier)
+                    if user_settings.chocolate_box_unlocked:
+                        user_cooldown *= settings.CHOCOLATE_BOX_MULTIPLIER
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user in embed_users):
                         time_left_seconds = (time_left_seconds
@@ -390,22 +396,30 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 elif user_settings.christmas_area_enabled and not found_together:
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                elif user_settings.round_card_active and not found_together:
-                    time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
-                elif user_settings.potion_flask_active and not found_together:
-                    time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                 elif (user_settings.christmas_area_enabled and not partner_christmas_area
                       and user_settings.hunt_rotation_enabled and found_together):
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
+                if user_settings.round_card_active and not found_together:
+                    time_left_seconds *= settings.ROUND_CARD_MULTIPLIER                    
+                if user_settings.potion_flask_active and not found_together:
+                    time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
+                if user_settings.chocolate_box_unlocked and not found_together:
+                    time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER
                 partner_hunt_multiplier = partner.alert_hunt.multiplier if partner is not None else 1
+                chocolate_box_multiplier = 1
                 if together and not user_settings.hunt_rotation_enabled:
                     pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))
+                    if user_settings.partner_chocolate_box_unlocked:
+                        chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
+                        time_left_seconds_partner_hunt *= settings.CHOCOLATE_BOX_MULTIPLIER
                 else:
                     pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))
+                    if user_settings.chocolate_box_unlocked:
+                        chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
                 time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
-                                      * pocket_watch_multiplier)
+                                      * pocket_watch_multiplier * chocolate_box_multiplier)
                 time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt * partner_hunt_multiplier
                                                    * (1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))))
                 if time_left < timedelta(0): return

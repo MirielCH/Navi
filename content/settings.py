@@ -951,9 +951,11 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
     partner_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[partner_donor_tier]
     partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
     partner_pocket_watch_reduction = 100 - (100 * user_settings.partner_pocket_watch_multiplier)
-    donor_tier = (
+    chocolate_box_unlocked = 'Yes' if user_settings.partner_chocolate_box_unlocked else 'No'
+    cooldown_reductions = (
         f'{emojis.BP} **Partner donor tier**: {partner_donor_tier}\n'
         f'{emojis.BP} **Partner pocket watch reduction**: `{partner_pocket_watch_reduction:g}` %\n'
+        f'{emojis.BP} **Partner has chocolate box artifact**: `{chocolate_box_unlocked}`\n'
         f'_You can only change these settings if you have no partner set._\n'
         f'_If you do, this is synchronized with your partner instead._\n'
     )
@@ -974,7 +976,7 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
             f'_Settings for your partner. To add or change your partner, use the menu below._\n'
         )
     )
-    embed.add_field(name='EPIC RPG DONOR TIER & POCKET WATCH', value=donor_tier, inline=False)
+    embed.add_field(name='COOLDOWN REDUCTIONS', value=cooldown_reductions, inline=False)
     embed.add_field(name='YOUR SETTINGS', value=settings_user, inline=False)
     embed.add_field(name='YOUR PARTNER\'S SETTINGS', value=settings_partner, inline=False)
     return embed
@@ -1164,7 +1166,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     )
     command_reminders = (
         #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
-        f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
+        #f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
         #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
@@ -1183,6 +1185,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         #f'{emojis.BP} **ETERNAL presents** {emojis.PRESENT_ETERNAL}: '
         #f'{await functions.bool_to_text(user_settings.alert_eternal_present.enabled)}\n'
         f'{emojis.BP} **EPIC items**: {await functions.bool_to_text(user_settings.alert_epic.enabled)}\n'
+        f'{emojis.BP} **EPIC shop restocks**: {await functions.bool_to_text(user_settings.alert_epic_shop.enabled)}\n'
         f'{emojis.BP} **Farm**: {await functions.bool_to_text(user_settings.alert_farm.enabled)}\n'
         f'{emojis.BP} **Guild**: {await functions.bool_to_text(user_settings.alert_guild.enabled)}\n'
         f'{emojis.DETAIL} _For the guild channel reminder switch to `Guild settings`._\n'
@@ -1357,7 +1360,8 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     partner_donor_tier = f'{partner_donor_tier_emoji} `{partner_donor_tier}`'.lstrip('None ')
     user_pocket_watch_reduction = 100 - (user_settings.user_pocket_watch_multiplier * 100)
     partner_pocket_watch_reduction = 100 - (user_settings.partner_pocket_watch_multiplier * 100)
-
+    chocolate_box_unlocked = 'Yes' if user_settings.chocolate_box_unlocked else 'No'
+    partner_chocolate_box_unlocked = 'Yes' if user_settings.partner_chocolate_box_unlocked else 'No'
     bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
         f'{emojis.DETAIL} _You can toggle this by using {await functions.get_navi_slash_command(bot, "on")} '
@@ -1372,12 +1376,16 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
         f'{emojis.BP} **Donor tier**: {user_donor_tier}\n'
         f'{emojis.BP} **Pocket watch reduction**: `{user_pocket_watch_reduction:g}` %\n'
         f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
+        f'{emojis.BP} **Has chocolate box artifact**: `{chocolate_box_unlocked}`\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
+        
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
         f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} to update this setting._\n'
     )
     epic_rpg_partner = (
         f'{emojis.BP} **Donor tier**: {partner_donor_tier}\n'
         f'{emojis.BP} **Pocket watch reduction**: `{partner_pocket_watch_reduction:g}` %\n'
+        f'{emojis.BP} **Has chocolate box artifact**: `{partner_chocolate_box_unlocked}`\n'
         f'_You can only change these settings if you have no partner set._\n'
         f'_If you do, this is synchronized with your partner instead._\n'
     )

@@ -116,6 +116,7 @@ DEFAULT_MESSAGES = {
     'duel': DEFAULT_MESSAGE,
     'dungeon-miniboss': DEFAULT_MESSAGE,
     'epic': '{name} Hey! Your EPIC item cooldown is ready!',
+    'epic-shop': '{name} Hey! The {epic_shop_emoji} **{epic_shop_item}** is back on sale in the {command}!',
     'eternal-presents': '{name} Hey! It''s time to {command} your ETERNAL presents! Make sure you open all of them in **one** command!',
     'farm': DEFAULT_MESSAGE,
     'guild': DEFAULT_MESSAGE,
@@ -143,6 +144,8 @@ PLACEHOLDER_DESCRIPTIONS = {
     'command': 'The command you get reminded for',
     'id': 'The ID of the pet',
     'emoji': 'The emoji of the pet',
+    'epic_shop_item': 'The name of the epic shop item',
+    'epic_shop_emoji': 'The emoji of the epic shop item',
     'partner': 'The name of your partner',
     'event': 'The name of the finished event',
     'loot': 'The name of the item your partner found',
@@ -182,6 +185,7 @@ DONOR_TIERS_EMOJIS = {
 }
 
 ARTIFACTS_EMOJIS = {
+    'chocolate box': emojis.ARTIFACT_CHOCOLATE_BOX,
     'claus belt': emojis.ARTIFACT_CLAUS_BELT,
     'coin ring': emojis.ARTIFACT_COIN_RING,
     'golden pan': emojis.ARTIFACT_GOLDEN_PAN,
@@ -210,16 +214,13 @@ POCKET_WATCH_AFFECTED_ACTIVITIES = (
 ROUND_CARD_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
-    'daily',
     'duel',
     'dungeon-miniboss',
     'farm',
     'horse',
     'hunt',
-    'lootbox',
     'quest',
     'training',
-    'weekly',
     'work'
 )
 
@@ -307,6 +308,7 @@ ACTIVITIES = (
     'duel',
     'dungeon-miniboss',
     'epic',
+    'epic-shop',
     'eternal-presents',
     'farm',
     'guild',
@@ -391,6 +393,7 @@ ACTIVITIES_BOOSTS = (
     'king-potion',
     'liquid-hair-potion',
     'lootbox-potion',
+    'mega-boost',
     'mod-boost',
     'mod-buff',
     'monster-potion',
@@ -1011,7 +1014,7 @@ SLASH_COMMANDS = {
     'alchemy': '</alchemy:1074072459847925810>',
     'area': '</area:956658464879427604>',
     'arena': '</arena:960740633302138920>',
-    'artifacts': '</artifacts:0>',
+    'artifacts': '</artifacts:1145567421948768318>',
     'axe': '</axe:959162695909781504>',
     'big arena': '</big arena:960362922029252719>',
     'big dice': '</big dice:960362922029252719>',
@@ -1040,6 +1043,7 @@ SLASH_COMMANDS = {
     'dynamite': '</dynamite:959164543920132126>',
     'enchant': '</enchant:959164903745257532>',
     'epic quest': '</epic quest:961046236469792810>',
+    'epic shop': '</epic shop:961046236469792810>',
     'event': '</event:959164906903584838>',
     'farm': '</farm:959915738716598272>',
     'forge': '</forge:960002338121203722>',
@@ -1138,6 +1142,7 @@ RPG_COMMANDS = {
     'dynamite': 'rpg dynamite',
     'enchant': 'rpg enchant',
     'epic quest': 'rpg epic quest',
+    'epic shop': 'rpg epic shop',
     'event': 'rpg event',
     'farm': 'rpg farm',
     'forge': 'rpg forge',

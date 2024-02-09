@@ -707,8 +707,11 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         if view.user_settings.partner_id is None:
-            options.append(discord.SelectOption(label=f'Change partner pocket watch reduction', emoji=None,
+            options.append(discord.SelectOption(label='Change partner pocket watch reduction', emoji=None,
                                                 value='set_partner_pocket_watch_reduction'))
+            emoji = emojis.ENABLED if view.user_settings.partner_chocolate_box_unlocked else emojis.DISABLED
+            options.append(discord.SelectOption(label='Partner has chocolate box artifact', emoji=emoji,
+                                                value='toggle_partner_chocolate_box_unlocked'))
         options.append(discord.SelectOption(label='Add this channel as partner channel',
                                             value='set_channel', emoji=emojis.ADD))
         options.append(discord.SelectOption(label='Remove partner channel',
@@ -756,6 +759,10 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             modal = modals.SetPartnerPocketWatchReductionModal(self.view)
             await interaction.response.send_modal(modal)
             return
+        elif select_value == 'toggle_partner_chocolate_box_unlocked':
+            await self.view.user_settings.update(
+                partner_chocolate_box_unlocked=not self.view.user_settings.partner_chocolate_box_unlocked
+            )
         elif select_value == 'reset_channel':
             if self.view.user_settings.partner_channel_id is None:
                 await interaction.response.send_message(
@@ -797,9 +804,9 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_id=None, partner_donor_tier=0,
-                                                     partner_pocket_watch_multiplier=1)
+                                                     partner_pocket_watch_multiplier=1, partner_chocolate_box_unlocked=False)
                 await self.view.partner_settings.update(partner_id=None, partner_donor_tier=0,
-                                                        partner_pocket_watch_multiplier=1)
+                                                        partner_pocket_watch_multiplier=1, partner_chocolate_box_unlocked=False)
                 self.view.partner_settings = None
                 await confirm_interaction.edit_original_response(content='Partner reset.', view=None)
                 for child in self.view.children.copy():
@@ -1068,10 +1075,12 @@ class AddPartnerSelect(discord.ui.Select):
                 except exceptions.NoDataFoundError:
                     pass
             await self.view.user_settings.update(partner_id=new_partner.id, partner_donor_tier=new_partner_settings.user_donor_tier,
-                                                 partner_pocket_watch_multiplier=new_partner_settings.user_pocket_watch_multiplier)
+                                                 partner_pocket_watch_multiplier=new_partner_settings.user_pocket_watch_multiplier,
+                                                 partner_chocolate_box_unlocked=new_partner_settings.chocolate_box_unlocked)
             await new_partner_settings.update(
                 partner_id=interaction.user.id, partner_donor_tier=self.view.user_settings.user_donor_tier,
-                partner_pocket_watch_multiplier=self.view.user_settings.user_pocket_watch_multiplier
+                partner_pocket_watch_multiplier=self.view.user_settings.user_pocket_watch_multiplier,
+                partner_chocolate_box_unlocked=self.view.user_settings.chocolate_box_unlocked
             )
             if self.view.user_settings.partner_id == new_partner.id and new_partner_settings.partner_id == interaction.user.id:
                 answer = (

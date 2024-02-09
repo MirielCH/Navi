@@ -65,7 +65,7 @@ class BoostsCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -422,6 +422,53 @@ class BoostsCog(commands.Cog):
                     )
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'round-card', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # Mega boost
+            search_strings = [
+                '** uses a <:megaboost', #English
+                '** uses a <:megaboost', #Spanish, MISSING
+                '** uses a <:megaboost', #Portuguese, MISSING
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for mega boost message.',
+                                               message)
+                        return
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_USE_MEGA_BOOST,
+                                                    user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the mega boost message.',
+                                               message)
+                        return
+                    if user is None: user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left = timedelta(days=30)
+                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.MEGA_BOOST)
+                        .replace('{boost_item}', 'mega boost')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'mega-boost', time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)

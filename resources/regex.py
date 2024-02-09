@@ -30,6 +30,7 @@ COMMAND_AREA_MOVE_CANDY_CANE = re.compile(
 COMMAND_ARENA = re.compile(rf"\barena\b")
 COMMAND_ARTIFACTS = re.compile(rf"\bartifacts?\b")
 COMMAND_BOOSTS = re.compile(rf"\bboosts?\b")
+COMMAND_BUY = re.compile(rf"\bbuy\b")
 COMMAND_CARD_HAND = re.compile(rf"\bcards?\b\s+\bhand\b")
 COMMAND_CARD_SLOTS = re.compile(rf"\bcards?\b\s+\bslots\b")
 COMMAND_CLAN = re.compile(rf"\bguild\b")
@@ -51,6 +52,7 @@ COMMAND_DUEL = re.compile(rf"\bduel\b")
 COMMAND_DUNGEON_MINIBOSS_MININTBOSS = re.compile(rf"(?:\bdung\b|\bdungeon\b|\bminiboss\b|\bminintboss\b)")
 COMMAND_ENCHANT = re.compile(rf"(?:\benchant\b|\brefine\b|\btransmute\b|\btranscend\b)")
 COMMAND_EPIC_QUEST = re.compile(rf"\bepic\b\s+\bquest\b")
+COMMAND_EPIC_SHOP = re.compile(rf"\bepic\b\s+\bshop\b")
 COMMAND_EVENTS = re.compile(rf"\bevents?\b")
 COMMAND_FARM = re.compile(rf"\bfarm\b")
 COMMAND_FORGE_OMEGA_SWORD = re.compile(rf"\bforge\b\s+\bomega\b\s+\bsword\b")
@@ -110,6 +112,7 @@ COMMAND_USE_EPIC_ITEM = re.compile(
 COMMAND_USE_EPIC_ITEM_ARENA_TOKEN = re.compile(
     rf"use\s+(?:\bepic\b\s+\bseed\b|\bultra\b\s+\bbait\b|\bcoin\b\s+\btrumpet\b|\blegendary\b\s+\btoothbrush\b|\barena\b\s+\btoken\b)"
 )
+COMMAND_USE_MEGA_BOOST = re.compile(rf"use\s+\bmega\b\s+\bboost\b")
 COMMAND_USE_PARTY_POPPER = re.compile(rf"use\s+\bparty\b\s+\bpopper\b")
 COMMAND_USE_ROUND_CARD = re.compile(rf"use\s+\bround\b\s+\bcard\b")
 COMMAND_USE_TIME_COOKIE = re.compile(rf"use\s+\btime\b\s+\bcookie\b")

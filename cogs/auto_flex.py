@@ -328,7 +328,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -508,7 +508,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -546,7 +546,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -587,7 +587,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -635,7 +635,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -931,7 +931,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_command_message = (
                             await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING,
                                                         user_name=user_name)
@@ -1015,7 +1015,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -1069,7 +1069,7 @@ class AutoFlexCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
                         if user_name_match:
                             user_name = user_name_match.group(1)

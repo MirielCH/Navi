@@ -42,9 +42,9 @@ class ArtifactsCog(commands.Cog):
                 icon_url = embed.author.icon_url
             if embed.title is not None: embed_title = str(embed.title)
             if embed.description is not None: embed_description = str(embed.description)
-            embed_field0 = ''
-            if embed.fields:
-                embed_field0 = embed.fields[0].value
+            embed_fields = ''
+            for field in embed.fields:
+                embed_fields = f'{embed_fields}\n{field.value}'
 
             # Artifacts overview
             search_strings = [
@@ -60,7 +60,7 @@ class ArtifactsCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
@@ -82,25 +82,35 @@ class ArtifactsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                top_hat_active_match = re.search(r'✅ \| <:tophat', embed_field0.lower())
+                top_hat_active_match = re.search(r'✅ \| <:tophat', embed_fields.lower())
                 top_hat_unlocked = True if top_hat_active_match else False
-                await user_settings.update(top_hat_unlocked=top_hat_unlocked)
-                pocket_watch_active_match = re.search(r'✅ \| <:pocketwatch', embed_field0.lower())
-                if not pocket_watch_active_match: return
-                search_patterns = [
-                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #English
-                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Spanish, MISSING
-                    r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Portuguese, MISSING
-                ]
-                pocket_watch_cooldown_match = await functions.get_match_from_patterns(search_patterns, embed_field0)
-                pocket_watch_cooldown = float(pocket_watch_cooldown_match.group(1))
-                await user_settings.update(user_pocket_watch_multiplier=(100 - pocket_watch_cooldown) / 100)
-                if user_settings.partner_id is not None:
-                    try:
-                        partner_settings: users.User = await users.get_user(user_settings.partner_id)
-                        await partner_settings.update(partner_pocket_watch_multiplier=(100 - pocket_watch_cooldown) / 100)
-                    except exceptions.FirstTimeUserError:
-                        pass
+                chocolate_box_active_match = re.search(r'✅ \| <:chocolatebox', embed_fields.lower())
+                chocolate_box_unlocked = True if chocolate_box_active_match else False
+                if (user_settings.top_hat_unlocked != top_hat_unlocked
+                    or user_settings.chocolate_box_unlocked != chocolate_box_unlocked):
+                    await user_settings.update(top_hat_unlocked=top_hat_unlocked, chocolate_box_unlocked=chocolate_box_unlocked)
+                    if user_settings.partner_id is not None:
+                        try:
+                            partner_settings = await users.get_user(user_settings.partner_id)
+                            await partner_settings.update(partner_chocolate_box_unlocked=chocolate_box_unlocked)
+                        except:
+                            pass
+                pocket_watch_active_match = re.search(r'✅ \| <:pocketwatch', embed_fields.lower())
+                if pocket_watch_active_match:
+                    search_patterns = [
+                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #English
+                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Spanish, MISSING
+                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Portuguese, MISSING
+                    ]
+                    pocket_watch_cooldown_match = await functions.get_match_from_patterns(search_patterns, embed_fields)
+                    pocket_watch_cooldown = float(pocket_watch_cooldown_match.group(1))
+                    await user_settings.update(user_pocket_watch_multiplier=(100 - pocket_watch_cooldown) / 100)
+                    if user_settings.partner_id is not None:
+                        try:
+                            partner_settings: users.User = await users.get_user(user_settings.partner_id)
+                            await partner_settings.update(partner_pocket_watch_multiplier=(100 - pocket_watch_cooldown) / 100)
+                        except exceptions.FirstTimeUserError:
+                            pass
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 

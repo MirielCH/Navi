@@ -84,7 +84,7 @@ class HelperPetsCog(commands.Cog):
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
-                    else:
+                    if user is None:
                         search_patterns = [
                             r"APPROACHING \*\*(.+?)\*\*", #English
                             r"ACERCANDO A \*\*(.+?)\*\*", #Spanish

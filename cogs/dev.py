@@ -342,7 +342,7 @@ class DevCog(commands.Cog):
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
-    @dev.command()
+    @dev.command(name='leave-server')
     async def leave_server(
         self,
         ctx: discord.ApplicationContext,

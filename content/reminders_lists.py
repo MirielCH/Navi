@@ -126,6 +126,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
     reminders_commands_list = []
     reminders_events_list = []
     reminders_boosts_list = []
+    reminders_epic_shop_list = []
     reminders_pets_list = []
     reminders_custom_list = []
     for reminder in user_reminders:
@@ -137,6 +138,8 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
             reminders_events_list.append(reminder)
         elif reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES:
             reminders_boosts_list.append(reminder)
+        elif reminder.activity.startswith('epic-shop-'):
+            reminders_epic_shop_list.append(reminder)
         else:
             reminders_commands_list.append(reminder)
 
@@ -222,6 +225,23 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
                 f'{emojis.BP} **`{activity}`** ({reminder_time})'
             )
         embed.add_field(name='BOOSTS', value=field_boosts_reminders.strip(), inline=False)
+    if reminders_epic_shop_list:
+        field_epic_shop_reminders = ''
+        for reminder in reminders_epic_shop_list:
+            if show_timestamps:
+                end_time = reminder.end_time + local_time_difference
+                flag = 'T' if end_time.day == current_time.day else 'f'
+                reminder_time = f'<t:{int(end_time.timestamp())}:{flag}>'
+            else:
+                time_left = reminder.end_time - current_time
+                timestring = await functions.parse_timedelta_to_timestring(time_left)
+                reminder_time = f'**{timestring}**'
+            activity = reminder.activity[10:].replace('-',' ').capitalize()
+            field_epic_shop_reminders = (
+                f'{field_epic_shop_reminders}\n'
+                f'{emojis.BP} **`{activity}`** ({reminder_time})'
+            )
+        embed.add_field(name='EPIC SHOP RESTOCKS', value=field_epic_shop_reminders.strip(), inline=False)
     if clan_reminders:
         reminder = clan_reminders[0]
         clan: clans.Clan = await clans.get_clan_by_clan_name(reminder.clan_name)
