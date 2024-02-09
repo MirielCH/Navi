@@ -232,10 +232,13 @@ class HelperRubyCog(commands.Cog):
                     answer = (
                         f'{emojis.WARNING} Sorry can\'t help you this time, looks like your recorded ruby count is wrong.\n'
                         f'Please open your inventory to update it.'
-                    )    
+                    )
                     if not user_settings.dnd_mode_enabled:
                         answer = f'{user.mention} {answer}'
-                    await message.reply(answer)
+                    else:
+                        user_global_name = user.global_name if user.global_name is not None else user.name
+                        answer = f'**{user_global_name}**, {answer}'
+                    await message.channel.send(answer)
                     return
                 answer = f'You have {user_settings.inventory.ruby:,} {emojis.RUBY}'
                 if user_settings.ruby_counter_button_mode:
@@ -254,7 +257,10 @@ class HelperRubyCog(commands.Cog):
                     view = None
                 if not user_settings.dnd_mode_enabled:
                     answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
-                await message.reply(content=answer, view=view)
+                else:
+                    user_global_name = user.global_name if user.global_name is not None else user.name
+                    answer = f'**{user_global_name}**, {answer}'
+                await message.channel.send(content=answer, view=view)
 
             # Rubies from selling
             search_strings = [

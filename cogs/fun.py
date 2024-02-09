@@ -291,7 +291,7 @@ class FunCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     search_patterns = [
-                        r"\*\*(.+?)\*\* (also )?earned [0-9] <:coolness", #English
+                        r"\*\*(.+?)\*\* (also )?earned [0-9,]+ <:coolness", #English
                         r"\*\*(.+?)\*\* found", #English 2
                     ]
                     user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)

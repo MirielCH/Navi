@@ -92,12 +92,18 @@ class EpicShopCog(commands.Cog):
                     item_amount_bought = int(shop_item_data_match.group(2))
                     item_amount_available = int(shop_item_data_match.group(3))
                     timestring = shop_item_data_match.group(4)
-                    if item_amount_bought < item_amount_available: continue
+                    activity = item_name.replace(' ','-')
+                    if item_amount_bought < item_amount_available:
+                        try:
+                            epic_shop_reminder = await reminders.get_user_reminder(user.id, f'epic-shop-{activity}')
+                            await epic_shop_reminder.delete()
+                        except:
+                            pass
+                        continue
                     time_left_timestring = await functions.parse_timestring_to_timedelta(timestring)
                     time_left = midnight_tomorrow - current_time + timedelta(seconds=random.randint(0, 600))
                     if time_left_timestring >= timedelta(days=1):
                         time_left = time_left + timedelta(days=time_left_timestring.days)
-                    activity = item_name.replace(' ','-')
                     emoji = emojis.EPIC_SHOP_EMOJIS.get(activity, '')
                     user_command = await functions.get_slash_command(user_settings, 'epic shop')
                     reminder_message = (
@@ -125,7 +131,7 @@ class EpicShopCog(commands.Cog):
                 user_command_message = None
                 user = message.mentions[0]
                 user_command_message = (
-                    await messages.find_message(message.channel.id, regex.COMMAND_BUY, user=user)
+                    await messages.find_message(message.channel.id, regex.COMMAND_EPIC_SHOP_BUY, user=user)
                 )
                 if user_command_message is None:
                     await functions.add_warning_reaction(message)

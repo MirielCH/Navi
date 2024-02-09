@@ -53,6 +53,7 @@ COMMAND_DUNGEON_MINIBOSS_MININTBOSS = re.compile(rf"(?:\bdung\b|\bdungeon\b|\bmi
 COMMAND_ENCHANT = re.compile(rf"(?:\benchant\b|\brefine\b|\btransmute\b|\btranscend\b)")
 COMMAND_EPIC_QUEST = re.compile(rf"\bepic\b\s+\bquest\b")
 COMMAND_EPIC_SHOP = re.compile(rf"\bepic\b\s+\bshop\b")
+COMMAND_EPIC_SHOP_BUY = re.compile(rf"\bepic\b\s+\bshop\b\s+\bbuy\b")
 COMMAND_EVENTS = re.compile(rf"\bevents?\b")
 COMMAND_FARM = re.compile(rf"\bfarm\b")
 COMMAND_FORGE_OMEGA_SWORD = re.compile(rf"\bforge\b\s+\bomega\b\s+\bsword\b")

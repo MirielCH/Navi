@@ -255,7 +255,7 @@ class AutoFlexCog(commands.Cog):
         await auto_flex_channel.send(content=content, embed=embed)
         if user_settings.reactions_enabled: await message.add_reaction(emojis.PANDA_LUCKY)
         if not user_settings.auto_flex_tip_read:
-            await message.reply(
+            await message.channel.send(
                 f'{user.mention} Nice! You just did something flex worthy. Because you have auto flex enabled, '
                 f'this was automatically posted to the channel <#{guild_settings.auto_flex_channel_id}>.\n'
                 f'If you don\'t like this, you can disable auto flex and/or auto flex pings in '
@@ -608,9 +608,9 @@ class AutoFlexCog(commands.Cog):
                     time_travel_count = 0
                 else:
                     search_patterns = [
-                        'time travels\*\*: (.+?)$', #English
-                        'el tiempo\*\*: (.+?)$', #Spanish
-                        'no tempo\*\*: (.+?)$', #Portuguese
+                        'time travels\*\*: (.+?)(?:$|\n)', #English
+                        'el tiempo\*\*: (.+?)(?:$|\n)', #Spanish
+                        'no tempo\*\*: (.+?)(?:$|\n)', #Portuguese
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
                     if not tt_match:
@@ -870,7 +870,7 @@ class AutoFlexCog(commands.Cog):
                 guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
                 if len(guild_users) > 1:
                     await functions.add_warning_reaction(message)
-                    await message.reply(
+                    await message.channel.send(
                         f'Congratulations **{user_name}**, you found something worthy of an auto flex!\n'
                         f'Sadly I am unable to determine who you are as your username is not unique.\n'
                         f'To resolve this, either change your username (not nickname!) or use slash commands next time.'

@@ -113,16 +113,20 @@ class HelperTrainingCog(commands.Cog):
                     if user_settings.training_helper_button_mode:
                         answer, buttons = await functions.get_void_training_answer_buttons(message, user_settings)
                         if buttons:
-                            answer = None if user_settings.dnd_mode_enabled else user.mention
+                            user_global_name = user.global_name if user.global_name is not None else user.name
+                            answer = f'**{user_global_name}**' if user_settings.dnd_mode_enabled else user.mention
                             view = views.TrainingAnswerView(buttons)
-                            await message.reply(content=answer, view=view)
+                            await message.channel.send(content=answer, view=view)
                         else:
                             if not user_settings.dnd_mode_enabled:
                                 if user_settings.ping_after_message:
                                     answer = f'{user.mention}\n{answer}' if emojis.BP in answer else f'{user.mention} {answer}'
                                 else:
                                     answer = f'{answer}\n{user.mention}' if emojis.BP in answer else f'{answer} {user.mention}'
-                            await message.reply(answer)
+                            else:
+                                user_global_name = user.global_name if user.global_name is not None else user.name
+                                answer = f'**{user_global_name}**\n{answer}' if emojis.BP in answer else f'**{user_global_name}**, {answer}'
+                            await message.channel.send(answer)
                     else:
                         answer = await functions.get_void_training_answer_text(message, user_settings)
                         if not user_settings.dnd_mode_enabled:
@@ -130,13 +134,17 @@ class HelperTrainingCog(commands.Cog):
                                 answer = f'{user.mention}\n{answer}' if emojis.BP in answer else f'{user.mention} {answer}'
                             else:
                                 answer = f'{answer}\n{user.mention}' if emojis.BP in answer else f'{answer} {user.mention}'
-                        await message.reply(answer)
+                        else:
+                            user_global_name = user.global_name if user.global_name is not None else user.name
+                            answer = f'**{user_global_name}**\n{answer}' if emojis.BP in answer else f'**{user_global_name}**, {answer}'                            
+                        await message.channel.send(answer)
                 else:
                     if user_settings.training_helper_button_mode:
-                        answer = None if user_settings.dnd_mode_enabled else user.mention
+                        user_global_name = user.global_name if user.global_name is not None else user.name
+                        answer = f'**{user_global_name}**' if user_settings.dnd_mode_enabled else user.mention
                         buttons = await functions.get_training_answer_buttons(message)
                         view = views.TrainingAnswerView(buttons)
-                        await message.reply(content=answer, view=view)
+                        await message.channel.send(content=answer, view=view)
                     else:
                         answer = await functions.get_training_answer_text(message)
                         if not user_settings.dnd_mode_enabled:
@@ -144,7 +152,10 @@ class HelperTrainingCog(commands.Cog):
                                 answer = f'{answer} {user.mention}'
                             else:
                                 answer = f'{user.mention} {answer}'
-                        await message.reply(answer)
+                        else:
+                            user_global_name = user.global_name if user.global_name is not None else user.name
+                            answer = f'**{user_global_name}**, {answer}'
+                        await message.channel.send(answer)
 
 
 # Initialization

@@ -555,6 +555,7 @@ ACTIVITIES_COLUMNS = {
     'dungeon-miniboss': 'alert_dungeon_miniboss',
     'electronical-potion': 'alert_boosts',
     'epic': 'alert_epic',
+    'epic-shop': 'alert_epic_shop',
     'eternal-presents': 'alert_eternal_present',
     'farm': 'alert_farm',
     'fish-potion': 'alert_boosts',
