@@ -256,8 +256,8 @@ class HelperHealCog(commands.Cog):
         # Heal after brewing dragon breath potion
         search_strings = [
             '**dragon breath potion**, you\'ve received the following boosts', #English
-            '**dragon breath potion**, you\'ve received the following boosts', #Spanish, MISSING
-            '**dragon breath potion**, you\'ve received the following boosts', #Portuguese, MISSING
+            '**dragon breath potion**, has recibido los siguientes boosts', #Spanish
+            '**dragon breath potion**, recebeu os seguintes boosts', #Portuguese
         ]
         if any(search_string in message_content.lower() for search_string in search_strings):
             user = await functions.get_interaction_user(message)

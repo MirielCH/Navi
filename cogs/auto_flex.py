@@ -2281,8 +2281,8 @@ class AutoFlexCog(commands.Cog):
             # Brew electronical potion
             search_strings = [
                 '**electronical potion**, you\'ve received the following boosts', #English
-                '**electronical potion**, you\'ve received the following boosts', #Spanish, MISSING
-                '**electronical potion**, you\'ve received the following boosts', #Portuguese, MISSING
+                '**electronical potion**, has recibido los siguientes boosts', #Spanish
+                '**electronical potion**, recebeu os seguintes boosts', #Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)

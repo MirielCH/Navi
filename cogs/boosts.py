@@ -53,37 +53,39 @@ class BoostsCog(commands.Cog):
             # Boosts cooldowns
             search_strings = [
                 'these are your active boosts', #English
-                'these are your active boosts', #Spanish, MISSING
-                'these are your active boosts', #Portuguese, MISSING
+                'estos son tus boosts activos', #Spanish
+                'estes são seus boosts ativos', #Portuguese
             ]
             if (any(search_string in embed_description.lower() for search_string in search_strings)):
                 user_id = user_name = user_command_message = None
                 potion_dragon_breath_active = round_card_active = potion_flask_active = False
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                        user = message.guild.get_member(user_id)
-                    if user is None:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                        else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('Couldn\'t find a command for the boosts message.', message)
-                            return
+                embed_users = []
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
                     user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_BOOSTS, user=user,
-                                                    user_name=user_name)
+                        await messages.find_message(message.channel.id, regex.COMMAND_BOOSTS)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find a command for the boosts message.', message)
                         return
-                    if user is None: user = user_command_message.author
+                    interaction_user = user_command_message.author
+                    
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    embed_users.append(message.guild.get_member(user_id))
+                if not embed_users:
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    if not user_name_match or not embed_users:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find embed user for the boosts message.', message)
+                        return
+                if interaction_user not in embed_users: return
                 try:
-                    user_settings: users.User = await users.get_user(user.id)
+                    user_settings: users.User = await users.get_user(interaction_user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
@@ -96,7 +98,7 @@ class BoostsCog(commands.Cog):
                     ]
                     if any(search_string == embed_potion_fields.lower() for search_string in search_strings):
                         try:
-                            active_reminders = await reminders.get_active_user_reminders(user.id)
+                            active_reminders = await reminders.get_active_user_reminders(interaction_user.id)
                             for active_reminder in active_reminders:
                                 if (active_reminder.activity in strings.ACTIVITIES_BOOSTS
                                     or active_reminder.activity in strings.BOOSTS_ALIASES):
@@ -139,12 +141,12 @@ class BoostsCog(commands.Cog):
                         .replace('  ', ' ')
                     )
                     reminder: reminders.Reminder = (
-                        await reminders.insert_user_reminder(user.id, active_item_activity, time_left,
+                        await reminders.insert_user_reminder(interaction_user.id, active_item_activity, time_left,
                                                              message.channel.id, reminder_message)
                     )
                 for activity in all_boosts:
                     try:
-                        active_reminder = await reminders.get_user_reminder(user.id, activity)
+                        active_reminder = await reminders.get_user_reminder(interaction_user.id, activity)
                         await active_reminder.delete()
                     except exceptions.NoDataFoundError:
                         continue
@@ -163,7 +165,7 @@ class BoostsCog(commands.Cog):
             # Party popper
             search_strings = [
                 'uses the <:partypopper', #English
-                'uses the <:partypopper', #Spanish, MISSING
+                'usa el <:partypopper', #Spanish
                 'uses the <:partypopper', #Portuguese, MISSING
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):

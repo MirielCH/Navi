@@ -89,7 +89,7 @@ class QuestCog(commands.Cog):
                 if any(search_string in field_value.lower() for search_string in search_strings_miniboss): 
                     if user_settings.alert_dungeon_miniboss.enabled:
                         try:
-                            miniboss_reminder = await reminders.get_user_reminder(user.id)
+                            miniboss_reminder = await reminders.get_user_reminder(user.id, 'dungeon-miniboss')
                         except:
                             miniboss_reminder = None
                         command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
@@ -115,48 +115,68 @@ class QuestCog(commands.Cog):
                     try:
                         clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
                     except exceptions.NoDataFoundError:
-                        return
+                        clan = None
                     try:
                         clan_reminder = await reminders.get_clan_reminder(user_settings.clan_name)
                     except exceptions.NoDataFoundError:
                         clan_reminder = None
-                    if clan.alert_enabled:
-                        if user_settings.dnd_mode_enabled:
-                            user_name = f'**{user_global_name}**,'
-                        else:
-                            user_name = user.mention
-                        await user_settings.update(last_quest_command='quest')
-                        if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
+                    if clan is not None:
+                        if clan.alert_enabled:
+                            if user_settings.dnd_mode_enabled:
+                                user_name = f'**{user_global_name}**,'
+                            else:
+                                user_name = user.mention
+                            await user_settings.update(last_quest_command='quest')
+                            if clan.stealth_current < clan.stealth_threshold and not clan.upgrade_quests_enabled:
+                                await message.channel.send(
+                                    f'{user_name}\n'
+                                    f'{emojis.DISABLED} Guild quest slot not available.\n'
+                                    f'Your guild doesn\'t allow doing guild quests below the '
+                                    f'stealth threshold ({clan.stealth_threshold}).'
+                                )
+                                return
+                            if clan.quest_user_id is not None:
+                                await message.channel.send(
+                                    f'{user_name}\n'
+                                    f'{emojis.DISABLED} Guild quest slot not available.\n'
+                                    f'Another guild member is already doing a guild quest.'
+                                )
+                                return
+                            command_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                            if clan_reminder is not None:
+                                current_time = datetime.utcnow().replace(microsecond=0)
+                                time_left = clan_reminder.end_time - current_time
+                                timestring = await functions.parse_timedelta_to_timestring(time_left)
+                                raid_ready = f'🕓 {command_raid} is ready in **{timestring}**.'
+                                await user_settings.update(guild_quest_prompt_active=True)
+                            else:
+                                raid_ready = f'{emojis.ENABLED} {command_raid} is ready!'
                             await message.channel.send(
                                 f'{user_name}\n'
-                                f'{emojis.DISABLED} Guild quest slot not available.\n'
-                                f'Your guild doesn\'t allow doing guild quests below the '
-                                f'stealth threshold ({clan.stealth_threshold}).'
+                                f'{emojis.ENABLED} Guild quest slot available!\n{raid_ready}\n\n'
+                                f'_If you accept this quest, the next guild reminder will ping you solo first. '
+                                f'You will have 5 minutes to raid before the other members are pinged._\n'
+                                f'_Note that you will lose your slot if you don\'t answer in time._'
                             )
                             return
-                        if clan.quest_user_id is not None:
-                            await message.channel.send(
-                                f'{user_name}\n'
-                                f'{emojis.DISABLED} Guild quest slot not available.\n'
-                                f'Another guild member is already doing a guild quest.'
-                            )
-                            return
-                        command_raid = await functions.get_slash_command(user_settings, 'guild raid')
-                        if clan_reminder is not None:
+                    if user_settings.alert_guild.enabled:
+                        try:
+                            clan_user_reminder = await reminders.get_user_reminder(user.id, 'guild')
+                        except:
+                            clan_user_reminder = None
+                        command_guild_raid = await functions.get_slash_command(user_settings, 'guild raid')
+                        if clan_user_reminder is not None:
                             current_time = datetime.utcnow().replace(microsecond=0)
-                            time_left = clan_reminder.end_time - current_time
+                            time_left = clan_user_reminder.end_time - current_time
                             timestring = await functions.parse_timedelta_to_timestring(time_left)
-                            raid_ready = f'🕓 {command_raid} is ready in **{timestring}**.'
-                            await user_settings.update(guild_quest_prompt_active=True)
+                            answer = f'🕓 {command_guild_raid} is ready in **{timestring}**.'
                         else:
-                            raid_ready = f'{emojis.ENABLED} {command_raid} is ready!'
-                        await message.channel.send(
-                            f'{user_name}\n'
-                            f'{emojis.ENABLED} Guild quest slot available!\n{raid_ready}\n\n'
-                            f'_If you accept this quest, the next guild reminder will ping you solo first. '
-                            f'You will have 5 minutes to raid before the other members are pinged._\n'
-                            f'_Note that you will lose your slot if you don\'t answer in time._'
-                        )
+                            answer = f'{emojis.ENABLED} {command_guild_raid} is ready!'
+                        if user_settings.dnd_mode_enabled:
+                            answer = f'**{user_global_name}**, {answer}'
+                        else:
+                            answer = f'{user.mention} {answer}'
+                        await message.channel.send(answer)
 
             # Quest cooldown
             search_strings = [
