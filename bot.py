@@ -153,6 +153,7 @@ EXTENSIONS = [
         'cogs.tracking',
         'cogs.trade',
         'cogs.training',
+        'cogs.valentine',
         'cogs.vote',
         'cogs.weekly',
         'cogs.work',

@@ -447,6 +447,13 @@ def update_database() -> bool:
             "('{name} Hey! The {epic_shop_emoji} **{epic_shop_item}** is back on sale in the {command}!')",
             "ALTER TABLE users ADD alert_epic_shop_visible INTEGER NOT NULL DEFAULT (1)",
         ]
+    if db_version < 17:
+        sqls += [
+            "ALTER TABLE users ADD alert_love_share_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_love_share_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_love_share_visible INTEGER NOT NULL DEFAULT (1)",
+        ]
 
     # Run SQLs
     for sql in sqls:

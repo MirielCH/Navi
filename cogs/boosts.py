@@ -69,7 +69,6 @@ class BoostsCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         return
                     interaction_user = user_command_message.author
-                    
                 user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                 if user_id_match:
                     user_id = int(user_id_match.group(1))

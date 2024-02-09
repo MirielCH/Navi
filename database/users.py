@@ -57,6 +57,7 @@ class User():
     alert_hunt: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
+    alert_love_share: UserAlert
     alert_maintenance: UserAlert
     alert_megarace: UserAlert
     alert_minirace: UserAlert
@@ -178,6 +179,7 @@ class User():
         self.alert_hunt = new_settings.alert_hunt
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
+        self.alert_love_share = new_settings.alert_love_share
         self.alert_maintenance = new_settings.alert_maintenance
         self.alert_megarace = new_settings.alert_megarace
         self.alert_minirace = new_settings.alert_minirace
@@ -379,6 +381,9 @@ class User():
             alert_lottery_enabled: bool
             alert_lottery_message: str
             alert_lottery_visible: bool
+            alert_love_share_enabled: bool
+            alert_love_share_message: str
+            alert_love_share_visible: bool
             alert_maintenance_enabled: bool
             alert_maintenance_message: str
             alert_maintenance_visible: bool
@@ -625,6 +630,10 @@ async def _dict_to_user(record: dict) -> User:
                                       message=record['alert_lottery_message'],
                                       multiplier=1.0,
                                       visible=bool(record['alert_lottery_visible'])),
+            alert_love_share = UserAlert(enabled=bool(record['alert_love_share_enabled']),
+                                         message=record['alert_love_share_message'],
+                                         multiplier=1.0,
+                                         visible=bool(record['alert_love_share_visible'])),
             alert_maintenance = UserAlert(enabled=bool(record['alert_maintenance_enabled']),
                                           message=record['alert_maintenance_message'],
                                           multiplier=1.0,
@@ -999,6 +1008,9 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_lottery_enabled: bool
         alert_lottery_message: str
         alert_lottery_visible: bool
+        alert_love_share_enabled: bool
+        alert_love_share_message: str
+        alert_love_share_visible: bool
         alert_maintenance_enabled: bool
         alert_maintenance_message: str
         alert_maintenance_visible: bool
