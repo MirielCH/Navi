@@ -139,13 +139,13 @@ class SettingsCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_on(self, ctx: commands.Context, *args: str) -> None:
         """Turn on Navi (prefix version)"""
-        await ctx.reply(f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "on")} to activate me.')
+        await settings_cmd.command_on(self.bot, ctx)
 
     @commands.command(name='off', aliases=('deactivate','stop'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_off(self, ctx: commands.Context, *args: str) -> None:
         """Turn off Navi (prefix version)"""
-        await ctx.reply(f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "off")} to deactivate me.')
+        await settings_cmd.command_off(self.bot, ctx)
 
     @commands.command(name='alts', aliases=('alt',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
@@ -157,16 +157,26 @@ class SettingsCog(commands.Cog):
         )
         
     aliases_settings_user = (
-        'slashmentions','donor','donator','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
-        'hunt-rotate','huntswitch','hunt-switch','dnd','ruby','rubies','last_tt','last-tt',
-        'lasttt','tracking','track'
+        'donator','tracking','track','last_tt','last-tt','lasttt',
     )
-    @commands.command(name='slash-mentions', aliases=aliases_settings_user)
+    @commands.command(name='donor', aliases=aliases_settings_user)
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_user(self, ctx: commands.Context, *args: str) -> None:
         """User settings (prefix version)"""
         await ctx.reply(
             f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings user")} '
+            f'to change these settings.'
+        )
+    aliases_settings_reminders = (
+        'slashmentions','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
+        'hunt-rotate','huntswitch','hunt-switch','dnd',
+    )
+    @commands.command(name='slash-mentions', aliases=aliases_settings_reminders)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def prefix_settings_reminders(self, ctx: commands.Context, *args: str) -> None:
+        """Reminder settings (prefix version)"""
+        await ctx.reply(
+            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings reminders")} '
             f'to change these settings.'
         )
 
@@ -197,10 +207,9 @@ class SettingsCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_settings_multipliers(self, ctx: commands.Context, *args: str) -> None:
         """Multiplier settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings multipliers")} '
-            f'to change these settings.'
-        )
+        args = [arg.lower() for arg in args]
+        prefix_args = None if not args else args
+        await settings_cmd.command_settings_multipliers(self.bot, ctx, prefix_args=prefix_args)
 
     @commands.command(name='partner')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)

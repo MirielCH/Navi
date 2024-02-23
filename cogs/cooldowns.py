@@ -92,6 +92,7 @@ class CooldownsCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
+            if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
             # Anniversary event reduction update
             search_patterns = [
                 r'anniversary event cooldown reduction\*\*: (\d+?)%',

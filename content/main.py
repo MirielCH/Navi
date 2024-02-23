@@ -22,22 +22,27 @@ class LinksView(discord.ui.View):
         super().__init__(timeout=None)
         if settings.LINK_SUPPORT is not None:
             self.add_item(discord.ui.Button(label="Support", style=discord.ButtonStyle.link,
-                                            url=settings.LINK_SUPPORT, emoji=emojis.NAVI))
+                                            url=settings.LINK_SUPPORT, emoji=emojis.NAVI, row=0))
+        self.add_item(discord.ui.Button(label="Changelog", style=discord.ButtonStyle.link,
+                                        url=strings.LINK_CHANGELOG, emoji=emojis.GITHUB, row=0))
         self.add_item(discord.ui.Button(label="Github", style=discord.ButtonStyle.link,
-                                        url=strings.LINK_GITHUB, emoji=emojis.GITHUB))
+                                        url=strings.LINK_GITHUB, emoji=emojis.GITHUB, row=0))
         self.add_item(discord.ui.Button(label="Privacy policy", style=discord.ButtonStyle.link,
-                                        url=strings.LINK_PRIVACY_POLICY, emoji=emojis.PRIVACY_POLICY))
+                                        url=strings.LINK_PRIVACY_POLICY, emoji=emojis.PRIVACY_POLICY, row=1))
             
 
 
 # --- Commands ---
-async def command_event_reduction(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+async def command_event_reduction(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
     """Help command"""
     all_cooldowns = list(await cooldowns.get_all_cooldowns())
     embed = await embed_event_reductions(bot, all_cooldowns)
-    await ctx.respond(embed=embed)
+    if isinstance(ctx, discord.ApplicationContext):
+        await ctx.respond(embed=embed)
+    else:
+        await ctx.reply(embed=embed)
 
-        
+
 async def command_help(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context, discord.Message]) -> None:
     """Help command"""
     view = LinksView()
@@ -48,15 +53,22 @@ async def command_help(bot: discord.Bot, ctx: Union[discord.ApplicationContext, 
         await ctx.reply(embed=embed, view=view)
 
 
-async def command_about(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+async def command_about(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
     """About command"""
     start_time = datetime.utcnow()
-    interaction = await ctx.respond('Testing API latency...')
+    answer = 'Testing API latency...'
+    if isinstance(ctx, discord.ApplicationContext):
+        interaction = await ctx.respond('Testing API latency...')
+    else:
+        interaction = await ctx.reply('Testing API latency...')
     end_time = datetime.utcnow()
     api_latency = end_time - start_time
     img_navi, embed = await embed_about(bot, api_latency)
     view = LinksView()
-    await functions.edit_interaction(interaction, content=None, embed=embed, view=view, file=img_navi)
+    if isinstance(ctx, discord.ApplicationContext):
+        await functions.edit_interaction(interaction, content=None, embed=embed, view=view, file=img_navi)
+    else:
+        await interaction.edit(content=None, embed=embed, view=view, file=img_navi)
 
 
 # --- Embeds ---
@@ -76,7 +88,7 @@ async def embed_event_reductions(bot: discord.Bot, all_cooldowns: List[cooldowns
         color = settings.EMBED_COLOR,
         title = 'ACTIVE EVENT REDUCTIONS',
         description = (
-            f'_Event reductions are set by your Navi bot admin._\n'
+            f'_Event reductions are set by your Navi bot owner._\n'
             f'_You can set additional personal multipliers with '
             f'{await functions.get_navi_slash_command(bot, "settings multipliers")}_\n'
         )
@@ -98,6 +110,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{emojis.DETAIL} _Aliases: `{prefix}reminder`, `{prefix}rm`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings messages")} : Manage reminder messages\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings multipliers")} : Manage custom multipliers\n'
+        f'{emojis.DETAIL} _Alias: `{prefix}multi`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings ready")} : Manage the ready list\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings reminders")} : Enable/disable reminders\n'
     )
@@ -107,7 +120,9 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
     )
     user_settings = (
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "on")} : Turn on Navi\n'
+        f'{emojis.DETAIL} _Alias: `{prefix}on`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "off")} : Turn off Navi\n'
+        f'{emojis.DETAIL} _Alias: `{prefix}off`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings user")} : Manage your user settings\n'
     )
     helper_settings = (
@@ -128,6 +143,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         f'{await functions.get_navi_slash_command(bot, "disable")} : Speed enable/disable settings\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}enable` & `{prefix}disable`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "event-reductions")} : Check active event reductions\n'
+        f'{emojis.DETAIL} _Aliases: `{prefix}event-reductions`, `{prefix}er`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "portals")} : Customizable list of channel links\n'
         f'{emojis.DETAIL} _Aliases: `{prefix}portals`, `{prefix}pt`_\n'
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "purge data")} : Purges your user data\n'
@@ -137,6 +153,10 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
     server_settings = (
         f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings server")} : Server settings\n'
         f'{emojis.DETAIL} _Requires `Manage server` permission._\n'
+    )
+    about = (
+        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "about")} : About Navi\n'
+        f'{emojis.DETAIL} _Alias: `{prefix}about`_\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
@@ -160,6 +180,7 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
     embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
     embed.add_field(name='MISC', value=misc_settings, inline=False)
     embed.add_field(name='SERVER', value=server_settings, inline=False)
+    embed.add_field(name='ABOUT NAVI', value=about, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
     return embed
 
@@ -174,9 +195,10 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         f'{emojis.BP} {user_count:,} users\n'
         f'{emojis.BP} {round(bot.latency * 1000):,} ms bot latency\n'
         f'{emojis.BP} {round(api_latency.total_seconds() * 1000):,} ms API latency\n'
-        f'{emojis.BP} Online for {format_timespan(uptime)}'
+        f'{emojis.BP} Online for {format_timespan(uptime)}\n'
+        f'{emojis.BP} Bot owner: <@{settings.OWNER_ID}>\n'
     )
-    creator = f'{emojis.BP} miriel.ch'
+    creator = f'{emojis.BP} <@619879176316649482>'
     dev_stuff = (
         f'{emojis.BP} Version: {settings.VERSION}\n'
         f'{emojis.BP} Language: Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}\n'
@@ -200,6 +222,10 @@ async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed
         'My waning interest in WoW',
         'My keyboard',
         'That one QBasic book back in 1997',
+        'VisualBasic 3, 4, 5 and 6',
+        'An Intel 486-DX2-S with 16 MB of RAM',
+        'The Raspberry Pi Foundation',
+        'Mom',
     ]
     img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
     image_url = 'attachment://navi.png'

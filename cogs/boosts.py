@@ -163,7 +163,7 @@ class BoostsCog(commands.Cog):
 
             # Party popper
             search_strings = [
-                'uses the <:partypopper', #English
+                'uses a <:partypopper', #English
                 'usa el <:partypopper', #Spanish
                 'uses the <:partypopper', #Portuguese, MISSING
             ]
@@ -195,7 +195,9 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
-                time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                time_left_hours = 1
+                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', emojis.PARTY_POPPER)
@@ -247,6 +249,7 @@ class BoostsCog(commands.Cog):
                 if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', item_emoji)
@@ -414,7 +417,7 @@ class BoostsCog(commands.Cog):
                 timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
                 if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
-                await reminders.reduce_reminder_time_percentage(user.id, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
+                await reminders.reduce_reminder_time_percentage(user.id, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
                                                                 user_settings)
                 reminder_message = (
                         user_settings.alert_boosts.message

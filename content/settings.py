@@ -19,6 +19,7 @@ SETTINGS_HELPERS = [
     'pet-helper',
     'ruby-counter',
     'training-helper',
+    'halloween-helper',
 ]
 
 SETTINGS_HELPER_ALIASES = {
@@ -55,6 +56,16 @@ SETTINGS_HELPER_ALIASES = {
     'trhelper': 'training-helper',
     'traininghelp': 'training-helper',
     'traininghelper': 'training-helper',
+    'halloweenhelper': 'halloween-helper',
+    'pumpkinbat': 'halloween-helper',
+    'pumpkin-bat': 'halloween-helper',
+    'pumpkin-bat-helper': 'halloween-helper',
+    'pumpkinbat-helper': 'halloween-helper',
+    'pumpkin-helper': 'halloween-helper',
+    'scroll-boss-helper': 'halloween-helper',
+    'scrollboss-helper': 'halloween-helper',
+    'scrollboss': 'halloween-helper',
+    'scroll-boss': 'halloween-helper',
 }
 
 SETTINGS_HELPER_COLUMNS = {
@@ -63,15 +74,19 @@ SETTINGS_HELPER_COLUMNS = {
     'pet-helper': 'pet_helper',
     'ruby-counter': 'ruby_counter',
     'training-helper': 'training_helper',
+    'halloween-helper': 'halloween_helper',
 }
 
 SETTINGS_USER = [
     'auto-ready',
+    'auto-ready-ping',
     'dnd-mode',
     'hardmode-mode',
     'hunt-rotation',
     'slash-mentions',
     'tracking',
+    'area-20-cooldowns',
+    'auto-flex',
 ]
 
 SETTINGS_USER_ALIASES = {
@@ -108,6 +123,15 @@ SETTINGS_USER_ALIASES = {
     'rd': 'auto-ready',
     'ready': 'auto-ready',
     'autoready': 'auto-ready',
+    'a20-cd': 'area-20-cooldowns',
+    'a20': 'area-20-cooldowns',
+    'area20-cd': 'area-20-cooldowns',
+    'area-20-cd': 'area-20-cooldowns',
+    'area-20': 'area-20-cooldowns',
+    'area20': 'area-20-cooldowns',
+    'autoflex': 'auto-flex',
+    'auto flex': 'auto-flex',
+    'flex': 'auto-flex',
 }
 
 SETTINGS_USER_COLUMNS = {
@@ -117,31 +141,45 @@ SETTINGS_USER_COLUMNS = {
     'hunt-rotation': 'hunt_rotation',
     'slash-mentions': 'slash_mentions',
     'tracking': 'tracking',
+    'area-20-cooldowns': 'area_20_cooldowns',
+    'auto-flex': 'auto_flex',
 }
 
 # --- Commands ---
-async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+async def command_on(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
     """On command"""
     first_time_user = False
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name    
     try:
         user: users.User = await users.get_user(ctx.author.id)
         if user.bot_enabled:
-            await ctx.respond(f'**{ctx_author_name}**, I\'m already turned on.', ephemeral=True)
+            answer = f'**{ctx_author_name}**, I\'m already turned on.'
+            if isinstance(ctx, discord.ApplicationContext):
+                await ctx.respond(answer, ephemeral=True)
+            else:
+                await ctx.reply(answer)
             return
     except exceptions.FirstTimeUserError:
         user = await users.insert_user(ctx.author.id)
         first_time_user = True
-    if not user.bot_enabled: await user.update(bot_enabled=True)
     if not user.bot_enabled:
-        await ctx.respond(strings.MSG_ERROR, ephemeral=True)
+        await user.update(bot_enabled=True)
+    if not user.bot_enabled:
+        if isinstance(ctx, discord.ApplicationContext):
+            await ctx.respond(strings.MSG_ERROR, ephemeral=True)
+        else:
+            await ctx.reply(strings.MSG_ERROR)
         return
     if not first_time_user:
-        await ctx.respond(f'Hey! **{ctx_author_name}**! Welcome back!')
+        answer = f'Hey! **{ctx_author_name}**! Welcome back!'
+        if isinstance(ctx, discord.ApplicationContext):
+            await ctx.respond(answer)
+        else:
+            await ctx.reply(answer)
     else:
         field_settings = (
             f'You may want to have a look at my settings. You can also set your EPIC RPG donor tier there.\n'
-            f'Click the button below or use {await functions.get_navi_slash_command(bot, "settings user")}.'
+            f'Use {await functions.get_navi_slash_command(bot, "settings user")} to get started.'
         )
         field_tracking = (
             f'I track the amount of some EPIC RPG commands you use. Check '
@@ -151,7 +189,7 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
             f'or in your user settings.\n\n'
         )
         field_auto_flex = (
-            f'This bot has an auto flex feature. If auto flexing is turned on by the server admin, I will automatically '
+            f'This bot has an auto flex feature. If auto flexing is turned on by a server admin, I will automatically '
             f'post certain rare events (rare lootboxes, high tier loot, etc) to an auto flex channel.\n'
             f'If you don\'t like this, you can turn it off in your user settings.\n'
         )
@@ -174,21 +212,28 @@ async def command_on(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
         embed.add_field(name='AUTO FLEXING', value=field_auto_flex, inline=False)
         embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
         embed.set_thumbnail(url=image_url)
-        view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
-        interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
-        view.interaction_message = interaction
-        await view.wait()
-        if view.value == 'pressed':
-            await functions.edit_interaction(interaction, view=None)
-            await command_settings_user(bot, ctx)
+        if isinstance(ctx, discord.ApplicationContext):
+            view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
+            interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
+            view.interaction_message = interaction
+            await view.wait()
+            if view.value == 'pressed':
+                await functions.edit_interaction(interaction, view=None)
+                await command_settings_user(bot, ctx)
+        else:
+            await ctx.reply(embed=embed, file=img_navi)
 
 
-async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
+async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
     """Off command"""
     user: users.User = await users.get_user(ctx.author.id)
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     if not user.bot_enabled:
-        await ctx.respond(f'**{ctx_author_name}**, I\'m already turned off.', ephemeral=True)
+        answer = f'**{ctx_author_name}**, I\'m already turned off.'
+        if isinstance(ctx, discord.ApplicationContext):
+            await ctx.respond(answer, ephemeral=True)
+        else:
+            await ctx.reply(answer)
         return
     answer = (
         f'**{ctx_author_name}**, turning me off will disable me completely. This includes all helpers, the command '
@@ -196,7 +241,10 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
         f'Are you sure?'
     )
     view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-    interaction = await ctx.respond(answer, view=view)
+    if isinstance(ctx, discord.ApplicationContext):
+        interaction = await ctx.respond(answer, view=view)
+    else:
+        interaction = await ctx.reply(answer, view=view)
     view.interaction_message = interaction
     await view.wait()
     if view.value is None:
@@ -215,12 +263,21 @@ async def command_off(bot: discord.Bot, ctx: discord.ApplicationContext) -> None
                 f'**{ctx_author_name}**, I\'m now turned off.\n'
                 f'All active reminders were deleted.'
             )
-            await functions.edit_interaction(interaction, content=answer, view=None)
+            if isinstance(ctx, discord.ApplicationContext):
+                await functions.edit_interaction(interaction, content=answer, view=None)
+            else:
+                await interaction.edit(content=answer, view=None)
         else:
-            await ctx.followup.send(strings.MSG_ERROR)
+            if isinstance(ctx, discord.ApplicationContext):
+                await ctx.followup.send(strings.MSG_ERROR)
+            else:
+                await ctx.send(strings.MSG_ERROR)
             return
     else:
-        await functions.edit_interaction(interaction, content='Aborted.', view=None)
+        if isinstance(ctx, discord.ApplicationContext):
+            await functions.edit_interaction(interaction, content='Aborted.', view=None)
+        else:
+            await interaction.edit(content='Aborted.', view=None)
 
 
 async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
@@ -443,8 +500,9 @@ async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCo
     await view.wait()
 
 
-async def command_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                       switch_view: Optional[discord.ui.View] = None) -> None:
+async def command_settings_multipliers(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context],
+                                       switch_view: Optional[discord.ui.View] = None,
+                                       prefix_args: Optional[List[str]] = None) -> None:
     """Reminder multiplier settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -453,14 +511,93 @@ async def command_settings_multipliers(bot: discord.Bot, ctx: discord.Applicatio
         switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
-    view = views.SettingsMultipliersView(ctx, bot, user_settings, embed_settings_multipliers)
-    embed = await embed_settings_multipliers(bot, ctx, user_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
+        
+    if isinstance(ctx, discord.ApplicationContext):
+        view = views.SettingsMultipliersView(ctx, bot, user_settings, embed_settings_multipliers)
+        embed = await embed_settings_multipliers(bot, ctx, user_settings)
+        if interaction is None:
+            interaction = await ctx.respond(embed=embed, view=view)
+        else:
+            await functions.edit_interaction(interaction, embed=embed, view=view)
+        view.interaction = interaction
+        await view.wait()
+
+    if isinstance(ctx, commands.Context):
+        async def get_current_multipliers() -> str:
+            current_multipliers = ''
+            for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+                alert_settings = getattr(user_settings, f'alert_{activity.replace("-","_")}')
+                current_multipliers = (
+                    f'{current_multipliers}\n'
+                    f'{emojis.BP} **{activity.capitalize()}**: `{alert_settings.multiplier}`'
+                )
+            return current_multipliers.strip()
+        
+        syntax = (
+            f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
+            f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
+            f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
+        )
+        if prefix_args is None:
+            current_multipliers = await get_current_multipliers()
+            await ctx.reply(
+                f'Current multipliers:\n'
+                f'{current_multipliers}\n\n'
+                f'{syntax}'
+            )
+        else:
+            multiplier_found = None
+            activities_found = []
+            ignored_activities = []
+            kwargs = {}
+            for arg in prefix_args:
+                try:
+                    multiplier_found = float(arg)
+                    if not 0.01 <= multiplier_found <= 5.0:
+                        await ctx.reply(
+                            f'Multipliers need to be between 0.01 and 5.00.\n\n{syntax}'
+                        )
+                        return
+                    if not activities_found:
+                        await ctx.reply(
+                            f'Invalid syntax.\n\n{syntax}'
+                        )
+                        return
+                    for activity in activities_found:
+                        kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
+                    activities_found = []
+                except ValueError:
+                    if arg == 'all':
+                        activities_found = strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER
+                    else:
+                        if arg in strings.ACTIVITIES_ALIASES: arg = strings.ACTIVITIES_ALIASES[arg]
+                        if arg in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER and not arg in activities_found:
+                            activities_found.append(arg)
+                        else:
+                            ignored_activities.append(arg)
+                        
+            if activities_found:
+                await ctx.reply(
+                    f'Invalid syntax.\n\n{syntax}'
+                )
+                return
+            await user_settings.update(**kwargs)
+            answer = (
+                f'Multiplier(s) updated.'
+            )
+            current_multipliers = await get_current_multipliers()
+            answer = (
+                f'{answer}\n\n'
+                f'{current_multipliers}'
+            )
+            if ignored_activities:
+                answer = (
+                    f'{answer}\n\n'
+                    f'Couldn\'t find the following activities:'
+                )
+                for activity in ignored_activities:
+                    answer = f'{answer}\n{emojis.BP} `{activity}`'
+            await ctx.reply(answer)
     
 
 async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext,
@@ -799,9 +936,9 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
         f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'
         f'{emojis.DETAIL} _Changes your farm reminder according to the mode and your inventory._\n'
-        f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
-        f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
-        f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
+        #f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
+        #f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
+        #f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
     )
     helper_settings = (
         f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'
@@ -924,7 +1061,7 @@ async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationC
         description = (
             f'_Multipliers are applied to all reminder times._\n'
             f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
-            f'_These are **not** for global event reductions. Those are set by your Navi admin and can be '
+            f'_These are **not** for global event reductions. Those are set by your Navi bot owner and can be '
             f'viewed in {await functions.get_navi_slash_command(bot, "event-reductions")}._\n'
         )
     )
@@ -1107,7 +1244,7 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
-        f'{emojis.BP} **Love share** ❤️: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
+        #f'{emojis.BP} **Love share** ❤️: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
         #f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
         #f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
@@ -1160,6 +1297,8 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
         f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
+        f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
+        f'{emojis.DETAIL} _If disabled, Navi will ignore command cooldowns and `rpg cd` when in area 20._\n'
         f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
         f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
         #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
@@ -1195,7 +1334,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
-        f'{emojis.BP} **Love share** ❤️: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
+        #f'{emojis.BP} **Love share** ❤️: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
         f'{emojis.BP} **Maintenance**: {await functions.bool_to_text(user_settings.alert_maintenance.enabled)}\n'
         #f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
         #f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
@@ -1274,7 +1413,7 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_party_popper_enabled)}\n'
         f'{emojis.BP} Drop: **SUPER fish from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_superfish_enabled)}\n'
-        f'{emojis.BP} Drop: **TIME capsule from GODLY lootbox**: '
+        f'{emojis.BP} Drop: **TIME capsule from GODLY/VOID lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
         f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'

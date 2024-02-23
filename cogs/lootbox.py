@@ -77,6 +77,7 @@ class BuyCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_lootbox.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 lootbox_name = '[lootbox]' if user_settings.last_lootbox == '' else f'{user_settings.last_lootbox} lootbox'
                 user_command = await functions.get_slash_command(user_settings, 'buy')
                 if user_settings.slash_mentions_enabled:

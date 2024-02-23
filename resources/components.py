@@ -585,6 +585,7 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
         dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
         hunt_emoji = emojis.ENABLED if view.user_settings.hunt_rotation_enabled else emojis.DISABLED
         mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
+        a20_cd_emoji = emojis.ENABLED if view.user_settings.area_20_cooldowns_enabled else emojis.DISABLED
         #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
         options.append(discord.SelectOption(label='DND mode', emoji=dnd_emoji,
                                             value='toggle_dnd'))
@@ -592,6 +593,8 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
                                             value='toggle_hunt'))
         options.append(discord.SelectOption(label='Slash command reminders', emoji=mentions_emoji,
                                             value='toggle_mentions'))
+        options.append(discord.SelectOption(label='Read cooldowns in area 20', emoji=a20_cd_emoji,
+                                            value='toggle_a20_cd'))
         options.append(discord.SelectOption(label='Add this channel as reminder channel', emoji=emojis.ADD,
                                             value='set_channel'))
         options.append(discord.SelectOption(label='Remove reminder channel', emoji=emojis.REMOVE,
@@ -610,6 +613,8 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
             await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
         elif select_value == 'toggle_mentions':
             await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
+        elif select_value == 'toggle_a20_cd':
+            await self.view.user_settings.update(area_20_cooldowns_enabled=not self.view.user_settings.area_20_cooldowns_enabled)
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(

@@ -34,6 +34,18 @@ class MainCog(commands.Cog):
         """About command"""
         await main.command_about(self.bot, ctx)
 
+    @commands.command(name='about', aliases=('info','ping'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def prefix_about(self, ctx: commands.Context) -> None:
+        """About command (prefix version)"""
+        await main.command_about(self.bot, ctx)
+
+    @commands.command(name='event-reductions', aliases=('event','er'))
+    @commands.bot_has_permissions(send_messages=True)
+    async def prefix_event_reductions(self, ctx: commands.Context) -> None:
+        """Event reduction command (prefix version)"""
+        await main.command_event_reduction(self.bot, ctx)
+
     @commands.command(name='help', aliases=('h',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_help(self, ctx: Union[commands.Context, discord.Message]) -> None:
@@ -76,7 +88,7 @@ class MainCog(commands.Cog):
             else:
                 await ctx.respond(
                     f'I\'m sorry, this command is not available in this server.\n\n'
-                    f'To allow this, the server admin needs to reinvite me with the necessary permissions.\n',
+                    f'To allow this, a server admin needs to reinvite me with the necessary permissions.\n',
                     ephemeral=True
                 )
         elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,

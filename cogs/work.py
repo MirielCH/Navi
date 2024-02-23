@@ -81,6 +81,7 @@ class WorkCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_work.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     last_work_command = interaction.name
@@ -121,7 +122,7 @@ class WorkCog(commands.Cog):
                 if all(string not in line.lower() for string in filter_strings):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
-            
+
             # Work
             excluded_strings = [
                 'hunting together', #English, hunt

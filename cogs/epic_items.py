@@ -80,6 +80,7 @@ class EpicItemsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_epic.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 timestring_match = await functions.get_match_from_patterns(regex.PATTERNS_COOLDOWN_TIMESTRING,
                                                                            message_title)
                 if not timestring_match:

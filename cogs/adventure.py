@@ -81,6 +81,7 @@ class AdventureCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_adventure.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if not slash_command:
                     last_adventure_mode = None
                     user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())

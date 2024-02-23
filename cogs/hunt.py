@@ -112,6 +112,7 @@ class HuntCog(commands.Cog):
                         if last_hunt_mode == '': last_hunt_mode = None
                         await user_settings.update(last_hunt_mode=last_hunt_mode)
                 if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 user_command = await functions.get_slash_command(user_settings, 'hunt')
                 if user_settings.last_hunt_mode != '':
                     if user_settings.slash_mentions_enabled:

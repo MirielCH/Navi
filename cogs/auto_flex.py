@@ -35,7 +35,8 @@ FLEX_TITLES = {
     'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
     'lb_godly': strings.FLEX_TITLES_LB_GODLY,
     'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
-    'lb_godly_tt': strings.FLEX_TITLES_GODLY_TT,
+    'lb_godly_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
+    'lb_void_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
     'lb_omega_multiple': strings.FLEX_TITLES_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_TITLES_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_TITLES_LB_OMEGA_PARTNER,
@@ -111,7 +112,8 @@ FLEX_THUMBNAILS = {
     'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
     'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
     'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
-    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_TT,
+    'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
+    'lb_void_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
     'lb_omega_multiple': strings.FLEX_THUMBNAILS_LB_OMEGA_MULTIPLE,
     'lb_omega_no_hardmode': strings.FLEX_THUMBNAILS_LB_OMEGA_NOHARDMODE,
     'lb_omega_partner': strings.FLEX_THUMBNAILS_LB_OMEGA_PARTNER,
@@ -316,6 +318,8 @@ class AutoFlexCog(commands.Cog):
                     event = 'lb_omega_ultra'
                 elif 'godly lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
                     event = 'lb_godly_tt'
+                elif 'void lootbox' in embed_field0_name.lower() and '<:timecapsule' in embed_field0_value.lower():
+                    event = 'lb_void_tt'
                 elif '<:partypopper' in embed_field0_value.lower():
                     event = 'lb_party_popper'
                 else:
@@ -381,6 +385,18 @@ class AutoFlexCog(commands.Cog):
                         f'So.\n**{user.name}** opened a {emojis.LB_GODLY} GODLY lootbox. I mean that\'s cool.\n'
                         f'__BUT__. For some reason they found **{amount}** {emojis.TIME_CAPSULE} **time capsule** in there.\n'
                         f'This hasn\'t happened often yet, so expect to get blacklisted from the game.'
+                    )
+                elif event == 'lb_void_tt':
+                    match = re.search(r'\+(.+?) (.+?) time capsule', embed_field0_value.lower())
+                    if not match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Time capsule amount not found in auto flex void lootbox message.', message)
+                        return
+                    amount = match.group(1)
+                    description = (
+                        f'**{user.name}** decided to not contribue their {emojis.LB_VOID} VOID lootbox and open it.\n'
+                        f'They should be ashamed.\n'
+                        f'Okay, they probably are not, because they got **{amount}** {emojis.TIME_CAPSULE} **time capsule** as a reward for their deceit.'
                     )
                 elif event == 'lb_party_popper':
                     match = re.search(r'\+(.+?) (.+?) party popper', embed_field0_value.lower())
@@ -1163,6 +1179,7 @@ class AutoFlexCog(commands.Cog):
             search_strings_excluded = [
                 'contribu', #All languages, void contributions
                 'epic bundle', #All languages, halloween shop
+                'epic coins', #All languages, epic shop
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in search_strings_excluded)

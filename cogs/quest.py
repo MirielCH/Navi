@@ -90,6 +90,7 @@ class QuestCog(commands.Cog):
                     if user_settings.alert_dungeon_miniboss.enabled:
                         try:
                             miniboss_reminder = await reminders.get_user_reminder(user.id, 'dungeon-miniboss')
+                            if miniboss_reminder.triggered: miniboss_reminder = None
                         except:
                             miniboss_reminder = None
                         command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
@@ -162,6 +163,7 @@ class QuestCog(commands.Cog):
                     if user_settings.alert_guild.enabled:
                         try:
                             clan_user_reminder = await reminders.get_user_reminder(user.id, 'guild')
+                            if clan_user_reminder.triggered: clan_user_reminder = None
                         except:
                             clan_user_reminder = None
                         command_guild_raid = await functions.get_slash_command(user_settings, 'guild raid')
@@ -215,6 +217,7 @@ class QuestCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     last_quest_command = 'epic quest' if interaction.name.startswith('epic') else 'quest'

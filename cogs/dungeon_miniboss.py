@@ -78,6 +78,7 @@ class DungeonMinibossCog(commands.Cog):
                         return
                 if interaction_user not in embed_users: return
                 if not user_settings.bot_enabled or not user_settings.alert_dungeon_miniboss.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 command_dungeon = await functions.get_slash_command(user_settings, 'dungeon')
                 command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
                 user_command = f"{command_dungeon} or {command_miniboss}"

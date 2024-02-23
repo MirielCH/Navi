@@ -312,6 +312,7 @@ class ClanCog(commands.Cog):
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if (user_alert_enabled
                     and not (clan_alert_enabled and clan.channel_id == message.channel.id)):
+                    if not user_settings.bot_enabled: return
                     if clan_alert_enabled:
                         action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                         alert_message = await functions.get_slash_command(user_settings, action)
@@ -329,6 +330,7 @@ class ClanCog(commands.Cog):
                     if not clan_alert_enabled:
                         await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings is not None:
+                    if not user_settings.bot_enabled: return
                     if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         if clan_channel_id == message.channel.id: return
                         await functions.call_ready_command(self.bot, message, user)
@@ -418,6 +420,7 @@ class ClanCog(commands.Cog):
                         if settings.DEBUG_MODE: await message.channel.send(strings.MSG_ERROR)
                 if (user_alert_enabled
                     and not (clan_alert_enabled and clan.channel_id == message.channel.id)):
+                    if not user_settings.bot_enabled: return
                     if clan_alert_enabled:
                         action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
                         alert_message = await functions.get_slash_command(user_settings, action)
@@ -435,6 +438,7 @@ class ClanCog(commands.Cog):
                     if not clan_alert_enabled:
                         await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings is not None:
+                    if not user_settings.bot_enabled: return
                     if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
                         if clan_channel_id == message.channel.id: return
                         await functions.call_ready_command(self.bot, message, user)

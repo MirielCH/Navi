@@ -80,6 +80,7 @@ class HorseCog(commands.Cog):
                         return
                 if interaction_user not in embed_users: return
                 if not user_settings.bot_enabled or not user_settings.alert_horse_breed.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 command_breed = await functions.get_slash_command(user_settings, 'horse breeding')
                 command_race = await functions.get_slash_command(user_settings, 'horse race')
                 user_command = f"{command_breed} or {command_race}"

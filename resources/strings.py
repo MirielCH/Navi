@@ -90,6 +90,7 @@ FARM_HELPER_MODES = {
 
 
 # Links
+LINK_CHANGELOG = 'https://github.com/Miriel-py/Navi/releases'
 LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
 LINK_PRIVACY_POLICY = 'https://github.com/Miriel-py/Navi/blob/master/PRIVACY.md'
 
@@ -357,7 +358,7 @@ ACTIVITIES_COMMANDS = (
     'horse',
     'hunt',
     'lootbox',
-    'love-share',
+    #'love-share',
     #'megarace',
     #'minirace',
     'quest',
@@ -512,6 +513,9 @@ ACTIVITIES_ALIASES = {
     'lootboxalert': 'partner',
     'lbalert': 'partner',
     'lb-alert': 'partner',
+    'love': 'love-share',
+    'love share': 'love-share',
+    'loveshare': 'love-share',
     'partner-alert': 'partner',
     'partneralert': 'partner',
     'notsominiboss': 'minintboss',
@@ -543,6 +547,9 @@ ACTIVITIES_ALIASES = {
     'calendar': 'advent-calendar',
     'xmas-calendar': 'advent-calendar',
     'xmas-chimney': 'chimney',
+    'boost': 'boosts',
+    'potion': 'boosts',
+    'potions': 'boosts',
 }
 
 ACTIVITIES_COLUMNS = {
@@ -1424,7 +1431,7 @@ FLEX_TITLES_OMEGA_ULTRA = [
     'Why are my OMEGAs never like this?',
 ]
 
-FLEX_TITLES_GODLY_TT = [
+FLEX_TITLES_GODLY_VOID_TT = [
     'There\'s luck, and then there\'s THIS',
     'Jeez, now that is something',
     'Don\'t get jealous folks... or do',
@@ -1840,7 +1847,7 @@ FLEX_THUMBNAILS_OMEGA_ULTRA = [
     'https://media.tenor.com/TukiL_LftA0AAAAC/loz-botw.gif',
 ]
 
-FLEX_THUMBNAILS_GODLY_TT = [
+FLEX_THUMBNAILS_GODLY_VOID_TT = [
     'https://c.tenor.com/-BVQhBulOmAAAAAC/bruce-almighty-morgan-freeman.gif',
     'https://media.giphy.com/media/jltuIcAMViLHYaz9bN/giphy.gif',
 ]

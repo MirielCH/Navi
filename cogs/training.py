@@ -86,6 +86,7 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_training.enabled: return
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
                     last_training_command = 'ultraining' if interaction.name.startswith('ultraining') else 'training'
