@@ -240,17 +240,39 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
         f'tracking, auto flexing and the reminders. It will also delete all of your active reminders.\n'
         f'Are you sure?'
     )
-    view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+    aborted = confirmed = timeout = False
     if isinstance(ctx, discord.ApplicationContext):
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         interaction = await ctx.respond(answer, view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            timeout = True
+        elif view.value == 'confirm':
+            confirmed = True
+        else:
+            aborted = True
     else:
-        interaction = await ctx.reply(answer, view=view)
-    view.interaction_message = interaction
-    await view.wait()
-    if view.value is None:
-        await functions.edit_interaction(
-            interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
-    elif view.value == 'confirm':
+        def check(m: discord.Message) -> bool:
+            return m.author == ctx.author and m.channel == ctx.channel
+        
+        interaction = await ctx.reply(f'{answer} `[yes/no]`')
+        try:
+            answer = await bot.wait_for('message', check=check, timeout=30)
+        except asyncio.TimeoutError:
+            timeout = True
+        if answer.content.lower() in ['yes','y']:
+            confirmed = True
+        else:
+            aborted = True
+    if timeout:
+        if isinstance(ctx, discord.ApplicationContext):
+            await functions.edit_interaction(
+                interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
+        else:
+            await interaction.edit(
+                interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
+    elif confirmed:
         await user.update(bot_enabled=False)
         try:
             active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
@@ -266,7 +288,7 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
             if isinstance(ctx, discord.ApplicationContext):
                 await functions.edit_interaction(interaction, content=answer, view=None)
             else:
-                await interaction.edit(content=answer, view=None)
+                await ctx.send(content=answer)
         else:
             if isinstance(ctx, discord.ApplicationContext):
                 await ctx.followup.send(strings.MSG_ERROR)
@@ -277,7 +299,7 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
         if isinstance(ctx, discord.ApplicationContext):
             await functions.edit_interaction(interaction, content='Aborted.', view=None)
         else:
-            await interaction.edit(content='Aborted.', view=None)
+            await ctx.send(content='Aborted.')
 
 
 async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
