@@ -40,7 +40,7 @@ class MainCog(commands.Cog):
         """About command (prefix version)"""
         await main.command_about(self.bot, ctx)
 
-    @commands.command(name='event-reductions', aliases=('event','er'))
+    @commands.command(name='event-reductions', aliases=('event','er','events','reductions'))
     @commands.bot_has_permissions(send_messages=True)
     async def prefix_event_reductions(self, ctx: commands.Context) -> None:
         """Event reduction command (prefix version)"""
