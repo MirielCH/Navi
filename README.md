@@ -37,6 +37,7 @@ Reminder / Helper for EPIC RPG.
 • Add Reactions  
 • Use External Emoji  
 • Read Message History  
+• Attach files  
 
 ## Commands
 
