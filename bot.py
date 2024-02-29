@@ -6,7 +6,7 @@ import sys
 import traceback
 
 import discord
-from discord.ext import commands
+from discord.ext import commands, bridge
 
 from database import errors, guilds, update_database
 from database import settings as settings_db
@@ -50,13 +50,13 @@ allowed_mentions = discord.AllowedMentions(everyone=False, roles=False, replied_
 
 
 if settings.DEBUG_MODE:
-    bot = commands.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
-                                  case_insensitive=True, intents=intents, owner_id=settings.OWNER_ID,
+    bot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
+                                case_insensitive=True, intents=intents, owner_id=settings.OWNER_ID,
                                   allowed_mentions=allowed_mentions, debug_guilds=settings.DEV_GUILDS)
 else:
-    bot = commands.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
-                                  case_insensitive=True, intents=intents, allowed_mentions=allowed_mentions,
-                                  owner_id=settings.OWNER_ID)
+    bot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
+                                case_insensitive=True, intents=intents, allowed_mentions=allowed_mentions,
+                                owner_id=settings.OWNER_ID)
 
 
 @bot.event
@@ -138,6 +138,7 @@ EXTENSIONS = [
         'cogs.main',
         'cogs.maintenance',
         'cogs.nsmb_bigarena',
+        'cogs.patreon',
         'cogs.pets_tournament',
         'cogs.pets',
         'cogs.portals',

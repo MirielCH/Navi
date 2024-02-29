@@ -6,10 +6,10 @@ from humanfriendly import format_timespan
 import psutil
 import random
 import sys
-from typing import List, Union
+from typing import List
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from database import cooldowns, guilds, users
 from database import settings as settings_db
@@ -33,40 +33,31 @@ class LinksView(discord.ui.View):
 
 
 # --- Commands ---
-async def command_event_reduction(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
+async def command_event_reduction(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
     """Help command"""
     all_cooldowns = list(await cooldowns.get_all_cooldowns())
     embed = await embed_event_reductions(bot, all_cooldowns)
-    if isinstance(ctx, discord.ApplicationContext):
-        await ctx.respond(embed=embed)
-    else:
-        await ctx.reply(embed=embed)
+    await ctx.respond(embed=embed)
 
 
-async def command_help(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context, discord.Message]) -> None:
+async def command_help(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
     """Help command"""
     view = LinksView()
     embed = await embed_help(bot, ctx)
-    if isinstance(ctx, discord.ApplicationContext):
-        await ctx.respond(embed=embed, view=view)
-    else:
-        await ctx.reply(embed=embed, view=view)
+    await ctx.respond(embed=embed, view=view)
 
 
-async def command_about(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
+async def command_about(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
     """About command"""
     start_time = datetime.utcnow()
-    answer = 'Testing API latency...'
-    if isinstance(ctx, discord.ApplicationContext):
-        interaction = await ctx.respond('Testing API latency...')
-    else:
-        interaction = await ctx.reply('Testing API latency...')
+    interaction = await ctx.respond('Testing API latency...')
     end_time = datetime.utcnow()
     api_latency = end_time - start_time
     img_navi, embed = await embed_about(bot, api_latency)
     view = LinksView()
-    if isinstance(ctx, discord.ApplicationContext):
-        await functions.edit_interaction(interaction, content=None, embed=embed, view=view, file=img_navi)
+    channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
+    if not channel_permissions.attach_files:
+        await interaction.edit(content=None, embed=embed, view=view)
     else:
         await interaction.edit(content=None, embed=embed, view=view, file=img_navi)
 

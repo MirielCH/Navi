@@ -811,13 +811,15 @@ async def get_void_training_answer_buttons(message: discord.Message, user_settin
     a19_seal_time = all_settings.get('a19_seal_time', None)
     a20_seal_time = all_settings.get('a20_seal_time', None)
     seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-    seal_times_days = {}
+    seal_times_areas_days = {}
+    seal_times_days = []
     for area_no, seal_time in enumerate(seal_times, 16):
         if seal_time is not None:
             seal_time = datetime.fromisoformat(seal_time, )
             time_left = seal_time - current_time
             if seal_time > current_time:
-                seal_times_days[area_no] = str(time_left.days)
+                seal_times_areas_days[area_no] = str(time_left.days)
+                seal_times_days.append(str(time_left.days))
     matches = []
     for row, action_row in enumerate(message.components, start=1):
         for button in action_row.children:
@@ -832,7 +834,7 @@ async def get_void_training_answer_buttons(message: discord.Message, user_settin
                     buttons[row][button.custom_id] = (button.label, button.emoji, True)
                 else:
                     buttons[row][button.custom_id] = (button.label, button.emoji, False)
-    for area_no, days in seal_times_days.items():
+    for area_no, days in seal_times_areas_days.items():
         answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
     if answer == '':
         command_void_areas = await get_slash_command(user_settings, 'void areas')
@@ -855,13 +857,15 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
     a19_seal_time = all_settings.get('a19_seal_time', None)
     a20_seal_time = all_settings.get('a20_seal_time', None)
     seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-    seal_times_days = {}
+    seal_times_areas_days = {}
+    seal_times_days = []
     for area_no, seal_time in enumerate(seal_times, 16):
         if seal_time is not None:
             seal_time = datetime.fromisoformat(seal_time, )
             time_left = seal_time - current_time
             if seal_time > current_time:
-                seal_times_days[area_no] = str(time_left.days)
+                seal_times_areas_days[area_no] = str(time_left.days)
+                seal_times_days.append(str(time_left.days))
     matches = []
     for row, action_row in enumerate(message.components, start=1):
         for button in action_row.children:
@@ -869,7 +873,7 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
                 matches.append(button.label)
     if len(matches) == 1: answer = f'`{matches[0]}`'
     if answer == '':
-        for area_no, days in seal_times_days.items():
+        for area_no, days in seal_times_areas_days.items():
             answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
     if answer == '':
         command_void_areas = await get_slash_command(user_settings, 'void areas')

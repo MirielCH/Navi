@@ -45,9 +45,9 @@ class DungeonMinibossCog(commands.Cog):
 
             # Dungeon / Miniboss cooldown
             search_strings = [
-                'you have been in a fight with a boss recently', #English
-                'has estado en una pelea con un boss recientemente', #Spanish
-                'você esteve em uma briga com um boss recentemente', #Portuguese
+                'been in a fight with a boss recently', #English
+                'en una pelea con un boss recientemente', #Spanish
+                'em uma briga com um boss recentemente', #Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None

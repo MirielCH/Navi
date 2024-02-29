@@ -2,8 +2,8 @@
 """Contains settings commands"""
 
 import discord
-from discord.commands import SlashCommandGroup, slash_command, Option
-from discord.ext import commands
+from discord.commands import SlashCommandGroup
+from discord.ext import bridge, commands
 import re
 
 from database import clans, errors, reminders, users
@@ -16,17 +16,40 @@ class SettingsCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # Slash commands
-    @slash_command()
-    async def on(self, ctx: discord.ApplicationContext) -> None:
+    # Bridge commands
+    @bridge.bridge_command(name='on', description='Turn on Navi', aliases=('register', 'activate', 'start'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def on(self, ctx: bridge.BridgeContext) -> None:
         """Turn on Navi"""
         await settings_cmd.command_on(self.bot, ctx)
 
-    @slash_command()
-    async def off(self, ctx: discord.ApplicationContext) -> None:
+    @bridge.bridge_command(name='off', description='Turn off Navi', aliases=('deactivate','stop'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def off(self, ctx: bridge.BridgeContext) -> None:
         """Turn off Navi"""
         await settings_cmd.command_off(self.bot, ctx)
 
+    @bridge.bridge_command(name='enable')
+    @commands.bot_has_permissions(send_messages=True)
+    @discord.option("settings", str, max_length=1024, default='')
+    async def enable(self, ctx: bridge.BridgeContext, *, settings: str) -> None:
+        """Enable specific settings"""
+        if len(settings) > 1024:
+            await ctx.respond('Are you trying to write a novel here? 🤔')
+            return
+        await settings_cmd.command_enable_disable(self.bot, ctx, 'enable', settings.split())
+        
+    @bridge.bridge_command(name='disable')
+    @commands.bot_has_permissions(send_messages=True)
+    @discord.option("settings", str, max_length=1024, default='')
+    async def disable(self, ctx: bridge.BridgeContext, *, settings: str) -> None:
+        """Enable specific settings"""
+        if len(settings) > 1024:
+            await ctx.respond('Are you trying to write a novel here? 🤔')
+            return
+        await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.split())
+
+    # Slash commands
     cmd_purge = SlashCommandGroup(
         "purge",
         "Purge commands",
@@ -105,47 +128,6 @@ class SettingsCog(commands.Cog):
     async def user(self, ctx: discord.ApplicationContext) -> None:
         """Manage user settings"""
         await settings_cmd.command_settings_user(self.bot, ctx)
-
-    @slash_command()
-    async def enable(
-        self,
-        ctx: discord.ApplicationContext,
-        settings: Option(str, 'Setting(s) you want to enable', default='')
-    ) -> None:
-        """Enable specific settings"""
-        await settings_cmd.command_enable_disable(self.bot, ctx, 'enable', settings.split())
-
-    @slash_command()
-    async def disable(
-        self,
-        ctx: discord.ApplicationContext,
-        settings: Option(str, 'Setting(s) you want to disable', max_length=1024, default='')
-    ) -> None:
-        """Disable specific settings"""
-        await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.split())
-
-    #Prefix commands
-    @commands.command(name='enable', aliases=('disable',))
-    @commands.bot_has_permissions(send_messages=True)
-    async def prefix_enable(self, ctx: commands.Context, *args: str) -> None:
-        """Enable/disable specific settings (prefix version)"""
-        action = ctx.invoked_with
-        if len(args) > 1024:
-            await ctx.reply('Did you just try to spam me :thinking:')
-            return
-        await settings_cmd.command_enable_disable(self.bot, ctx, action, list(args))
-
-    @commands.command(name='on', aliases=('register', 'activate', 'start'))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_on(self, ctx: commands.Context, *args: str) -> None:
-        """Turn on Navi (prefix version)"""
-        await settings_cmd.command_on(self.bot, ctx)
-
-    @commands.command(name='off', aliases=('deactivate','stop'))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_off(self, ctx: commands.Context, *args: str) -> None:
-        """Turn off Navi (prefix version)"""
-        await settings_cmd.command_off(self.bot, ctx)
 
     @commands.command(name='alts', aliases=('alt',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)

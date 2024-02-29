@@ -105,6 +105,7 @@ class CooldownsCog(commands.Cog):
                 event_reduction = int(anniversary_event_match.group(1))
                 anniversary_activities = [
                     'arena',
+                    'card-hand',
                     'quest',
                     'dungeon-miniboss',
                     'lootbox',

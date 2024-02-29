@@ -1,11 +1,8 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
-from typing import Union
-
 import discord
-from discord.ext import commands
-from discord.commands import slash_command
+from discord.ext import bridge, commands
 
 from content import main
 from database import errors, guilds
@@ -17,44 +14,31 @@ class MainCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
 
-    # Commands
-    @slash_command(name='event-reductions')
-    async def event_reductions(self, ctx: discord.ApplicationContext) -> None:
+    # Bridge commands
+    @bridge.bridge_command(name='event-reductions', description='Shows currently active event reductions',
+                           aliases=('event','er','events','reductions'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def event_reductions(self, ctx: bridge.BridgeContext) -> None:
         """Shows currently active event reductions"""
         await main.command_event_reduction(self.bot, ctx)
         
-    @slash_command(description='Main help command')
+    @bridge.bridge_command(name='help', description='Main help command', aliases=('h',))
     @commands.guild_only()
-    async def help(self, ctx: discord.ApplicationContext) -> None:
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def help(self, ctx: bridge.BridgeContext) -> None:
         """Main help command"""
         await main.command_help(self.bot, ctx)
 
-    @slash_command(description='Some info and links about Navi')
-    async def about(self, ctx: discord.ApplicationContext) -> None:
+    @bridge.bridge_command(name='about', description='Some info and links about Navi', aliases=('info','ping'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def about(self, ctx: bridge.BridgeContext) -> None:
         """About command"""
         await main.command_about(self.bot, ctx)
 
-    @commands.command(name='about', aliases=('info','ping'))
-    @commands.bot_has_permissions(send_messages=True)
-    async def prefix_about(self, ctx: commands.Context) -> None:
-        """About command (prefix version)"""
-        await main.command_about(self.bot, ctx)
-
-    @commands.command(name='event-reductions', aliases=('event','er','events','reductions'))
-    @commands.bot_has_permissions(send_messages=True)
-    async def prefix_event_reductions(self, ctx: commands.Context) -> None:
-        """Event reduction command (prefix version)"""
-        await main.command_event_reduction(self.bot, ctx)
-
-    @commands.command(name='help', aliases=('h',))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_help(self, ctx: Union[commands.Context, discord.Message]) -> None:
-        """Main help command (prefix version)"""
-        await main.command_help(self.bot, ctx)
-
+    # Text commands
     @commands.command(name='invite', aliases=('inv',))
     @commands.bot_has_permissions(send_messages=True)
-    async def prefix_invite(self, ctx: commands.Context) -> None:
+    async def invite(self, ctx: commands.Context) -> None:
         """Invite command"""
         message = (
             f'Sorry, you can\'t invite me.\n'

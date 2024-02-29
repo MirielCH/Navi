@@ -7,7 +7,7 @@ import re
 from typing import List, Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from database import clans, guilds, portals, reminders, tracking, users
 from resources import emojis, exceptions, functions, settings, strings, views
@@ -146,7 +146,7 @@ SETTINGS_USER_COLUMNS = {
 }
 
 # --- Commands ---
-async def command_on(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
+async def command_on(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
     """On command"""
     first_time_user = False
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name    
@@ -154,10 +154,7 @@ async def command_on(bot: discord.Bot, ctx: Union[discord.ApplicationContext, co
         user: users.User = await users.get_user(ctx.author.id)
         if user.bot_enabled:
             answer = f'**{ctx_author_name}**, I\'m already turned on.'
-            if isinstance(ctx, discord.ApplicationContext):
-                await ctx.respond(answer, ephemeral=True)
-            else:
-                await ctx.reply(answer)
+            await ctx.respond(answer, ephemeral=True)
             return
     except exceptions.FirstTimeUserError:
         user = await users.insert_user(ctx.author.id)
@@ -165,20 +162,19 @@ async def command_on(bot: discord.Bot, ctx: Union[discord.ApplicationContext, co
     if not user.bot_enabled:
         await user.update(bot_enabled=True)
     if not user.bot_enabled:
-        if isinstance(ctx, discord.ApplicationContext):
-            await ctx.respond(strings.MSG_ERROR, ephemeral=True)
-        else:
-            await ctx.reply(strings.MSG_ERROR)
+        await ctx.respond(strings.MSG_ERROR, ephemeral=True)
         return
     if not first_time_user:
         answer = f'Hey! **{ctx_author_name}**! Welcome back!'
-        if isinstance(ctx, discord.ApplicationContext):
-            await ctx.respond(answer)
-        else:
-            await ctx.reply(answer)
+        await ctx.respond(answer)
     else:
+        field_tldr_setup = (
+            f'- Use {strings.SLASH_COMMANDS["donate"]} to update your donor tier\n'
+            f'- Use {strings.SLASH_COMMANDS["artifacts"]} to update your artifacts\n'
+            f'- Use {strings.SLASH_COMMANDS["cd"]} to update your current reminders\n'
+        )
         field_settings = (
-            f'You may want to have a look at my settings. You can also set your EPIC RPG donor tier there.\n'
+            f'You may want to have a look at my settings.\n'
             f'Use {await functions.get_navi_slash_command(bot, "settings user")} to get started.'
         )
         field_tracking = (
@@ -207,12 +203,13 @@ async def command_on(bot: discord.Bot, ctx: Union[discord.ApplicationContext, co
             ),
             color =  settings.EMBED_COLOR,
         )
+        embed.add_field(name='TL;DR SETUP', value=field_tldr_setup, inline=False)
         embed.add_field(name='SETTINGS', value=field_settings, inline=False)
         embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
         embed.add_field(name='AUTO FLEXING', value=field_auto_flex, inline=False)
         embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
         embed.set_thumbnail(url=image_url)
-        if isinstance(ctx, discord.ApplicationContext):
+        if ctx.is_app:
             view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
             interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
             view.interaction_message = interaction
@@ -221,19 +218,15 @@ async def command_on(bot: discord.Bot, ctx: Union[discord.ApplicationContext, co
                 await functions.edit_interaction(interaction, view=None)
                 await command_settings_user(bot, ctx)
         else:
-            await ctx.reply(embed=embed, file=img_navi)
+            await ctx.respond(embed=embed, file=img_navi)
 
 
-async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
+async def command_off(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
     """Off command"""
     user: users.User = await users.get_user(ctx.author.id)
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     if not user.bot_enabled:
-        answer = f'**{ctx_author_name}**, I\'m already turned off.'
-        if isinstance(ctx, discord.ApplicationContext):
-            await ctx.respond(answer, ephemeral=True)
-        else:
-            await ctx.reply(answer)
+        await ctx.respond(f'**{ctx_author_name}**, I\'m already turned off.', ephemeral=True)
         return
     answer = (
         f'**{ctx_author_name}**, turning me off will disable me completely. This includes all helpers, the command '
@@ -241,7 +234,7 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
         f'Are you sure?'
     )
     aborted = confirmed = timeout = False
-    if isinstance(ctx, discord.ApplicationContext):
+    if ctx.is_app:
         view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
         interaction = await ctx.respond(answer, view=view)
         view.interaction_message = interaction
@@ -256,7 +249,7 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
         def check(m: discord.Message) -> bool:
             return m.author == ctx.author and m.channel == ctx.channel
         
-        interaction = await ctx.reply(f'{answer} `[yes/no]`')
+        interaction = await ctx.respond(f'{answer} `[yes/no]`')
         try:
             answer = await bot.wait_for('message', check=check, timeout=30)
         except asyncio.TimeoutError:
@@ -266,12 +259,7 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
         else:
             aborted = True
     if timeout:
-        if isinstance(ctx, discord.ApplicationContext):
-            await functions.edit_interaction(
-                interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
-        else:
-            await interaction.edit(
-                interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
+        await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
     elif confirmed:
         await user.update(bot_enabled=False)
         try:
@@ -285,21 +273,12 @@ async def command_off(bot: discord.Bot, ctx: Union[discord.ApplicationContext, c
                 f'**{ctx_author_name}**, I\'m now turned off.\n'
                 f'All active reminders were deleted.'
             )
-            if isinstance(ctx, discord.ApplicationContext):
-                await functions.edit_interaction(interaction, content=answer, view=None)
-            else:
-                await ctx.send(content=answer)
+            await interaction.edit(content=answer, view=None)
         else:
-            if isinstance(ctx, discord.ApplicationContext):
-                await ctx.followup.send(strings.MSG_ERROR)
-            else:
-                await ctx.send(strings.MSG_ERROR)
+            await ctx.send(strings.MSG_ERROR)
             return
     else:
-        if isinstance(ctx, discord.ApplicationContext):
-            await functions.edit_interaction(interaction, content='Aborted.', view=None)
-        else:
-            await ctx.send(content='Aborted.')
+        await interaction.edit(content='Aborted.', view=None)
 
 
 async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
@@ -725,7 +704,7 @@ async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContex
     await view.wait()
 
 
-async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context],
+async def command_enable_disable(bot: discord.Bot, ctx: bridge.BridgeContext,
                                  action: str, settings: List[str]) -> None:
     """Enables/disables specific settings"""
     user_settings: users.User = await users.get_user(ctx.author.id)
@@ -742,8 +721,7 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
         possible_user = f'{possible_user}\n{emojis.BP} `{setting}`'
 
     if not settings:
-        await functions.reply_or_respond(
-            ctx,
+        await ctx.respond(
             f'This command can be used to quickly enable or disable certain settings.\n'
             f'You can disable multiple settings at once by separating them with a space.\n\n'
             f'**Possible settings**\n'
@@ -765,22 +743,13 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
                 f'reminders. Are you sure?'
             )
             view = views.ConfirmCancelView(ctx, [discord.ButtonStyle.red, discord.ButtonStyle.grey])
-            if isinstance(ctx, discord.ApplicationContext):
-                interaction_message = await ctx.respond(answer_delete, view=view)
-            else:
-                interaction_message = await ctx.reply(answer_delete, view=view)
+            interaction_message = await ctx.respond(answer_delete, view=view)
             view.interaction_message = interaction_message
             await view.wait()
             if view.value == 'confirm':
-                if isinstance(ctx, discord.ApplicationContext):
-                    await functions.edit_interaction(interaction_message, view=None)
-                else:
-                    await interaction_message.edit(view=None)
+                await interaction_message.edit(view=None)
             else:
-                if isinstance(ctx, discord.ApplicationContext):
-                    await functions.edit_interaction(interaction_message, content='Aborted.', view=None)
-                else:
-                    await interaction_message.edit(content='Aborted', view=None)
+                await interaction_message.edit(content='Aborted', view=None)
                 return
         for setting in settings.copy():
             if setting in strings.ACTIVITIES:
@@ -850,7 +819,7 @@ async def command_enable_disable(bot: discord.Bot, ctx: Union[discord.Applicatio
     if answer_ignored != '':
         answer = f'{answer}\n\n{answer_ignored}'
 
-    await functions.reply_or_respond(ctx, answer.strip())
+    await ctx.respond(answer.strip())
 
 
 # --- Embeds ---
