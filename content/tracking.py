@@ -6,15 +6,15 @@ from humanfriendly import format_timespan
 from typing import Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from database import users, tracking
-from resources import emojis, functions, exceptions, settings, strings, views
+from resources import emojis, functions, exceptions, settings, views
 
 
 # --- Commands ---
 async def command_stats(
-    bot: discord.Bot,
+    bot: bridge.AutoShardedBot,
     ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
     timestring: Optional[str] = None,
     user: Optional[discord.User] = None,

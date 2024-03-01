@@ -2,8 +2,8 @@
 """Contains reminders lists commands"""
 
 import discord
-from discord.commands import slash_command, Option
-from discord.ext import commands
+from discord.commands import slash_command
+from discord.ext import bridge, commands
 
 from content import reminders_lists
 from resources import functions
@@ -11,24 +11,18 @@ from resources import functions
 
 class RemindersListsCog(commands.Cog):
     """Cog with reminders lists commands"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @slash_command()
-    async def list(
-        self,
-        ctx: discord.ApplicationContext,
-        user: Option(discord.User, 'User you want to check active reminders for', default=None),
-    ) -> None:
+    @discord.option('user', discord.User, description='User you want to check active reminders for', default=None)
+    async def list(self, ctx: discord.ApplicationContext, user: discord.User) -> None:
         """Lists all active reminders"""
         await reminders_lists.command_list(self.bot, ctx, user)
 
     @slash_command()
-    async def ready(
-        self,
-        ctx: discord.ApplicationContext,
-        user: Option(discord.User, 'User you want to check the ready commands for', default=None),
-    ) -> None:
+    @discord.option('user', discord.User, description='User you want to check ready commands for', default=None)
+    async def ready(self, ctx: discord.ApplicationContext, user: discord.User) -> None:
         """Lists all commands off cooldown"""
         if user is None: user = ctx.author
         if user.bot:

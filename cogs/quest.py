@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import cooldowns, clans, errors, reminders, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings
 
 class QuestCog(commands.Cog):
     """Cog that contains the quest detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

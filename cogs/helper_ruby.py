@@ -3,7 +3,7 @@
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
@@ -12,7 +12,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings, v
 
 class HelperRubyCog(commands.Cog):
     """Cog that contains all commands related to the ruby counter"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()
@@ -188,7 +188,14 @@ class HelperRubyCog(commands.Cog):
                     await message.add_reaction(emojis.NAVI)
 
         if not message.embeds:
-            message_content = message.content
+            message_content = ''
+            filter_strings = [
+                'coin ring',
+            ]
+            for line in message.content.split('\n'):
+                if all(string not in line.lower() for string in filter_strings):
+                    message_content = f'{message_content}\n{line}'
+            message_content = message_content.strip()
             # Ruby training helper
             search_strings = [
                 '** is training in the mine!', #English

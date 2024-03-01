@@ -149,565 +149,7 @@ SETTINGS_USER_COLUMNS = {
 }
 
 # --- Commands ---
-async def command_on(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
-    """On command"""
-    first_time_user = False
-    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name    
-    try:
-        user: users.User = await users.get_user(ctx.author.id)
-        if user.bot_enabled:
-            answer = f'**{ctx_author_name}**, I\'m already turned on.'
-            await ctx.respond(answer, ephemeral=True)
-            return
-    except exceptions.FirstTimeUserError:
-        user = await users.insert_user(ctx.author.id)
-        first_time_user = True
-    if not user.bot_enabled:
-        await user.update(bot_enabled=True)
-    if not user.bot_enabled:
-        await ctx.respond(strings.MSG_ERROR, ephemeral=True)
-        return
-    if not first_time_user:
-        answer = f'Hey! **{ctx_author_name}**! Welcome back!'
-        await ctx.respond(answer)
-    else:
-        field_tldr_setup = (
-            f'- Use {strings.SLASH_COMMANDS["donate"]} to update your donor tier\n'
-            f'- Use {strings.SLASH_COMMANDS["artifacts"]} to update your artifacts\n'
-            f'- Use {strings.SLASH_COMMANDS["cd"]} to update your current reminders\n'
-        )
-        field_settings = (
-            f'You may want to have a look at my settings.\n'
-            f'Use {await functions.get_navi_slash_command(bot, "settings user")} to get started.'
-        )
-        field_tracking = (
-            f'I track the amount of some EPIC RPG commands you use. Check '
-            f'{await functions.get_navi_slash_command(bot, "stats")} to see what commands are tracked.\n'
-            f'**__No personal data is processed or stored in any way!__**\n'
-            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")} '
-            f'or in your user settings.\n\n'
-        )
-        field_auto_flex = (
-            f'This bot has an auto flex feature. If auto flexing is turned on by a server admin, I will automatically '
-            f'post certain rare events (rare lootboxes, high tier loot, etc) to an auto flex channel.\n'
-            f'If you don\'t like this, you can turn it off in your user settings.\n'
-        )
-        field_privacy = (
-            f'To read more about what data is processed and why, feel free to check the privacy policy found in '
-            f'{await functions.get_navi_slash_command(bot, "help")}.'
-        )
-        img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
-        image_url = 'attachment://navi.png'
-        embed = discord.Embed(
-            title = f'Hey! {ctx_author_name}! Hello!'.upper(),
-            description = (
-                f'I am here to help you with your EPIC RPG commands!\n'
-                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} for a list of my own commands.'
-            ),
-            color =  settings.EMBED_COLOR,
-        )
-        embed.add_field(name='TL;DR SETUP', value=field_tldr_setup, inline=False)
-        embed.add_field(name='SETTINGS', value=field_settings, inline=False)
-        embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
-        embed.add_field(name='AUTO FLEXING', value=field_auto_flex, inline=False)
-        embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
-        embed.set_thumbnail(url=image_url)
-        if ctx.is_app:
-            view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
-            interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
-            view.interaction_message = interaction
-            await view.wait()
-            if view.value == 'pressed':
-                await functions.edit_interaction(interaction, view=None)
-                await command_settings_user(bot, ctx)
-        else:
-            await ctx.respond(embed=embed, file=img_navi)
-
-
-async def command_off(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
-    """Off command"""
-    user: users.User = await users.get_user(ctx.author.id)
-    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
-    if not user.bot_enabled:
-        await ctx.respond(f'**{ctx_author_name}**, I\'m already turned off.', ephemeral=True)
-        return
-    answer = (
-        f'**{ctx_author_name}**, turning me off will disable me completely. This includes all helpers, the command '
-        f'tracking, auto flexing and the reminders. It will also delete all of your active reminders.\n'
-        f'Are you sure?'
-    )
-    aborted = confirmed = timeout = False
-    if ctx.is_app:
-        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
-        interaction = await ctx.respond(answer, view=view)
-        view.interaction_message = interaction
-        await view.wait()
-        if view.value is None:
-            timeout = True
-        elif view.value == 'confirm':
-            confirmed = True
-        else:
-            aborted = True
-    else:
-        def check(m: discord.Message) -> bool:
-            return m.author == ctx.author and m.channel == ctx.channel
-        
-        interaction = await ctx.respond(f'{answer} `[yes/no]`')
-        try:
-            answer = await bot.wait_for('message', check=check, timeout=30)
-        except asyncio.TimeoutError:
-            timeout = True
-        if answer.content.lower() in ['yes','y']:
-            confirmed = True
-        else:
-            aborted = True
-    if timeout:
-        await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
-    elif confirmed:
-        await user.update(bot_enabled=False)
-        try:
-            active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
-            for reminder in active_reminders:
-                await reminder.delete()
-        except exceptions.NoDataFoundError:
-            pass
-        if not user.bot_enabled:
-            answer = (
-                f'**{ctx_author_name}**, I\'m now turned off.\n'
-                f'All active reminders were deleted.'
-            )
-            await interaction.edit(content=answer, view=None)
-        else:
-            await ctx.send(strings.MSG_ERROR)
-            return
-    else:
-        await interaction.edit(content='Aborted.', view=None)
-
-
-async def command_purge_data(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
-    """Purge data command"""
-    user_settings: users.User = await users.get_user(ctx.author.id)
-    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
-    answer_aborted = f'**{ctx_author_name}**, phew, was worried there for a second.'
-    answer_timeout = f'**{ctx_author_name}**, you didn\'t answer in time.'
-    answer = (
-        f'{emojis.WARNING} **{ctx_author_name}**, this will purge your user data **completely** {emojis.WARNING}\n\n'
-        f'This includes the following:\n'
-        f'{emojis.BP} Your alts\n'
-        f'{emojis.BP} All reminders\n'
-        f'{emojis.BP} All raids in the current guild leaderboard\n'
-        f'{emojis.BP} Your complete command tracking history\n'
-        f'{emojis.BP} Your user portals\n'
-        f'{emojis.BP} And finally, your user settings\n\n'
-        f'**There is no coming back from this**.\n'
-        f'You will of course be able to start using me again, but all of your data will start '
-        f'from scratch.\n'
-        f'Are you **SURE**?'
-    )
-    view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
-    interaction = await ctx.respond(answer, view=view)
-    view.interaction_message = interaction
-    await view.wait()
-    if view.value is None:
-        await functions.edit_interaction(
-            interaction, content=answer_timeout, view=None
-        )
-    elif view.value == 'confirm':
-        await functions.edit_interaction(interaction, view=None)
-        answer = (
-            f'{emojis.WARNING} **{ctx_author_name}**, just a friendly final warning {emojis.WARNING}\n'
-            f'**ARE YOU SURE?**'
-        )
-        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
-        interaction = await ctx.respond(answer, view=view)
-        view.interaction_message = interaction
-        await view.wait()
-        if view.value is None:
-            await functions.edit_interaction(
-                interaction, content=answer_timeout, view=None
-            )
-        elif view.value == 'confirm':
-            cur = settings.NAVI_DB.cursor()
-            await functions.edit_interaction(
-                interaction, content='Purging user settings...',
-                view=None
-            )
-            if user_settings.partner_id is not None:
-                try:
-                    partner_settings: users.User = await users.get_user(user_settings.partner_id)
-                    await partner_settings.update(partner_id=None)
-                except exceptions.FirstTimeUserError:
-                    pass
-            cur.execute('DELETE FROM users WHERE user_id=?', (ctx.author.id,))
-            await asyncio.sleep(1)
-            await functions.edit_interaction(
-                interaction, content='Purging alts...',
-                view=None
-            )
-            cur.execute('DELETE FROM alts WHERE user1_id=? OR user2_id=?', (ctx.author.id, ctx.author.id))
-            await asyncio.sleep(1)
-            await functions.edit_interaction(
-                interaction, content='Purging reminders...',
-                view=None
-            )
-            cur.execute('DELETE FROM reminders_users WHERE user_id=?', (ctx.author.id,))
-            await asyncio.sleep(1)
-            await functions.edit_interaction(
-                interaction, content='Purging raid data...',
-                view=None
-            )
-            cur.execute('DELETE FROM clans_raids WHERE user_id=?', (ctx.author.id,))
-            await asyncio.sleep(1)
-            await functions.edit_interaction(
-                interaction, content='Purging portals...',
-                view=None
-            )
-            cur.execute('DELETE FROM users_portals WHERE user_id=?', (ctx.author.id,))
-            await asyncio.sleep(1)
-            await functions.edit_interaction(
-                interaction, content='Purging tracking data... (this can take a while)',
-                view=None
-            )
-            try:
-                log_entries =  await tracking.get_all_log_entries(ctx.author.id)
-            except exceptions.NoDataFoundError:
-                log_entries = []
-            for log_entry in log_entries:
-                await log_entry.delete()
-                await asyncio.sleep(0.01)
-            await asyncio.sleep(1)
-            await functions.edit_interaction(
-                interaction,
-                content=f'{emojis.ENABLED} **{ctx_author_name}**, you are now gone and forgotten. Thanks for using me!',
-                view=None
-            )   
-        else:
-            await functions.edit_interaction(
-                interaction, content=answer_aborted, view=None
-            )
-    else:
-        await functions.edit_interaction(
-            interaction, content=answer_aborted, view=None
-        )
-        
-
-async def command_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                switch_view: Optional[discord.ui.View] = None) -> None:
-    """Alt settings command"""
-    interaction = user_settings = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    if switch_view is not None: switch_view.stop()
-    view = views.SettingsAltsView(ctx, bot, user_settings, embed_settings_alts)
-    embed = await embed_settings_alts(bot, ctx, user_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-    
-async def command_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                switch_view: Optional[discord.ui.View] = None) -> None:
-    """Clan settings command"""
-    user_settings: users.User = await users.get_user(ctx.author.id)
-    clan_settings = interaction = None
-    if switch_view is not None:
-        clan_settings = getattr(switch_view, 'clan_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-    if clan_settings is None:
-        try:
-            clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
-        except exceptions.NoDataFoundError:
-            await ctx.respond(
-                f'Your guild is not registered with me yet. Use {strings.SLASH_COMMANDS["guild list"]} '
-                f'to do that first.',
-                ephemeral=True
-            )
-            return
-    if switch_view is not None: switch_view.stop()
-    view = views.SettingsClanView(ctx, bot, clan_settings, embed_settings_clan)
-    embed = await embed_settings_clan(bot, ctx, clan_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                   switch_view: Optional[discord.ui.View] = None) -> None:
-    """Helper settings command"""
-    user_settings = interaction = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    view = views.SettingsHelpersView(ctx, bot, user_settings, embed_settings_helpers)
-    embed = await embed_settings_helpers(bot, ctx, user_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                   switch_view: Optional[discord.ui.View] = None) -> None:
-    """Portals settings command"""
-    user_settings = interaction = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    try:
-        user_portals = list(await portals.get_portals(ctx.author.id))
-    except exceptions.NoDataFoundError:
-        user_portals = []
-    view = views.SettingsPortalsView(ctx, bot, user_settings, user_portals, embed_settings_portals)
-    embed = await embed_settings_portals(bot, ctx, user_settings, user_portals)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_messages(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                    switch_view: Optional[discord.ui.View] = None) -> None:
-    """Reminder message settings command"""
-    user_settings = interaction = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    view = views.SettingsMessagesView(ctx, bot, user_settings, embed_settings_messages, 'all')
-    embeds = await embed_settings_messages(bot, ctx, user_settings, 'all')
-    if interaction is None:
-        interaction = await ctx.respond(embeds=embeds, view=view)
-    else:
-        await functions.edit_interaction(interaction, embeds=embeds, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_multipliers(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context],
-                                       switch_view: Optional[discord.ui.View] = None,
-                                       prefix_args: Optional[List[str]] = None) -> None:
-    """Reminder multiplier settings command"""
-    user_settings = interaction = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-        
-    if isinstance(ctx, discord.ApplicationContext):
-        view = views.SettingsMultipliersView(ctx, bot, user_settings, embed_settings_multipliers)
-        embed = await embed_settings_multipliers(bot, ctx, user_settings)
-        if interaction is None:
-            interaction = await ctx.respond(embed=embed, view=view)
-        else:
-            await functions.edit_interaction(interaction, embed=embed, view=view)
-        view.interaction = interaction
-        await view.wait()
-
-    if isinstance(ctx, commands.Context):
-        async def get_current_multipliers() -> str:
-            current_multipliers = ''
-            for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-                alert_settings = getattr(user_settings, f'alert_{activity.replace("-","_")}')
-                current_multipliers = (
-                    f'{current_multipliers}\n'
-                    f'{emojis.BP} **{activity.capitalize()}**: `{alert_settings.multiplier}`'
-                )
-            return current_multipliers.strip()
-        
-        syntax = (
-            f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
-            f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
-            f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
-        )
-        if prefix_args is None:
-            current_multipliers = await get_current_multipliers()
-            await ctx.reply(
-                f'Current multipliers:\n'
-                f'{current_multipliers}\n\n'
-                f'{syntax}'
-            )
-        else:
-            multiplier_found = None
-            activities_found = []
-            ignored_activities = []
-            kwargs = {}
-            for arg in prefix_args:
-                try:
-                    multiplier_found = float(arg)
-                    if not 0.01 <= multiplier_found <= 5.0:
-                        await ctx.reply(
-                            f'Multipliers need to be between 0.01 and 5.00.\n\n{syntax}'
-                        )
-                        return
-                    if not activities_found:
-                        await ctx.reply(
-                            f'Invalid syntax.\n\n{syntax}'
-                        )
-                        return
-                    for activity in activities_found:
-                        kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
-                    activities_found = []
-                except ValueError:
-                    if arg == 'all':
-                        activities_found = strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER
-                    else:
-                        if arg in strings.ACTIVITIES_ALIASES: arg = strings.ACTIVITIES_ALIASES[arg]
-                        if arg in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER and not arg in activities_found:
-                            activities_found.append(arg)
-                        else:
-                            ignored_activities.append(arg)
-                        
-            if activities_found:
-                await ctx.reply(
-                    f'Invalid syntax.\n\n{syntax}'
-                )
-                return
-            await user_settings.update(**kwargs)
-            answer = (
-                f'Multiplier(s) updated.'
-            )
-            current_multipliers = await get_current_multipliers()
-            answer = (
-                f'{answer}\n\n'
-                f'{current_multipliers}'
-            )
-            if ignored_activities:
-                answer = (
-                    f'{answer}\n\n'
-                    f'Couldn\'t find the following activities:'
-                )
-                for activity in ignored_activities:
-                    answer = f'{answer}\n{emojis.BP} `{activity}`'
-            await ctx.reply(answer)
-    
-
-async def command_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                   switch_view: Optional[discord.ui.View] = None) -> None:
-    """Partner settings command"""
-    user_settings = interaction = partner_settings = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        partner_settings = getattr(switch_view, 'partner_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    if partner_settings is None and user_settings.partner_id is not None:
-        try:
-            partner_settings: users.User = await users.get_user(user_settings.partner_id)
-        except exceptions.NoDataFoundError:
-            await ctx.respond(strings.MSG_ERROR, ephemeral=True)
-            return
-    view = views.SettingsPartnerView(ctx, bot, user_settings, partner_settings, embed_settings_partner)
-    embed = await embed_settings_partner(bot, ctx, user_settings, partner_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                 switch_view: Optional[discord.ui.View] = None) -> None:
-    """ready settings command"""
-    user_settings = clan_settings = interaction = None
-    if switch_view is not None:
-        clan_settings = getattr(switch_view, 'clan_settings', None)
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    if clan_settings is None:
-        try:
-            clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
-        except exceptions.NoDataFoundError:
-            clan_settings = None
-    view = views.SettingsReadyView(ctx, bot, user_settings, clan_settings, embed_settings_ready)
-    embed = await embed_settings_ready(bot, ctx, user_settings, clan_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                     switch_view: Optional[discord.ui.View] = None) -> None:
-    """Reminder settings command"""
-    user_settings = interaction = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    view = views.SettingsRemindersView(ctx, bot, user_settings, embed_settings_reminders)
-    embed = await embed_settings_reminders(bot, ctx, user_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext) -> None:
-    """Server settings command"""
-    guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
-    view = views.SettingsServerView(ctx, bot, guild_settings, embed_settings_server)
-    embed = await embed_settings_server(bot, ctx, guild_settings)
-    interaction = await ctx.respond(embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
-                                switch_view: Optional[discord.ui.View] = None) -> None:
-    """User settings command"""
-    user_settings = interaction = None
-    if switch_view is not None:
-        user_settings = getattr(switch_view, 'user_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-        switch_view.stop()
-    if user_settings is None:
-        user_settings: users.User = await users.get_user(ctx.author.id)
-    view = views.SettingsUserView(ctx, bot, user_settings, embed_settings_user)
-    embed = await embed_settings_user(bot, ctx, user_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await functions.edit_interaction(interaction, embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-
-async def command_enable_disable(bot: discord.Bot, ctx: bridge.BridgeContext,
+async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                  action: str, settings: List[str]) -> None:
     """Enables/disables specific settings"""
     user_settings: users.User = await users.get_user(ctx.author.id)
@@ -825,8 +267,537 @@ async def command_enable_disable(bot: discord.Bot, ctx: bridge.BridgeContext,
     await ctx.respond(answer.strip())
 
 
+async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
+    user_settings: users.User = await users.get_user(ctx.author.id)
+    async def get_current_multipliers() -> str:
+        current_multipliers = ''
+        for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+            alert_settings = getattr(user_settings, f'alert_{activity.replace("-","_")}')
+            current_multipliers = (
+                f'{current_multipliers}\n'
+                f'{emojis.BP} **{activity.capitalize()}**: `{alert_settings.multiplier}`'
+            )
+        return current_multipliers.strip()
+    
+    syntax = (
+        f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
+        f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
+        f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
+    )
+    if not args:
+        current_multipliers = await get_current_multipliers()
+        await ctx.reply(
+            f'Current multipliers:\n'
+            f'{current_multipliers}\n\n'
+            f'{syntax}'
+        )
+    else:
+        multiplier_found = None
+        activities_found = []
+        ignored_activities = []
+        kwargs = {}
+        for arg in args:
+            try:
+                multiplier_found = float(arg)
+                if not 0.01 <= multiplier_found <= 5.0:
+                    await ctx.reply(
+                        f'Multipliers need to be between 0.01 and 5.00.\n\n{syntax}'
+                    )
+                    return
+                if not activities_found:
+                    await ctx.reply(
+                        f'Invalid syntax.\n\n{syntax}'
+                    )
+                    return
+                for activity in activities_found:
+                    kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
+                activities_found = []
+            except ValueError:
+                if arg == 'all':
+                    activities_found = strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER
+                else:
+                    if arg in strings.ACTIVITIES_ALIASES: arg = strings.ACTIVITIES_ALIASES[arg]
+                    if arg in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER and not arg in activities_found:
+                        activities_found.append(arg)
+                    else:
+                        ignored_activities.append(arg)
+                    
+        if activities_found:
+            await ctx.reply(
+                f'Invalid syntax.\n\n{syntax}'
+            )
+            return
+        await user_settings.update(**kwargs)
+        answer = (
+            f'Multiplier(s) updated.'
+        )
+        current_multipliers = await get_current_multipliers()
+        answer = (
+            f'{answer}\n\n'
+            f'{current_multipliers}'
+        )
+        if ignored_activities:
+            answer = (
+                f'{answer}\n\n'
+                f'Couldn\'t find the following activities:'
+            )
+            for activity in ignored_activities:
+                answer = f'{answer}\n{emojis.BP} `{activity}`'
+        await ctx.reply(answer)
+
+
+async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
+    """On command"""
+    first_time_user = False
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name    
+    try:
+        user: users.User = await users.get_user(ctx.author.id)
+        if user.bot_enabled:
+            answer = f'**{ctx_author_name}**, I\'m already turned on.'
+            await ctx.respond(answer, ephemeral=True)
+            return
+    except exceptions.FirstTimeUserError:
+        user = await users.insert_user(ctx.author.id)
+        first_time_user = True
+    if not user.bot_enabled:
+        await user.update(bot_enabled=True)
+    if not user.bot_enabled:
+        await ctx.respond(strings.MSG_ERROR, ephemeral=True)
+        return
+    if not first_time_user:
+        answer = f'Hey! **{ctx_author_name}**! Welcome back!'
+        await ctx.respond(answer)
+    else:
+        field_tldr_setup = (
+            f'- Use {strings.SLASH_COMMANDS["donate"]} or `rpg donate` to update your donor tier\n'
+            f'- Use {strings.SLASH_COMMANDS["artifacts"]} or `rpg artifacts` to update your artifacts\n'
+            f'- Use {strings.SLASH_COMMANDS["cd"]} or `rpg cd` to update your current reminders\n'
+        )
+        field_settings = (
+            f'You may want to have a look at my settings.\n'
+            f'Use {await functions.get_navi_slash_command(bot, "settings user")} or `{ctx.prefix}set` to get started.'
+        )
+        field_tracking = (
+            f'I track the amount of some EPIC RPG commands you use. Check '
+            f'{await functions.get_navi_slash_command(bot, "stats")} or `{ctx.prefix}st` to see what commands are tracked.\n'
+            f'**__No personal data is processed or stored in any way!__**\n'
+            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")}, `{ctx.prefix}st` '
+            f'or in your user settings.\n\n'
+        )
+        field_auto_flex = (
+            f'This bot has an auto flex feature. If auto flexing is turned on by a server admin, I will automatically '
+            f'post certain rare events (rare lootboxes, high tier loot, etc) to an auto flex channel.\n'
+            f'If you don\'t like this, you can turn it off in your user settings.\n'
+        )
+        field_privacy = (
+            f'To read more about what data is processed and why, feel free to check the privacy policy found in '
+            f'{await functions.get_navi_slash_command(bot, "help")} or `{ctx.prefix}help`.'
+        )
+        img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
+        image_url = 'attachment://navi.png'
+        embed = discord.Embed(
+            title = f'Hey! {ctx_author_name}! Hello!'.upper(),
+            description = (
+                f'I am here to help you with your EPIC RPG commands!\n'
+                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} or `{ctx.prefix}help` '
+                f'for a list of my own commands.'
+            ),
+            color =  settings.EMBED_COLOR,
+        )
+        embed.add_field(name='TL;DR SETUP', value=field_tldr_setup, inline=False)
+        embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+        embed.add_field(name='COMMAND TRACKING', value=field_tracking, inline=False)
+        embed.add_field(name='AUTO FLEXING', value=field_auto_flex, inline=False)
+        embed.add_field(name='PRIVACY POLICY', value=field_privacy, inline=False)
+        embed.set_thumbnail(url=image_url)
+        view = views.OneButtonView(ctx, discord.ButtonStyle.blurple, 'pressed', '➜ Settings')
+        interaction = await ctx.respond(embed=embed, file=img_navi, view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value == 'pressed':
+            await interaction.edit(view=None)
+            await command_settings_user(bot, ctx)
+
+
+async def command_off(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
+    """Off command"""
+    user: users.User = await users.get_user(ctx.author.id)
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+    if not user.bot_enabled:
+        await ctx.respond(f'**{ctx_author_name}**, I\'m already turned off.', ephemeral=True)
+        return
+    answer = (
+        f'**{ctx_author_name}**, turning me off will disable me completely. This includes all helpers, the command '
+        f'tracking, auto flexing and the reminders. It will also delete all of your active reminders.\n'
+        f'Are you sure?'
+    )
+    aborted = confirmed = timeout = False
+    if ctx.is_app:
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(answer, view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            timeout = True
+        elif view.value == 'confirm':
+            confirmed = True
+        else:
+            aborted = True
+    else:
+        def check(m: discord.Message) -> bool:
+            return m.author == ctx.author and m.channel == ctx.channel
+        
+        interaction = await ctx.respond(f'{answer} `[yes/no]`')
+        try:
+            answer = await bot.wait_for('message', check=check, timeout=30)
+        except asyncio.TimeoutError:
+            timeout = True
+        if answer.content.lower() in ['yes','y']:
+            confirmed = True
+        else:
+            aborted = True
+    if timeout:
+        await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
+    elif confirmed:
+        await user.update(bot_enabled=False)
+        try:
+            active_reminders = await reminders.get_active_user_reminders(ctx.author.id)
+            for reminder in active_reminders:
+                await reminder.delete()
+        except exceptions.NoDataFoundError:
+            pass
+        if not user.bot_enabled:
+            answer = (
+                f'**{ctx_author_name}**, I\'m now turned off.\n'
+                f'All active reminders were deleted.'
+            )
+            await interaction.edit(content=answer, view=None)
+        else:
+            await ctx.send(strings.MSG_ERROR)
+            return
+    else:
+        await interaction.edit(content='Aborted.', view=None)
+
+
+async def command_purge_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
+    """Purge data command"""
+    user_settings: users.User = await users.get_user(ctx.author.id)
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+    answer_aborted = f'**{ctx_author_name}**, phew, was worried there for a second.'
+    answer_timeout = f'**{ctx_author_name}**, you didn\'t answer in time.'
+    answer = (
+        f'{emojis.WARNING} **{ctx_author_name}**, this will purge your user data **completely** {emojis.WARNING}\n\n'
+        f'This includes the following:\n'
+        f'{emojis.BP} Your alts\n'
+        f'{emojis.BP} All reminders\n'
+        f'{emojis.BP} All raids in the current guild leaderboard\n'
+        f'{emojis.BP} Your complete command tracking history\n'
+        f'{emojis.BP} Your user portals\n'
+        f'{emojis.BP} And finally, your user settings\n\n'
+        f'**There is no coming back from this**.\n'
+        f'You will of course be able to start using me again, but all of your data will start '
+        f'from scratch.\n'
+        f'Are you **SURE**?'
+    )
+    view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
+    interaction = await ctx.respond(answer, view=view)
+    view.interaction_message = interaction
+    await view.wait()
+    if view.value is None:
+        await interaction.edit(content=answer_timeout, view=None)
+    elif view.value == 'confirm':
+        await interaction.edit(view=None)
+        answer = (
+            f'{emojis.WARNING} **{ctx_author_name}**, just a friendly final warning {emojis.WARNING}\n'
+            f'**ARE YOU SURE?**'
+        )
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.green])
+        interaction = await ctx.respond(answer, view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await interaction.edit(content=answer_timeout, view=None)
+        elif view.value == 'confirm':
+            cur = settings.NAVI_DB.cursor()
+            await interaction.edit(content='Purging user settings...', view=None)
+            if user_settings.partner_id is not None:
+                try:
+                    partner_settings: users.User = await users.get_user(user_settings.partner_id)
+                    await partner_settings.update(partner_id=None)
+                except exceptions.FirstTimeUserError:
+                    pass
+            cur.execute('DELETE FROM users WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await interaction.edit(content='Purging alts...', view=None)
+            cur.execute('DELETE FROM alts WHERE user1_id=? OR user2_id=?', (ctx.author.id, ctx.author.id))
+            await asyncio.sleep(1)
+            await interaction.edit(content='Purging reminders...', view=None)
+            cur.execute('DELETE FROM reminders_users WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await interaction.edit(content='Purging raid data...', view=None)
+            cur.execute('DELETE FROM clans_raids WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await interaction.edit(content='Purging portals...', view=None)
+            cur.execute('DELETE FROM users_portals WHERE user_id=?', (ctx.author.id,))
+            await asyncio.sleep(1)
+            await interaction.edit(content='Purging tracking data... (this can take a while)', view=None)
+            try:
+                log_entries =  await tracking.get_all_log_entries(ctx.author.id)
+            except exceptions.NoDataFoundError:
+                log_entries = []
+            for log_entry in log_entries:
+                await log_entry.delete()
+                await asyncio.sleep(0.01)
+            await asyncio.sleep(1)
+            await interaction.edit(
+                content=f'{emojis.ENABLED} **{ctx_author_name}**, you are now gone and forgotten. Thanks for using me!',
+                view=None
+            )   
+        else:
+            await interaction.edit( content=answer_aborted, view=None)
+    else:
+        await interaction.edit(content=answer_aborted, view=None)
+        
+
+async def command_settings_alts(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                switch_view: Optional[discord.ui.View] = None) -> None:
+    """Alt settings command"""
+    interaction = user_settings = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    if switch_view is not None: switch_view.stop()
+    view = views.SettingsAltsView(ctx, bot, user_settings, embed_settings_alts)
+    embed = await embed_settings_alts(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+    
+async def command_settings_clan(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                switch_view: Optional[discord.ui.View] = None) -> None:
+    """Clan settings command"""
+    user_settings: users.User = await users.get_user(ctx.author.id)
+    clan_settings = interaction = None
+    if switch_view is not None:
+        clan_settings = getattr(switch_view, 'clan_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if clan_settings is None:
+        try:
+            clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
+        except exceptions.NoDataFoundError:
+            await ctx.respond(
+                f'Your guild is not registered with me yet. Use {strings.SLASH_COMMANDS["guild list"]} '
+                f'to do that first.',
+                ephemeral=True
+            )
+            return
+    if switch_view is not None: switch_view.stop()
+    view = views.SettingsClanView(ctx, bot, clan_settings, embed_settings_clan)
+    embed = await embed_settings_clan(bot, ctx, clan_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_helpers(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                   switch_view: Optional[discord.ui.View] = None) -> None:
+    """Helper settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsHelpersView(ctx, bot, user_settings, embed_settings_helpers)
+    embed = await embed_settings_helpers(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_portals(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                   switch_view: Optional[discord.ui.View] = None) -> None:
+    """Portals settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    try:
+        user_portals = list(await portals.get_portals(ctx.author.id))
+    except exceptions.NoDataFoundError:
+        user_portals = []
+    view = views.SettingsPortalsView(ctx, bot, user_settings, user_portals, embed_settings_portals)
+    embed = await embed_settings_portals(bot, ctx, user_settings, user_portals)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_messages(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                    switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder message settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsMessagesView(ctx, bot, user_settings, embed_settings_messages, 'all')
+    embeds = await embed_settings_messages(bot, ctx, user_settings, 'all')
+    if interaction is None:
+        interaction = await ctx.respond(embeds=embeds, view=view)
+    else:
+        await interaction.edit(embeds=embeds, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_multipliers(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                       switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder multiplier settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+        
+    view = views.SettingsMultipliersView(ctx, bot, user_settings, embed_settings_multipliers)
+    embed = await embed_settings_multipliers(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+    
+
+async def command_settings_partner(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                   switch_view: Optional[discord.ui.View] = None) -> None:
+    """Partner settings command"""
+    user_settings = interaction = partner_settings = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        partner_settings = getattr(switch_view, 'partner_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    if partner_settings is None and user_settings.partner_id is not None:
+        try:
+            partner_settings: users.User = await users.get_user(user_settings.partner_id)
+        except exceptions.NoDataFoundError:
+            await ctx.respond(strings.MSG_ERROR, ephemeral=True)
+            return
+    view = views.SettingsPartnerView(ctx, bot, user_settings, partner_settings, embed_settings_partner)
+    embed = await embed_settings_partner(bot, ctx, user_settings, partner_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_ready(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                 switch_view: Optional[discord.ui.View] = None) -> None:
+    """ready settings command"""
+    user_settings = clan_settings = interaction = None
+    if switch_view is not None:
+        clan_settings = getattr(switch_view, 'clan_settings', None)
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    if clan_settings is None:
+        try:
+            clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
+        except exceptions.NoDataFoundError:
+            clan_settings = None
+    view = views.SettingsReadyView(ctx, bot, user_settings, clan_settings, embed_settings_ready)
+    embed = await embed_settings_ready(bot, ctx, user_settings, clan_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                     switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsRemindersView(ctx, bot, user_settings, embed_settings_reminders)
+    embed = await embed_settings_reminders(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_server(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
+    """Server settings command"""
+    guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    view = views.SettingsServerView(ctx, bot, guild_settings, embed_settings_server)
+    embed = await embed_settings_server(bot, ctx, guild_settings)
+    interaction = await ctx.respond(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
+async def command_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                switch_view: Optional[discord.ui.View] = None) -> None:
+    """User settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsUserView(ctx, bot, user_settings, embed_settings_user)
+    embed = await embed_settings_user(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+
 # --- Embeds ---
-async def embed_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
+async def embed_settings_alts(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
     """Alt settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     alts = f'{emojis.BP} No alts set'
@@ -850,7 +821,7 @@ async def embed_settings_alts(bot: discord.Bot, ctx: discord.ApplicationContext,
     return embed
 
 
-async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
+async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, clan_settings: clans.Clan) -> discord.Embed:
     """Guild settings embed"""
     reminder_enabled = await functions.bool_to_text(clan_settings.alert_enabled)
     if clan_settings.upgrade_quests_enabled:
@@ -888,7 +859,7 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
         if member_id is not None:
             members = f'{members}\n{emojis.BP} <@{member_id}>'
             member_count += 1
-    members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} to update guild members._'
+    members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update guild members._'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{clan_settings.clan_name} GUILD SETTINGS',
@@ -906,7 +877,7 @@ async def embed_settings_clan(bot: discord.Bot, ctx: discord.ApplicationContext,
     return embed
 
 
-async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
+async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User) -> discord.Embed:
     """Helper settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     tr_helper_mode = 'Buttons' if user_settings.training_helper_button_mode else 'Text'
@@ -952,7 +923,7 @@ async def embed_settings_helpers(bot: discord.Bot, ctx: discord.ApplicationConte
     return embed
 
 
-async def embed_settings_portals(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  user_portals: List[portals.Portal]) -> discord.Embed:
     """Portals settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -975,7 +946,7 @@ async def embed_settings_portals(bot: discord.Bot, ctx: discord.ApplicationConte
     return embed
 
 
-async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationContext,
+async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                   user_settings: users.User, activity: str) -> List[discord.Embed]:
     """Reminder message specific activity embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1031,7 +1002,7 @@ async def embed_settings_messages(bot: discord.Bot, ctx: discord.ApplicationCont
     return embeds
 
 
-async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationContext,
+async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                      user_settings: users.User) -> discord.Embed:
     """Reminder multiplier settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1063,7 +1034,7 @@ async def embed_settings_multipliers(bot: discord.Bot, ctx: discord.ApplicationC
     return embed
 
 
-async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+async def embed_settings_partner(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
                                  partner_settings: Optional[users.User] = None) -> discord.Embed:
     """Partner settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1113,7 +1084,7 @@ async def embed_settings_partner(bot: discord.Bot, ctx: discord.ApplicationConte
     return embed
 
 
-async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
                                clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1188,7 +1159,7 @@ async def embed_settings_ready(bot: discord.Bot, ctx: discord.ApplicationContext
     return embed
 
 
-async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.ApplicationContext, user_settings: users.User,
+async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
                                          clan_settings: Optional[clans.Clan] = None) -> discord.Embed:
     """Ready reminders settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1277,7 +1248,7 @@ async def embed_settings_ready_reminders(bot: discord.Bot, ctx: discord.Applicat
     return embed
 
 
-async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationContext,
+async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                    user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1364,7 +1335,7 @@ async def embed_settings_reminders(bot: discord.Bot, ctx: discord.ApplicationCon
     return embed
 
 
-async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContext,
+async def embed_settings_server(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                 guild_settings: guilds.Guild) -> discord.Embed:
     """Server settings embed"""
     if guild_settings.auto_flex_channel_id is not None:
@@ -1478,7 +1449,7 @@ async def embed_settings_server(bot: discord.Bot, ctx: discord.ApplicationContex
     return embed
 
 
-async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
+async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                               user_settings: users.User) -> discord.Embed:
     """User settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -1510,12 +1481,11 @@ async def embed_settings_user(bot: discord.Bot, ctx: discord.ApplicationContext,
     epic_rpg_user = (
         f'{emojis.BP} **Donor tier**: {user_donor_tier}\n'
         f'{emojis.BP} **Pocket watch reduction**: `{user_pocket_watch_reduction:g}` %\n'
-        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} or `rpg artifacts` to update this setting._\n'
         f'{emojis.BP} **Has chocolate box artifact**: `{chocolate_box_unlocked}`\n'
-        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
-        
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} or `rpg artifacts` to update this setting._\n'
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
-        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} to update this setting._\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} or `rpg pr` to update this setting._\n'
     )
     epic_rpg_partner = (
         f'{emojis.BP} **Donor tier**: {partner_donor_tier}\n'

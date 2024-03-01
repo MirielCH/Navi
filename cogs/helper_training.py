@@ -4,7 +4,7 @@ import re
 from datetime import datetime
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, settings, regex, views
 
 class HelperTrainingCog(commands.Cog):
     """Cog that contains the training helper detection"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

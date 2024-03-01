@@ -1,34 +1,26 @@
 # leaderboards.py
 """Contains leaderboard commands"""
 
-from typing import Union
-
 import discord
-from discord.ext import commands
+from discord.ext import bridge
 
-from database import clans, users
-from resources import emojis, exceptions, functions, settings, strings
+from database import clans
+from resources import emojis, exceptions, settings, strings
 
 
 # -- Commands ---
-async def command_leaderboard_clan(
-    ctx: Union[commands.Context, discord.ApplicationContext, discord.Message]
-) -> None:
+async def command_leaderboard_clan(ctx: bridge.BridgeContext) -> None:
     """Shows the clan leaderboard"""
     try:
         clan_settings: clans.Clan = await clans.get_clan_by_user_id(ctx.author.id)
     except exceptions.NoDataFoundError:
-        await functions.reply_or_respond(
-            ctx,
+        await ctx.respond(
             f'Your guild is not registered with Navi. If you are in a guild, use '
-            f'{strings.SLASH_COMMANDS["guild list"]} to add it.'
+            f'{strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to add it.'
         )
         return
     embed = await embed_leaderboard_clan(clan_settings)
-    if isinstance(ctx, discord.ApplicationContext):
-        await ctx.respond(embed=embed)
-    else:
-        await ctx.reply(embed=embed)
+    await ctx.respond(embed=embed)
 
 
 # -- Embeds ---

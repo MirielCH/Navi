@@ -2,39 +2,40 @@
 """Contains the link command"""
 
 import random
-from typing import Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge
 
 from database import portals, users
 from resources import emojis, exceptions, functions, settings
 
 
 # --- Commands ---
-async def command_portals(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
-    """Link command"""
+async def command_portals(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
+    """Portal command"""
     user_settings: users.User = await users.get_user(ctx.author.id)
     message_content, embed = await embed_portals(bot, ctx, user_settings)
-    if isinstance(ctx, discord.ApplicationContext):
-        await ctx.respond(content=message_content, embed=embed)
-    else:
-        await ctx.reply(content=message_content, embed=embed)
+    await ctx.respond(content=message_content, embed=embed)
 
 
 # --- Embeds ---
-async def embed_portals(bot: discord.Bot, ctx: Union[discord.ApplicationContext, commands.Context],
+async def embed_portals(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                         user_settings: users.User) -> discord.Embed:
-    """Link embed"""
+    """Portal embed"""
     description = ''
     message_content = embed = None
+    if ctx.is_app:
+        footer_command = f'/settings portals'
+        description_command = await functions.get_navi_slash_command(bot, "settings portals")
+    else:
+        footer_command = f'{ctx.prefix}set pt'
+        description_command = f'`{footer_command}`'
     try:
         user_portals = await portals.get_portals(ctx.author.id)
     except exceptions.NoDataFoundError:
         user_portals = None
         description = (
-            f'_No portals found. Use {await functions.get_navi_slash_command(bot, "settings portals")} '
-            f'to set some._'
+            f'_No portals found. Use {description_command} to set some._'
         )
     if user_portals is not None:
         for portal in user_portals:
@@ -69,5 +70,5 @@ async def embed_portals(bot: discord.Bot, ctx: Union[discord.ApplicationContext,
             title = random.choice(titles),
             description = description.strip(),
         )
-        embed.set_footer(text='Use \'/settings portals\' to edit this list.')
+        embed.set_footer(text=f'Use \'{footer_command}\' to edit this list.')
     return (message_content, embed)

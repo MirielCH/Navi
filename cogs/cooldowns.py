@@ -4,7 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from datetime import timedelta
 
 from cache import messages
@@ -15,7 +15,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 class CooldownsCog(commands.Cog):
     """Cog that contains the cooldowns detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

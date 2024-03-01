@@ -2,7 +2,6 @@
 """Contains settings commands"""
 
 import discord
-from discord.commands import SlashCommandGroup
 from discord.ext import bridge, commands
 import re
 
@@ -13,7 +12,7 @@ from resources import emojis, exceptions, functions, settings, strings
 
 class SettingsCog(commands.Cog):
     """Cog with user settings commands"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     # Bridge commands
@@ -29,7 +28,7 @@ class SettingsCog(commands.Cog):
         """Turn off Navi"""
         await settings_cmd.command_off(self.bot, ctx)
 
-    @bridge.bridge_command(name='enable')
+    @bridge.bridge_command(name='enable', aliases=('e',))
     @commands.bot_has_permissions(send_messages=True)
     @discord.option("settings", str, max_length=1024, default='')
     async def enable(self, ctx: bridge.BridgeContext, *, settings: str) -> None:
@@ -39,7 +38,7 @@ class SettingsCog(commands.Cog):
             return
         await settings_cmd.command_enable_disable(self.bot, ctx, 'enable', settings.split())
         
-    @bridge.bridge_command(name='disable')
+    @bridge.bridge_command(name='disable', aliases=('d',))
     @commands.bot_has_permissions(send_messages=True)
     @discord.option("settings", str, max_length=1024, default='')
     async def disable(self, ctx: bridge.BridgeContext, *, settings: str) -> None:
@@ -49,74 +48,84 @@ class SettingsCog(commands.Cog):
             return
         await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.split())
 
-    # Slash commands
-    cmd_purge = SlashCommandGroup(
-        "purge",
-        "Purge commands",
-    )
-
-    @cmd_purge.command()
-    async def data(self, ctx: discord.ApplicationContext) -> None:
+    @bridge.bridge_command()
+    async def purge(self, ctx: bridge.BridgeContext) -> None:
         """Purges user data from Navi"""
         await settings_cmd.command_purge_data(self.bot, ctx)
 
-    cmd_settings = SlashCommandGroup(
-        "settings",
-        "Settings commands",
-    )
+    @bridge.bridge_group(name='settings', aliases=('setting','set', 's'), invoke_without_command=True)
+    async def settings_group(self, ctx: bridge.BridgeContext):
+        """Settings command group"""
+        command = self.bot.get_command(name='settings user')
+        if command is not None: await command.callback(command.cog, ctx)
 
-    @cmd_settings.command()
-    async def alts(self, ctx: discord.ApplicationContext) -> None:
-        """Manage alt settings"""
+    @settings_group.command(name='alts', aliases=('alt', 'a'), description='Manage alts')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_alts(self, ctx: bridge.BridgeContext):
+        """Alt settings command"""
         await settings_cmd.command_settings_alts(self.bot, ctx)
         
-    @cmd_settings.command()
-    async def guild(self, ctx: discord.ApplicationContext) -> None:
-        """Manage guild settings"""
+    @settings_group.command(name='guild', aliases=('clan', 'g'), description='Manage guild settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_clan(self, ctx: bridge.BridgeContext):
+        """Guild settings command"""
         await settings_cmd.command_settings_clan(self.bot, ctx)
 
-    @cmd_settings.command()
-    async def helpers(self, ctx: discord.ApplicationContext) -> None:
-        """Manage helper settings"""
+    aliases_settings_helpers = (
+        'context-help','contexthelper','contexthelp','pethelper','pethelp','pet-helper','pet-help','heal',
+        'heal-warning','healwarning','heal-warn','healwarn','trhelper','tr-helper','trhelp','tr-help','traininghelper',
+        'training-helper', 'context-helper', 'h', 'helper'
+    )
+    @settings_group.command(name='helpers', aliases=aliases_settings_helpers, description='Manage helper settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_helpers(self, ctx: bridge.BridgeContext):
+        """Helper settings command"""
         await settings_cmd.command_settings_helpers(self.bot, ctx)
-
-    @cmd_settings.command()
-    async def portals(self, ctx: discord.ApplicationContext) -> None:
-        """Manage portals"""
-        await settings_cmd.command_settings_portals(self.bot, ctx)
-
-    @cmd_settings.command()
-    async def messages(self, ctx: discord.ApplicationContext) -> None:
-        """Manage reminder messages"""
+        
+    @settings_group.command(name='messages', aliases=('message', 'msg', 'm'), description='Manage reminder messages')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_messages(self, ctx: bridge.BridgeContext):
+        """Message settings command"""
         await settings_cmd.command_settings_messages(self.bot, ctx)
         
-    @cmd_settings.command()
-    async def multipliers(self, ctx: discord.ApplicationContext) -> None:
-        """Manage reminder multipliers"""
+    @settings_group.command(name='multipliers', aliases=('multiplier', 'multi'), description='Manage multipliers')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_multipliers(self, ctx: bridge.BridgeContext):
+        """Multiplier settings command"""
         await settings_cmd.command_settings_multipliers(self.bot, ctx)
-
-    @cmd_settings.command()
-    async def partner(
-        self,
-        ctx: discord.ApplicationContext,
-    ) -> None:
-        """Manage partner settings"""
+        
+    @settings_group.command(name='partner', aliases=('p', 'marry', 'marriage'), description='Manage partner settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_partner(self, ctx: bridge.BridgeContext):
+        """Partner settings command"""
         await settings_cmd.command_settings_partner(self.bot, ctx)
-
-    @cmd_settings.command()
-    async def ready(self, ctx: discord.ApplicationContext) -> None:
-        """Manage ready settings"""
+        
+    @settings_group.command(name='portals', aliases=('portal', 'pt'), description='Manage portals')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_portals(self, ctx: bridge.BridgeContext):
+        """Portal settings command"""
+        await settings_cmd.command_settings_portals(self.bot, ctx)
+        
+    @settings_group.command(name='ready', aliases=('rd','auto-ready'), description='Manage ready settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_ready(self, ctx: bridge.BridgeContext):
+        """Ready settings command"""
         await settings_cmd.command_settings_ready(self.bot, ctx)
 
-    @cmd_settings.command()
-    async def reminders(self, ctx: discord.ApplicationContext) -> None:
-        """Manage reminder settings"""
+    aliases_settings_reminders = (
+        'slashmentions','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
+        'hunt-rotate','huntswitch','hunt-switch','dnd','slash-mentions','reminder','rm',
+    )
+    @settings_group.command(name='reminders', aliases=aliases_settings_reminders, description='Manage reminder settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_reminders(self, ctx: bridge.BridgeContext):
+        """Reminder settings command"""
         await settings_cmd.command_settings_reminders(self.bot, ctx)
-
-    @commands.guild_only()
-    @cmd_settings.command()
-    async def server(self, ctx: discord.ApplicationContext) -> None:
-        """Manage server settings"""
+        
+    @settings_group.command(name='server', aliases=('s','srv'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_server(self, ctx: bridge.BridgeContext, description='Manage server settings'):
+        """Server settings command"""
         if (not ctx.author.guild_permissions.manage_guild
             and not (ctx.guild.id == 713541415099170836 and ctx.author.id == 619879176316649482)):
             raise commands.MissingPermissions(['manage_guild',])
@@ -124,110 +133,21 @@ class SettingsCog(commands.Cog):
             # in any other server.
         await settings_cmd.command_settings_server(self.bot, ctx)
 
-    @cmd_settings.command()
-    async def user(self, ctx: discord.ApplicationContext) -> None:
-        """Manage user settings"""
+    @settings_group.command(name='user', aliases=('me','u','donor','track','tracking','last-tt','lasttt','donator'),
+                      description='Manage user settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_user(self, ctx: bridge.BridgeContext):
+        """User settings command"""
         await settings_cmd.command_settings_user(self.bot, ctx)
 
-    @commands.command(name='alts', aliases=('alt',))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_alts(self, ctx: commands.Context, *args: str) -> None:
-        """Alt settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings alts")} '
-            f'to change these settings.'
-        )
-        
-    aliases_settings_user = (
-        'donator','tracking','track','last_tt','last-tt','lasttt',
-    )
-    @commands.command(name='donor', aliases=aliases_settings_user)
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_user(self, ctx: commands.Context, *args: str) -> None:
-        """User settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings user")} '
-            f'to change these settings.'
-        )
-    aliases_settings_reminders = (
-        'slashmentions','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
-        'hunt-rotate','huntswitch','hunt-switch','dnd',
-    )
-    @commands.command(name='slash-mentions', aliases=aliases_settings_reminders)
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_reminders(self, ctx: commands.Context, *args: str) -> None:
-        """Reminder settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings reminders")} '
-            f'to change these settings.'
-        )
 
-    aliases_settings_helpers = (
-        'context-help','contexthelper','contexthelp','pethelper','pethelp','pet-helper','pet-help','heal',
-        'heal-warning','healwarning','heal-warn','healwarn','trhelper','tr-helper','trhelp','tr-help','traininghelper',
-        'training-helper'
-    )
-    @commands.command(name='context-helper', aliases=aliases_settings_helpers)
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_helpers(self, ctx: commands.Context, *args: str) -> None:
-        """Helper settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings helpers")} '
-            f'to change these settings.'
-        )
-
-    @commands.command(name='message', aliases=('messages',))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_messages(self, ctx: commands.Context, *args: str) -> None:
-        """Message settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings messages")} '
-            f'to change your messages.'
-        )
-
+    # Text commands
     @commands.command(name='multipliers', aliases=('multiplier','multi','multis'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_multipliers(self, ctx: commands.Context, *args: str) -> None:
-        """Multiplier settings (prefix version)"""
-        args = [arg.lower() for arg in args]
-        prefix_args = None if not args else args
-        await settings_cmd.command_settings_multipliers(self.bot, ctx, prefix_args=prefix_args)
+    async def multipliers(self, ctx: commands.Context, *args: str) -> None:
+        """Multiplier settings (text version)"""
+        await settings_cmd.command_multipliers(self.bot, ctx, args)
 
-    @commands.command(name='partner')
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_partner(self, ctx: commands.Context, *args: str) -> None:
-        """Partner settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings partner")} '
-            f'to change these settings.'
-        )
-
-    @commands.command(name='server')
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings_server(self, ctx: commands.Context, *args: str) -> None:
-        """Server settings (prefix version)"""
-        await ctx.reply(
-            f'Hey! Please use {await functions.get_navi_slash_command(self.bot, "settings server")} '
-            f'to change these settings.'
-        )
-
-    @commands.command(name='settings', aliases=('me','setting','set'))
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def prefix_settings(self, ctx: commands.Context, *args: str) -> None:
-        """Settings (prefix version)"""
-        await ctx.reply(
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings alts")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings guild")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings helpers")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings messages")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings multipliers")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings partner")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings portals")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings ready")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings reminders")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings server")}\n'
-            f'➜ {await functions.get_navi_slash_command(self.bot, "settings user")}\n'
-        )
 
     # Events
     @commands.Cog.listener()

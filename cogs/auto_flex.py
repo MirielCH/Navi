@@ -5,7 +5,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, guilds, users
@@ -209,7 +209,7 @@ FLEX_COLUMNS = {
 
 class AutoFlexCog(commands.Cog):
     """Cog that contains the auto flex detection"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     async def send_auto_flex_message(self, message: discord.Message, guild_settings: guilds.Guild,

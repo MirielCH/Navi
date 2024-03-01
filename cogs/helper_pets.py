@@ -3,7 +3,7 @@
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
@@ -12,7 +12,7 @@ from resources import emojis, exceptions, functions, settings, regex
 
 class HelperPetsCog(commands.Cog):
     """Cog that contains the pets detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

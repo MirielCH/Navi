@@ -6,7 +6,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -15,7 +15,7 @@ from resources import exceptions, functions, settings
 
 class CelebrationCog(commands.Cog):
     """Cog that contains the celebration event detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

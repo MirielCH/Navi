@@ -11,7 +11,7 @@ from resources import exceptions, functions, logs, settings
 
 class MainCog(commands.Cog):
     """Cog with events and help and about commands"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     # Bridge commands
@@ -94,7 +94,7 @@ class MainCog(commands.Cog):
             ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.respond(
                 f'Hey! **{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
+                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
                 ephemeral=True
             )
         elif isinstance(error, commands.NotOwner):
@@ -147,7 +147,7 @@ class MainCog(commands.Cog):
             ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} to activate me first.',
+                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
@@ -177,7 +177,8 @@ class MainCog(commands.Cog):
             and (message.content.lower().replace('<@!','').replace('<@','').replace('>','')
                  .replace(str(self.bot.user.id),'')) == ''
         ):
-            await self.prefix_help(message)
+            command = self.bot.get_command(name='help')
+            if command is not None: await command.callback(command.cog, message)
 
     # Events
     @commands.Cog.listener()
@@ -196,7 +197,7 @@ class MainCog(commands.Cog):
             welcome_message = (
                 f'Hey! **{guild.name}**! I\'m here to remind you to do your EPIC RPG commands!\n\n'
                 f'Note that reminders are off by default. If you want to get reminded, please use '
-                f'{await functions.get_navi_slash_command(self.bot, "on")} to activate me.'
+                f'{await functions.get_navi_slash_command(self.bot, "on")} or `{guild_settings.prefix}on` to activate me.'
             )
             await guild.system_channel.send(welcome_message)
         except:

@@ -9,7 +9,7 @@ import sqlite3
 from typing import List
 
 import discord
-from discord.ext import commands, tasks
+from discord.ext import bridge, commands, tasks
 
 from cache import messages
 from database import clans, errors, reminders, tracking, users
@@ -21,7 +21,7 @@ running_tasks = {}
 
 class TasksCog(commands.Cog):
     """Cog with tasks"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     # Task management

@@ -1,25 +1,17 @@
 # link.py
 """Contains the link command"""
 
-import discord
-from discord.commands import slash_command
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from content import portals
 
 
 class PortalsCog(commands.Cog):
-    """Cog with the link command"""
-    def __init__(self, bot: commands.Bot):
+    """Cog with the portal command"""
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
-    # Link commands
-    @slash_command(description='A list of your favorite channels')
-    async def portals(self, ctx: discord.ApplicationContext) -> None:
-        """Link command"""
-        await portals.command_portals(self.bot, ctx)
-
-    #Prefix commands
+    # Bridge commands
     aliases = (
         'link',
         'links',
@@ -36,10 +28,9 @@ class PortalsCog(commands.Cog):
         'channel',
         'channels',
     )
-    @commands.command(name='portals', aliases=aliases)
-    @commands.bot_has_permissions(send_messages=True)
-    async def prefix_portals(self, ctx: commands.Context) -> None:
-        """Link command (prefix version)"""
+    @bridge.bridge_command(name='portals', aliases=aliases, description='A list of your favorite channels')
+    async def portals(self, ctx: bridge.BridgeContext) -> None:
+        """Portals command"""
         await portals.command_portals(self.bot, ctx)
 
 

@@ -965,21 +965,15 @@ class AddAltSelect(discord.ui.Select):
         view.interaction = interaction
         await view.wait()
         if view.value is None:
-            await functions.edit_interaction(
-                interaction,
-                content=f'**{user_global_name}**, the user didn\'t answer in time.',
-                view=None
-            )
+            await interaction.edit(content=f'**{user_global_name}**, the user didn\'t answer in time.', view=None)
         elif view.value == 'confirm':
             await self.view.user_settings.add_alt(new_alt.id)
-            await functions.edit_interaction(
-                interaction,
+            await interaction.edit(
                 content=f'**{user_global_name}** and **{alt_global_name}** are now alts of each other.',
                 view=None
             )
         else:
-            await functions.edit_interaction(
-                interaction,
+            await interaction.edit(
                 content=(
                     f'**{alt_global_name}** doesn\'t want to be an alt. Oh no.\n'
                     f'Guess they don\'t like you. Oh well. Happens.'
@@ -1040,17 +1034,16 @@ class AddPartnerSelect(discord.ui.Select):
             view.interaction_message = replace_interaction
             await view.wait()
             if view.value is None:
-                await functions.edit_interaction(
-                    replace_interaction,
+                await replace_interaction.edit(
                     content=f'**{user_global_name}**, you didn\'t answer in time.',
                     view=None
                 )
                 await update_message()
                 return
             elif view.value == 'confirm':
-                await functions.edit_interaction(replace_interaction, view=None)
+                await replace_interaction.edit(view=None)
             else:
-                await functions.edit_interaction(replace_interaction, content='Aborted.', view=None)
+                await replace_interaction.edit(content='Aborted.', view=None)
                 await update_message()
                 return
         view = views.ConfirmUserView(new_partner, 'I do!', 'Forever alone')
@@ -1065,8 +1058,7 @@ class AddPartnerSelect(discord.ui.Select):
         view.interaction = partner_interaction
         await view.wait()
         if view.value is None:
-            await functions.edit_interaction(
-                partner_interaction,
+            await partner_interaction.edit(
                 content=f'**{user_global_name}**, your lazy partner didn\'t answer in time.',
                 view=None
             )
@@ -1095,15 +1087,14 @@ class AddPartnerSelect(discord.ui.Select):
                     f'{emojis.BP} **{partner_global_name}**, ... wait what?\n\n'
                     f'Anyway, you may now kiss the brides.'
                 )
-                await functions.edit_interaction(partner_interaction, view=None)
+                await partner_interaction.edit(view=None)
                 await interaction.followup.send(answer)
             else:
                 await interaction.followup.send(strings.MSG_ERROR)
                 await update_message()
                 return
         else:
-            await functions.edit_interaction(
-                partner_interaction,
+            await partner_interaction.edit(
                 content=(
                     f'**{partner_global_name}** prefers to be forever alone.\n'
                     f'Stood up at the altar, that\'s gotta hurt, rip.'

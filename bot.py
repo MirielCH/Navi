@@ -159,7 +159,6 @@ EXTENSIONS = [
         'cogs.weekly',
         'cogs.work',
         'cogs.xmas',
-        'cogs.dev_old',
     ]
 
 if settings.COMPLAINT_CHANNEL_ID is not None and settings.SUGGESTION_CHANNEL_ID is not None:

@@ -5,7 +5,7 @@ from datetime import timedelta
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
@@ -14,7 +14,7 @@ from resources import exceptions, functions, regex, settings
 
 class WeeklyCog(commands.Cog):
     """Cog that contains the weekly detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

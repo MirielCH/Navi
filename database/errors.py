@@ -7,12 +7,12 @@ import traceback
 from typing import Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from resources import exceptions, logs, settings, strings
 
 
-async def log_error(error: Union[Exception, str], ctx: Optional[Union[commands.Context, discord.Message]] = None) -> None:
+async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.BridgeContext, discord.Message]] = None) -> None:
     """Logs an error to the database and the logfile
 
     Arguments

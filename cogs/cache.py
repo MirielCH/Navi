@@ -2,7 +2,7 @@
 """Collects messages containing rpg and mention commands for the local cache"""
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from resources import settings
@@ -10,7 +10,7 @@ from resources import settings
 
 class CacheCog(commands.Cog):
     """Cog that contains the cache commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

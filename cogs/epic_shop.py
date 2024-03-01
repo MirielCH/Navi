@@ -5,7 +5,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from datetime import timedelta
 
 from cache import messages
@@ -15,7 +15,7 @@ from resources import emojis, exceptions, functions, regex, settings
 
 class EpicShopCog(commands.Cog):
     """Cog that contains the epic shop detection commands"""
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

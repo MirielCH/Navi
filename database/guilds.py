@@ -8,7 +8,7 @@ import sqlite3
 from typing import List, Tuple, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -244,7 +244,7 @@ async def _get_mixed_case_prefixes(prefix: str) -> List[str]:
 
 
 # Read data
-async def get_prefix(ctx_or_message: Union[commands.Context, discord.Message]) -> str:
+async def get_prefix(ctx_or_message: Union[bridge.BridgeContext, discord.Message]) -> str:
     """Check database for stored prefix. If no prefix is found, the default prefix is used"""
     table = 'guilds'
     function_name = 'get_prefix'
@@ -263,7 +263,7 @@ async def get_prefix(ctx_or_message: Union[commands.Context, discord.Message]) -
 
     return prefix
 
-async def get_all_prefixes(bot: commands.Bot, ctx: commands.Context) -> Tuple:
+async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> Tuple:
     """Gets all prefixes. If no prefix is found, a record for the guild is created with the
     default prefix.
 

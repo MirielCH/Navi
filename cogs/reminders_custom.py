@@ -1,27 +1,24 @@
 # reminders_custom.py
 
 import discord
-from discord.ext import commands
-from discord.commands import slash_command, Option
+from discord.ext import bridge, commands
+from discord.commands import slash_command
 
 from content import reminders_custom
-from database import reminders, users
-from resources import emojis, functions, strings
+from resources import functions
 
 
 class RemindersCustomCog(commands.Cog):
-    def __init__(self, bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
     """Cog that contains custom reminder commands"""
 
+
     # Slash commands
     @slash_command(name='custom-reminder')
-    async def custom_reminder(
-        self,
-        ctx: discord.ApplicationContext,
-        timestring: Option(str, 'Timestring (e.g. 1h20m10s'),
-        text: Option(str, 'Text of the reminder', max_length=1500),
-    ) -> None:
+    @discord.option('timestring', str, description='Timestring (e.g. 1h20m10s)')
+    @discord.option('text', str, description='Text of the reminder', max_length=1500)
+    async def custom_reminder(self, ctx: discord.ApplicationContext, timestring: str, text: str) -> None:
         """Adds a custom reminder"""
         await reminders_custom.command_custom_reminder(ctx, timestring, text)
 

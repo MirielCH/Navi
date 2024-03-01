@@ -5,8 +5,8 @@ from datetime import datetime
 import re
 
 import discord
-from discord.commands import slash_command, Option
-from discord.ext import commands
+from discord.commands import slash_command
+from discord.ext import bridge, commands
 
 from cache import messages
 from content import tracking as tracking_cmd
@@ -16,20 +16,18 @@ from resources import emojis, functions, exceptions, regex, settings
 
 class TrackingCog(commands.Cog):
     """Cog with command tracking commands"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
-    # Commands
+    # Slash commands
     @slash_command()
-    async def stats(
-        self,
-        ctx: discord.ApplicationContext,
-        timestring: Option(str, 'The relative timeframe you want stats for. Example: 1d5h30m.', default=None),
-        user: Option(discord.User, 'User to view the stats of. Shows your own stats it empty.', default=None),
-    ) -> None:
-        """Lists your command statistics"""
+    @discord.option('timestring', str, description='The relative timeframe you want stats for. Example: 1d5h30m.', default=None)
+    @discord.option('user', discord.User, description='User to view the stats of.', default=None)
+    async def stats(self, ctx: discord.ApplicationContext, timestring: str, user: discord.User) -> None:
+        """Shows your tracking stats"""
         await tracking_cmd.command_stats(self.bot, ctx, timestring, user)
 
+    # Text commands
     @commands.command(name='stats', aliases=('stat','st','statistic', 'statistics'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_stats(self, ctx: commands.Context, *args: str) -> None:

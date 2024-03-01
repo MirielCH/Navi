@@ -1,22 +1,17 @@
 # slashboard.py
 """Contains the slashboard command"""
 
-from typing import Union
-
 import discord
-from discord.ext import commands
+from discord.ext import bridge
 
 from resources import emojis, settings, strings
 
 
 # --- Commands ---
-async def command_slashboard(ctx: Union[discord.ApplicationContext, commands.Context]) -> None:
+async def command_slashboard(ctx: bridge.BridgeContext) -> None:
     """Help command"""
     embed = await embed_slashboard()
-    if isinstance(ctx, discord.ApplicationContext):
-        await ctx.respond(embed=embed)
-    else:
-        await ctx.reply(embed=embed)
+    await ctx.respond(embed=embed)
 
 
 # --- Embeds ---
@@ -43,7 +38,6 @@ async def embed_slashboard() -> discord.Embed:
     )
     profile = (
         f'{emojis.BP} {strings.SLASH_COMMANDS["cd"]}\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS["event"]}\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS["horse stats"]}\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS["inventory"]}\n'
         f'{emojis.BP} {strings.SLASH_COMMANDS["professions stats"]}\n'

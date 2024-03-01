@@ -5,7 +5,7 @@ import random
 import re
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
@@ -14,7 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings
 
 class FunCog(commands.Cog):
     """Cog with events and help and about commands"""
-    def __init__(self, bot: commands.Bot):
+    def __init__(self, bot: bridge.AutoShardedBot):
         self.bot = bot
 
     @commands.Cog.listener()

@@ -6,10 +6,10 @@ from humanfriendly import format_timespan
 import psutil
 import random
 import sys
-from typing import List
+from typing import List, Union
 
 import discord
-from discord.ext import bridge, commands
+from discord.ext import bridge
 
 from database import cooldowns, guilds, users
 from database import settings as settings_db
@@ -33,21 +33,24 @@ class LinksView(discord.ui.View):
 
 
 # --- Commands ---
-async def command_event_reduction(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
+async def command_event_reduction(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
     """Help command"""
     all_cooldowns = list(await cooldowns.get_all_cooldowns())
     embed = await embed_event_reductions(bot, all_cooldowns)
     await ctx.respond(embed=embed)
 
 
-async def command_help(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
+async def command_help(bot: bridge.AutoShardedBot, ctx: Union[bridge.BridgeContext, discord.Message]) -> None:
     """Help command"""
     view = LinksView()
     embed = await embed_help(bot, ctx)
-    await ctx.respond(embed=embed, view=view)
+    if isinstance(ctx, discord.Message):
+        await ctx.reply(embed=embed, view=view)
+    else:
+        await ctx.respond(embed=embed, view=view)
 
 
-async def command_about(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
+async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
     """About command"""
     start_time = datetime.utcnow()
     interaction = await ctx.respond('Testing API latency...')
@@ -63,7 +66,7 @@ async def command_about(bot: discord.Bot, ctx: bridge.BridgeContext) -> None:
 
 
 # --- Embeds ---
-async def embed_event_reductions(bot: discord.Bot, all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+async def embed_event_reductions(bot: bridge.AutoShardedBot, all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
     """Event reductions embed"""
     reductions_slash = reductions_text = ''
     for cooldown in all_cooldowns:
@@ -89,65 +92,86 @@ async def embed_event_reductions(bot: discord.Bot, all_cooldowns: List[cooldowns
     return embed
 
 
-async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> discord.Embed:
+async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> discord.Embed:
     """Main menu embed"""
     prefix = await guilds.get_prefix(ctx)
+    title_link = 'https://youtu.be/SB4sDPTZPYM'
     reminder_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "list")} : Your active reminders\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}list`, `{prefix}cd`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "ready")} : Your ready commands\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}ready`, `{prefix}rd`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "custom-reminder")} : Add a custom reminder\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}reminder`, `{prefix}rm`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings messages")} : Manage reminder messages\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings multipliers")} : Manage custom multipliers\n'
-        f'{emojis.DETAIL} _Alias: `{prefix}multi`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings ready")} : Manage the ready list\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings reminders")} : Enable/disable reminders\n'
+        f'{emojis.BP} **[Check active reminders]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "list")}, `{prefix}cd`\n'
+        f'{emojis.BP} **[Add custom reminder]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "custom-reminder")}, `{prefix}rm`\n'
+        f'{emojis.BP} **[Manage reminders]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings reminders")}, `{prefix}s rm`\n'
+        f'{emojis.BP} **[Manage reminder messages]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}s msg`\n'
+    )
+    ready_settings = (
+        f'{emojis.BP} **[Check ready commands]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "ready")}, `{prefix}rd`\n'
+        f'{emojis.BP} **[Manage ready list]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings ready")}, `{prefix}s rd`\n'
     )
     stats = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "stats")} : Shows your command stats\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}stats`, `{prefix}st`_\n'
+        f'{emojis.BP} **[Check stats]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "stats")}, `{prefix}st`\n'
+        f'{emojis.BP} **[Manage tracking settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings user")}, `{prefix}s`\n'
     )
     user_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "on")} : Turn on Navi\n'
-        f'{emojis.DETAIL} _Alias: `{prefix}on`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "off")} : Turn off Navi\n'
-        f'{emojis.DETAIL} _Alias: `{prefix}off`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings user")} : Manage your user settings\n'
+        f'{emojis.BP} **[Enable Navi]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "on")}, `{prefix}on`\n'
+        f'{emojis.BP} **[Disable Navi]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "off")}, `{prefix}off`\n'
+        f'{emojis.BP} **[Manage user settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings user")}, `{prefix}s`\n'
     )
     helper_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings helpers")} : Enable/disable helpers\n'
+        f'{emojis.BP} **[Manage helper settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings helpers")}, `{prefix}s h`\n'
     )
     partner_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings alts")} : Manage alts\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings partner")} : Manage partner settings\n'
+        f'{emojis.BP} **[Manage alts]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings alts")}, `{prefix}s a`\n'
+        f'{emojis.BP} **[Manage partner]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings partner")}, `{prefix}s p`\n'
     )
     guild_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "leaderboard guild")} : Check the weekly raid leaderboard\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}guild leaderboard`, `{prefix}guild lb`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings guild")} : Manage guild channel reminders\n'
-        f'{emojis.BP} {strings.SLASH_COMMANDS["guild list"]} : Add/update your guild\n'
+        f'{emojis.BP} **[Check weekly leaderboard]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "leaderboard guild")}, `{prefix}g lb`\n'
+        f'{emojis.BP} **[Manage guild settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings guild")}, `{prefix}s g`\n'
+        f'{emojis.BP} **[Add or update your guild]({title_link})**: '
+        f'{strings.SLASH_COMMANDS["guild list"]}, `rpg guild list`\n'
+    )
+    multiplier_settings = (
+        f'{emojis.BP} **[Check event reductions]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "event-reductions")}, `{prefix}er`\n'
+        f'{emojis.BP} **[Manage multipliers]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings multipliers")}, `{prefix}multi`\n'
+    )
+    portal_settings = (
+        f'{emojis.BP} **[Check your portals]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "portals")}, `{prefix}pt`\n'
+        f'{emojis.BP} **[Manage your portals]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings portals")}, `{prefix}s pt`\n'
     )
     misc_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "enable")} & '
-        f'{await functions.get_navi_slash_command(bot, "disable")} : Speed enable/disable settings\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}enable` & `{prefix}disable`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "event-reductions")} : Check active event reductions\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}event-reductions`, `{prefix}er`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "portals")} : Customizable list of channel links\n'
-        f'{emojis.DETAIL} _Aliases: `{prefix}portals`, `{prefix}pt`_\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "purge data")} : Purges your user data\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings portals")} : Manage your portals\n'
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "slashboard")} : List of some EPIC RPG slash commands\n'
+        f'{emojis.BP} **[Speed enable settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "enable")}, `{prefix}e`\n'
+        f'{emojis.BP} **[Speed disable settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "disable")}, `{prefix}d`\n'
+        f'{emojis.BP} **[Purge your data]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "purge")}, `{prefix}purge`\n'
+        f'{emojis.BP} **[Slash command overview]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "slashboard")}, `{prefix}sb`\n'
+        f'{emojis.BP} **[About Navi]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "about")}, `{prefix}about`\n'
     )
     server_settings = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "settings server")} : Server settings\n'
+        f'{emojis.BP} **[Manage server settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings server")}, `{prefix}s s`\n'
         f'{emojis.DETAIL} _Requires `Manage server` permission._\n'
-    )
-    about = (
-        f'{emojis.BP} {await functions.get_navi_slash_command(bot, "about")} : About Navi\n'
-        f'{emojis.DETAIL} _Alias: `{prefix}about`_\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
@@ -160,23 +184,24 @@ async def embed_help(bot: discord.Bot, ctx: discord.ApplicationContext) -> disco
         title = 'NAVI',
         description =   (
             f'_Hey! **{ctx_author_name}**! Hello!_\n'
-            f'_May I interest you in some settings?_'
         )
     )
     embed.add_field(name='USER', value=user_settings, inline=False)
-    embed.add_field(name='PARTNER & ALTS', value=partner_settings, inline=False)
     embed.add_field(name='REMINDERS', value=reminder_settings, inline=False)
+    embed.add_field(name='READY COMMANDS', value=ready_settings, inline=False)
+    embed.add_field(name='ALTS & PARTNER', value=partner_settings, inline=False)
     embed.add_field(name='HELPERS', value=helper_settings, inline=False)
-    embed.add_field(name='GUILD CHANNEL REMINDERS', value=guild_settings, inline=False)
-    embed.add_field(name='COMMAND TRACKING', value=stats, inline=False)
-    embed.add_field(name='MISC', value=misc_settings, inline=False)
+    embed.add_field(name='GUILD', value=guild_settings, inline=False)
+    embed.add_field(name='TRACKING', value=stats, inline=False)
+    embed.add_field(name='MULTIPLIERS & EVENT REDUCTIONS', value=multiplier_settings, inline=False)
+    embed.add_field(name='PORTALS', value=portal_settings, inline=False)
     embed.add_field(name='SERVER', value=server_settings, inline=False)
-    embed.add_field(name='ABOUT NAVI', value=about, inline=False)
+    embed.add_field(name='MISC', value=misc_settings, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
     return embed
 
 
-async def embed_about(bot: commands.Bot, api_latency: datetime) -> discord.Embed:
+async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> discord.Embed:
     """Bot info embed"""
     user_count = await users.get_user_count()
     all_settings = await settings_db.get_settings()

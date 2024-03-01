@@ -6,7 +6,7 @@ import re
 from typing import Dict, List, Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
@@ -87,7 +87,7 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
     return None
 
 
-async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
+async def get_discord_user(bot: bridge.AutoShardedBot, user_id: int) -> discord.User:
     """Checks the user cache for a user and makes an additional API call if not found. Returns None if user not found."""
     await bot.wait_until_ready()
     user = bot.get_user(user_id)
@@ -99,7 +99,7 @@ async def get_discord_user(bot: discord.Bot, user_id: int) -> discord.User:
     return user
 
 
-async def get_discord_channel(bot: discord.Bot, channel_id: int) -> discord.User:
+async def get_discord_channel(bot: bridge.AutoShardedBot, channel_id: int) -> discord.User:
     """Checks the channel cache for a channel and makes an additional API call if not found. Returns None if channel not found."""
     if channel_id is None: return None
     await bot.wait_until_ready()
@@ -971,7 +971,7 @@ async def get_farm_command(user_settings: users.User, include_prefix: Optional[b
 
 
 # Miscellaneous
-async def call_ready_command(bot: commands.Bot, message: discord.Message, user: discord.User) -> None:
+async def call_ready_command(bot: bridge.AutoShardedBot, message: discord.Message, user: discord.User) -> None:
     """Calls the ready command as a reply to the current message"""
     command = bot.get_application_command(name='ready')
     if command is not None: await command.callback(command.cog, message, user=user)
@@ -987,7 +987,7 @@ async def get_slash_command(user_settings: users.User, command_name: str, includ
         return f'`{command}`' if include_prefix else f'`{command.replace("rpg ", "")}`'
 
 
-async def get_navi_slash_command(bot: discord.Bot, command_name: str) -> str:
+async def get_navi_slash_command(bot: bridge.AutoShardedBot, command_name: str) -> str:
     """Gets a slash command from Navi. If found, returns the slash mention. If not found, just returns /command.
     Note that slash mentions only work with GLOBAL commands."""
     main_command, *sub_commands = command_name.lower().split(' ')

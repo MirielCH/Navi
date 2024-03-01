@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Union
 
 import discord
-from discord.ext import commands
+from discord.ext import bridge, commands
 
 from content import settings as settings_cmd
 from database import clans, reminders, users
@@ -14,7 +14,7 @@ from resources import emojis, functions, exceptions, settings, strings, views
 
 # -- Commands ---
 async def command_list(
-    bot: discord.Bot,
+    bot: bridge.AutoShardedBot,
     ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
     user: Optional[discord.User] = None
 ) -> None:
@@ -47,7 +47,7 @@ async def command_list(
 
 
 async def command_ready(
-    bot: discord.Bot,
+    bot: bridge.AutoShardedBot,
     ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
     user: Optional[discord.User] = None
 ) -> None:
@@ -106,7 +106,7 @@ async def command_ready(
 
 
 # -- Embeds ---
-async def embed_reminders_list(bot: discord.Bot, user: discord.User,
+async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
                                show_timestamps: Optional[bool] = False) -> discord.Embed:
     """Embed with active reminders"""
     user_settings: users.User = await users.get_user(user.id)
@@ -300,7 +300,7 @@ async def embed_reminders_list(bot: discord.Bot, user: discord.User,
     return embed
 
 
-async def embed_ready(bot: discord.Bot, user: discord.User, auto_ready: bool) -> discord.Embed:
+async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready: bool) -> discord.Embed:
     """Embed with ready commands"""
 
     user_settings: users.User = await users.get_user(user.id)
