@@ -122,10 +122,10 @@ class MainCog(commands.Cog):
             await ctx.reply(embed=embed)
 
         error = getattr(error, 'original', error)
+        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.CommandOnCooldown):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, you can only use this command every '
                 f'{int(error.cooldown.per)} seconds.\n'
@@ -133,7 +133,7 @@ class MainCog(commands.Cog):
             )
         elif isinstance(error, commands.DisabledCommand):
             await ctx.reply(f'Command `{ctx.command.qualified_name}` is temporarily disabled.')
-        elif isinstance(error, (commands.MissingPermissions, commands.MissingRequiredArgument,
+        elif isinstance(error, (commands.MissingPermissions,
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
         elif isinstance(error, commands.BotMissingPermissions):
@@ -143,15 +143,23 @@ class MainCog(commands.Cog):
                 await ctx.reply(error)
             else:
                 await send_error()
+        elif isinstance(error, commands.MissingRequiredArgument):
+            parameters = ''
+            full_command_name = f'{ctx.command.full_parent_name} {ctx.invoked_with}'.strip()
+            for param_name in ctx.command.clean_params.keys():
+                parameters = f'{parameters} <{param_name}>'
+            answer = (
+                f'**{ctx_author_name}**, this command is missing the parameter `<{error.param.name}>`.\n\n'
+                f'Syntax: `{ctx.clean_prefix}{full_command_name} {parameters.strip()}`'
+            )
+            await ctx.reply(answer)
         elif isinstance(error, exceptions.FirstTimeUserError):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, looks like I don\'t know you yet.\n'
                 f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
             await ctx.reply(
                 f'**{ctx_author_name}**, whatever you just entered contained invalid characters I can\'t process.\n'
                 f'Please try that again.'
