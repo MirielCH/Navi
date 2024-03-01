@@ -104,7 +104,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{emojis.BP} **[Manage reminders]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "settings reminders")}, `{prefix}s rm`\n'
         f'{emojis.BP} **[Manage reminder messages]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}s msg`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}s m`\n'
     )
     ready_settings = (
         f'{emojis.BP} **[Check ready commands]({title_link})**: '

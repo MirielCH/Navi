@@ -147,6 +147,26 @@ class SettingsCog(commands.Cog):
     async def multipliers(self, ctx: commands.Context, *args: str) -> None:
         """Multiplier settings (text version)"""
         await settings_cmd.command_multipliers(self.bot, ctx, args)
+        
+    @commands.command(name='sa', aliases=('srm','sm','srd','sp','sh','spt','sg','smulti','ss','su'))
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_shortcuts(self, ctx: commands.Context, *args: str) -> None:
+        """Settings shortcuts"""
+        settings_commands = {
+            'sa': 'settings alts',
+            'sg': 'settings guild',
+            'sh': 'settings helpers',
+            'sm': 'settings messages',
+            'smulti': 'settings multipliers',
+            'sp': 'settings partner',
+            'spt': 'settings portals',
+            'srd': 'settings ready',
+            'srm': 'settings reminders',
+            'ss': 'settings server',
+            'su': 'settings user',
+        }
+        command = self.bot.get_command(name=settings_commands[ctx.invoked_with.lower()])
+        if command is not None: await command.callback(command.cog, ctx)
 
 
     # Events
