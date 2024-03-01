@@ -85,6 +85,7 @@ SETTINGS_USER = [
     'hunt-rotation',
     'slash-mentions',
     'tracking',
+    'reactions',
     'area-20-cooldowns',
     'auto-flex',
 ]
@@ -132,6 +133,7 @@ SETTINGS_USER_ALIASES = {
     'autoflex': 'auto-flex',
     'auto flex': 'auto-flex',
     'flex': 'auto-flex',
+    'reaction': 'reactions',
 }
 
 SETTINGS_USER_COLUMNS = {
@@ -143,6 +145,7 @@ SETTINGS_USER_COLUMNS = {
     'tracking': 'tracking',
     'area-20-cooldowns': 'area_20_cooldowns',
     'auto-flex': 'auto_flex',
+    'reactions': 'reactions',
 }
 
 # --- Commands ---

@@ -183,6 +183,7 @@ class TasksCog(commands.Cog):
         self.consolidate_tracking_log.start()
         self.delete_old_messages_from_cache.start()
         self.reset_trade_daily_done.start()
+        self.disable_event_reduction.start()
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -357,6 +358,19 @@ class TasksCog(commands.Cog):
         deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=5))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
+
+    @tasks.loop(seconds=60)
+    async def disable_event_reduction(self) -> None:
+        """Task that sets all event reductions to 0. Set time when needed (UTC)."""
+        year, month, day = 2024, 2, 29
+        hour, minute = 23, 55
+        start_time = datetime.utcnow().replace(microsecond=0)
+        if (start_time.year == year and start_time.month == month and start_time.day == day and start_time.hour == hour
+            and start_time.minute == minute):
+            from database import cooldowns
+            all_cooldowns = await cooldowns.get_all_cooldowns()
+            for cooldown in all_cooldowns:
+                await cooldown.update(event_reduction_slash=0, event_reduction_mention=0)
 
 # Initialization
 def setup(bot):
