@@ -1,4 +1,5 @@
-# feddback.py
+# feedback.py
+# pyright: reportInvalidTypeForm=false
 """Contains feedback commands
 
 To enable this cog, you need to set COMPLAINT_CHANNEL_ID and SUGGESTION_CHANNEL_ID in the .env file.
@@ -6,6 +7,7 @@ To enable this cog, you need to set COMPLAINT_CHANNEL_ID and SUGGESTION_CHANNEL_
 
 import discord
 from discord.ext import bridge, commands
+from discord.ext.bridge import BridgeOption
 
 from resources import settings, views
 
@@ -17,8 +19,12 @@ class FeedbackCog(commands.Cog):
 
     # Commands
     @bridge.bridge_command(name='complaint', aliases=('complain',), description='Sends a complaint about Navi to the owner.')
-    @discord.option('message', str, description='Complaint you want to send', max_length=2000)
-    async def complaint(self, ctx: bridge.BridgeContext, *, message: str) -> None:
+    async def complaint(
+        self,
+        ctx: bridge.BridgeContext,
+        *,
+        message: BridgeOption(str, description='Complaint you want to send', max_length=2000)
+    ) -> None:
         """Sends a complaint about Navi to the owner."""
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         embed = discord.Embed(
@@ -68,8 +74,12 @@ class FeedbackCog(commands.Cog):
             await ctx.send(answer)
             
     @bridge.bridge_command(name='suggestion', aliases=('suggest',), description='Sends a suggestion about Navi to the owner.')
-    @discord.option('message', str, description='Suggestion you want to send', max_length=2000)
-    async def suggestion(self, ctx: bridge.BridgeContext, *, message:str) -> None:
+    async def suggestion(
+        self,
+        ctx: bridge.BridgeContext,
+        *,
+        message: BridgeOption(str, description='Suggestion you want to send', max_length=2000),
+    ) -> None:
         """Sends a suggestion about Navi to the dev."""
         ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
         embed = discord.Embed(

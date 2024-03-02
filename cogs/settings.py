@@ -1,8 +1,10 @@
 # settings.py
+# pyright: reportInvalidTypeForm=false
 """Contains settings commands"""
 
 import discord
 from discord.ext import bridge, commands
+from discord.ext.bridge import BridgeOption
 import re
 
 from database import clans, errors, reminders, users
@@ -30,8 +32,12 @@ class SettingsCog(commands.Cog):
 
     @bridge.bridge_command(name='enable', aliases=('e',))
     @commands.bot_has_permissions(send_messages=True)
-    @discord.option("settings", str, max_length=1024, default='')
-    async def enable(self, ctx: bridge.BridgeContext, *, settings: str) -> None:
+    async def enable(
+        self,
+        ctx: bridge.BridgeContext,
+        *,
+        settings: BridgeOption(str, max_lenght=1024, default=''),
+    ) -> None:
         """Enable specific settings"""
         if len(settings) > 1024:
             await ctx.respond('Are you trying to write a novel here? 🤔')
@@ -40,8 +46,12 @@ class SettingsCog(commands.Cog):
         
     @bridge.bridge_command(name='disable', aliases=('d',))
     @commands.bot_has_permissions(send_messages=True)
-    @discord.option("settings", str, max_length=1024, default='')
-    async def disable(self, ctx: bridge.BridgeContext, *, settings: str) -> None:
+    async def disable(
+        self,
+        ctx: bridge.BridgeContext,
+        *,
+        settings: BridgeOption(str, max_lenght=1024, default='')
+    ) -> None:
         """Enable specific settings"""
         if len(settings) > 1024:
             await ctx.respond('Are you trying to write a novel here? 🤔')

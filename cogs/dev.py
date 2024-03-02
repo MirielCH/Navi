@@ -1,4 +1,5 @@
 # dev.py
+# pyright: reportInvalidTypeForm=false
 """Internal dev commands"""
 
 import asyncio
@@ -12,6 +13,7 @@ from typing import List
 
 import discord
 from discord.ext import bridge, commands
+from discord.ext.bridge import BridgeOption
 from humanfriendly import format_timespan
 
 from database import cooldowns
@@ -55,9 +57,13 @@ class DevCog(commands.Cog):
         )
 
     @dev_group.command(name='reload', description='Reloads cogs or modules', guild_ids=settings.DEV_GUILDS)
-    @discord.option('modules', str, description='Cogs or modules to reload')
     @commands.bot_has_permissions(send_messages=True)
-    async def dev_reload(self, ctx: bridge.BridgeContext, *, modules: str) -> None:
+    async def dev_reload(
+        self,
+        ctx: bridge.BridgeContext,
+        *,
+        modules: BridgeOption(str, description='Cogs or modules to reload'),
+    ) -> None:
         """Reloads cogs or modules"""
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
@@ -122,7 +128,7 @@ class DevCog(commands.Cog):
                 '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see and set '
                 'the correct IDs in `emojis.py`._\n'
             )
-        if invalid_emojis:    
+        if invalid_emojis:
             description = f'{description}\n\n**Invalid emojis**'
             for attribute_name, emoji_string in invalid_emojis.items():
                 description = f'{description}\n- {emoji_string} `{attribute_name}`'
@@ -175,7 +181,7 @@ class DevCog(commands.Cog):
         elif view.value != 'confirm':
             await interaction.edit(view=None)
             await interaction.edit('Backup aborted.')
-        else:    
+        else:
             start_time = datetime.utcnow()
             interaction = await ctx.respond('Starting backup...')
             backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
@@ -187,11 +193,15 @@ class DevCog(commands.Cog):
 
     @dev_group.command(name='post-message', aliases=('pm',),
                        description='Sends the content of a message to a channel in an embed', guild_ids=settings.DEV_GUILDS)
-    @discord.option('message_id', str, description='Message ID of the message IN THIS CHANNEL with the content')
-    @discord.option('channel_id', str, description='Channel ID of the channel where the message is sent to')
-    @discord.option('embed_title', str, description='Title of the embed', max_length=256)
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def dev_post_message(self, ctx: bridge.BridgeContext, message_id: str, channel_id: str, *, embed_title: str) -> None:
+    async def dev_post_message(
+        self,
+        ctx: bridge.BridgeContext,
+        message_id: BridgeOption(str, description='Message ID of the message IN THIS CHANNEL with the content'),
+        channel_id: BridgeOption(str, description='Channel ID of the channel where the message is sent to'),
+        *,
+        embed_title: BridgeOption(str, description='Title of the embed', max_length=256),
+    ) -> None:
         """Sends the content of a message to a channel in an embed"""
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
@@ -285,7 +295,7 @@ class DevCog(commands.Cog):
         else:
             def check(m: discord.Message) -> bool:
                 return m.author == ctx.author and m.channel == ctx.channel
-            
+
             interaction = await ctx.respond(f'{answer} `[yes/no]`')
             try:
                 answer = await self.bot.wait_for('message', check=check, timeout=30)
@@ -388,8 +398,11 @@ class DevCog(commands.Cog):
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
 
     @dev_group.command(name='leave-server', description='Removes Navi from a specific guild', guild_ids=settings.DEV_GUILDS)
-    @discord.option('guild_id', str, description='ID of the server you want to leave')
-    async def dev_leave_server(self, ctx: bridge.BridgeContext, guild_id: str) -> None:
+    async def dev_leave_server(
+        self,
+        ctx: bridge.BridgeContext,
+        guild_id: BridgeOption(str, description='ID of the server you want to leave'),
+    ) -> None:
         """Removes Navi from a specific guild"""
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
@@ -424,7 +437,7 @@ class DevCog(commands.Cog):
                                    view=None)
         else:
             await interaction.edit(content='Aborted.', view=None)
-        
+
 
 def setup(bot):
     bot.add_cog(DevCog(bot))

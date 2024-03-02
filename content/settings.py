@@ -359,6 +359,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
     except exceptions.FirstTimeUserError:
         user = await users.insert_user(ctx.author.id)
         first_time_user = True
+    prefix = await guilds.get_prefix(ctx)
     if not user.bot_enabled:
         await user.update(bot_enabled=True)
     if not user.bot_enabled:
@@ -375,13 +376,13 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         )
         field_settings = (
             f'You may want to have a look at my settings.\n'
-            f'Use {await functions.get_navi_slash_command(bot, "settings user")} or `{ctx.prefix}set` to get started.'
+            f'Use {await functions.get_navi_slash_command(bot, "settings user")} or `{prefix}s` to get started.'
         )
         field_tracking = (
             f'I track the amount of some EPIC RPG commands you use. Check '
-            f'{await functions.get_navi_slash_command(bot, "stats")} or `{ctx.prefix}st` to see what commands are tracked.\n'
+            f'{await functions.get_navi_slash_command(bot, "stats")} or `{prefix}st` to see what commands are tracked.\n'
             f'**__No personal data is processed or stored in any way!__**\n'
-            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")}, `{ctx.prefix}st` '
+            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")}, `{prefix}st` '
             f'or in your user settings.\n\n'
         )
         field_auto_flex = (
@@ -391,7 +392,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         )
         field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
-            f'{await functions.get_navi_slash_command(bot, "help")} or `{ctx.prefix}help`.'
+            f'{await functions.get_navi_slash_command(bot, "help")} or `{prefix}help`.'
         )
         img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
         image_url = 'attachment://navi.png'
@@ -399,7 +400,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
             title = f'Hey! {ctx_author_name}! Hello!'.upper(),
             description = (
                 f'I am here to help you with your EPIC RPG commands!\n'
-                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} or `{ctx.prefix}help` '
+                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} or `{prefix}help` '
                 f'for a list of my own commands.'
             ),
             color =  settings.EMBED_COLOR,
@@ -867,7 +868,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
             f'_Settings to set up a guild reminder for the whole guild. Note that if you enable this reminder, Navi will '
             f'ping **all guild members**.\n'
             f'If you just want to get reminded for the guild command yourself, there is a separate reminder for that in '
-            f'`Reminder settings` below._'
+            f'`Reminders` below._'
         )
     )
     embed.add_field(name='OVERVIEW', value=overview, inline=False)

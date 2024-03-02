@@ -36,7 +36,7 @@ class LinksView(discord.ui.View):
 async def command_event_reduction(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
     """Help command"""
     all_cooldowns = list(await cooldowns.get_all_cooldowns())
-    embed = await embed_event_reductions(bot, all_cooldowns)
+    embed = await embed_event_reductions(bot, ctx, all_cooldowns)
     await ctx.respond(embed=embed)
 
 
@@ -66,7 +66,8 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
 
 
 # --- Embeds ---
-async def embed_event_reductions(bot: bridge.AutoShardedBot, all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                 all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
     """Event reductions embed"""
     reductions_slash = reductions_text = ''
     for cooldown in all_cooldowns:
@@ -84,7 +85,7 @@ async def embed_event_reductions(bot: bridge.AutoShardedBot, all_cooldowns: List
         description = (
             f'_Event reductions are set by your Navi bot owner._\n'
             f'_You can set additional personal multipliers with '
-            f'{await functions.get_navi_slash_command(bot, "settings multipliers")}_\n'
+            f'{await functions.get_navi_slash_command(bot, "settings multipliers")} or `{ctx.prefix}multi`_\n'
         )
     )
     embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
@@ -138,7 +139,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     )
     guild_settings = (
         f'{emojis.BP} **[Check weekly leaderboard]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "leaderboard guild")}, `{prefix}g lb`\n'
+        f'{await functions.get_navi_slash_command(bot, "guild leaderboard")}, `{prefix}g lb`\n'
         f'{emojis.BP} **[Manage guild settings]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "settings guild")}, `{prefix}s g`\n'
         f'{emojis.BP} **[Add or update your guild]({title_link})**: '
