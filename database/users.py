@@ -1189,11 +1189,17 @@ async def insert_user(user_id: int) -> User:
     function_name = 'insert_user'
     table = 'users'
     columns = ''
-    values = [user_id,]
+    if settings.LITE_MODE:
+        reactions_enabled = 0
+        ready_after_all_commands = 0
+    else:
+        reactions_enabled = 1
+        ready_after_all_commands = 1
+    values = [user_id, reactions_enabled, ready_after_all_commands]
     for activity, default_message in strings.DEFAULT_MESSAGES.items():
         columns = f'{columns},{strings.ACTIVITIES_COLUMNS[activity]}_message'
         values.append(default_message)
-    sql = f'INSERT INTO {table} (user_id{columns}) VALUES ('
+    sql = f'INSERT INTO {table} (user_id, reactions_enabled, ready_after_all_commands{columns}) VALUES ('
     for value in values:
         sql = f'{sql}?,'
     sql = f'{sql.strip(",")})'

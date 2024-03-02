@@ -49,6 +49,7 @@ except:
     sys.exit()
 
 DEBUG_MODE = True if os.getenv('DEBUG_MODE') == 'ON' else False
+LITE_MODE = True if os.getenv('LITE_MODE') == 'ON' else False
 
 DEV_IDS = os.getenv('DEV_IDS')
 if DEV_IDS is None or DEV_IDS == '':

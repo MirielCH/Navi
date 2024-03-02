@@ -85,10 +85,10 @@ SETTINGS_USER = [
     'hunt-rotation',
     'slash-mentions',
     'tracking',
-    'reactions',
     'area-20-cooldowns',
     'auto-flex',
 ]
+if not settings.LITE_MODE: SETTINGS_USER += ['reactions',]
 
 SETTINGS_USER_ALIASES = {
     'dnd': 'dnd-mode',
@@ -133,7 +133,6 @@ SETTINGS_USER_ALIASES = {
     'autoflex': 'auto-flex',
     'auto flex': 'auto-flex',
     'flex': 'auto-flex',
-    'reaction': 'reactions',
 }
 
 SETTINGS_USER_COLUMNS = {
@@ -145,8 +144,8 @@ SETTINGS_USER_COLUMNS = {
     'tracking': 'tracking',
     'area-20-cooldowns': 'area_20_cooldowns',
     'auto-flex': 'auto_flex',
-    'reactions': 'reactions',
 }
+if not settings.LITE_MODE: SETTINGS_USER_COLUMNS['reactions'] = 'reactions'
 
 # --- Commands ---
 async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
@@ -1109,10 +1108,18 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
     if user_settings.ready_pets_claim_after_every_pet:
         pets_claim_type = 'After every pet'
     else:
-        pets_claim_type = 'When all pets are back'
+        pets_claim_type = 'When all pets are back'    
     field_settings = (
         f'{emojis.BP} **Auto-ready**: {auto_ready_enabled}\n'
-        f'{emojis.BP} **Auto-ready frequency**: `{frequency}`\n'
+        f'{emojis.BP} **Auto-ready frequency**: `{frequency}`'
+    )
+    if settings.LITE_MODE:
+        field_settings = (
+            f'{field_settings}\n'
+            f'{emojis.DETAIL} _This setting can\'t be changed in Navi Lite._'
+        )
+    field_settings = (
+        f'{field_settings}\n'
         f'{emojis.BP} **Auto-ready ping**: {ping_user_enabled}\n'
         f'{emojis.BP} **Message style**: `{message_style}`\n'
         f'{emojis.BP} **Embed color**: `#{user_settings.ready_embed_color}`\n'
@@ -1469,11 +1476,19 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     partner_pocket_watch_reduction = 100 - (user_settings.partner_pocket_watch_multiplier * 100)
     chocolate_box_unlocked = 'Yes' if user_settings.chocolate_box_unlocked else 'No'
     partner_chocolate_box_unlocked = 'Yes' if user_settings.partner_chocolate_box_unlocked else 'No'
-    bot = (
+    field_bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
         f'{emojis.DETAIL} _You can toggle this by using {await functions.get_navi_slash_command(bot, "on")} '
         f'and {await functions.get_navi_slash_command(bot, "off")}._\n'
-        f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}\n'
+        f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}'
+    )
+    if settings.LITE_MODE:
+        field_bot = (
+            f'{field_bot}\n'
+            f'{emojis.DETAIL} _This setting can\'t be changed in Navi Lite._'
+        )
+    field_bot = (
+        f'{field_bot}\n'
         f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(user_settings.auto_flex_enabled)}\n'
         f'{emojis.DETAIL} _Auto flexing only works if it\'s also enabled in the server settings._\n'
         f'{emojis.DETAIL} _Most flexes are **English only**._\n'
@@ -1507,7 +1522,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
             f'_Various user settings. If you are married, also check out `Partner settings`._\n'
         )
     )
-    embed.add_field(name='MAIN', value=bot, inline=False)
+    embed.add_field(name='MAIN', value=field_bot, inline=False)
     embed.add_field(name='YOUR EPIC RPG SETTINGS', value=epic_rpg_user, inline=False)
     embed.add_field(name='YOUR PARTNER\'S EPIC RPG SETTINGS', value=epic_rpg_partner, inline=False)
     embed.add_field(name='TRACKING', value=tracking, inline=False)
