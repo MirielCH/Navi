@@ -25,7 +25,7 @@ This data does usually not get stored and is immediately discarded.
 
 ## Storing message data
 
-The bot caches all messages sent by users that either mention the EPIC RPG bot or start with `rpg `. They are used to reduce API calls and increase performance. These messages are discarded after 5 minutes and not stored permanently.  
+The bot caches all messages sent by users that either mention the EPIC RPG bot or start with `rpg `. They are used to reduce API calls and increase performance. These messages are discarded after 10 minutes and **not** stored permanently.  
 
 If there is an error, the following data is stored permanently in the error log:  
 • Content of the **EPIC RPG** message that couldn’t get processed correctly (but never messages by **you**).  
@@ -37,7 +37,7 @@ Please be aware that I have no control over the code and policies of forks and o
 
 This policy therefore only applies to:  
 • The code in the [main repository](https://github.com/Miriel-py/Navi), maintained by myself.  
-• The bot instance with the username `Navi#4692`, hosted by myself. This bot instance is only available in RPG Army, Charivari Headquarters and a few private servers which are not accessible to the public. If you encounter Navi on any server not listed here, it is outside of the scope of this privacy policy.  
+• The bot instances with the username `Navi#4692` and `Navi Lite#9605`, hosted by myself. Any other bot instances not listed here, it is outside of the scope of this privacy policy.  
 
 The bot may also link to external sites that are not operated by me. The same limits apply to those sites.
 

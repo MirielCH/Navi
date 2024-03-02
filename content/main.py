@@ -29,6 +29,8 @@ class LinksView(discord.ui.View):
                                         url=strings.LINK_GITHUB, emoji=emojis.GITHUB, row=0))
         self.add_item(discord.ui.Button(label="Privacy policy", style=discord.ButtonStyle.link,
                                         url=strings.LINK_PRIVACY_POLICY, emoji=emojis.PRIVACY_POLICY, row=1))
+        self.add_item(discord.ui.Button(label="Terms of Service", style=discord.ButtonStyle.link,
+                                        url=strings.LINK_TERMS, emoji=emojis.TERMS, row=1))
             
 
 
@@ -103,15 +105,15 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{emojis.BP} **[Add custom reminder]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "custom-reminder")}, `{prefix}rm`\n'
         f'{emojis.BP} **[Manage reminders]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings reminders")}, `{prefix}s rm`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings reminders")}, `{prefix}srm`\n'
         f'{emojis.BP} **[Manage reminder messages]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}s m`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}sm`\n'
     )
     ready_settings = (
         f'{emojis.BP} **[Check ready commands]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "ready")}, `{prefix}rd`\n'
         f'{emojis.BP} **[Manage ready list]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings ready")}, `{prefix}s rd`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings ready")}, `{prefix}srd`\n'
     )
     stats = (
         f'{emojis.BP} **[Check stats]({title_link})**: '
@@ -129,19 +131,19 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     )
     helper_settings = (
         f'{emojis.BP} **[Manage helper settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings helpers")}, `{prefix}s h`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings helpers")}, `{prefix}sh`\n'
     )
     partner_settings = (
         f'{emojis.BP} **[Manage alts]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings alts")}, `{prefix}s a`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings alts")}, `{prefix}sa`\n'
         f'{emojis.BP} **[Manage partner]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings partner")}, `{prefix}s p`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings partner")}, `{prefix}sp`\n'
     )
     guild_settings = (
         f'{emojis.BP} **[Check weekly leaderboard]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "guild leaderboard")}, `{prefix}g lb`\n'
+        f'{await functions.get_navi_slash_command(bot, "guild leaderboard")}, `{prefix}glb`\n'
         f'{emojis.BP} **[Manage guild settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings guild")}, `{prefix}s g`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings guild")}, `{prefix}sg`\n'
         f'{emojis.BP} **[Add or update your guild]({title_link})**: '
         f'{strings.SLASH_COMMANDS["guild list"]}, `rpg guild list`\n'
     )
@@ -182,7 +184,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'NAVI',
+        title = 'NAVI' if not settings.LITE_MODE else 'NAVI LITE',
         description =   (
             f'_Hey! **{ctx_author_name}**! Hello!_\n'
         )
@@ -248,7 +250,7 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> disc
     image_url = 'attachment://navi.png'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = 'ABOUT NAVI',
+        title = 'ABOUT NAVI' if not settings.LITE_MODE else 'ABOUT NAVI LITE',
         description = 'I am as free as a fairy.'
     )
     embed.add_field(name='BOT STATS', value=general, inline=False)

@@ -9,7 +9,7 @@ import discord
 
 from content import settings as settings_cmd
 from database import cooldowns, portals, reminders, users
-from resources import emojis, exceptions, functions, modals, strings, views
+from resources import emojis, exceptions, functions, modals, settings, strings, views
 
 
 class ToggleAutoReadyButton(discord.ui.Button):
@@ -317,8 +317,9 @@ class ManageReadySettingsSelect(discord.ui.Select):
         other_position = 'on bottom' if view.user_settings.ready_other_on_top else 'on top'
         options.append(discord.SelectOption(label=f'Auto-ready',
                                             value='toggle_auto_ready', emoji=auto_ready_emoji))
-        options.append(discord.SelectOption(label=f'Show auto-ready after {frequency}',
-                                            value='toggle_frequency', emoji=None))
+        if not settings.LITE_MODE:
+            options.append(discord.SelectOption(label=f'Show auto-ready after {frequency}',
+                                                value='toggle_frequency', emoji=None))
         options.append(discord.SelectOption(label='Auto-ready ping',
                                             value='toggle_user_ping', emoji=user_ping_emoji))
         options.append(discord.SelectOption(label=f'Show ready commands as {message_style}',
@@ -532,8 +533,9 @@ class ManageUserSettingsSelect(discord.ui.Select):
         auto_flex_emoji = emojis.ENABLED if view.user_settings.auto_flex_enabled else emojis.DISABLED
         auto_flex_ping_emoji = emojis.ENABLED if view.user_settings.auto_flex_ping_enabled else emojis.DISABLED
         tracking_emoji = emojis.ENABLED if view.user_settings.tracking_enabled else emojis.DISABLED
-        options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
-                                            value='toggle_reactions'))
+        if not settings.LITE_MODE:
+            options.append(discord.SelectOption(label=f'Reactions', emoji=reactions_emoji,
+                                                value='toggle_reactions'))
         options.append(discord.SelectOption(label=f'Auto flex alerts', emoji=auto_flex_emoji,
                                             value='toggle_auto_flex'))
         options.append(discord.SelectOption(label=f'Auto flex ping', emoji=auto_flex_ping_emoji,
