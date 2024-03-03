@@ -93,6 +93,18 @@ if LINK_SUPPORT != '' and LINK_SUPPORT is not None:
     LINK_SUPPORT = LINK_SUPPORT.strip('" ')
 else:
     LINK_SUPPORT = None
+
+LINK_PRIVACY_POLICY = os.getenv('LINK_PRIVACY_POLICY')
+if LINK_PRIVACY_POLICY != '' and LINK_PRIVACY_POLICY is not None:
+    LINK_PRIVACY_POLICY = LINK_PRIVACY_POLICY.strip('" ')
+else:
+    LINK_PRIVACY_POLICY = None
+
+LINK_TERMS = os.getenv('LINK_TERMS')
+if LINK_TERMS != '' and LINK_TERMS is not None:
+    LINK_TERMS = LINK_TERMS.strip('" ')
+else:
+    LINK_TERMS = None
     
 COMPLAINT_CHANNEL_ID = os.getenv('COMPLAINT_CHANNEL_ID')
 if COMPLAINT_CHANNEL_ID != '' and COMPLAINT_CHANNEL_ID is not None:

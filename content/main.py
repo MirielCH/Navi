@@ -27,10 +27,12 @@ class LinksView(discord.ui.View):
                                         url=strings.LINK_CHANGELOG, emoji=emojis.GITHUB, row=0))
         self.add_item(discord.ui.Button(label="Github", style=discord.ButtonStyle.link,
                                         url=strings.LINK_GITHUB, emoji=emojis.GITHUB, row=0))
-        self.add_item(discord.ui.Button(label="Privacy policy", style=discord.ButtonStyle.link,
-                                        url=strings.LINK_PRIVACY_POLICY, emoji=emojis.PRIVACY_POLICY, row=1))
-        self.add_item(discord.ui.Button(label="Terms of Service", style=discord.ButtonStyle.link,
-                                        url=strings.LINK_TERMS, emoji=emojis.TERMS, row=1))
+        if settings.LINK_PRIVACY_POLICY is not None:
+            self.add_item(discord.ui.Button(label="Privacy policy", style=discord.ButtonStyle.link,
+                                            url=settings.LINK_PRIVACY_POLICY, emoji=emojis.PRIVACY_POLICY, row=1))
+        if settings.LINK_TERMS is not None:
+            self.add_item(discord.ui.Button(label="Terms of Service", style=discord.ButtonStyle.link,
+                                            url=settings.LINK_TERMS, emoji=emojis.TERMS, row=1))
             
 
 
