@@ -6,7 +6,7 @@ import discord
 from discord.ext import bridge, commands
 
 from cache import messages
-from database import errors, users
+from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings, strings
 
 
@@ -75,6 +75,11 @@ class CurrentAreaCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 await user_settings.update(current_area=1)
+                try:
+                    time_potion_reminder = await reminders.get_user_reminder(user.id, 'time-potion')
+                    await time_potion_reminder.delete()
+                except exceptions.NoDataFoundError:
+                    pass
 
             # Set current area from profile
             search_strings = [

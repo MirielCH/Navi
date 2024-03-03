@@ -75,6 +75,7 @@ SETTINGS_HELPER_COLUMNS = {
     'ruby-counter': 'ruby_counter',
     'training-helper': 'training_helper',
     'halloween-helper': 'halloween_helper',
+    'time-potion-warning': 'time_potion_warning',
 }
 
 SETTINGS_USER = [
@@ -457,7 +458,7 @@ async def command_off(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> 
         else:
             aborted = True
     if timeout:
-        await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
+        await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
     elif confirmed:
         await user.update(bot_enabled=False)
         try:
@@ -897,6 +898,8 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
         f'{emojis.DETAIL} _Keeps track of your rubies and helps with ruby training._\n'
     )
     helpers2 = (
+        f'{emojis.BP} **Time potion warning**: {await functions.bool_to_text(user_settings.time_potion_warning_enabled)}\n'
+        f'{emojis.DETAIL} _Shows whether you have a time potion active when super time travelling._\n'
         f'{emojis.BP} **Training helper**: {await functions.bool_to_text(user_settings.training_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
         f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'

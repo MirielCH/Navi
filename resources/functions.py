@@ -289,13 +289,24 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
     """Parses a time string and returns the time as timedelta."""
     time_left_seconds = 0
 
+    if timestring.find('y') > -1:
+        years_start = 0
+        years_end = timestring.find('y')
+        years = timestring[years_start:years_end]
+        timestring = timestring[years_end+1:].strip()
+        try:
+            time_left_seconds = time_left_seconds + (int(years) * 31_536_000)
+        except:
+            await errors.log_error(
+                f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{years}\' to an integer'
+            )
     if timestring.find('w') > -1:
         weeks_start = 0
         weeks_end = timestring.find('w')
         weeks = timestring[weeks_start:weeks_end]
         timestring = timestring[weeks_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(weeks) * 604800)
+            time_left_seconds = time_left_seconds + (int(weeks) * 604_800)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{weeks}\' to an integer'
@@ -306,7 +317,7 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
         days = timestring[days_start:days_end]
         timestring = timestring[days_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(days) * 86400)
+            time_left_seconds = time_left_seconds + (int(days) * 86_400)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer'
@@ -317,7 +328,7 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
         hours = timestring[hours_start:hours_end]
         timestring = timestring[hours_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(hours) * 3600)
+            time_left_seconds = time_left_seconds + (int(hours) * 3_600)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{hours}\' to an integer'
@@ -345,7 +356,7 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{seconds}\' to an integer'
             )
 
-    if time_left_seconds > 999_999_999:
+    if time_left_seconds > 999_999_999_999:
         raise OverflowError('Timestring out of valid range. Stop hacking.')
 
     return timedelta(seconds=time_left_seconds)

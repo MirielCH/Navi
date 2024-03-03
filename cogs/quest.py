@@ -385,6 +385,7 @@ class QuestCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled: return
+                user_global_name = user.global_name if user.global_name is not None else user.name
                 if user_settings.dnd_mode_enabled:
                     user_name = f'**{user_global_name}**,'
                 else:

@@ -286,6 +286,7 @@ class SettingsHelpersView(discord.ui.View):
             #'Megarace helper': 'megarace_helper_enabled',
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
+            'Time potion warning': 'time_potion_warning_enabled',
             'Training helper': 'training_helper_enabled',
             #'Pumpkin bat helper': 'halloween_helper_enabled',
         }

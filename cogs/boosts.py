@@ -158,6 +158,57 @@ class BoostsCog(commands.Cog):
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
+            # Tell user whether time potion is active on super time travel
+            search_strings_author = [
+                "— super time travel", #All languages
+                "— time jump", #All languages
+            ]
+            search_strings_description = [
+                "are you sure", #English
+                "are you sure", #Spanish, MISSING
+                "are you sure", #Portuguese, MISSING
+            ]
+            if (any(search_string in embed_author.lower() for search_string in search_strings_author)
+                and any(search_string in embed_description.lower() for search_string in search_strings_description)):
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    if user is None:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_TIME_TRAVEL,
+                                                            user_name=user_name)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if (not user_settings.bot_enabled or not user_settings.alert_boosts.enabled
+                    or not user_settings.time_potion_warning_enabled): return
+                try:
+                    time_potion_reminder = await reminders.get_user_reminder(user.id, 'time-potion')
+                except exceptions.NoDataFoundError:
+                    time_potion_reminder = None
+                user_global_name = user.global_name if user.global_name is not None else user.name
+                if user_settings.dnd_mode_enabled:
+                    user_name = f'**{user_global_name}**,'
+                else:
+                    user_name = user.mention
+                if time_potion_reminder is not None:
+                    answer = f'{user_name} {emojis.ENABLED} You have a {emojis.POTION_TIME} **Time potion** active.'
+                else:
+                    answer = f'{user_name} {emojis.DISABLED} You do **NOT** have a {emojis.POTION_TIME} **Time potion** active!'
+                await message.channel.send(answer)
+
         if not message.embeds:
             message_content = message.content
 
@@ -476,6 +527,7 @@ class BoostsCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
 
 # Initialization
 def setup(bot):

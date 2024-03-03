@@ -20,7 +20,8 @@ Navi is provided "AS IS", without warranty of any kind, express or implied, incl
 
 ## Limits of these ToS
 
-Navi or the support server may link to external sites that are not operated by me. Please be aware that I have no control over the content and policies of those sites, and cannot accept responsibility or liability for their respective ToS.  
+Thse ToS only apply to the bot instances with the username `Navi#4692` and `Navi Lite#9605`, hosted by myself. Any other bot instances not listed here, it is outside of the scope of this document.  
+The mentioned bot instances or the support server may link to external sites that are not operated by me. Please be aware that I have no control over the content and policies of those sites, and cannot accept responsibility or liability for their respective ToS.  
 
 ## Changes to these ToS
 

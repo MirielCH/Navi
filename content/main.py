@@ -81,13 +81,14 @@ async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
         reductions_slash = f'{emojis.BP} No event reductions active'
     if reductions_text == '':
         reductions_text = f'{emojis.BP} No event reductions active'
+    prefix = await guilds.get_prefix(ctx)
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'ACTIVE EVENT REDUCTIONS',
         description = (
             f'_Event reductions are set by your Navi bot owner._\n'
             f'_You can set additional personal multipliers with '
-            f'{await functions.get_navi_slash_command(bot, "settings multipliers")} or `{ctx.prefix}multi`_\n'
+            f'{await functions.get_navi_slash_command(bot, "settings multipliers")} or `{prefix}multi`_\n'
         )
     )
     embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
