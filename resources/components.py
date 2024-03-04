@@ -911,7 +911,7 @@ class AddAltSelect(discord.ui.Select):
         alt_global_name = new_alt.global_name if new_alt.global_name is not None else new_alt.name
         if new_alt == interaction.user:
             await interaction.response.send_message(
-                f'You want to add **yourself** as an alt? Are you **that** lonely?',
+                'You want to add **yourself** as an alt? Are you **that** lonely?',
                 ephemeral=True
             )
             await update_message()
@@ -922,14 +922,14 @@ class AddAltSelect(discord.ui.Select):
             return
         if new_alt.bot:
             await interaction.response.send_message(
-                f'Sorry, bots are not allowed to be alts, they are too smol.',
+                'Sorry, bots are not allowed to be alts, they are too smol.',
                 ephemeral=True
             )
             await update_message()
             return
         if len(self.view.user_settings.alts) >= 24:
             await interaction.response.send_message(
-                f'Your already has 24 alts and no space left. They need to remove one first.',
+                'You already have 24 alts and no space left. You need to remove one first.',
                 ephemeral=True
             )
             await update_message()
