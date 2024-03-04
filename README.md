@@ -4,7 +4,13 @@
 
 Reminder / Helper for EPIC RPG.  
 
-## Setup
+## How to invite Navi
+
+If you don't want to run Navi yourself, you can invite [Navi Lite](https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot). This is a global version hosted by me. To prevent rate limit issues, it has the following limitations:  
+• Reactions are permanently disabled.  
+• Auto-ready frequency is fixed to `after hunt only`.  
+
+## How to run Navi
 
 • Install python 3.8 or higher. I recommend the newest version (3.11).  
 • Install all third party libraries mentioned in `requirements.txt`.  
@@ -16,7 +22,7 @@ Reminder / Helper for EPIC RPG.
 • Run `bot.py`.  
 • Invite Navi to all your emoji servers and all other servers you want to use it. Note the required permissions below.  
 
-## Updating the bot
+## How to update Navi
 
 • Merge your old `resources/emojis.py` with the new one, so you have the new code but keep your own emoji IDs.  
 • Replace all other `.py` files with the new ones.  
@@ -51,7 +57,6 @@ These commands provide bot admin level functionality and are restricted as follo
 • They are not registered globally and only show up in the servers set in DEV_GUILDS.  
 • They are not listed in `/help`.  
 **Do not change this behaviour. Some of them would expose data, others would allow users to mess with your Navi.**  
-
 
 The following commands are available:  
 
@@ -106,6 +111,6 @@ Shows a link to the dev support server (see below).
 
 Ignore other dev commands, they are my own test commands and might even mess up something for you.  
 
-## Dev support server
+## Support server
 
-• If you find bugs, have issues running Navi or something else, feel free to join the [dev support server](https://discord.gg/Kz2Vz2K4gy).  
+• If you find bugs, have issues running Navi or something else, feel free to join the [support server](https://discord.gg/Kz2Vz2K4gy).  

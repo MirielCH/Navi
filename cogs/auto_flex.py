@@ -1583,7 +1583,7 @@ class AutoFlexCog(commands.Cog):
                         message_content_user = message_content_partner = message_content
                     else:
                         search_patterns_user = search_patterns_partner = search_patterns_together_new
-                        search_patterns_user_lost = search_patterns_together_new_lost
+                        search_patterns_user_lost = search_patterns_partner_lost = search_patterns_together_new_lost
                         partner_loot_start = message_content.find(f'**{partner_name}**:')
                         message_content_user = message_content[:partner_loot_start]
                         message_content_partner = message_content[partner_loot_start:]

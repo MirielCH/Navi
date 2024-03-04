@@ -40,12 +40,19 @@ class MainCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True)
     async def invite(self, ctx: commands.Context) -> None:
         """Invite command"""
-        message = (
-            f'Sorry, you can\'t invite me.\n'
-            f'However, I am fully open source on an MIT license, so feel free to run me yourself.\n'
-            f'https://github.com/Miriel-py/Navi'
-        )
-        await ctx.reply(message)
+        invite_link = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
+        if ctx.guild.me.id == 1213487623688167494: # Navi Lite#9605
+            answer = (
+                f'Click [here]({invite_link}) to invite me!'
+            )
+        else:
+            answer = (
+                f'Sorry, you can\'t invite this Navi.\n\n'
+                f'However, you have 2 options:\n'
+                f'1. [Invite Navi Lite]({invite_link}), a global version of Navi with a few limitations.\n'
+                f'2. [Run Navi yourself](https://github.com/Miriel-py/Navi). Navi is free and open source.\n'
+            )
+        await ctx.reply(answer)
 
      # Events
     @commands.Cog.listener()
