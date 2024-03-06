@@ -170,7 +170,7 @@ class FarmCog(commands.Cog):
                         ]
                         crop_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     crop_type = crop_match.group(2)
-                    crop_count = getattr(user_settings.inventory, crop_type)
+                    crop_count = getattr(user_settings.inventory, crop_type.lower())
                     crop_count += int(crop_match.group(1).replace(',',''))
                     kwargs[f'inventory_{crop_type}'] = crop_count
                     search_patterns = [
