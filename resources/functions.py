@@ -982,8 +982,13 @@ async def get_farm_command(user_settings: users.User, include_prefix: Optional[b
 
 
 # Miscellaneous
-async def call_ready_command(bot: bridge.AutoShardedBot, message: discord.Message, user: discord.User) -> None:
-    """Calls the ready command as a reply to the current message"""
+async def call_ready_command(bot: bridge.AutoShardedBot, message: discord.Message, user: discord.User,
+                             user_settings: users.User, activity: str) -> None:
+    """Calls the ready command as a reply to the current message
+    """
+    if not user_settings.auto_ready_enabled: return
+    if user_settings.round_card_active: return
+    if not user_settings.ready_after_all_commands and not activity.lower() == 'hunt': return
     command = bot.get_application_command(name='ready')
     if command is not None: await command.callback(command.cog, message, user=user)
 

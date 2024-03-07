@@ -135,8 +135,7 @@ class HorseFestivalCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'horse', time_left,
                                                             message.channel.id, reminder_message)
                     )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'horse'))
                 if user_settings.reactions_enabled:
                     await message.add_reaction(emojis.NAVI)
                     await message.add_reaction(emojis.KIRBY_RUN)
@@ -213,8 +212,7 @@ class HorseFestivalCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'minirace', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'minirace'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             search_strings = [
@@ -255,8 +253,7 @@ class HorseFestivalCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'minirace', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'minirace'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
             """
 

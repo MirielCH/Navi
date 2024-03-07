@@ -1468,6 +1468,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
         tt_timestamp = int(user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
+    prefix = await guilds.get_prefix(ctx)
     ascension = 'Ascended' if user_settings.ascended else 'Not ascended'
     user_donor_tier = strings.DONOR_TIERS[user_settings.user_donor_tier]
     user_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[user_donor_tier]
@@ -1481,8 +1482,8 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     partner_chocolate_box_unlocked = 'Yes' if user_settings.partner_chocolate_box_unlocked else 'No'
     field_bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
-        f'{emojis.DETAIL} _You can toggle this by using {await functions.get_navi_slash_command(bot, "on")} '
-        f'and {await functions.get_navi_slash_command(bot, "off")}._\n'
+        f'{emojis.DETAIL} _You can toggle this with {await functions.get_navi_slash_command(bot, "on")}'
+        f' and {await functions.get_navi_slash_command(bot, "off")} or `{prefix} on` and `off`_\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}'
     )
     if settings.LITE_MODE:

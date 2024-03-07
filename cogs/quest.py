@@ -104,7 +104,10 @@ class QuestCog(commands.Cog):
                         if user_settings.dnd_mode_enabled:
                             answer = f'**{user_global_name}**, {answer}'
                         else:
-                            answer = f'{user.mention} {answer}'
+                            if user_settings.ping_after_message:
+                                answer = f'{answer} {user.mention}'
+                            else:
+                                answer = f'{user.mention} {answer}'
                         await message.channel.send(answer)
                     
                 search_strings_guild_raid = [
@@ -343,8 +346,7 @@ class QuestCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'quest'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Guild quest in progress
@@ -529,8 +531,7 @@ class QuestCog(commands.Cog):
                             pass
 
                     await user_settings.update(guild_quest_prompt_active=False)
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'quest'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Aborted guild quest

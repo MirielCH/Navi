@@ -331,9 +331,8 @@ class ClanCog(commands.Cog):
                         await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings is not None:
                     if not user_settings.bot_enabled: return
-                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                        if clan_channel_id == message.channel.id: return
-                        await functions.call_ready_command(self.bot, message, user)
+                    if clan_channel_id == message.channel.id: return
+                    await functions.call_ready_command(self.bot, message, user, user_settings, 'guild')
 
             # Guild raid
             search_strings = [
@@ -439,9 +438,8 @@ class ClanCog(commands.Cog):
                         await functions.add_reminder_reaction(message, reminder, user_settings)
                 if user_settings is not None:
                     if not user_settings.bot_enabled: return
-                    if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                        if clan_channel_id == message.channel.id: return
-                        await functions.call_ready_command(self.bot, message, user)
+                    if clan_channel_id == message.channel.id: return
+                    await functions.call_ready_command(self.bot, message, user, user_settings, 'guild')
 
 
 # Initialization

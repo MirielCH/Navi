@@ -154,8 +154,7 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'training'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
                 search_strings = [
                     'better luck next time', #English
@@ -209,8 +208,7 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'training'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Training VOID event
@@ -252,8 +250,7 @@ class TrainingCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'training', timedelta(seconds=1),
                                                          message.channel.id, reminder_message)
                 )
-                if user_settings.auto_ready_enabled and user_settings.ready_after_all_commands:
-                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'training'))
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
             # Training reset from ultraining shop

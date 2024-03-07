@@ -853,6 +853,78 @@ class AutoFlexCog(commands.Cog):
                         f'**{user.name}** traveled in time for **999** times and thus broke Epic RPG Guide. Good job.\n'
                         f'Hope you\'re proud. Damn it.'
                     )
+                elif time_travel_count_old < 1_100 and time_travel_count_new >= 1_100:
+                    event = 'time_travel_1100'
+                    description = (
+                        f'**{user.name}** needs therapy. I mean time traveled **1,100** times.'
+                    )
+                elif time_travel_count_old < 1_200 and time_travel_count_new >= 1_200:
+                    event = 'time_travel_1200'
+                    description = (
+                        f'**{user.name}** time traveled **1,200** times which makes them rather smol if you ask me.'
+                    )
+                elif time_travel_count_old < 1_300 and time_travel_count_new >= 1_300:
+                    event = 'time_travel_1300'
+                    description = (
+                        f'**{user.name}** is increasing their time travel count to **1,300**.\n'
+                        f'Now, some people would call a doctor at this point. Maybe even **the** doctor.'
+                    )
+                elif time_travel_count_old < 1_400 and time_travel_count_new >= 1_400:
+                    event = 'time_travel_1400'
+                    description = (
+                        f'La laaa laaaah, dee daaaahh, running out of ideas, shoo beee dooo...\n'
+                        f'What happened, you ask? Well, **{user.name}** reached TT **1,400**. The usual.'
+                    )
+                elif time_travel_count_old < 1_500 and time_travel_count_new >= 1_500:
+                    event = 'time_travel_1500'
+                    description = (
+                        f'One thousand five hundred time travels.\n'
+                        f'**{user.name}** seems to quite mad.'
+                    )
+                elif time_travel_count_old < 1_600 and time_travel_count_new >= 1_600:
+                    event = 'time_travel_1600'
+                    description = (
+                        f'Ah. Time. A beautiful concept. Some even travel through it.\n'
+                        f'And then there\'s **{user.name}**, doing it freaking **1,600** times.'
+                    )
+                elif time_travel_count_old < 1_700 and time_travel_count_new >= 1_700:
+                    event = 'time_travel_1700'
+                    description = (
+                        f'Did you hear that? I think some fuse blew.\n'
+                        f'Ah yes. Must be **{user.name}**\'s time machine, it finally broke after **1,700** time travels.'
+                    )
+                elif time_travel_count_old < 1_800 and time_travel_count_new >= 1_800:
+                    event = 'time_travel_1800'
+                    description = (
+                        f'Let me introduce you to **{user.name}**, the person who time traveled **1,800** times.\n'
+                        f'I\'m afraid they got quite a few screws loose.'
+                    )
+                elif time_travel_count_old < 1_900 and time_travel_count_new >= 1_900:
+                    event = 'time_travel_1900'
+                    description = (
+                        f'If you see this, then someone triggered it. **{user.name}**, to be exact.\n'
+                        f'The problem is, it requires **1,900** time travels to trigger this.\n'
+                        f'Make of that what you will.'
+                    )
+                elif time_travel_count_old < 2_000 and time_travel_count_new >= 2_000:
+                    event = 'time_travel_2000'
+                    description = (
+                        f'Once upon a time, **{user.name}** found a game called EPIC RPG.\n'
+                        f'It was quite a nice little game, so they decided to play a bit, maybe even TT once or thrice.\n'
+                        f'They happened to like it, so they kept going a bit longer.\n'
+                        f'They kept going.\n'
+                        f'And going.\n'
+                        f'They grew older.\n'
+                        f'Still going.\n'
+                        f'Jesus, why don\'t they stop.\n'
+                        f'Call an ambulance.\n'
+                        f'Is this normal?\n'
+                        f'SOMEONE HELP THEM.\n'
+                        f'Oh lord.\n'
+                        f'STILL GOING.\n'
+                        f'Oh god. They reached **2,000** time travels.\n'
+                        f'Stawp.'
+                    )
                 else:
                     return
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,

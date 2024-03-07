@@ -199,14 +199,17 @@ class BoostsCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     time_potion_reminder = None
                 user_global_name = user.global_name if user.global_name is not None else user.name
-                if user_settings.dnd_mode_enabled:
-                    user_name = f'**{user_global_name}**,'
-                else:
-                    user_name = user.mention
                 if time_potion_reminder is not None:
-                    answer = f'{user_name} {emojis.ENABLED} You have a {emojis.POTION_TIME} **Time potion** active.'
+                    answer = f'{emojis.ENABLED} You have a {emojis.POTION_TIME} **Time potion** active.'
                 else:
-                    answer = f'{user_name} {emojis.DISABLED} You do **NOT** have a {emojis.POTION_TIME} **Time potion** active!'
+                    answer = f'{emojis.DISABLED} You do **NOT** have a {emojis.POTION_TIME} **Time potion** active!'
+                if user_settings.dnd_mode_enabled:
+                    answer = f'**{user_global_name}**, {answer}'
+                else:
+                    if user_settings.ping_after_message:
+                        answer = f'{answer} {user.mention}'
+                    else:
+                        answer = f'{user.mention} {answer}'
                 await message.channel.send(answer)
 
         if not message.embeds:
@@ -480,6 +483,15 @@ class BoostsCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+                if user_settings.dnd_mode_enabled:
+                    user_global_name = user.global_name if user.global_name is not None else user.name
+                    user_name = f'**{user_global_name}**,'
+                else:
+                    user_name = user.mention
+                if user_settings.auto_ready_enabled:
+                    await message.channel.send(
+                        f'{user_name} Auto-ready will be disabled while the round card is active.'
+                    )
 
                 
             # Mega boost

@@ -430,8 +430,7 @@ class HuntCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'hunt', time_left,
                                                              message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'hunt'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
                 if found_together and partner is not None:
@@ -674,8 +673,7 @@ class HuntCog(commands.Cog):
                         await reminders.insert_user_reminder(user.id, 'hunt', time_left,
                                                                 message.channel.id, reminder_message)
                     )
-                    if user_settings.auto_ready_enabled:
-                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, user))
+                    asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'hunt'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
