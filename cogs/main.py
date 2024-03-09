@@ -2,6 +2,7 @@
 """Contains error handling and the help and about commands"""
 
 import discord
+from discord import slash_command
 from discord.ext import bridge, commands
 
 from content import main
@@ -35,21 +36,28 @@ class MainCog(commands.Cog):
         """About command"""
         await main.command_about(self.bot, ctx)
 
+    # Slash commands
+    if settings.LINK_INVITE is not None:
+        @slash_command(name='invite', description='Invite Navi to your server!')
+        async def invite(self, ctx: discord.ApplicationContext) -> None:
+            """Sends and invite link"""
+            await ctx.respond(f'Click [here]({settings.LINK_INVITE}) to invite me!')
+
     # Text commands
     @commands.command(name='invite', aliases=('inv',))
     @commands.bot_has_permissions(send_messages=True)
-    async def invite(self, ctx: commands.Context) -> None:
+    async def invite_prefix(self, ctx: commands.Context) -> None:
         """Invite command"""
-        invite_link = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
-        if ctx.guild.me.id == 1213487623688167494: # Navi Lite#9605
+        if settings.LINK_INVITE is not None:
             answer = (
-                f'Click [here]({invite_link}) to invite me!'
+                f'Click [here]({settings.LINK_INVITE}) to invite me!'
             )
         else:
+            navi_lite_invite = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
             answer = (
                 f'Sorry, you can\'t invite this Navi.\n\n'
                 f'However, you have 2 options:\n'
-                f'1. [Invite Navi Lite]({invite_link}), a global version of Navi with a few limitations.\n'
+                f'1. [Invite Navi Lite]({navi_lite_invite}), a global version of Navi with a few limitations.\n'
                 f'2. [Run Navi yourself](https://github.com/MirielCH/Navi). Navi is free and open source.\n'
             )
         await ctx.reply(answer)

@@ -88,6 +88,12 @@ else:
         print(f'Can\'t convert value "{EMBED_COLOR}" of variable EMBED_COLOR in the .env file to an integer.')
         sys.exit()
 
+LINK_INVITE = os.getenv('LINK_INVITE')
+if LINK_INVITE != '' and LINK_INVITE is not None:
+    LINK_INVITE = LINK_INVITE.strip('" ')
+else:
+    LINK_INVITE = None
+
 LINK_SUPPORT = os.getenv('LINK_SUPPORT')
 if LINK_SUPPORT != '' and LINK_SUPPORT is not None:
     LINK_SUPPORT = LINK_SUPPORT.strip('" ')
