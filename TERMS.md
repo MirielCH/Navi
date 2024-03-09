@@ -29,7 +29,7 @@ At my discretion, I may change my ToS to reflect updates. If I decide to change 
 
 ## Code usage
 
-Navi is open source. For details about its license, please check [LICENSE](https://github.com/Miriel-py/Navi/blob/master/LICENSE).  
+Navi is open source. For details about its license, please check [LICENSE](https://github.com/MirielCH/Navi/blob/master/LICENSE).  
 
 ## Contact me
 

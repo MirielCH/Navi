@@ -50,7 +50,7 @@ class MainCog(commands.Cog):
                 f'Sorry, you can\'t invite this Navi.\n\n'
                 f'However, you have 2 options:\n'
                 f'1. [Invite Navi Lite]({invite_link}), a global version of Navi with a few limitations.\n'
-                f'2. [Run Navi yourself](https://github.com/Miriel-py/Navi). Navi is free and open source.\n'
+                f'2. [Run Navi yourself](https://github.com/MirielCH/Navi). Navi is free and open source.\n'
             )
         await ctx.reply(answer)
 

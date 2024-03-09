@@ -16,6 +16,9 @@ from database import settings as settings_db
 from resources import emojis, functions, settings, strings
 
 
+LINK_INVITE_NAVI_LITE = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
+
+
 class LinksView(discord.ui.View):
     """View with link buttons."""
     def __init__(self):
@@ -36,6 +39,7 @@ class LinksView(discord.ui.View):
             
 
 
+
 # --- Commands ---
 async def command_event_reduction(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
     """Help command"""
@@ -47,6 +51,9 @@ async def command_event_reduction(bot: bridge.AutoShardedBot, ctx: bridge.Bridge
 async def command_help(bot: bridge.AutoShardedBot, ctx: Union[bridge.BridgeContext, discord.Message]) -> None:
     """Help command"""
     view = LinksView()
+    if ctx.guild.me.id == 1213487623688167494: # Navi Lite#9605
+        view.add_item(discord.ui.Button(label="Invite", style=discord.ButtonStyle.link,
+                      url=LINK_INVITE_NAVI_LITE, emoji='<:invite:1215733334542385265>', row=2))
     embed = await embed_help(bot, ctx)
     if isinstance(ctx, discord.Message):
         await ctx.reply(embed=embed, view=view)
@@ -62,6 +69,9 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
     api_latency = end_time - start_time
     img_navi, embed = await embed_about(bot, api_latency)
     view = LinksView()
+    if ctx.guild.me.id == 1213487623688167494: # Navi Lite#9605
+        view.add_item(discord.ui.Button(label="Invite", style=discord.ButtonStyle.link,
+                      url=LINK_INVITE_NAVI_LITE, emoji='<:invite:1215733334542385265>', row=2))
     channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
     if not channel_permissions.attach_files:
         await interaction.edit(content=None, embed=embed, view=view)

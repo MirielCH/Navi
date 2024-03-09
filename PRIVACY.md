@@ -36,7 +36,7 @@ If there is an error, the following data is stored permanently in the error log:
 Please be aware that I have no control over the code and policies of forks and other projects that use Navi’s source code and cannot accept responsibility or liability for their respective privacy practices.  
 
 This policy therefore only applies to:  
-• The code in the [main repository](https://github.com/Miriel-py/Navi), maintained by myself.  
+• The code in the [main repository](https://github.com/MirielCH/Navi), maintained by myself.  
 • The bot instances with the username `Navi#4692` and `Navi Lite#9605`, hosted by myself. Any other bot instances not listed here, it is outside of the scope of this privacy policy.  
 
 The bot may also link to external sites that are not operated by me. The same limits apply to those sites.

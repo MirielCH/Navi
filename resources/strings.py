@@ -90,8 +90,8 @@ FARM_HELPER_MODES = {
 
 
 # Links
-LINK_CHANGELOG = 'https://github.com/Miriel-py/Navi/releases'
-LINK_GITHUB = 'https://github.com/Miriel-py/Navi'
+LINK_CHANGELOG = 'https://github.com/MirielCH/Navi/releases'
+LINK_GITHUB = 'https://github.com/MirielCH/Navi'
 
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
