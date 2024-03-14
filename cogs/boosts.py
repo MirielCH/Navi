@@ -89,6 +89,7 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 all_boosts = list(strings.ACTIVITIES_BOOSTS[:])
+                auto_healing_active = False
                 for line in embed_potion_fields.lower().split('\n'):
                     search_strings = [
                         'none', #English
@@ -122,12 +123,12 @@ class BoostsCog(commands.Cog):
                         round_card_active = True
                         if not user_settings.round_card_active:
                             await user_settings.update(round_card_active=True)
-                        if not user_settings.alert_boosts.enabled: return
                     if active_item_activity == 'flask-potion':
                         potion_flask_active = True
                         if not user_settings.potion_flask_active:
                             await user_settings.update(potion_flask_active=True)
-                        if not user_settings.alert_boosts.enabled: return
+                    if active_item_activity in ('mega-boost', 'potion-potion'):
+                        auto_healing_active = True
                     if not user_settings.alert_boosts.enabled: continue
                     active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
@@ -149,12 +150,8 @@ class BoostsCog(commands.Cog):
                         await active_reminder.delete()
                     except exceptions.NoDataFoundError:
                         continue
-                if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
-                    await user_settings.update(potion_dragon_breath_active=potion_dragon_breath_active)
-                if user_settings.round_card_active != round_card_active:
-                    await user_settings.update(round_card_active=round_card_active)
-                if user_settings.potion_flask_active != potion_flask_active:
-                    await user_settings.update(potion_flask_active=potion_flask_active)
+                if user_settings.auto_healing_active != auto_healing_active:
+                    await user_settings.update(auto_healing_active=auto_healing_active)
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
@@ -165,8 +162,8 @@ class BoostsCog(commands.Cog):
             ]
             search_strings_description = [
                 "are you sure", #English
-                "are you sure", #Spanish, MISSING
-                "are you sure", #Portuguese, MISSING
+                "are you sure", #TODO: Spanish
+                "are you sure", #TODO: Portuguese
             ]
             if (any(search_string in embed_author.lower() for search_string in search_strings_author)
                 and any(search_string in embed_description.lower() for search_string in search_strings_description)):
@@ -219,7 +216,7 @@ class BoostsCog(commands.Cog):
             search_strings = [
                 'uses a <:partypopper', #English
                 'usa el <:partypopper', #Spanish
-                'uses the <:partypopper', #Portuguese, MISSING
+                'uses the <:partypopper', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -300,6 +297,8 @@ class BoostsCog(commands.Cog):
                     await user_settings.update(potion_dragon_breath_active=True)
                 if item_activity == 'round-card':
                     await user_settings.update(round_card_active=True)
+                if item_activity == 'potion-potion':
+                    await user_settings.update(auto_healing_active=True)
                 if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
@@ -436,8 +435,8 @@ class BoostsCog(commands.Cog):
             # Round card
             search_strings = [
                 '** eats a <:roundcard', #English
-                '** eats a <:roundcard', #Spanish, MISSING
-                '** eats a <:roundcard', #Portuguese, MISSING
+                '** eats a <:roundcard', #TODO: Spanish
+                '** eats a <:roundcard', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -497,8 +496,8 @@ class BoostsCog(commands.Cog):
             # Mega boost
             search_strings = [
                 '** uses a <:megaboost', #English
-                '** uses a <:megaboost', #Spanish, MISSING
-                '** uses a <:megaboost', #Portuguese, MISSING
+                '** uses a <:megaboost', #TODO: Spanish
+                '** uses a <:megaboost', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
@@ -538,6 +537,8 @@ class BoostsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'mega-boost', time_left,
                                                          message.channel.id, reminder_message)
                 )
+                if not user_settings.auto_healing_active:
+                    await user_settings.update(auto_healing_active=True)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 

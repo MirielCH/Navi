@@ -105,6 +105,16 @@ class TasksCog(commands.Cog):
                         await reminders.increase_reminder_time_percentage(user.id, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
                                                                           user_settings)
                         await user_settings.update(round_card_active=False)
+                    elif reminder.activity == 'mega-boost':
+                        try:
+                            await reminders.get_user_reminder(user_settings.user_id, 'potion-potion')
+                        except exceptions.NoDataFoundError:
+                            await user_settings.update(auto_healing_active=False)
+                    elif reminder.activity == 'potion-potion':
+                        try:
+                            await reminders.get_user_reminder(user_settings.user_id, 'mega-boost')
+                        except exceptions.NoDataFoundError:
+                            await user_settings.update(auto_healing_active=False)
                     for message in messages.values():
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:

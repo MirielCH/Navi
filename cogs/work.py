@@ -132,8 +132,8 @@ class WorkCog(commands.Cog):
                 '** encontr', #Spanish, Portuguese, hunt/adventure
                 '** plant', #English, Spanish, Portuguese, farm
                 '** throws', #English, world boss
-                '** tiró', #Spanish, MISSING, world boss
-                '** jogou', #Portuguese, MISSING, world boss
+                '** tiró', #TODO: Spanish, world boss
+                '** jogou', #TODO: Portuguese,world boss
                 'new quest', #English, quest
                 'nueva misión', #Spanish, quest
                 'nova missão', #Portuguese, quest

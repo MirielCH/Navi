@@ -1198,7 +1198,7 @@ class SetReminderMessageButton(discord.ui.Button):
             except asyncio.TimeoutError:
                 await interaction.edit_original_response(content=f'**{user_global_name}**, you didn\'t answer in time.')
                 return
-            for found_id in re.findall(r'<@!?(\d{16,20})>', answer.content.lower()):
+            for found_id in re.findall(r'<@!?&?(\d{16,20})>', answer.content.lower()):
                 if int(found_id) != interaction.user.id and int(found_id) not in self.view.user_settings.alts:
                     await interaction.delete_original_response(delay=5)
                     followup_message = await interaction.followup.send(

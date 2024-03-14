@@ -162,7 +162,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{emojis.BP} **[Check your portals]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "portals")}, `{prefix}pt`\n'
         f'{emojis.BP} **[Manage your portals]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings portals")}, `{prefix}s pt`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings portals")}, `{prefix}spt`\n'
     )
     misc_settings = (
         f'{emojis.BP} **[Speed enable settings]({title_link})**: '
@@ -178,7 +178,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     )
     server_settings = (
         f'{emojis.BP} **[Manage server settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings server")}, `{prefix}s s`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings server")}, `{prefix}ss`\n'
         f'{emojis.DETAIL} _Requires `Manage server` permission._\n'
     )
     supported_languages = (

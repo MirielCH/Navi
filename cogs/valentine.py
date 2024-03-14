@@ -46,8 +46,8 @@ class ValentineCog(commands.Cog):
             # Love share cooldown
             search_strings = [
                 'you have shared a life potion recently', #English
-                'you have shared a life potion recently', #Spanish, MISSING
-                'you have shared a life potion recently', #Portuguese, MISSING
+                'you have shared a life potion recently', #TODO: Spanish
+                'you have shared a life potion recently', #TODO: Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None
@@ -104,8 +104,8 @@ class ValentineCog(commands.Cog):
             # Love share
             search_strings = [
                 " life potion with **", #English
-                " life potion with **", #Spanish, MISSING
-                " life potion with **", #Portuguese, MISSING
+                " life potion with **", #TODO: Spanish
+                " life potion with **", #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None

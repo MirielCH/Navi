@@ -466,6 +466,10 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE users ADD time_potion_warning_enabled INTEGER NOT NULL DEFAULT (0)",
         ]
+    if db_version < 21:
+        sqls += [
+            "ALTER TABLE users ADD auto_healing_active INTEGER NOT NULL DEFAULT (0)",
+        ]
 
     # Run SQLs
     for sql in sqls:

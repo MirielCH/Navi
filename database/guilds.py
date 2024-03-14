@@ -249,6 +249,8 @@ async def get_prefix(ctx_or_message: Union[bridge.BridgeContext, discord.Message
     table = 'guilds'
     function_name = 'get_prefix'
     sql = f'SELECT prefix FROM {table} WHERE guild_id=?'
+    if ctx_or_message.guild is None:
+        return settings.DEFAULT_PREFIX
     guild_id = ctx_or_message.guild.id
     try:
         cur=settings.NAVI_DB.cursor()

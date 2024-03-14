@@ -56,7 +56,7 @@ class MainCog(commands.Cog):
             navi_lite_invite = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
             answer = (
                 f'Sorry, you can\'t invite this Navi.\n\n'
-                f'However, you have 2 options:\n'
+                f'However, you can:\n'
                 f'1. [Invite Navi Lite]({navi_lite_invite}), a global version of Navi with a few limitations.\n'
                 f'2. [Run Navi yourself](https://github.com/MirielCH/Navi). Navi is free and open source.\n'
             )

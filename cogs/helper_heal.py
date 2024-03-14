@@ -78,7 +78,8 @@ class HelperHealCog(commands.Cog):
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
                 return
-            if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            if (not user_settings.bot_enabled or not user_settings.heal_warning_enabled
+                or user_settings.auto_healing_active): return
             try:
                 potion_potion_reminder = await reminders.get_user_reminder(user.id, 'potion-potion')
                 return
@@ -106,9 +107,9 @@ class HelperHealCog(commands.Cog):
                     'ambos perdieron luchando', #Spanish 3
                     f'{user_name}** perdeu, mas ', #Portuguese 1
                     'mas perdeu a luta', #Portuguese 2
-                    'mas perdeu a luta', #Portuguese 3, MISSING
+                    'mas perdeu a luta', #TODO: Portuguese 3
                 ]
-                if all(search_string not in message_content for search_string in search_strings):
+                if all(search_string not in message_content.lower() for search_string in search_strings):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Health not found in hunt together message for heal warning.', message)
                     return
@@ -169,7 +170,8 @@ class HelperHealCog(commands.Cog):
                 user_settings: users.User = await users.get_user(user.id)
             except exceptions.FirstTimeUserError:
                 return
-            if not user_settings.bot_enabled or not user_settings.heal_warning_enabled: return
+            if (not user_settings.bot_enabled or not user_settings.heal_warning_enabled
+                or user_settings.auto_healing_active): return
             try:
                 potion_potion_reminder = await reminders.get_user_reminder(user.id, 'potion-potion')
                 return
@@ -189,10 +191,10 @@ class HelperHealCog(commands.Cog):
                     'both lost fighting', #English 3
                     f'{user_name}** perdió pero ', #Spanish 1
                     'pero perdió luchando', #Spanish 2
-                    'pero perdió luchando', #Spanish 3, MISSING
+                    'pero perdió luchando', #TODO: Spanish 3
                     f'{user_name}** perdeu, mas ', #Portuguese 1
                     'mas perdeu a luta', #Portuguese 2
-                    'mas perdeu a luta', #Portuguese 3, MISSING
+                    'mas perdeu a luta', #TODO: Portuguese 3
                 ]
                 if all(search_string not in message_content for search_string in search_strings):
                     await functions.add_warning_reaction(message)

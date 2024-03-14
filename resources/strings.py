@@ -215,11 +215,8 @@ POCKET_WATCH_AFFECTED_ACTIVITIES = (
 ROUND_CARD_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
-    'card-hand',
     'duel',
-    'dungeon-miniboss',
     'farm',
-    'horse',
     'hunt',
     'quest',
     'training',

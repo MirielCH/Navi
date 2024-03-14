@@ -40,8 +40,8 @@ class MaintenanceCog(commands.Cog):
             # Cel Multiply cooldown
             search_strings = [
                 'the bot is under maintenance!', #English
-                'the bot is under maintenance!', #Spanish, MISSING
-                'the bot is under maintenance!', #Portuguese, MISSING
+                'the bot is under maintenance!', #TODO: Spanish
+                'the bot is under maintenance!', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = message.mentions[0]

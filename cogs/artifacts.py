@@ -99,8 +99,8 @@ class ArtifactsCog(commands.Cog):
                 if pocket_watch_active_match:
                     search_patterns = [
                         r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #English
-                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Spanish, MISSING
-                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #Portuguese, MISSING
+                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #TODO: Spanish
+                        r'adds a cooldown reduction of ([0-9\.]+)% and doubles', #TODO: Portuguese
                     ]
                     pocket_watch_cooldown_match = await functions.get_match_from_patterns(search_patterns, embed_fields)
                     pocket_watch_cooldown = float(pocket_watch_cooldown_match.group(1))
@@ -111,6 +111,16 @@ class ArtifactsCog(commands.Cog):
                             await partner_settings.update(partner_pocket_watch_multiplier=(100 - pocket_watch_cooldown) / 100)
                         except exceptions.FirstTimeUserError:
                             pass
+                else:
+                    if user_settings.user_pocket_watch_multiplier != 1:
+                        await user_settings.update(user_pocket_watch_multiplier=1)
+                    if user_settings.partner_id is not None:
+                        if user_settings.partner_pocket_watch_multiplier != 1:
+                            try:
+                                partner_settings: users.User = await users.get_user(user_settings.partner_id)
+                                await partner_settings.update(partner_pocket_watch_multiplier=1)
+                            except exceptions.FirstTimeUserError:
+                                pass
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 

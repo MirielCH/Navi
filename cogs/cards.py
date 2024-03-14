@@ -45,8 +45,8 @@ class CardsCog(commands.Cog):
             # Card hand cooldown
             search_strings = [
                 'you have played your cards recently', #English
-                'you have played your cards recently', #Spanish, MISSING
-                'you have played your cards recently', #Portuguese, MISSING
+                'you have played your cards recently', #TODO: Spanish
+                'you have played your cards recently', #TODO: Portuguese
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None
@@ -141,8 +141,8 @@ class CardsCog(commands.Cog):
             # Card hand timeout
             search_strings = [
                 '** decided not to play lol', #English
-                '** decided not to play lol', #Spanish, MISSING
-                '** decided not to play lol', #Portuguese, MISSING
+                '** decided not to play lol', #TODO: Spanish
+                '** decided not to play lol', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)

@@ -157,16 +157,16 @@ class FarmCog(commands.Cog):
                     kwargs[f'inventory_seed_{seed_used_type}'] = seed_used_count
                 search_strings_excluded = [
                     'no crop has grown', #English
-                    'no crop has grown', #Spanish, MISSING
-                    'no crop has grown', #Portuguese, MISSING
+                    'no crop has grown', #TODO: Spanish
+                    'no crop has grown', #TODO: Portuguese
                 ]
                 if all(search_string not in message_content.lower() for search_string in search_strings_excluded):
                     crop_match = re.search(r'^([0-9,]+) <.+> (.+?) ', message_content.lower(), re.MULTILINE)
                     if crop_match is None:
                         search_patterns = [
                             r'give you ([0-9,]+) <.+> (.+?), ', #English, TOP
-                            r'give you ([0-9,]+) <.+> (.+?), ', #Spanish, TOP, MISSING
-                            r'give you ([0-9,]+) <.+> (.+?), ', #Portuguese, TOP, MISSING
+                            r'give you ([0-9,]+) <.+> (.+?), ', #TODO: Spanish, TOP
+                            r'give you ([0-9,]+) <.+> (.+?), ', #TODO: Portuguese, TOP
                         ]
                         crop_match = await functions.get_match_from_patterns(search_patterns, message_content)
                     crop_type = crop_match.group(2)

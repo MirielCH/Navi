@@ -298,7 +298,7 @@ class ChristmasCog(commands.Cog):
                 search_strings_stuck = [
                     'now stuck in the chimney', #English
                     'atascó en la chimenea', #Spanish
-                    'now stuck in the chimney', #Portuguese, MISSING
+                    'now stuck in the chimney', #TODO: Portuguese
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_stuck):
                     reminder: reminders.Reminder = (
@@ -351,9 +351,9 @@ class ChristmasCog(commands.Cog):
                 'has moved to the area #', #English, area change
                 'starts to fly and travels to the next area!', #English, candy cane
                 'se movio al área #', #Spanish, area change
-                'se movio al área #', #Spanish, candy cane, MISSING
+                'se movio al área #', #TODO: Spanish, candy cane
                 'foi movido para a área #', #Portuguese, area change
-                'foi movido para a área #', #Portuguese, candy cane, MISSING
+                'foi movido para a área #', #TODO: Portuguese, candy cane
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -540,8 +540,8 @@ class ChristmasCog(commands.Cog):
             # Eternal present cooldown
             search_strings = [
                 'you cannot open eternal presents', #English
-                'you cannot open eternal presents', #Spanish, MISSING
-                'you cannot open eternal presents', #Portuguese, MISSING
+                'you cannot open eternal presents', #TODO: Spanish
+                'you cannot open eternal presents', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = message.mentions[0]

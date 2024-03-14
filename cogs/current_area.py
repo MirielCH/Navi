@@ -219,9 +219,9 @@ class CurrentAreaCog(commands.Cog):
                 'has moved to the area #', #English, area change
                 'starts to fly and travels to the next area!', #English, candy cane
                 'se movio al área #', #Spanish, area change
-                'se movio al área #', #Spanish, candy cane, MISSING
-                'foi movido para a área #', #Portuguese, area change
-                'foi movido para a área #', #Portuguese, candy cane, MISSING
+                'se movio al área #', #TODO: Spanish, candy cane
+                'foi movido para a área #', #TODO: Portuguese, area change
+                'foi movido para a área #', #TODO: Portuguese, candy cane
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_name = None

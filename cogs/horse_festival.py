@@ -217,8 +217,8 @@ class HorseFestivalCog(commands.Cog):
 
             search_strings = [
                 'started riding!', #English
-                'started riding!', #Spanish, MISSING
-                'started riding!', #Portuguese, MISSING
+                'started riding!', #TODO: Spanish
+                'started riding!', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user_id = user_name = None
@@ -401,7 +401,7 @@ class HorseFestivalCog(commands.Cog):
                 search_patterns = [
                     r'(?:increased|reduced)__: \*\*(.+?)\*\*', #English
                     r'(?:incrementado|aumentado|reducido)__: \*\*(.+?)\*\*', #Spanish, increased one UNCONFIRMED
-                    r'(?:incrementado|aumentado|reduzido)__: \*\*(.+?)\*\*', #Portuguese, MISSING
+                    r'(?:incrementado|aumentado|reduzido)__: \*\*(.+?)\*\*', #TODO: Portuguese
                 ]
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
                 if not timestring_match:

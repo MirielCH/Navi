@@ -76,6 +76,7 @@ class User():
     auto_flex_enabled: bool
     auto_flex_ping_enabled: bool
     auto_flex_tip_read: bool
+    auto_healing_active: bool
     auto_ready_enabled: bool
     bot_enabled: bool
     chocolate_box_unlocked: bool
@@ -200,6 +201,7 @@ class User():
         self.auto_flex_enabled = new_settings.auto_flex_enabled
         self.auto_flex_ping_enabled = new_settings.auto_flex_ping_enabled
         self.auto_flex_tip_read = new_settings.auto_flex_tip_read
+        self.auto_healing_active = new_settings.auto_healing_active
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.chocolate_box_unlocked = new_settings.chocolate_box_unlocked
@@ -432,6 +434,7 @@ class User():
             auto_flex_enabled: bool
             auto_flex_ping_enabled: bool
             auto_flex_tip_read: bool
+            auto_healing_active: bool
             auto_ready_enabled: bool
             bot_enabled: bool
             chocolate_box_unlocked: bool
@@ -693,6 +696,7 @@ async def _dict_to_user(record: dict) -> User:
             area_20_cooldowns_enabled = bool(record['area_20_cooldowns_enabled']),
             auto_flex_enabled = bool(record['auto_flex_enabled']),
             auto_flex_ping_enabled = bool(record['auto_flex_ping_enabled']),
+            auto_healing_active = bool(record['auto_healing_active']),
             auto_ready_enabled = bool(record['auto_ready_enabled']),
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
@@ -1063,6 +1067,7 @@ async def _update_user(user: User, **kwargs) -> None:
         auto_flex_enabled: bool
         auto_flex_ping_enabled: bool
         auto_flex_tip_read: bool
+        auto_healing_active: bool
         auto_ready_enabled: bool
         bot_enabled: bool
         chocolate_box_unlocked: bool
