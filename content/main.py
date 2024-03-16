@@ -3,6 +3,7 @@
 
 from datetime import datetime
 from humanfriendly import format_timespan
+import os
 import psutil
 import random
 import sys
@@ -215,20 +216,26 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> disc
     all_settings = await settings_db.get_settings()
     uptime = datetime.utcnow().replace(microsecond=0) - datetime.fromisoformat(all_settings['startup_time'])
     general = (
-        f'{emojis.BP} {len(bot.guilds):,} servers\n'
-        f'{emojis.BP} {user_count:,} users\n'
-        f'{emojis.BP} {round(bot.latency * 1000):,} ms bot latency\n'
-        f'{emojis.BP} {round(api_latency.total_seconds() * 1000):,} ms API latency\n'
+        f'{emojis.BP} `{len(bot.guilds):,}` servers\n'
+        f'{emojis.BP} `{user_count:,}` users\n'
+        f'{emojis.BP} `{round(bot.latency * 1000):,}` ms bot latency\n'
+        f'{emojis.BP} `{round(api_latency.total_seconds() * 1000):,}` ms API latency\n'
         f'{emojis.BP} Online for {format_timespan(uptime)}\n'
         f'{emojis.BP} Bot owner: <@{settings.OWNER_ID}>\n'
     )
+    app_process = psutil.Process(os.getpid())
+    navi_memory = app_process.memory_info().vms / (1024 ** 2)
+    system_memory_used = round(psutil.virtual_memory()[3] / (1024 ** 2))
+    system_memory_total = round(psutil.virtual_memory()[0] / (1024 ** 2))
+    system_memory_percent = psutil.virtual_memory()[2]
     creator = f'{emojis.BP} <@619879176316649482>'
     dev_stuff = (
-        f'{emojis.BP} Version: {settings.VERSION}\n'
-        f'{emojis.BP} Language: Python {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}\n'
-        f'{emojis.BP} Library: Pycord {discord.__version__}\n'
-        f'{emojis.BP} System CPU usage: {psutil.cpu_percent()}%\n'
-        f'{emojis.BP} System RAM usage: {psutil.virtual_memory()[2]}%\n'
+        f'{emojis.BP} Version: `{settings.VERSION}`\n'
+        f'{emojis.BP} Language: Python `{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}`\n'
+        f'{emojis.BP} Library: Pycord `{discord.__version__}`\n'
+        f'{emojis.BP} Navi RAM usage: `{navi_memory:,.2f}` MB\n'
+        f'{emojis.BP} System CPU usage: `{psutil.cpu_percent():g}`%\n'
+        f'{emojis.BP} System RAM usage: `{system_memory_percent}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
     )
     thanks_to = [
         'Swiss cheese',
