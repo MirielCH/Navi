@@ -6,16 +6,25 @@ import sys
 import traceback
 
 import discord
-from discord.ext import commands, bridge
+from discord.ext import bridge
 
 from database import errors, guilds, update_database
 from database import settings as settings_db
 from resources import functions, logs, settings
 
-from datetime import timedelta
 
+# Check if python version is at least 3.12
+python_version = float(f'{sys.version_info.major}.{sys.version_info.minor}')
+if python_version < settings.PYTHON_VERSION:
+    error_message = (
+        f'Navi requires Python {settings.PYTHON_VERSION} or higher to run.\n'
+        f'Your current version is {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}.'
+    )
+    print(error_message)
+    logs.logger.error(error_message)
+    sys.exit()
 
-#Check if database is up to date
+# Check if database is up to date
 try:
     cur = settings.NAVI_DB.cursor()
     db_version = update_database.get_user_version()

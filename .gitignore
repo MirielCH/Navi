@@ -135,3 +135,6 @@ database/navi_db*.db
 
 # Visual Studio Code
 .vscode/
+
+# Pyright config file
+pyrightconfig.json

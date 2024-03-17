@@ -14,6 +14,7 @@ ENV_VARIABLE_MISSING = (
     'accordingly.'
 )
 
+PYTHON_VERSION = 3.12
 NAVI_DB_VERSION = 21
 
 # Files and directories

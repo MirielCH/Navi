@@ -225,17 +225,18 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> disc
     )
     app_process = psutil.Process(os.getpid())
     navi_memory = app_process.memory_info().vms / (1024 ** 2)
-    system_memory_used = round(psutil.virtual_memory()[3] / (1024 ** 2))
-    system_memory_total = round(psutil.virtual_memory()[0] / (1024 ** 2))
-    system_memory_percent = psutil.virtual_memory()[2]
+    system_memory = psutil.virtual_memory()
+    system_memory_total = round(system_memory[0] / (1024 ** 2))
+    system_memory_available = round(system_memory[1] / (1024 ** 2))
+    system_memory_used = system_memory_total - system_memory_available
     creator = f'{emojis.BP} <@619879176316649482>'
     dev_stuff = (
         f'{emojis.BP} Version: `{settings.VERSION}`\n'
         f'{emojis.BP} Language: Python `{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}`\n'
         f'{emojis.BP} Library: Pycord `{discord.__version__}`\n'
-        f'{emojis.BP} Navi RAM usage: `{navi_memory:,.2f}` MB\n'
         f'{emojis.BP} System CPU usage: `{psutil.cpu_percent():g}`%\n'
-        f'{emojis.BP} System RAM usage: `{system_memory_percent}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
+        f'{emojis.BP} System RAM usage: `{system_memory[2]}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
+        f'{emojis.DETAIL} Navi RAM usage: `{navi_memory:,.2f}` MB\n'
     )
     thanks_to = [
         'Swiss cheese',
