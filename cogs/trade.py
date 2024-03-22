@@ -134,5 +134,5 @@ class TradeCog(commands.Cog):
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(TradeCog(bot))

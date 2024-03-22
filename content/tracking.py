@@ -1,11 +1,12 @@
 # tracking.py
 """Contains commands related to command tracking"""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta, timezone
 from humanfriendly import format_timespan
-from typing import Optional, Union
+from typing import Coroutine
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from database import users, tracking
@@ -15,16 +16,16 @@ from resources import emojis, functions, exceptions, settings, views
 # --- Commands ---
 async def command_stats(
     bot: bridge.AutoShardedBot,
-    ctx: Union[commands.Context, discord.ApplicationContext, discord.Message],
-    timestring: Optional[str] = None,
-    user: Optional[discord.User] = None,
+    ctx: commands.Context | discord.ApplicationContext | discord.Message,
+    timestring: str | None = None,
+    user: discord.User | discord.Member | None = None,
 ) -> None:
     """Lists all stats"""
-    if user is not None and user != ctx.author:
-        user_mentioned = True
+    if user and user != ctx.author:
+        user_mentioned: bool = True
     else:
         user = ctx.author
-        user_mentioned = False
+        user_mentioned: bool = False
     try:
         user_settings: users.User = await users.get_user(user.id)
     except exceptions.FirstTimeUserError:
@@ -33,15 +34,15 @@ async def command_stats(
         else:
             await functions.reply_or_respond(ctx, 'This user is not registered with this bot.', True)
             return
-    if timestring is None:
-        time_left = timedelta(0)
-        embed = await embed_stats_overview(ctx, user)
-        embed_function = embed_stats_overview
+    if not timestring:
+        time_left: timedelta = timedelta(0)
+        embed: discord.Embed = await embed_stats_overview(ctx, user)
+        embed_function: Coroutine = embed_stats_overview
     else:
         try:
-            timestring = await functions.check_timestring(timestring)
+            timestring: str = await functions.check_timestring(timestring)
         except exceptions.InvalidTimestringError as error:
-            msg_error = (
+            msg_error: str = (
                 f'{error}\n'
                 f'Supported time codes: `w`, `d`, `h`, `m`, `s`\n\n'
                 f'Examples:\n'
@@ -52,7 +53,7 @@ async def command_stats(
             await functions.reply_or_respond(ctx, msg_error, True)
             return
         try:
-            time_left = await functions.parse_timestring_to_timedelta(timestring)
+            time_left: timedelta = await functions.parse_timestring_to_timedelta(timestring)
         except OverflowError as error:
             await ctx.reply(error)
             return
@@ -60,42 +61,41 @@ async def command_stats(
         if time_left.days > 365:
             await ctx.reply('The maximum time is 365d, sorry.')
             return
-        embed = await embed_stats_timeframe(ctx, user, time_left)
-        embed_function = embed_stats_timeframe
+        embed: discord.Embed = await embed_stats_timeframe(ctx, user, time_left)
+        embed_function: Coroutine = embed_stats_timeframe
+    view: views.StatsView | None = None
     if not user_mentioned:
         view = views.StatsView(bot, ctx, user_settings, user_mentioned, time_left, embed_function)
-    else:
-        view = None
     if isinstance(ctx, discord.ApplicationContext):
+        interaction_message: discord.Interaction | discord.WebhookMessage
         interaction_message = await ctx.respond(embed=embed, view=view)
     else:
-        interaction_message = await ctx.reply(embed=embed, view=view)
-    if not user_mentioned:
+        interaction_message: discord.Message = await ctx.reply(embed=embed, view=view)
+    if not user_mentioned and view:
         view.interaction_message = interaction_message
         await view.wait()
 
 
 # --- Embeds ---
-async def embed_stats_overview(ctx: commands.Context, user: discord.User,
+async def embed_stats_overview(ctx: commands.Context, user: discord.User | discord.Member,
                                time_left: timedelta = timedelta(0)) -> discord.Embed:
     """Stats overview embed"""
-    user_global_name = user.global_name if user.global_name is not None else user.name
+    user_global_name: str = user.global_name if user.global_name else user.name
     user_settings: users.User = await users.get_user(user.id)
-    current_time = datetime.utcnow().replace(microsecond=0)
-    field_last_1h = await design_field(timedelta(hours=1), user)
-    field_last_12h = await design_field(timedelta(hours=12), user)
-    field_last_24h = await design_field(timedelta(hours=24), user)
-    field_last_7d = await design_field(timedelta(days=7), user)
-    field_last_4w = await design_field(timedelta(days=28), user)
-    field_last_1y = await design_field(timedelta(days=365), user)
-    field_last_tt = await design_field(current_time-user_settings.last_tt, user)
+    field_last_1h: str = await design_field(timedelta(hours=1), user)
+    field_last_12h: str = await design_field(timedelta(hours=12), user)
+    field_last_24h: str = await design_field(timedelta(hours=24), user)
+    field_last_7d: str = await design_field(timedelta(days=7), user)
+    field_last_4w: str = await design_field(timedelta(days=28), user)
+    field_last_1y: str = await design_field(timedelta(days=365), user)
+    field_last_tt: str = await design_field(utils.utcnow()-user_settings.last_tt, user)
     try:
-        timestamp = user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp()
+        timestamp: float = user_settings.last_tt.timestamp()
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
-        timestamp = 0
+        timestamp: float = 0
     field_last_tt = f'{field_last_tt.strip()}\n\nYour last TT was on <t:{int(timestamp)}:f>.'
 
-    embed = discord.Embed(
+    embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user_global_name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
@@ -110,12 +110,12 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User,
     return embed
 
 
-async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, time_left: timedelta) -> discord.Embed:
+async def embed_stats_timeframe(ctx: commands.Context, user: discord.User | discord.Member, time_left: timedelta) -> discord.Embed:
     """Stats timeframe embed"""
-    user_global_name = user.global_name if user.global_name is not None else user.name
+    user_global_name: str = user.global_name if user.global_name else user.name
     user_settings: users.User = await users.get_user(user.id)
-    field_content = await design_field(time_left, user)
-    embed = discord.Embed(
+    field_content: str = await design_field(time_left, user)
+    embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{user_global_name}\'s stats'.upper(),
         description = '**Command tracking is currently turned off!**' if not user_settings.tracking_enabled else ''
@@ -125,9 +125,9 @@ async def embed_stats_timeframe(ctx: commands.Context, user: discord.Member, tim
 
 
 # --- Functions ---
-async def design_field(timeframe: timedelta, user: discord.Member) -> str:
+async def design_field(timeframe: timedelta, user: discord.User | discord.Member) -> str:
     report: tracking.LogReport = await tracking.get_log_report(user.id, timeframe)
-    field_content = (
+    field_content: str = (
         f'{emojis.BP} `hunt`: {report.hunt_amount:,}\n'
         f'{emojis.BP} `work`: {report.work_amount:,}\n'
         f'{emojis.BP} `farm`: {report.farm_amount:,}\n'

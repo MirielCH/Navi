@@ -4,6 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from datetime import timedelta
 
@@ -316,6 +317,10 @@ class CooldownsCog(commands.Cog):
                 cd_timestring = cooldown[1]
                 cd_message = cooldown[2]
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = bot_answer_time - current_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): continue
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
@@ -424,5 +429,5 @@ class CooldownsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(CooldownsCog(bot))

@@ -5,6 +5,7 @@ from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from datetime import datetime, timedelta
 
@@ -193,6 +194,10 @@ class ClanCog(commands.Cog):
                 if not timestring_match: return
                 timestring = timestring_match.group(1)
                 time_left = await functions.parse_timestring_to_timedelta(timestring)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = bot_answer_time - current_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 if clan_alert_enabled:
                     action = 'guild raid' if clan.stealth_current >= clan.stealth_threshold else 'guild upgrade'
@@ -209,7 +214,7 @@ class ClanCog(commands.Cog):
                     else:
                         if settings.DEBUG_MODE: await message.add_reaction(emojis.CROSS)
                         return
-                    current_time = datetime.utcnow().replace(microsecond=0)
+                    current_time = utils.utcnow()
                     for member_id in clan.member_ids:
                         if member_id == user.id: continue
                         try:
@@ -276,8 +281,8 @@ class ClanCog(commands.Cog):
                 if clan_channel_id is None: clan_alert_enabled = False
                 if not user_alert_enabled and not clan_alert_enabled: return
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 time_left = timedelta(seconds=actual_cooldown) - time_elapsed
@@ -378,8 +383,8 @@ class ClanCog(commands.Cog):
                 if clan_channel_id is None: clan_alert_enabled = False
                 if not user_alert_enabled and not clan_alert_enabled: return
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('clan')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 time_left = timedelta(seconds=actual_cooldown) - time_elapsed
@@ -397,7 +402,7 @@ class ClanCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Energy not found in clan raid message.', message)
                         return
-                    current_time = datetime.utcnow().replace(microsecond=0)
+                    current_time = utils.utcnow()
                     clan_raid = await clans.insert_clan_raid(clan.clan_name, user.id, energy, current_time)
                     if not clan_raid.raid_time == current_time:
                         if settings.DEBUG_MODE:
@@ -443,5 +448,5 @@ class ClanCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(ClanCog(bot))

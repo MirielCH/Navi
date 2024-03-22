@@ -1,8 +1,5 @@
 # emojis.py
 
-from resources import settings
-
-
 # Clan leaderboard
 BEST_RAIDS = '<:panda_cool:1215043143204868217>'
 ENERGY = '🔅'

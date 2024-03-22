@@ -1,10 +1,11 @@
 # hunt.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -129,8 +130,8 @@ class HuntCog(commands.Cog):
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 time_left_seconds = time_left.total_seconds()
                 if time_left < timedelta(0): return
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 if user_settings.hunt_rotation_enabled: # This doesn't make much sense?
                     time_left = time_left - time_elapsed
@@ -184,7 +185,7 @@ class HuntCog(commands.Cog):
         if not message.embeds:
             message_content = ''
             for line in message.content.split('\n'):
-                if not 'card' in line:
+                if not re.match(r'\bcard\b', message.content):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
             # Hunt
@@ -295,7 +296,7 @@ class HuntCog(commands.Cog):
                 if found_together:
                     await user_settings.update(partner_name=partner_name)
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
+                current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                 if user_settings.partner_id is not None:
@@ -353,7 +354,7 @@ class HuntCog(commands.Cog):
                             if last_hunt_mode == '': last_hunt_mode = None
                     await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 time_elapsed = current_time - bot_answer_time
                 if found_together:
                     monsters_christmas = [
@@ -558,7 +559,7 @@ class HuntCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled: return
-                    current_time = datetime.utcnow().replace(microsecond=0)
+                    current_time = utils.utcnow()
                     if user_settings.tracking_enabled:
                         await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                     if not user_settings.alert_hunt.enabled: return
@@ -592,7 +593,7 @@ class HuntCog(commands.Cog):
                     if user_settings.last_hunt_mode != '':
                         user_command = f'{user_command} `mode: {user_settings.last_hunt_mode}`'
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
-                    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     time_elapsed = current_time - bot_answer_time
                     if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and not user_settings.hunt_rotation_enabled):
@@ -633,11 +634,11 @@ class HuntCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled: return
-                    current_time = datetime.utcnow().replace(microsecond=0)
+                    current_time = utils.utcnow()
                     if user_settings.tracking_enabled:
                         await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                     if not user_settings.alert_hunt.enabled: return
-                    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     time_elapsed = current_time - bot_answer_time
                     found_together = True if user_settings.partner_id is not None else False
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
@@ -678,5 +679,5 @@ class HuntCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HuntCog(bot))

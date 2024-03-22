@@ -1,7 +1,7 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from humanfriendly import format_timespan
 import os
 import psutil
@@ -10,6 +10,7 @@ import sys
 from typing import List, Union
 
 import discord
+from discord import utils
 from discord.ext import bridge
 
 from database import cooldowns, guilds, users
@@ -59,13 +60,15 @@ async def command_help(bot: bridge.AutoShardedBot, ctx: Union[bridge.BridgeConte
 
 async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
     """About command"""
-    start_time = datetime.utcnow()
+    start_time: datetime = utils.utcnow()
     interaction = await ctx.respond('Testing API latency...')
-    end_time = datetime.utcnow()
-    api_latency = end_time - start_time
+    end_time: datetime = utils.utcnow()
+    api_latency: timedelta = end_time - start_time
+    img_navi = discord.File
+    embed = discord.Embed
     img_navi, embed = await embed_about(bot, api_latency)
-    view = LinksView()
-    channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
+    view: LinksView = LinksView()
+    channel_permissions = ctx.channel.permissions_for(ctx.guild.me) # TODO: Typing
     if not channel_permissions.attach_files:
         await interaction.edit(content=None, embed=embed, view=view)
     else:
@@ -210,12 +213,14 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     return embed
 
 
-async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> discord.Embed:
+async def embed_about(bot: bridge.AutoShardedBot, api_latency: timedelta) -> discord.Embed:
     """Bot info embed"""
-    user_count = await users.get_user_count()
-    all_settings = await settings_db.get_settings()
-    uptime = datetime.utcnow().replace(microsecond=0) - datetime.fromisoformat(all_settings['startup_time'])
-    general = (
+    user_count: int = await users.get_user_count()
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    uptime: timedelta = utils.utcnow() - datetime.fromisoformat(all_settings['startup_time']).replace(tzinfo=timezone.utc)
+    uptime: timedelta = timedelta(seconds=round(uptime.total_seconds()))
+
+    general: str = (
         f'{emojis.BP} `{len(bot.guilds):,}` servers\n'
         f'{emojis.BP} `{user_count:,}` users\n'
         f'{emojis.BP} `{round(bot.latency * 1000):,}` ms bot latency\n'
@@ -223,14 +228,14 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> disc
         f'{emojis.BP} Online for {format_timespan(uptime)}\n'
         f'{emojis.BP} Bot owner: <@{settings.OWNER_ID}>\n'
     )
-    app_process = psutil.Process(os.getpid())
-    navi_memory = app_process.memory_info().vms / (1024 ** 2)
-    system_memory = psutil.virtual_memory()
-    system_memory_total = round(system_memory[0] / (1024 ** 2))
-    system_memory_available = round(system_memory[1] / (1024 ** 2))
-    system_memory_used = system_memory_total - system_memory_available
-    creator = f'{emojis.BP} <@619879176316649482>'
-    dev_stuff = (
+    app_process: psutil.Process = psutil.Process(os.getpid())
+    navi_memory: float = app_process.memory_info().vms / (1024 ** 2)
+    system_memory: psutil = psutil.virtual_memory()
+    system_memory_total = round(system_memory[0] / (1024 ** 2)) # TODO: Typing
+    system_memory_available: int = round(system_memory[1] / (1024 ** 2))
+    system_memory_used: int = system_memory_total - system_memory_available
+    creator: str = f'{emojis.BP} <@619879176316649482>'
+    dev_stuff: str = (
         f'{emojis.BP} Version: `{settings.VERSION}`\n'
         f'{emojis.BP} Language: Python `{sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}`\n'
         f'{emojis.BP} Library: Pycord `{discord.__version__}`\n'
@@ -238,7 +243,7 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> disc
         f'{emojis.BP} System RAM usage: `{system_memory[2]}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
         f'{emojis.DETAIL} Navi RAM usage: `{navi_memory:,.2f}` MB\n'
     )
-    thanks_to = [
+    thanks_to: list[str] = [
         'Swiss cheese',
         'Black coffee',
         'Shigeru Miyamoto',
@@ -259,9 +264,9 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: datetime) -> disc
         'The Raspberry Pi Foundation',
         'Mom',
     ]
-    img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
-    image_url = 'attachment://navi.png'
-    embed = discord.Embed(
+    img_navi: discord.File = discord.File(settings.IMG_NAVI, filename='navi.png')
+    image_url: str = 'attachment://navi.png'
+    embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = 'ABOUT NAVI' if not settings.LITE_MODE else 'ABOUT NAVI LITE',
         description = 'I am as free as a fairy.'

@@ -1,10 +1,11 @@
 # work.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -243,9 +244,8 @@ class WorkCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', utils.utcnow())
                 if not user_settings.alert_work.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
@@ -345,9 +345,8 @@ class WorkCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled: return
-                    current_time = datetime.utcnow().replace(microsecond=0)
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', utils.utcnow())
                     if not user_settings.alert_work.enabled: return
                     for command in strings.WORK_COMMANDS:
                         if command in user_command_message.content.lower():
@@ -393,9 +392,8 @@ class WorkCog(commands.Cog):
                     await user_settings.update(last_work_command=last_work_command)
                     if not user_settings.bot_enabled: return
                     user_command = await functions.get_slash_command(user_settings, interaction.name)
-                    current_time = datetime.utcnow().replace(microsecond=0)
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', current_time)
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', utils.utcnow())
                     if not user_settings.alert_work.enabled: return
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                     if time_left < timedelta(0): return
@@ -409,5 +407,5 @@ class WorkCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(WorkCog(bot))

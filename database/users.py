@@ -2,7 +2,8 @@
 """Provides access to the table "users" in the database"""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
+
 import sqlite3
 from typing import NamedTuple, Tuple
 
@@ -728,14 +729,14 @@ async def _dict_to_user(record: dict) -> User:
             last_lootbox = '' if record['last_lootbox'] is None else record['last_lootbox'],
             last_quest_command = '' if record['last_quest_command'] is None else record['last_quest_command'],
             last_training_command = record['last_training_command'],
-            last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
+            last_tt = datetime.fromisoformat(record['last_tt']).replace(tzinfo=timezone.utc) if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             partner_alert_threshold = record['partner_alert_threshold'],
             partner_channel_id = record['partner_channel_id'],
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
             partner_donor_tier = record['partner_donor_tier'],
-            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
+            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']).replace(tzinfo=timezone.utc),
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
             partner_pocket_watch_multiplier = float(record['partner_pocket_watch_multiplier']),

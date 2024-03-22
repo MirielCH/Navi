@@ -1,10 +1,11 @@
 # training.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -141,9 +142,8 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'ultraining', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'ultraining', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'ultraining')
                 await user_settings.update(last_training_command='ultraining')
@@ -196,9 +196,8 @@ class TrainingCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'training')
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 await user_settings.update(last_training_command='training')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
@@ -239,9 +238,8 @@ class TrainingCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', current_time)
+                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'training')
                 await user_settings.update(last_training_command='training')
@@ -289,5 +287,5 @@ class TrainingCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(TrainingCog(bot))

@@ -1,11 +1,12 @@
 # adventure.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
 from discord.ext import bridge, commands
+from discord import utils
 
 from cache import messages
 from database import errors, reminders, tracking, users
@@ -111,7 +112,7 @@ class AdventureCog(commands.Cog):
         if not message.embeds:
             message_content = ''
             for line in message.content.split('\n'):
-                if not 'card' in line:
+                if not re.match(r'\bcard\b', message.content):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
             # Adventure
@@ -161,7 +162,7 @@ class AdventureCog(commands.Cog):
                         user_command = f"{user_command} `mode: {last_adventure_mode}`"
                     else:
                         user_command = f"{user_command} `{last_adventure_mode}`".replace('` `', ' ')
-                current_time = datetime.utcnow().replace(microsecond=0)
+                current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)
                 if not user_settings.alert_adventure.enabled: return
@@ -195,5 +196,5 @@ class AdventureCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(AdventureCog(bot))

@@ -31,5 +31,5 @@ class CacheCog(commands.Cog):
                 await messages.store_message(message)
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(CacheCog(bot))

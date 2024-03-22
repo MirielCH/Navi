@@ -1,10 +1,11 @@
 # farm.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -145,7 +146,7 @@ class FarmCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
+                current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
                 kwargs = {}
@@ -249,9 +250,8 @@ class FarmCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled: return
-                    current_time = datetime.utcnow().replace(microsecond=0)
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', utils.utcnow())
                     if not user_settings.alert_farm.enabled: return
                     user_command = await functions.get_slash_command(user_settings, 'farm')
                     last_farm_seed = None
@@ -288,9 +288,8 @@ class FarmCog(commands.Cog):
                         return
                     if not user_settings.bot_enabled: return
                     user_command = await functions.get_slash_command(user_settings, 'farm')
-                    current_time = datetime.utcnow().replace(microsecond=0)
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', utils.utcnow())
                     if not user_settings.alert_farm.enabled: return
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                     if time_left < timedelta(0): return
@@ -305,5 +304,5 @@ class FarmCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(FarmCog(bot))

@@ -1,10 +1,11 @@
 # valentine.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -136,9 +137,8 @@ class ValentineCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_love_share.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'love share')
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-                current_time = datetime.utcnow().replace(microsecond=0)
-                time_elapsed = current_time - bot_answer_time
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                time_elapsed = utils.utcnow() - bot_answer_time
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
@@ -159,5 +159,5 @@ class ValentineCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(ValentineCog(bot))

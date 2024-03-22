@@ -3,7 +3,6 @@
 """Internal dev commands"""
 
 import asyncio
-from datetime import datetime
 import importlib
 import os
 import re
@@ -12,6 +11,7 @@ import sys
 from typing import List
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from discord.ext.bridge import BridgeOption
 from humanfriendly import format_timespan
@@ -182,13 +182,13 @@ class DevCog(commands.Cog):
             await interaction.edit(view=None)
             await interaction.edit('Backup aborted.')
         else:
-            start_time = datetime.utcnow()
+            start_time = utils.utcnow()
             interaction = await ctx.respond('Starting backup...')
             backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
             navi_backup_db = sqlite3.connect(backup_db_file)
             settings.NAVI_DB.backup(navi_backup_db)
             navi_backup_db.close()
-            time_taken = datetime.utcnow() - start_time
+            time_taken = utils.utcnow() - start_time
             await interaction.edit(f'Backup finished after {format_timespan(time_taken)}')
 
     @dev_group.command(name='post-message', aliases=('pm',),
@@ -368,8 +368,8 @@ class DevCog(commands.Cog):
         from datetime import datetime
         import asyncio
         from humanfriendly import format_timespan
-        from database import tracking, users
-        start_time = datetime.utcnow().replace(microsecond=0)
+        from database import tracking
+        start_time = utils.utcnow()
         log_entry_count = 0
         try:
             old_log_entries = await tracking.get_old_log_entries(28)
@@ -385,14 +385,14 @@ class DevCog(commands.Cog):
             log_entry_count += 1
         for key, amount in entries.items():
             user_id, guild_id, command, date_time = key
-            summary_log_entry = await tracking.insert_log_summary(user_id, guild_id, command, date_time, amount)
+            await tracking.insert_log_summary(user_id, guild_id, command, date_time, amount)
             date_time_min = date_time.replace(hour=0, minute=0, second=0, microsecond=0)
             date_time_max = date_time.replace(hour=23, minute=59, second=59, microsecond=999999)
             await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
             await asyncio.sleep(0.01)
         cur = settings.NAVI_DB.cursor()
         cur.execute('VACUUM')
-        end_time = datetime.utcnow().replace(microsecond=0)
+        end_time = utils.utcnow()
         time_passed = end_time - start_time
         logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)} manually.')
         await ctx.respond(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
@@ -439,7 +439,7 @@ class DevCog(commands.Cog):
             await interaction.edit(content='Aborted.', view=None)
 
 
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(DevCog(bot))
 
 

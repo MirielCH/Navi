@@ -5,6 +5,7 @@ import re
 from typing import Literal
 
 import discord
+from discord import utils
 from discord.ui import InputText, Modal
 
 from database import portals, reminders
@@ -103,12 +104,7 @@ class SetLastTTModal(Modal):
         else:
             message_id = message_id_link
         try:
-            message_id = int(message_id)
-            snowflake_binary = f'{message_id:064b}'
-            timestamp_binary = snowflake_binary[:42]
-            timestamp_decimal = int(timestamp_binary, 2)
-            timestamp = (timestamp_decimal + 1_420_070_400_000) / 1000
-            tt_time = datetime.utcfromtimestamp(timestamp).replace(microsecond=0)
+            tt_time = utils.snowflake_time(int(message_id))
         except:
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send(msg_error, ephemeral=True)

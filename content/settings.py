@@ -1465,7 +1465,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     """User settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     try:
-        tt_timestamp = int(user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp())
+        tt_timestamp = int(user_settings.last_tt.timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
     prefix = await guilds.get_prefix(ctx)

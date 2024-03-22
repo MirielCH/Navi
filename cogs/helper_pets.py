@@ -188,5 +188,5 @@ class HelperPetsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HelperPetsCog(bot))

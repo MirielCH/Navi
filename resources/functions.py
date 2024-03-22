@@ -1,11 +1,12 @@
 # functions.py
 
 from argparse import ArgumentError
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import re
 from typing import Dict, List, Optional, Union
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from discord.utils import MISSING
 
@@ -160,9 +161,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
     """Returns the time left for a reminder based on a cooldown."""
     slash_command = True if message.interaction is not None else False
     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-    current_time = datetime.utcnow().replace(microsecond=0)
-    time_elapsed = current_time - bot_answer_time
+    bot_answer_time = message.edited_at if message.edited_at else message.created_at
+    time_elapsed = utils.utcnow() - bot_answer_time
     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
     if activity in strings.POCKET_WATCH_AFFECTED_ACTIVITIES:
@@ -187,9 +187,8 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
 async def calculate_time_left_from_timestring(message: discord.Message, timestring: str) -> timedelta:
     """Returns the time left for a reminder based on a timestring."""
     time_left = await parse_timestring_to_timedelta(timestring.lower())
-    bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
-    current_time = datetime.utcnow().replace(microsecond=0)
-    time_elapsed = current_time - bot_answer_time
+    bot_answer_time = message.edited_at if message.edited_at else message.created_at
+    time_elapsed = bot_answer_time - utils.utcnow()
     return time_left - time_elapsed
 
 
@@ -815,7 +814,7 @@ async def get_void_training_answer_buttons(message: discord.Message, user_settin
     """Returns the answer to a void training question."""
     all_settings = await settings_db.get_settings()
     answer = ''
-    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = utils.utcnow()
     a16_seal_time = all_settings.get('a16_seal_time', None)
     a17_seal_time = all_settings.get('a17_seal_time', None)
     a18_seal_time = all_settings.get('a18_seal_time', None)
@@ -826,7 +825,7 @@ async def get_void_training_answer_buttons(message: discord.Message, user_settin
     seal_times_days = []
     for area_no, seal_time in enumerate(seal_times, 16):
         if seal_time is not None:
-            seal_time = datetime.fromisoformat(seal_time, )
+            seal_time = datetime.fromisoformat(seal_time, ).replace(tzinfo=timezone.utc)
             time_left = seal_time - current_time
             if seal_time > current_time:
                 seal_times_areas_days[area_no] = str(time_left.days)
@@ -861,7 +860,7 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
     """Returns the answer to a void training question."""
     all_settings = await settings_db.get_settings()
     answer = ''
-    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = utils.utcnow()
     a16_seal_time = all_settings.get('a16_seal_time', None)
     a17_seal_time = all_settings.get('a17_seal_time', None)
     a18_seal_time = all_settings.get('a18_seal_time', None)
@@ -872,7 +871,7 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
     seal_times_days = []
     for area_no, seal_time in enumerate(seal_times, 16):
         if seal_time is not None:
-            seal_time = datetime.fromisoformat(seal_time, )
+            seal_time = datetime.fromisoformat(seal_time, ).replace(tzinfo=timezone.utc)
             time_left = seal_time - current_time
             if seal_time > current_time:
                 seal_times_areas_days[area_no] = str(time_left.days)

@@ -1,9 +1,10 @@
 # pets.py
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -25,7 +26,7 @@ class PetsCog(commands.Cog):
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
         for row in message_after.components:
-            for component in row.children:
+            for component in row.children: # pyright: ignore
                 if component.disabled:
                     return
         await self.on_message(message_after)
@@ -142,7 +143,7 @@ class PetsCog(commands.Cog):
                     await reminder.delete()
                     if reminder.record_exists:
                         logs.logger.error(
-                            f'{datetime.utcnow()}: Had an error deleting the pet reminder with activity '
+                            f'{utils.utcnow()}: Had an error deleting the pet reminder with activity '
                             f'{activity}.'
                         )
                 if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
@@ -295,8 +296,11 @@ class PetsCog(commands.Cog):
                     ]
                     if pet_action not in pet_actions: continue
                     pet_timestring = pet_action_timestring_match.group(2)
-                    current_time = datetime.utcnow().replace(microsecond=0)
+                    current_time = utils.utcnow()
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                    time_elapsed = bot_answer_time - current_time
+                    time_left -= time_elapsed
                     end_time = current_time + time_left
                     if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time
                     if summary_reminder_min is not None:
@@ -415,7 +419,7 @@ class PetsCog(commands.Cog):
                     'max': timestring_max_match.group(1),
                 }
                 if timestrings['min'] != '--' or timestrings['max'] != '--':
-                    current_time = datetime.utcnow().replace(microsecond=0)
+                    current_time = utils.utcnow()
                     for timestring_type, timestring in timestrings.items():
                         if timestring_type == '--': continue
                         time_left = await functions.calculate_time_left_from_timestring(message, timestring)
@@ -456,5 +460,5 @@ class PetsCog(commands.Cog):
                     await user_settings.update(ready_pets_claim_active=False)
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(PetsCog(bot))
