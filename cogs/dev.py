@@ -8,7 +8,7 @@ import os
 import re
 import sqlite3
 import sys
-from typing import List
+from typing import List, TextIO
 
 import discord
 from discord import utils
@@ -16,7 +16,7 @@ from discord.ext import bridge, commands
 from discord.ext.bridge import BridgeOption
 from humanfriendly import format_timespan
 
-from database import cooldowns
+from database import cooldowns, users
 from resources import emojis, exceptions, logs, settings, views
 
 
@@ -54,6 +54,7 @@ class DevCog(commands.Cog):
             f'{emojis.BP} `{ctx.prefix}dev server-list`\n'
             f'{emojis.BP} `{ctx.prefix}dev support`\n'
             f'{emojis.BP} `{ctx.prefix}dev shutdown`\n'
+            f'{emojis.BP} `{ctx.prefix}dev user-settings`\n'
         )
 
     @dev_group.command(name='reload', description='Reloads cogs or modules', guild_ids=settings.DEV_GUILDS)
@@ -437,6 +438,41 @@ class DevCog(commands.Cog):
                                    view=None)
         else:
             await interaction.edit(content='Aborted.', view=None)
+
+
+    @dev_group.command(name='user-settings', aliases=('user',),
+                       description='Returns settings of a user', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_user_settings(self, ctx: bridge.BridgeContext, user_id: str) -> None:
+        """Lists user settings of a given user"""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        try:
+            user_id_int: int = int(user_id)
+        except:
+            await ctx.respond('Invalid user ID.')
+            return
+
+        try:
+            user_settings: users.User = await users.get_user(user_id_int)
+        except exceptions.FirstTimeUserError:
+            await ctx.respond(f'This user is not registered with Navi.')
+            return
+
+        line: str
+        file_content: str = ''
+        text_file_path: str = 'dev_user_settings.py'
+        for line in str(user_settings).split(')'):
+            file_content = f'{file_content.strip()}\n{line.strip(', \n')})'
+        text_file: TextIO = open(text_file_path, 'w')
+        text_file.write(file_content.strip(') '))
+        text_file.close()
+        
+        await ctx.respond(content=f'**User settings for `{user_id}`**', file=discord.File(text_file_path))
+
+        os.remove(text_file_path)
 
 
 def setup(bot: bridge.AutoShardedBot):

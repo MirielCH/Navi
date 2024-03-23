@@ -157,6 +157,17 @@ class User():
     user_id: int
     user_pocket_watch_multiplier: float
 
+    def __str__(self) -> str:
+        response: str = ''
+        attribute_name: str
+        for attribute_name in dir(self):
+            if attribute_name.startswith('__'): continue
+            attribute_value = getattr(self, attribute_name)
+            if 'method' in str(attribute_value): continue
+            response = f'{response}\n{attribute_name}: {attribute_value}'
+        return response.strip()
+            
+
     async def refresh(self) -> None:
         """Refreshes user data from the database."""
         new_settings: User = await get_user(self.user_id)

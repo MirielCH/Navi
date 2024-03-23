@@ -1118,9 +1118,9 @@ async def parse_embed(message: discord.Message) -> dict[str, str]:
 
 async def update_multiplier(user_settings: users.User, activity: str, time_left: timedelta) -> None:
     """
-    Checks if the provided time left differs from the time left of an active reminder.
+    Checks if the provided time left differs from the time left of the active reminder.
     If yes, it will calculate the difference between the two, and then calculate the new multiplier and update it.
-    To not deviate too much, if the provided time left is <= 30 seconds (hunt: <= 5s), no calculation takes place.
+    To not deviate too much, if the provided time left is <= 10 seconds (hunt: <= 5s), no calculation takes place.
 
     Arguments
     ---------
@@ -1129,6 +1129,7 @@ async def update_multiplier(user_settings: users.User, activity: str, time_left:
         activity (str)
         time_left (timedelta): The time left found in the cooldown embed.
     """
+    if user_settings.current_area == 20: return
     if activity not in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: return
 
     # TODO: Once refactored to proper activities, make these 2 lines a percentage of the activity cooldown
@@ -1150,6 +1151,7 @@ async def update_multiplier(user_settings: users.User, activity: str, time_left:
     time_left_expected_seconds: float = (reminder.end_time - utils.utcnow()).total_seconds()
     new_multiplier: float =  time_left_actual_seconds / time_left_expected_seconds * alert_settings.multiplier
     if new_multiplier <= 0: return
+    if new_multiplier > 1 and not user_settings.current_area == 18: new_multiplier = 1.0
 
     # Round up hunt multiplier to 0.0x
     """
@@ -1161,7 +1163,7 @@ async def update_multiplier(user_settings: users.User, activity: str, time_left:
     """
 
     # Update multiplier
-    if abs(alert_settings.multiplier - new_multiplier) > 0.01:
+    if alert_settings.multiplier != new_multiplier:
         kwargs: dict[str: float] = {} 
         kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
         await user_settings.update(**kwargs)

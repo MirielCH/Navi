@@ -1709,9 +1709,9 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
     """Select to change multiplier settings"""
     def __init__(self, view: discord.ui.View, row: int | None = None):
         options: list[discord.SelectOption] = []
-        multiplier_management: str = 'manual' if view.user_settings.multiplier_management_enabled else 'automatic'
-        options.append(discord.SelectOption(label=f'Use {multiplier_management} multiplier management',
-                                                      value='multiplier_management', emoji=None))
+        multiplier_management_emoji: str = emojis.ENABLED if view.user_settings.multiplier_management_enabled else emojis.DISABLED
+        options.append(discord.SelectOption(label='Automatic multipliers',
+                                                      value='multiplier_management', emoji=multiplier_management_emoji))
         options.append(discord.SelectOption(label='Print current multipliers',
                                                       value='print_multipliers', emoji=None))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
@@ -1749,11 +1749,14 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
                 self.view.remove_item(child)
                 self.view.add_item(ManageMultiplierSettingsSelect(self.view))
             if isinstance(child, ManageMultipliersSelect):
-                if self.view.user_settings.multiplier_management_enabled != child.disabled:
+                select_disabled: bool = False
+                if self.view.user_settings.multiplier_management_enabled and self.view.user_settings.current_area != 20:
+                    select_disabled = True
+                if child.disabled != select_disabled:
                     self.view.remove_item(child)
                     self.view.add_item(
                         ManageMultipliersSelect(
-                        self.view, disabled=self.view.user_settings.multiplier_management_enabled
+                        self.view, disabled=select_disabled
                         )
                     )
         embed: discord.Embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)

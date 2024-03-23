@@ -419,9 +419,9 @@ class HuntCog(commands.Cog):
                     pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))
                     if user_settings.chocolate_box_unlocked:
                         chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
-                time_left = timedelta(seconds=ceil(time_left_seconds * user_settings.alert_hunt.multiplier
+                time_left = timedelta(seconds=(time_left_seconds * user_settings.alert_hunt.multiplier
                                       * pocket_watch_multiplier * chocolate_box_multiplier))
-                time_left_partner_hunt = timedelta(seconds=ceil(time_left_seconds_partner_hunt * partner_hunt_multiplier
+                time_left_partner_hunt = timedelta(seconds=(time_left_seconds_partner_hunt * partner_hunt_multiplier
                                                    * (1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier)))))
                 if time_left < timedelta(0): return
                 if user_settings.alert_hunt.enabled:

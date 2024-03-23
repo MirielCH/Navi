@@ -280,7 +280,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
         return current_multipliers.strip()
 
     syntax: str = ''
-    if not user_settings.multiplier_management_enabled:
+    if not user_settings.multiplier_management_enabled or user_settings.current_area == 20:
         syntax = (
             f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
             f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
@@ -294,7 +294,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
             f'{syntax}'
         )
     else:
-        if user_settings.multiplier_management_enabled:
+        if user_settings.multiplier_management_enabled and user_settings.current_area != 20:
             await ctx.reply(
                 'Changing multipliers is not possible with automatic multiplier management.'
             )
@@ -1020,13 +1020,17 @@ async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.Ap
     """Reminder multiplier settings embed"""
     ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
     if user_settings.multiplier_management_enabled:
-        multiplier_management: str = f'{emojis.ENABLED}`Automatic (recommended)`'
+        if user_settings.current_area == 20:
+            multiplier_management: str = f'{emojis.ENABLED}`Enabled (Inactive)`'
+        else:
+            multiplier_management: str = f'{emojis.ENABLED}`Enabled`'
     else:
-        multiplier_management: str = f'{emojis.DISABLED}`Manual`'
+        multiplier_management: str = f'{emojis.DISABLED}`Disabled`'
     
     field_settings: str = (
-        f'{emojis.BP} **Multiplier management**: {multiplier_management}\n'
+        f'{emojis.BP} **Automatic multipliers**: {multiplier_management}\n'
         f'{emojis.DETAIL} _Multipiers are not changeable in automatic mode._\n'
+        f'{emojis.DETAIL} _Note that automatic multipliers are inactive in area 20._\n'
     )
     field_multipliers: str = (
         f'{emojis.BP} **`{f'Adventure':<10}`** `{round(user_settings.alert_adventure.multiplier, 3):>5}`\n'

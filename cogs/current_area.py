@@ -23,7 +23,8 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
     kwargs: dict[str, Any] = {
         'current_area': new_area,
     }
-    if new_area != 18 and user_settings.current_area == 18 and user_settings.multiplier_management_enabled:
+    # Reset multipliers when entering area 20
+    if new_area == 20 and user_settings.current_area != 20 and user_settings.multiplier_management_enabled:
         kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
         kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
         kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1

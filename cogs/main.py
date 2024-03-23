@@ -215,8 +215,6 @@ class MainCog(commands.Cog):
         startup_info: str = f'{self.bot.user.name} has connected to Discord!'
         print(startup_info)
         logs.logger.info(startup_info)
-        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                                  name='your commands'))
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Fires when bot joins a guild. Sends a welcome message to the system channel."""

@@ -533,7 +533,10 @@ class SettingsMultipliersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         self.add_item(components.ManageMultiplierSettingsSelect(self))
-        self.add_item(components.ManageMultipliersSelect(self, disabled=user_settings.multiplier_management_enabled))
+        select_disabled: bool = False
+        if user_settings.multiplier_management_enabled and user_settings.current_area != 20:
+            select_disabled = True
+        self.add_item(components.ManageMultipliersSelect(self, disabled=select_disabled))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
