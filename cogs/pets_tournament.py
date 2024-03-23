@@ -47,7 +47,6 @@ class PetsTournamentCog(commands.Cog):
             if any(search_string in message_content.lower() for search_string in search_strings):
                 user = await functions.get_interaction_user(message)
                 user_command_message = None
-                slash_command = True if user is not None else False
                 if user is None:
                     user_command_message = (
                         await messages.find_message(message.channel.id, regex.COMMAND_PETS_TOURNAMENT)

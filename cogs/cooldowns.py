@@ -322,6 +322,9 @@ class CooldownsCog(commands.Cog):
                 time_elapsed = bot_answer_time - current_time
                 time_left -= time_elapsed
                 if time_left < timedelta(0): continue
+                time_left = timedelta(seconds=time_left.total_seconds() + 1)
+                if user_settings.multiplier_management_enabled:
+                    await functions.update_multiplier(user_settings, cd_activity, time_left)
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(interaction_user.id, cd_activity, time_left,

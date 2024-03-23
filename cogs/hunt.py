@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from math import ceil
 import re
 
 import discord
@@ -128,13 +129,12 @@ class HuntCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                time_left_seconds = time_left.total_seconds()
                 if time_left < timedelta(0): return
-                bot_answer_time = message.edited_at if message.edited_at else message.created_at
-                current_time = utils.utcnow()
-                time_elapsed = current_time - bot_answer_time
+                activity: str = 'hunt'
+                if (user_settings.multiplier_management_enabled and interaction_user in embed_users):
+                    await functions.update_multiplier(user_settings, activity, time_left)
+                time_left_seconds = time_left.total_seconds()
                 if user_settings.hunt_rotation_enabled: # This doesn't make much sense?
-                    time_left = time_left - time_elapsed
                     if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                     time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier)))
                     if not together and user_settings.round_card_active:
@@ -150,7 +150,7 @@ class HuntCog(commands.Cog):
                             partner_settings: users.User = await users.get_user(user_settings.partner_id)
                         except exceptions.FirstTimeUserError:
                             pass
-                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
+                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
                     actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                     partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
                     user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
@@ -169,14 +169,13 @@ class HuntCog(commands.Cog):
                         and interaction_user in embed_users):
                         time_left_seconds = (time_left_seconds
                                             + (partner_cooldown - user_cooldown)
-                                            - time_elapsed.total_seconds()
-                                            + 1)
+                                            - time_elapsed.total_seconds())
                         if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                time_left = timedelta(seconds=time_left_seconds)
+                time_left = timedelta(seconds=ceil(time_left_seconds))
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                 overwrite_message = False if user_settings.hunt_rotation_enabled else True
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(interaction_user.id, 'hunt', time_left,
+                    await reminders.insert_user_reminder(interaction_user.id, activity, time_left,
                                                          message.channel.id, reminder_message,
                                                          overwrite_message=overwrite_message)
                 )
@@ -420,10 +419,10 @@ class HuntCog(commands.Cog):
                     pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))
                     if user_settings.chocolate_box_unlocked:
                         chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
-                time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
-                                      * pocket_watch_multiplier * chocolate_box_multiplier)
-                time_left_partner_hunt = timedelta(seconds=time_left_seconds_partner_hunt * partner_hunt_multiplier
-                                                   * (1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))))
+                time_left = timedelta(seconds=ceil(time_left_seconds * user_settings.alert_hunt.multiplier
+                                      * pocket_watch_multiplier * chocolate_box_multiplier))
+                time_left_partner_hunt = timedelta(seconds=ceil(time_left_seconds_partner_hunt * partner_hunt_multiplier
+                                                   * (1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier)))))
                 if time_left < timedelta(0): return
                 if user_settings.alert_hunt.enabled:
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)

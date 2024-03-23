@@ -643,6 +643,7 @@ ACTIVITIES_WITH_COOLDOWN_ALL.insert(0, 'all')
 
 ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: Final[tuple[str]] = (
     'adventure',
+    'boo',
     'card-hand',
     'daily',
     'duel',

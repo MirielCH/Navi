@@ -91,6 +91,7 @@ class User():
     current_area: int
     dnd_mode_enabled: bool
     farm_helper_mode: int
+    guild_quest_prompt_active: bool
     halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
@@ -105,6 +106,7 @@ class User():
     last_tt: datetime
     last_work_command: str
     megarace_helper_enabled: bool
+    multiplier_management_enabled: bool
     partner_alert_threshold: int
     partner_channel_id: int
     partner_chocolate_box_unlocked: bool
@@ -119,7 +121,6 @@ class User():
     ping_after_message: bool
     portals_as_embed: bool
     portals_spacing_enabled: bool
-    guild_quest_prompt_active: bool
     potion_dragon_breath_active: bool
     potion_flask_active: bool
     reactions_enabled: bool
@@ -216,6 +217,7 @@ class User():
         self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.farm_helper_mode = new_settings.farm_helper_mode
+        self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
@@ -230,6 +232,7 @@ class User():
         self.last_tt = new_settings.last_tt
         self.last_work_command = new_settings.last_work_command
         self.megarace_helper_enabled = new_settings.megarace_helper_enabled
+        self.multiplier_management_enabled = new_settings.multiplier_management_enabled
         self.partner_alert_threshold = new_settings.partner_alert_threshold
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_chocolate_box_unlocked = new_settings.partner_chocolate_box_unlocked
@@ -246,7 +249,6 @@ class User():
         self.portals_spacing_enabled = new_settings.portals_spacing_enabled
         self.potion_dragon_breath_active = new_settings.potion_dragon_breath_active
         self.potion_flask_active = new_settings.potion_flask_active
-        self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_after_all_commands = new_settings.ready_after_all_commands
         self.ready_as_embed = new_settings.ready_as_embed
@@ -322,6 +324,7 @@ class User():
             alert_big_arena_visible: bool
             alert_boo_enabled: bool
             alert_boo_message: str
+            alert_boo_multiplier: float
             alert_boo_visible: bool
             alert_boosts_enabled: bool
             alert_boosts_message: str
@@ -471,6 +474,7 @@ class User():
             last_tt: datetime UTC
             last_workt_command: str
             megarace_helper_enabled: bool
+            multiplier_management_enabled: bool
             partner_alert_threshold: int
             partner_channel_id: int
             partner_chocolate_box_unlocked: bool
@@ -558,7 +562,7 @@ async def _dict_to_user(record: dict) -> User:
                                     visible=bool(record['alert_arena_visible'])),
             alert_boo = UserAlert(enabled=bool(record['alert_boo_enabled']),
                                     message=record['alert_boo_message'],
-                                    multiplier=1.0,
+                                    multiplier=record['alert_boo_multiplier'],
                                     visible=bool(record['alert_boo_visible'])),
             alert_boosts = UserAlert(enabled=bool(record['alert_boosts_enabled']),
                                      message=record['alert_boosts_message'],
@@ -570,7 +574,7 @@ async def _dict_to_user(record: dict) -> User:
                                         visible=bool(record['alert_card_hand_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
-                                      multiplier=1.0,
+                                      multiplier=record['alert_chimney_multiplier'],
                                       visible=bool(record['alert_chimney_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
@@ -732,6 +736,7 @@ async def _dict_to_user(record: dict) -> User:
             last_tt = datetime.fromisoformat(record['last_tt']).replace(tzinfo=timezone.utc) if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
+            multiplier_management_enabled = bool(record['multiplier_management_enabled']),
             partner_alert_threshold = record['partner_alert_threshold'],
             partner_channel_id = record['partner_channel_id'],
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
@@ -955,6 +960,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_big_arena_visible: bool
         alert_boo_enabled: bool
         alert_boo_message: str
+        alert_boo_multiplier: float
         alert_boo_visible: bool
         alert_boosts_enabled: bool
         alert_boosts_message: str
@@ -1104,6 +1110,7 @@ async def _update_user(user: User, **kwargs) -> None:
         last_tt: datetime UTC
         last_workt_command: str
         megarace_helper_enabled: bool
+        multiplier_management_enabled: bool
         partner_alert_threshold: int
         partner_channel_id: int
         partner_chocolate_box_unlocked: bool

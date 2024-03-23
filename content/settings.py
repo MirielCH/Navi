@@ -2,9 +2,8 @@
 """Contains settings commands"""
 
 import asyncio
-from datetime import timezone
 import re
-from typing import List, Optional, Union
+from typing import Any, List, Optional
 
 import discord
 from discord.ext import bridge, commands
@@ -270,32 +269,41 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
 async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
     user_settings: users.User = await users.get_user(ctx.author.id)
     async def get_current_multipliers() -> str:
-        current_multipliers = ''
+        current_multipliers: str = ''
+        activity: str
         for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-            alert_settings = getattr(user_settings, f'alert_{activity.replace("-","_")}')
+            alert_settings: users.UserAlert = getattr(user_settings, f'alert_{activity.replace("-","_")}')
             current_multipliers = (
                 f'{current_multipliers}\n'
-                f'{emojis.BP} **{activity.capitalize()}**: `{alert_settings.multiplier}`'
+                f'{emojis.BP} **`{f'{activity.capitalize()}':<10}`** `{round(alert_settings.multiplier, 3):>5}`'
             )
         return current_multipliers.strip()
-    
-    syntax = (
-        f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
-        f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
-        f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
-    )
+
+    syntax: str = ''
+    if not user_settings.multiplier_management_enabled:
+        syntax = (
+            f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
+            f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
+            f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
+        )
     if not args:
-        current_multipliers = await get_current_multipliers()
+        current_multipliers: str = await get_current_multipliers()
         await ctx.reply(
             f'Current multipliers:\n'
             f'{current_multipliers}\n\n'
             f'{syntax}'
         )
     else:
-        multiplier_found = None
-        activities_found = []
-        ignored_activities = []
-        kwargs = {}
+        if user_settings.multiplier_management_enabled:
+            await ctx.reply(
+                'Changing multipliers is not possible with automatic multiplier management.'
+            )
+            return
+        multiplier_found: float | None = None
+        activities_found: list[str] = []
+        ignored_activities: list[str] = []
+        kwargs: dict[str, Any] = {}
+        arg: str
         for arg in args:
             try:
                 multiplier_found = float(arg)
@@ -309,6 +317,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                         f'Invalid syntax.\n\n{syntax}'
                     )
                     return
+                activity: str
                 for activity in activities_found:
                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
                 activities_found = []
@@ -328,10 +337,10 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
             )
             return
         await user_settings.update(**kwargs)
-        answer = (
+        answer: str = (
             f'Multiplier(s) updated.'
         )
-        current_multipliers = await get_current_multipliers()
+        current_multipliers: str = await get_current_multipliers()
         answer = (
             f'{answer}\n\n'
             f'{current_multipliers}'
@@ -341,6 +350,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                 f'{answer}\n\n'
                 f'Couldn\'t find the following activities:'
             )
+            activity: str
             for activity in ignored_activities:
                 answer = f'{answer}\n{emojis.BP} `{activity}`'
         await ctx.reply(answer)
@@ -1008,32 +1018,41 @@ async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.Appli
 async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                      user_settings: users.User) -> discord.Embed:
     """Reminder multiplier settings embed"""
-    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
-    multipliers = (
-        f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
-        f'{emojis.BP} **Card hand**: `{user_settings.alert_card_hand.multiplier}`\n'
-        f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
-        f'{emojis.BP} **Duel**: `{user_settings.alert_duel.multiplier}`\n'
-        f'{emojis.BP} **EPIC items**: `{user_settings.alert_epic.multiplier}`\n'
-        f'{emojis.BP} **Farm**: `{user_settings.alert_farm.multiplier}`\n'
-        f'{emojis.BP} **Hunt**: `{user_settings.alert_hunt.multiplier}`\n'
-        f'{emojis.BP} **Lootbox**: `{user_settings.alert_lootbox.multiplier}`\n'
-        f'{emojis.BP} **Quest**: `{user_settings.alert_quest.multiplier}`\n'
-        f'{emojis.BP} **Training**: `{user_settings.alert_training.multiplier}`\n'
-        f'{emojis.BP} **Weekly**: `{user_settings.alert_weekly.multiplier}`\n'
-        f'{emojis.BP} **Work**: `{user_settings.alert_work.multiplier}`\n'
+    ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
+    if user_settings.multiplier_management_enabled:
+        multiplier_management: str = f'{emojis.ENABLED}`Automatic (recommended)`'
+    else:
+        multiplier_management: str = f'{emojis.DISABLED}`Manual`'
+    
+    field_settings: str = (
+        f'{emojis.BP} **Multiplier management**: {multiplier_management}\n'
+        f'{emojis.DETAIL} _Multipiers are not changeable in automatic mode._\n'
     )
-    embed = discord.Embed(
+    field_multipliers: str = (
+        f'{emojis.BP} **`{f'Adventure':<10}`** `{round(user_settings.alert_adventure.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Boo':<10}`** `{round(user_settings.alert_boo.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Card hand':<10}`** `{round(user_settings.alert_card_hand.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Daily':<10}`** `{round(user_settings.alert_daily.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Duel':<10}`** `{round(user_settings.alert_duel.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'EPIC items':<10}`** `{round(user_settings.alert_epic.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Farm':<10}`** `{round(user_settings.alert_farm.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Hunt':<10}`** `{round(user_settings.alert_hunt.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Lootbox':<10}`** `{round(user_settings.alert_lootbox.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Quest':<10}`** `{round(user_settings.alert_quest.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Training':<10}`** `{round(user_settings.alert_training.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Weekly':<10}`** `{round(user_settings.alert_weekly.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Work':<10}`** `{round(user_settings.alert_work.multiplier, 3):>5}`\n'
+    )
+    embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx_author_name.upper()}\'S REMINDER MULTIPLIERS',
         description = (
-            f'_Multipliers are applied to all reminder times._\n'
-            f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
-            f'_These are **not** for global event reductions. Those are set by your Navi bot owner and can be '
-            f'viewed in {await functions.get_navi_slash_command(bot, "event-reductions")}._\n'
+            f'_Multipliers are applied after all other reductions._\n'
+            f'_Unless you know what you\'re doing, leave it on automatic._\n'
         )
     )
-    embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
+    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+    embed.add_field(name='MULTIPLIERS', value=field_multipliers, inline=False)
     return embed
 
 

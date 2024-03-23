@@ -1,7 +1,7 @@
 # adventure.py
 
 import asyncio
-from datetime import timedelta
+from datetime import datetime, timedelta
 import re
 
 import discord
@@ -46,7 +46,7 @@ class AdventureCog(commands.Cog):
             if embed.title is not None: message_title = str(embed.title)
 
             # Adventure cooldown
-            search_strings = [
+            search_strings: list[str] = [
                 'you have already been on an adventure', #English
                 'ya has estado en una aventura', #Spanish
                 'você já esteve em uma aventura', #Portuguese
@@ -54,7 +54,7 @@ class AdventureCog(commands.Cog):
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else False
+                slash_command: bool = True if user is not None else False
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
@@ -100,11 +100,14 @@ class AdventureCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Timestring not found in adventure cooldown message.', message)
                     return
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
+                time_left: timedelta = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 if time_left < timedelta(0): return
+                activity: str = 'adventure'
+                if user_settings.multiplier_management_enabled:
+                    await functions.update_multiplier(user_settings, activity, time_left)
                 reminder_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'adventure', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)

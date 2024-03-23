@@ -89,9 +89,12 @@ class EpicItemsCog(commands.Cog):
                     return
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 if time_left < timedelta(0): return
+                activity: str = 'epic'
+                if user_settings.multiplier_management_enabled:
+                    await functions.update_multiplier(user_settings, activity, time_left)
                 reminder_message = user_settings.alert_epic.message
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'epic', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                         message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)

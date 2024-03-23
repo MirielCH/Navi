@@ -1,6 +1,7 @@
 # current_area.py
 
 import re
+from typing import Any
 
 import discord
 from discord.ext import bridge, commands
@@ -8,6 +9,34 @@ from discord.ext import bridge, commands
 from cache import messages
 from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings, strings
+
+
+async def update_area(user_settings: users.User, new_area: int) -> None:
+    """
+    Updates the current area. If leaving area 18 with active multiplier management,
+    it will also reset multipliers.
+
+    Args:
+        user_settings (users.User)
+        new_area (int)
+    """
+    kwargs: dict[str, Any] = {
+        'current_area': new_area,
+    }
+    if new_area != 18 and user_settings.current_area == 18 and user_settings.multiplier_management_enabled:
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+    await user_settings.update(**kwargs)
 
 
 class CurrentAreaCog(commands.Cog):
@@ -74,7 +103,7 @@ class CurrentAreaCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                await user_settings.update(current_area=1)
+                await update_area(user_settings, 1)
                 try:
                     time_potion_reminder = await reminders.get_user_reminder(user.id, 'time-potion')
                     await time_potion_reminder.delete()
@@ -119,13 +148,13 @@ class CurrentAreaCog(commands.Cog):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Area not found in current area profile or progress message.', message)
                     return
-                current_area = area_match.group(1)
-                if current_area == 'top':
-                    current_area = 21
+                new_area = area_match.group(1)
+                if new_area == 'top':
+                    new_area = 21
                 else:
-                    current_area = int(current_area)
-                if user_settings.current_area != current_area:
-                    await user_settings.update(current_area=current_area)
+                    new_area = int(new_area)
+                if user_settings.current_area != new_area:
+                    await update_area(user_settings, new_area)
 
         if not message.embeds:
             message_content = message.content
@@ -209,10 +238,10 @@ class CurrentAreaCog(commands.Cog):
                     await errors.log_error('Couldn\'t find mob name in current area hunt/adventure message.', message)
                     return
                 mob_name = mob_name_match.group(2)
-                current_area = await functions.get_area(f'**{mob_name}**')
-                if user_settings.current_area != current_area:
-                    if current_area == 20 and user_settings.current_area != 19: return
-                    await user_settings.update(current_area=current_area)
+                new_area = await functions.get_area(f'**{mob_name}**')
+                if user_settings.current_area != new_area:
+                    if new_area == 20 and user_settings.current_area != 19: return
+                    await update_area(user_settings, new_area)
 
             # Set current area from move command
             search_strings = [
@@ -256,7 +285,8 @@ class CurrentAreaCog(commands.Cog):
                     await errors.log_error('Couldn\'t find the current area in area change / candy cane message.',
                                            message)
                     return
-                await user_settings.update(current_area=int(area_match.group(1)))
+                new_area = int(area_match.group(1))
+                await update_area(user_settings, new_area)
 
             # Set current area from hunt event
             if ':zombie' in message_content.lower() and '#2' in message_content.lower():

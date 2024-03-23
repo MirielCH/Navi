@@ -8,7 +8,7 @@ from typing import Dict, List, Literal, Optional
 import discord
 
 from content import settings as settings_cmd
-from database import cooldowns, portals, reminders, users
+from database import cooldowns, guilds, portals, reminders, users
 from resources import emojis, exceptions, functions, modals, settings, strings, views
 
 
@@ -440,7 +440,7 @@ class SwitchReadyAltSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(content=content, embed=embed, view=self.view)
 
-            
+
 class SwitchStatsAltSelect(discord.ui.Select):
     """Select to switch between alts in /stats"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -471,7 +471,7 @@ class SwitchStatsAltSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
 
-            
+
 class SwitchRemindersListAltSelect(discord.ui.Select):
     """Select to switch between alts in /list"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -501,14 +501,14 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
                 self.view.remove_item(child)
             if isinstance(child, DeleteCustomRemindersButton) and alt != self.view.user:
                 self.view.remove_item(child)
-        if alt == self.view.user and self.view.custom_reminders: 
+        if alt == self.view.user and self.view.custom_reminders:
             self.view.add_item(DeleteCustomRemindersButton())
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
 
-        
+
 class SwitchSettingsSelect(discord.ui.Select):
     """Select to switch between settings embeds"""
     def __init__(self, view: discord.ui.View, commands_settings: Dict[str, callable], row: Optional[int] = None):
@@ -708,7 +708,7 @@ class RemoveAltSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
 
-            
+
 class ManagePartnerSettingsSelect(discord.ui.Select):
     """Select to change partner settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -833,7 +833,7 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
 
-            
+
 class SetPartnerAlertThreshold(discord.ui.Select):
     """Select to change the partner alert threshold"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -877,7 +877,7 @@ class SetDonorTierSelect(discord.ui.Select):
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
-        
+
 class AddAltSelect(discord.ui.Select):
     """Select to add a new alt"""
     def __init__(self, view: discord.ui.View,
@@ -893,13 +893,13 @@ class AddAltSelect(discord.ui.Select):
                     self.view.remove_item(child)
                 if isinstance(child, RemoveAltSelect):
                     self.view.remove_item(child)
-                    
+
             embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
             if interaction.response.is_done():
                 await interaction.message.edit(embed=embed, view=self.view)
             else:
                 await interaction.response.edit_message(embed=embed, view=self.view)
-            
+
             await asyncio.sleep(0.1)
             if len(self.view.user_settings.alts) < 24:
                 self.view.add_item(AddAltSelect(self.view, row=0))
@@ -984,7 +984,7 @@ class AddAltSelect(discord.ui.Select):
             )
         await update_message()
 
-            
+
 class AddPartnerSelect(discord.ui.Select):
     """Select to add a new partner"""
     def __init__(self, view: discord.ui.View, placeholder: str,
@@ -997,7 +997,7 @@ class AddPartnerSelect(discord.ui.Select):
         async def update_message() -> None:
             for child in self.view.children.copy():
                 if isinstance(child, AddPartnerSelect):
-                    self.view.remove_item(child)    
+                    self.view.remove_item(child)
             embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
                                                self.view.partner_settings)
             if interaction.response.is_done():
@@ -1007,7 +1007,7 @@ class AddPartnerSelect(discord.ui.Select):
             await asyncio.sleep(0.1)
             self.view.add_item(AddPartnerSelect(self.view, "Change partner", row=0))
             await interaction.message.edit(embed=embed, view=self.view)
-        
+
         new_partner = self.values[0]
         partner_global_name = new_partner.global_name if new_partner.global_name is not None else new_partner.name
         user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
@@ -1509,7 +1509,7 @@ class ManageServerSettingsSelect(discord.ui.Select):
 
 class ManageMultipliersSelect(discord.ui.Select):
     """Select to change multipliers"""
-    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None, disabled: bool = False):
         options = []
         options.append(discord.SelectOption(label=f'All',
                                             value='all'))
@@ -1517,7 +1517,7 @@ class ManageMultipliersSelect(discord.ui.Select):
             options.append(discord.SelectOption(label=activity.replace("-"," ").capitalize(),
                                                 value=activity))
         super().__init__(placeholder='Change multipliers', min_values=1, max_values=1, options=options, row=row,
-                         custom_id='manage_multipliers')
+                         custom_id='manage_multipliers', disabled=disabled)
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
@@ -1699,6 +1699,64 @@ class ManagePortalSettingsSelect(discord.ui.Select):
                 break
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
                                                self.view.user_portals)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class ManageMultiplierSettingsSelect(discord.ui.Select):
+    """Select to change multiplier settings"""
+    def __init__(self, view: discord.ui.View, row: int | None = None):
+        options: list[discord.SelectOption] = []
+        multiplier_management: str = 'manual' if view.user_settings.multiplier_management_enabled else 'automatic'
+        options.append(discord.SelectOption(label=f'Use {multiplier_management} multiplier management',
+                                                      value='multiplier_management', emoji=None))
+        options.append(discord.SelectOption(label='Print current multipliers',
+                                                      value='print_multipliers', emoji=None))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_multiplier_settings')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value: str = self.values[0]
+        match select_value:
+            case "multiplier_management":
+                await self.view.user_settings.update(
+                    multiplier_management_enabled=not self.view.user_settings.multiplier_management_enabled
+                )
+            case "print_multipliers":
+                prefix: str = await guilds.get_prefix(self.view.ctx)
+                answer: str = (
+                    f'```\n'
+                    f'{prefix}multi '
+                    f'adventure {round(self.view.user_settings.alert_adventure.multiplier, 4):g} '
+                    f'card-hand {round(self.view.user_settings.alert_card_hand.multiplier, 4):g} '
+                    f'daily {round(self.view.user_settings.alert_daily.multiplier, 4):g} '
+                    f'duel {round(self.view.user_settings.alert_duel.multiplier, 4):g} '
+                    f'epic {round(self.view.user_settings.alert_epic.multiplier, 4):g} '
+                    f'farm {round(self.view.user_settings.alert_farm.multiplier, 4):g} '
+                    f'hunt {round(self.view.user_settings.alert_hunt.multiplier, 4):g} '
+                    f'lootbox {round(self.view.user_settings.alert_lootbox.multiplier, 4):g} '
+                    f'quest {round(self.view.user_settings.alert_quest.multiplier, 4):g} '
+                    f'training {round(self.view.user_settings.alert_training.multiplier, 4):g} '
+                    f'weekly {round(self.view.user_settings.alert_weekly.multiplier, 4):g} '
+                    f'work {round(self.view.user_settings.alert_work.multiplier, 4):g} '
+                    f'\n```'
+                )
+                await interaction.response.send_message(answer, ephemeral=True)
+        for child in self.view.children.copy():
+            if isinstance(child, ManageMultiplierSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageMultiplierSettingsSelect(self.view))
+            if isinstance(child, ManageMultipliersSelect):
+                if self.view.user_settings.multiplier_management_enabled != child.disabled:
+                    self.view.remove_item(child)
+                    self.view.add_item(
+                        ManageMultipliersSelect(
+                        self.view, disabled=self.view.user_settings.multiplier_management_enabled
+                        )
+                    )
+        embed: discord.Embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:

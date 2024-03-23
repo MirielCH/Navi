@@ -102,9 +102,12 @@ class FarmCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                activity: str = 'farm'
+                if user_settings.multiplier_management_enabled:
+                    await functions.update_multiplier(user_settings, activity, time_left)
                 reminder_message = user_settings.alert_farm.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'farm', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
@@ -112,7 +115,7 @@ class FarmCog(commands.Cog):
         if not message.embeds:
             message_content = ''
             for line in message.content.split('\n'):
-                if not 'card' in line:
+                if not re.match(r'\bcard\b', message.content):
                     message_content = f'{message_content}\n{line}'
             message_content = message_content.strip()
             # Farm

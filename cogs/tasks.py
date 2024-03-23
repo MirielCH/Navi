@@ -203,10 +203,11 @@ class TasksCog(commands.Cog):
         Reminders that fire at the same second for the same user in the same channel are combined into one task.
         """
         user_reminders = {}
+        reminder: reminders.Reminder
         for reminder in reminders.scheduled_for_tasks.copy().values():
             reminders.scheduled_for_tasks.pop(reminder.task_name, None)
             if reminder.reminder_type == 'user':
-                reminder_user_channel = f'{reminder.user_id}-{reminder.channel_id}-{reminder.end_time}'
+                reminder_user_channel = f'{reminder.user_id}-{reminder.channel_id}-{reminder.end_time.replace(microsecond=0)}'
                 if reminder_user_channel in user_reminders:
                     user_reminders[reminder_user_channel].append(reminder)
                 else:
