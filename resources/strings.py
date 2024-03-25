@@ -186,6 +186,7 @@ DONOR_TIERS_EMOJIS = {
 }
 
 ARTIFACTS_EMOJIS = {
+    'bunny mask': emojis.ARTIFACT_BUNNY_MASK,
     'chocolate box': emojis.ARTIFACT_CHOCOLATE_BOX,
     'claus belt': emojis.ARTIFACT_CLAUS_BELT,
     'coin ring': emojis.ARTIFACT_COIN_RING,
