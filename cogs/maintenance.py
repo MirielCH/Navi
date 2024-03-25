@@ -40,7 +40,7 @@ class MaintenanceCog(commands.Cog):
         if not message.embeds:
  
             # Cel Multiply cooldown
-            search_strings: tuple[str] = (
+            search_strings: tuple[str, ...] = (
                 'the bot is under maintenance!', #English
                 'the bot is under maintenance!', #TODO: Spanish
                 'the bot is under maintenance!', #TODO: Portuguese
@@ -52,7 +52,7 @@ class MaintenanceCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_maintenance.enabled: return
-                timestring_match: re.Match[str] = re.search(r"in \*\*(.+?)\*\*", message.content.lower())
+                timestring_match: re.Match[str] | None = re.search(r"in \*\*(.+?)\*\*", message.content.lower())
                 time_left: timedelta = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()

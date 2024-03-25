@@ -6,9 +6,10 @@ import asyncio
 import importlib
 import os
 import re
+import shutil
 import sqlite3
 import sys
-from typing import List, TextIO
+from typing import List, TextIO, TYPE_CHECKING
 
 import discord
 from discord import utils
@@ -18,6 +19,9 @@ from humanfriendly import format_timespan
 
 from database import cooldowns, users
 from resources import emojis, exceptions, logs, settings, views
+
+if TYPE_CHECKING:
+    from datetime import datetime, timedelta
 
 
 EVENT_REDUCTION_TYPES = [
@@ -54,7 +58,7 @@ class DevCog(commands.Cog):
             f'{emojis.BP} `{ctx.prefix}dev server-list`\n'
             f'{emojis.BP} `{ctx.prefix}dev support`\n'
             f'{emojis.BP} `{ctx.prefix}dev shutdown`\n'
-            f'{emojis.BP} `{ctx.prefix}dev user-settings`\n'
+            f'{emojis.BP} `{ctx.prefix}dev user-settings <user id>`\n'
         )
 
     @dev_group.command(name='reload', description='Reloads cogs or modules', guild_ids=settings.DEV_GUILDS)
@@ -127,7 +131,8 @@ class DevCog(commands.Cog):
             description = (
                 '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
                 '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see and set '
-                'the correct IDs in `emojis.py`._\n'
+                'the correct IDs in `emojis.py`._\n\n'
+                '_Run `/dev emoji-update` to change the emoji IDs to the ones in your emoji guilds._'
             )
         if invalid_emojis:
             description = f'{description}\n\n**Invalid emojis**'
@@ -144,6 +149,119 @@ class DevCog(commands.Cog):
             description = description,
         )
         await ctx.respond(embed=embed)
+
+
+    @dev_group.command(name='emoji-update', aliases=('emojiupdate','emojis-update','update-emojis','update-emoji'),
+                       description='Update all emojis in emojis.py to your uploaded emojis.', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_emoji_update(self, ctx: bridge.BridgeContext) -> None:
+        """Update all emojis in emojis.py to your uploaded emojis."""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
+        view: views.ConfirmCancelView = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(
+            f'This command will execute the following actions:\n'
+            f'{emojis.BP} Create a backup of your `resources/emojis.py` as `resources/emojis.py.backup`\n'
+            f'{emojis.DETAIL} An existing backup will be overwritten!\n'
+            f'{emojis.BP} Check all emojis in `resources/emojis.py` and update the IDs from your emoji guilds\n'
+            f'{emojis.DETAIL} This only detects emojis **with the same name**!\n'
+            f'{emojis.BP} List missing emojis if there are any\n\n'
+            f'Do you want to proceed?',
+            view=view,
+        )
+        view.interaction_message = interaction
+        await view.wait()
+        match view.value:
+            case None:
+                await interaction.edit(f'**{ctx_author_name}**, you didn\'t answer in time.')
+            case 'confirm':
+                start_time: datetime = utils.utcnow()
+                interaction = await ctx.respond('Starting update...')
+                old_emoji_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py')
+                old_emoji_backup_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py.backup')
+                new_emoji_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py.new')
+
+                # Read old emojis.py
+                old_emoji_file: TextIO = open(old_emoji_file_path, 'r', encoding='utf-8')
+                old_emoji_file_content: list[str] = old_emoji_file.readlines()
+                old_emoji_file.close()
+
+                # Create backup file
+                shutil.copy(old_emoji_file_path, old_emoji_backup_file_path)
+
+                # Read all emojis from emoji servers                
+                guild_id: int
+                server_emojis: list[discord.Emoji] = []
+                for guild_id in settings.EMOJI_GUILDS:
+                    server_emojis += self.bot.get_guild(guild_id).emojis
+
+                # Create the new emoji file
+                new_emoji_file: TextIO = open(new_emoji_file_path, 'a', encoding='utf-8')
+                new_emoji_file.truncate(0)
+
+                # Go through all lines in the old emoji file and update emojis when necessary
+                try:
+                    missing_emojis: dict[str, str] = {}
+                    line: str
+                    for line in old_emoji_file_content:
+                        emoji_data_match: re.Match = re.match(r'^\b([\w_]+)\b.+<a?:(\w+):', line.strip())
+                        if not emoji_data_match:
+                            new_emoji_file.write(line)
+                        else:
+                            attribute_name: str
+                            emoji_name: str
+                            attribute_name, emoji_name = emoji_data_match.groups()
+                            
+                            server_emoji: discord.Emoji
+                            emoji_found: bool = False
+                            for server_emoji in server_emojis:
+                                if emoji_name.lower() == server_emoji.name.lower():
+                                    new_emoji_file.write(
+                                        f'{attribute_name.upper()}: Final[str] = \'{str(server_emoji)}\'\n'
+                                    )
+                                    emoji_found = True
+                                    break
+                                
+                            if not emoji_found:
+                                missing_emojis[attribute_name] = emoji_name
+                                new_emoji_file.write(f'{line.strip('\n')} # /dev emoji-update: Emoji not found\n')
+                except:
+                    raise
+                else:
+                    new_emoji_file.close()
+
+                # Replace old file with new one
+                shutil.move(new_emoji_file_path, old_emoji_file_path)
+
+                # Send report
+                time_taken: timedelta = utils.utcnow() - start_time
+                description: str = (
+                    f'_Update completed after {format_timespan(time_taken)}._\n'
+                    f'_➜ Please run `/dev emoji-check` to make sure all emojis are present._'
+                )
+                
+                if missing_emojis:
+                    description = (
+                        f'{description}\n\n'
+                        f'{emojis.WARNING} **Could not find the following emojis:**'
+                    )
+                    attribute_name: str
+                    emoji_name: str
+                    for attribute_name, emoji_name in missing_emojis.items():
+                        description = f'{description}\n{emojis.BP} `{attribute_name.upper()}` (emoji name `{emoji_name}`)'
+                        
+                if len(description) >= 4096:
+                    description = f'{description[:4050]}\n- ... too many missing emojis, what are you even doing?'
+                    
+                embed: discord.Embed = discord.Embed(title='Emoji Update', description=description)
+                await interaction.edit(content=None, embed=embed)
+                
+            case _:
+                await interaction.edit(view=None)
+                await interaction.edit('Updating aborted.')
 
 
     @dev_group.command(name='event-reductions', aliases=('er',), description='Manage global event reductions',
@@ -442,7 +560,7 @@ class DevCog(commands.Cog):
 
     @dev_group.command(name='user-settings', aliases=('user',),
                        description='Returns settings of a user', guild_ids=settings.DEV_GUILDS)
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    @commands.bot_has_permissions(send_messages=True, attach_files=True)
     async def dev_user_settings(self, ctx: bridge.BridgeContext, user_id: str) -> None:
         """Lists user settings of a given user"""
         if ctx.author.id not in settings.DEV_IDS:

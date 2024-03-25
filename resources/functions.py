@@ -4,10 +4,11 @@ from argparse import ArgumentError
 from datetime import datetime, timedelta, timezone
 from math import ceil
 import re
-from typing import Any, Coroutine,List, Optional, Union
+from typing import Any, Coroutine,List
 
 import discord
 from discord import utils
+from discord.abc import GuildChannel, PrivateChannel
 from discord.ext import bridge, commands
 from discord.utils import MISSING
 
@@ -15,28 +16,26 @@ from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
 from resources import emojis, exceptions, settings, strings
 
-
 # --- Get discord data ---
-async def get_interaction(message: discord.Message) -> discord.Interaction:
+async def get_interaction(message: discord.Message) -> discord.MessageInteraction | None:
     """Returns the interaction object if the message was triggered by a slash command. Returns None if no user was found."""
     if message.reference is not None:
         if message.reference.cached_message is not None:
             message = message.reference.cached_message
-        else:
+        elif message.reference.message_id is not None:
             message = await message.channel.fetch_message(message.reference.message_id)
     return message.interaction
 
 
-async def get_interaction_user(message: discord.Message) -> discord.User:
+async def get_interaction_user(message: discord.Message) -> discord.User | None:
     """Returns the user object if the message was triggered by a slash command. Returns None if no user was found."""
     interaction = await get_interaction(message)
     return interaction.user if interaction is not None else None
 
 
-async def get_message_from_channel_history(channel: discord.channel, regex: Union[str, re.Pattern] = None,
-                                           limit: int  = 50,
-                                           user: Optional[discord.User] = None, user_name: Optional[str] = None,
-                                           no_prefix: Optional[bool] = False) -> discord.Message:
+async def get_message_from_channel_history(channel: discord.TextChannel, regex: str | re.Pattern | None = None,
+                                           limit: int  = 50, user: discord.User | None = None, user_name: str | None = None,
+                                           no_prefix: bool | None = False) -> discord.Message | None:
     """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns
     both the message and the matched string. If user is defined, only messages from that user are returned.
 
@@ -61,38 +60,38 @@ async def get_message_from_channel_history(channel: discord.channel, regex: Unio
     ArgumentError if regex, user AND user_name are None.
     """
     if regex is None and user is None and user_name is None:
-        raise ArgumentError('At least one of these arguments has to be defined: regex, user, user_name.')
-    message_history = await channel.history(limit=limit).flatten()
+        raise ArgumentError(None, 'At least one of these arguments has to be defined: regex, user, user_name.')
+    message_history: list[discord.Message] = await channel.history(limit=limit).flatten()
+    message: discord.Message
     for message in message_history:
         if message.content is not None:
             if message.author.bot: continue
-            correct_mention = False
-            if (not no_prefix and not message.content.lower().startswith('rpg ')
-                and not message.content.lower().startswith('testy ')):
+            correct_mention: bool = False
+            if not no_prefix and not message.content.lower().startswith(('rpg ', 'testy ')):
                 if not message.mentions: continue
+                mentioned_user: discord.User | discord.Member
                 for mentioned_user in message.mentions:
                     if mentioned_user.id == settings.EPIC_RPG_ID:
                         correct_mention = True
                         break
                 if not correct_mention: continue
-            if (not no_prefix and not message.content.lower().startswith('rpg ')
-                and not message.content.lower().startswith('testy ') and not correct_mention):
+            if not no_prefix and not message.content.lower().startswith(('rpg ', 'testy ')) and not correct_mention:
                     continue
             if user is not None and message.author != user: continue
             if user_name is not None and await encode_text(user_name) != await encode_text(message.author.name): continue
             if regex is None:
                 return message
             else:
-                message_content = re.sub(rf'<@!?{settings.EPIC_RPG_ID}>', '', message.content.lower())
-                match = re.search(regex, message_content)
+                message_content: str = re.sub(rf'<@!?{settings.EPIC_RPG_ID}>', '', message.content.lower())
+                match: re.Match | None = re.search(regex, message_content)
                 if match: return message
     return None
 
 
-async def get_discord_user(bot: bridge.AutoShardedBot, user_id: int) -> discord.User:
+async def get_discord_user(bot: bridge.AutoShardedBot, user_id: int) -> discord.User | None:
     """Checks the user cache for a user and makes an additional API call if not found. Returns None if user not found."""
     await bot.wait_until_ready()
-    user = bot.get_user(user_id)
+    user: discord.User | None = bot.get_user(user_id)
     if user is None:
         try:
             user = await bot.fetch_user(user_id)
@@ -101,10 +100,11 @@ async def get_discord_user(bot: bridge.AutoShardedBot, user_id: int) -> discord.
     return user
 
 
-async def get_discord_channel(bot: bridge.AutoShardedBot, channel_id: int) -> discord.User:
+async def get_discord_channel(bot: bridge.AutoShardedBot, channel_id: int | None) -> GuildChannel | PrivateChannel | discord.Thread | None:
     """Checks the channel cache for a channel and makes an additional API call if not found. Returns None if channel not found."""
     if channel_id is None: return None
     await bot.wait_until_ready()
+    channel: GuildChannel | PrivateChannel | discord.Thread | None
     channel = bot.get_channel(channel_id)
     if channel is None:
         try:
@@ -129,25 +129,27 @@ async def add_reminder_reaction(message: discord.Message, reminder: reminders.Re
 
 async def add_warning_reaction(message: discord.Message) -> None:
     """Adds a warning reaction if debug mode is on or the guild is a dev guild"""
-    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS:
+    if settings.DEBUG_MODE or message.guild.id in settings.DEV_GUILDS: # pyright: ignore
         await message.add_reaction(emojis.WARNING)
 
 
 # --- Regex ---
-async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match:
+async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match | None:
     """Searches a string for a regex patterns out of a list of patterns and returns the first match.
     Returns None if no match is found.
     """
+    pattern: str
     for pattern in patterns:
-        match = re.search(pattern, string, re.IGNORECASE)
+        match: re.Match | None = re.search(pattern, string, re.IGNORECASE)
         if match: break
     return match
 
 
 # --- Time calculations ---
-async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> List[discord.Member]:
+async def get_guild_member_by_name(guild: discord.Guild | None, user_name: str) -> List[discord.Member]:
     """Returns all guild members found by the given name"""
-    members = []
+    members: list[discord.Member] = []
+    if guild is None: return members
     for member in guild.members:
         if await encode_text(member.name) == await encode_text(user_name) and not member.bot:
             try:
@@ -160,36 +162,37 @@ async def get_guild_member_by_name(guild: discord.Guild, user_name: str) -> List
 
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
     """Returns the time left for a reminder based on a cooldown."""
-    slash_command = True if message.interaction is not None else False
+    slash_command: bool = True if message.interaction is not None else False
     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-    bot_answer_time = message.edited_at if message.edited_at else message.created_at
-    time_elapsed = utils.utcnow() - bot_answer_time
-    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
+    bot_answer_time: datetime = message.edited_at if message.edited_at else message.created_at
+    time_elapsed: timedelta = utils.utcnow() - bot_answer_time
+    user_donor_tier: int = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+    actual_cooldown: int = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
+    activity: str
     if activity in strings.POCKET_WATCH_AFFECTED_ACTIVITIES:
-        pocket_watch_multiplier = user_settings.user_pocket_watch_multiplier
+        pocket_watch_multiplier: float = user_settings.user_pocket_watch_multiplier
     else:
-        pocket_watch_multiplier = 1
+        pocket_watch_multiplier: float = 1
     if cooldown.donor_affected:
-        time_left_seconds = (actual_cooldown
+        time_left_seconds: float = (actual_cooldown
                              * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - pocket_watch_multiplier))
                              - time_elapsed.total_seconds())
     else:
-        time_left_seconds = (actual_cooldown - time_elapsed.total_seconds()) * pocket_watch_multiplier
+        time_left_seconds: float = (actual_cooldown - time_elapsed.total_seconds()) * pocket_watch_multiplier
     if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
         time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
     if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
     if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
-    alert_settings = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
+    alert_settings: users.UserAlert = getattr(user_settings, strings.ACTIVITIES_COLUMNS[activity])
     time_left_seconds *= alert_settings.multiplier
     return timedelta(seconds=ceil(time_left_seconds))
 
 
 async def calculate_time_left_from_timestring(message: discord.Message, timestring: str) -> timedelta:
     """Returns the time left for a reminder based on a timestring."""
-    time_left = await parse_timestring_to_timedelta(timestring.lower())
-    bot_answer_time = message.edited_at if message.edited_at else message.created_at
-    time_elapsed = bot_answer_time - utils.utcnow()
+    time_left: timedelta = await parse_timestring_to_timedelta(timestring.lower())
+    bot_answer_time: datetime = message.edited_at if message.edited_at else message.created_at
+    time_elapsed: timedelta = bot_answer_time - utils.utcnow()
     return time_left - time_elapsed + timedelta(seconds=1)
 
 
@@ -200,16 +203,16 @@ async def check_timestring(string: str) -> str:
     ------
     ErrorInvalidTime if timestring is not a valid timestring.
     """
-    last_time_code = None
-    last_char_was_number = False
-    timestring = ''
-    current_number = ''
-    pos = 0
+    last_time_code: str | None = None
+    last_char_was_number: bool = False
+    timestring: str = ''
+    current_number: str = ''
+    pos: int = 0
     while not pos == len(string):
         slice = string[pos:pos+1]
-        pos = pos+1
-        allowedcharacters_numbers = set('1234567890')
-        allowedcharacters_timecode = set('wdhms')
+        pos += 1
+        allowedcharacters_numbers: set[str] = set('1234567890')
+        allowedcharacters_timecode: set[str] = set('wdhms')
         if set(slice).issubset(allowedcharacters_numbers):
             timestring = f'{timestring}{slice}'
             current_number = f'{current_number}{slice}'
@@ -219,7 +222,7 @@ async def check_timestring(string: str) -> str:
                 if last_time_code is None:
                     timestring = f'{timestring}w'
                     try:
-                        current_number_numeric = int(current_number)
+                        current_number_numeric: int = int(current_number)
                     except:
                         raise exceptions.InvalidTimestringError('Invalid timestring.')
                     last_time_code = 'weeks'
@@ -231,7 +234,7 @@ async def check_timestring(string: str) -> str:
                 if last_time_code in ('weeks',None):
                     timestring = f'{timestring}d'
                     try:
-                        current_number_numeric = int(current_number)
+                        current_number_numeric: int = int(current_number)
                     except:
                         raise exceptions.InvalidTimestringError('Invalid timestring.')
                     last_time_code = 'days'
@@ -243,7 +246,7 @@ async def check_timestring(string: str) -> str:
                 if last_time_code in ('weeks','days',None):
                     timestring = f'{timestring}h'
                     try:
-                        current_number_numeric = int(current_number)
+                        current_number_numeric: int = int(current_number)
                     except:
                         raise exceptions.InvalidTimestringError('Invalid timestring.')
                     last_time_code = 'hours'
@@ -255,7 +258,7 @@ async def check_timestring(string: str) -> str:
                 if last_time_code in ('weeks','days','hours',None):
                     timestring = f'{timestring}m'
                     try:
-                        current_number_numeric = int(current_number)
+                        current_number_numeric: int = int(current_number)
                     except:
                         raise exceptions.InvalidTimestringError('Invalid timestring.')
                     last_time_code = 'minutes'
@@ -267,7 +270,7 @@ async def check_timestring(string: str) -> str:
                 if last_time_code in ('weeks','days','hours','minutes',None):
                     timestring = f'{timestring}s'
                     try:
-                        current_number_numeric = int(current_number)
+                        current_number_numeric: int = int(current_number)
                     except:
                         raise exceptions.InvalidTimestringError('Invalid timestring.')
                     last_time_code = 'seconds'
@@ -287,70 +290,70 @@ async def check_timestring(string: str) -> str:
 
 async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
     """Parses a time string and returns the time as timedelta."""
-    time_left_seconds = 0
+    time_left_seconds: int = 0
 
-    if timestring.find('y') > -1:
-        years_start = 0
-        years_end = timestring.find('y')
-        years = timestring[years_start:years_end]
+    if 'y' in timestring:
+        years_start: int = 0
+        years_end: int = timestring.find('y')
+        years: str = timestring[years_start:years_end]
         timestring = timestring[years_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(years) * 31_536_000)
+            time_left_seconds += int(years) * 31_536_000
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{years}\' to an integer'
             )
-    if timestring.find('w') > -1:
-        weeks_start = 0
-        weeks_end = timestring.find('w')
-        weeks = timestring[weeks_start:weeks_end]
+    if 'w' in timestring:
+        weeks_start: int = 0
+        weeks_end: int = timestring.find('w')
+        weeks: str = timestring[weeks_start:weeks_end]
         timestring = timestring[weeks_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(weeks) * 604_800)
+            time_left_seconds += int(weeks) * 604_800
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{weeks}\' to an integer'
             )
-    if timestring.find('d') > -1:
-        days_start = 0
-        days_end = timestring.find('d')
-        days = timestring[days_start:days_end]
+    if 'd' in timestring:
+        days_start: int = 0
+        days_end: int = timestring.find('d')
+        days: str = timestring[days_start:days_end]
         timestring = timestring[days_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(days) * 86_400)
+            time_left_seconds += int(days) * 86_400
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{days}\' to an integer'
             )
-    if timestring.find('h') > -1:
-        hours_start = 0
-        hours_end = timestring.find('h')
-        hours = timestring[hours_start:hours_end]
+    if 'h' in timestring:
+        hours_start: int = 0
+        hours_end: int = timestring.find('h')
+        hours: str = timestring[hours_start:hours_end]
         timestring = timestring[hours_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(hours) * 3_600)
+            time_left_seconds += int(hours) * 3_600
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{hours}\' to an integer'
             )
-    if timestring.find('m') > -1:
-        minutes_start = 0
-        minutes_end = timestring.find('m')
-        minutes = timestring[minutes_start:minutes_end]
+    if 'm' in timestring:
+        minutes_start: int = 0
+        minutes_end: int = timestring.find('m')
+        minutes: str = timestring[minutes_start:minutes_end]
         timestring = timestring[minutes_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + (int(minutes) * 60)
+            time_left_seconds += int(minutes) * 60
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{minutes}\' to an integer'
             )
-    if timestring.find('s') > -1:
-        seconds_start = 0
-        seconds_end = timestring.find('s')
-        seconds = timestring[seconds_start:seconds_end]
+    if 's' in timestring:
+        seconds_start: int = 0
+        seconds_end: int = timestring.find('s')
+        seconds: str = timestring[seconds_start:seconds_end]
         timestring = timestring[seconds_end+1:].strip()
         try:
-            time_left_seconds = time_left_seconds + int(seconds)
+            time_left_seconds += int(seconds)
         except:
             await errors.log_error(
                 f'Error parsing timestring \'{timestring}\', couldn\'t convert \'{seconds}\' to an integer'
@@ -364,23 +367,18 @@ async def parse_timestring_to_timedelta(timestring: str) -> timedelta:
 
 async def parse_timedelta_to_timestring(time_left: timedelta) -> str:
     """Creates a time string from a timedelta."""
-    weeks = time_left.total_seconds() // 604800
-    weeks = int(weeks)
-    days = (time_left.total_seconds() % 604800) // 86400
-    days = int(days)
-    hours = (time_left.total_seconds() % 86400) // 3600
-    hours = int(hours)
-    minutes = (time_left.total_seconds() % 3600) // 60
-    minutes = int(minutes)
-    seconds = time_left.total_seconds() % 60
-    seconds = int(seconds)
+    weeks: int = int(time_left.total_seconds() // 604800)
+    days: int = int((time_left.total_seconds() % 604800) // 86400)
+    hours: int = int((time_left.total_seconds() % 86400) // 3600)
+    minutes: int = int((time_left.total_seconds() % 3600) // 60)
+    seconds = int(time_left.total_seconds() % 60)
 
-    timestring = ''
-    if not weeks == 0:
+    timestring: str = ''
+    if weeks != 0:
         timestring = f'{timestring}{weeks}w '
-    if not days == 0:
+    if days != 0:
         timestring = f'{timestring}{days}d '
-    if not hours == 0:
+    if hours != 0:
         timestring = f'{timestring}{hours}h '
     timestring = f'{timestring}{minutes}m {seconds}s'
 
@@ -417,15 +415,18 @@ def encode_text_non_async(text: str) -> str:
 async def encode_message(bot_message: discord.Message) -> str:
     """Encodes a message to a version that converts all potentionally problematic unicode characters (async)"""
     if not bot_message.embeds:
-        message = await encode_text(bot_message.content)
+        message: str = await encode_text(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = message_title = ''
-        if embed.author is not None: message_author = await encode_text(str(embed.author))
-        if embed.description is not None: message_description = await encode_text(str(embed.description))
-        if embed.title is not None: message_title = str(embed.title)
+        message_author: str = ''
+        message_description: str = ''
+        message_fields: str = ''
+        message_title: str = ''
+        if embed.author: message_author = await encode_text(str(embed.author))
+        if embed.description: message_description = await encode_text(str(embed.description))
+        if embed.title: message_title = str(embed.title)
         if embed.fields: message_fields = str(embed.fields)
-        message = f'{message_author}{message_description}{message_fields}{message_title}'
+        message: str = f'{message_author}{message_description}{message_fields}{message_title}'
 
     return message
 
@@ -433,15 +434,18 @@ async def encode_message(bot_message: discord.Message) -> str:
 def encode_message_non_async(bot_message: discord.Message) -> str:
     """Encodes a message to a version that converts all potentionally problematic unicode characters (non async)"""
     if not bot_message.embeds:
-        message = encode_text_non_async(bot_message.content)
+        message: str = encode_text_non_async(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = message_title = ''
-        if embed.author is not None: message_author = encode_text_non_async(str(embed.author))
-        if embed.description is not None: message_description = encode_text_non_async(str(embed.description))
-        if embed.title is not None: message_title = str(embed.title)
+        message_author: str = ''
+        message_description: str = ''
+        message_fields: str = ''
+        message_title: str = ''
+        if embed.author: message_author = encode_text_non_async(str(embed.author))
+        if embed.description: message_description = encode_text_non_async(str(embed.description))
+        if embed.title: message_title = str(embed.title)
         if embed.fields: message_fields = str(embed.fields)
-        message = f'{message_author}{message_description}{message_fields}{message_title}'
+        message: str = f'{message_author}{message_description}{message_fields}{message_title}'
 
     return message
 
@@ -449,16 +453,20 @@ def encode_message_non_async(bot_message: discord.Message) -> str:
 async def encode_message_clan(bot_message: discord.Message) -> str:
     """Encodes a message to a version that converts all potentionally problematic unicode characters (async, clan)"""
     if not bot_message.embeds:
-        message = await encode_text(bot_message.content)
+        message: str = await encode_text(bot_message.content)
     else:
         embed: discord.Embed = bot_message.embeds[0]
-        message_author = message_description = message_fields = message_footer = message_title = ''
-        if embed.author is not None: message_author = await encode_text(str(embed.author))
-        if embed.description is not None: message_description = await encode_text(str(embed.description))
-        if embed.title is not None: message_title = await encode_text(str(embed.title))
-        if embed.footer is not None: message_footer = await encode_text(str(embed.footer))
+        message_author: str = ''
+        message_description: str = ''
+        message_fields: str = ''
+        message_footer: str = ''
+        message_title: str = ''
+        if embed.author: message_author = await encode_text(str(embed.author))
+        if embed.description: message_description = await encode_text(str(embed.description))
+        if embed.title: message_title = await encode_text(str(embed.title))
+        if embed.footer: message_footer = await encode_text(str(embed.footer))
         if embed.fields: message_fields = str(embed.fields)
-        message = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
+        message: str = f'{message_author}{message_description}{message_fields}{message_title}{message_footer}'
 
     return message
 
@@ -516,7 +524,7 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
 
 
 # Helper functions
-async def get_training_answer_buttons(message: discord.Message) -> str:
+async def get_training_answer_buttons(message: discord.Message) -> dict[int,dict[str,tuple[str,str,bool]]]:
     """Returns the buttons for the TrainingAnswerView to a slash training question based on the message content."""
     buttons = {}
     message_content = message.content.lower()
@@ -642,7 +650,7 @@ async def get_training_answer_buttons(message: discord.Message) -> str:
             emoji = emoji_match.group(1)
         except:
             await errors.log_error(f'Log emoji not found in training answer function: {message_content}')
-            return
+            raise
         search_strings = [
             'how many ', #English
             'cuantos ', #Spanish
@@ -1114,56 +1122,3 @@ async def parse_embed(message: discord.Message) -> dict[str, str]:
         if embed.title:
             embed_data['title'] = embed.title
     return embed_data
-
-
-async def update_multiplier(user_settings: users.User, activity: str, time_left: timedelta) -> None:
-    """
-    Checks if the provided time left differs from the time left of the active reminder.
-    If yes, it will calculate the difference between the two, and then calculate the new multiplier and update it.
-    To not deviate too much, if the provided time left is <= 10 seconds (hunt: <= 5s), no calculation takes place.
-
-    Arguments
-    ---------
-        user_settings (users.User)
-        message (discord.Message): The message with the cooldown embed.
-        activity (str)
-        time_left (timedelta): The time left found in the cooldown embed.
-    """
-    if user_settings.current_area == 20: return
-    if activity not in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: return
-
-    # TODO: Once refactored to proper activities, make these 2 lines a percentage of the activity cooldown
-    if time_left != 'hunt' and time_left <= timedelta(seconds=10): return
-    if time_left == 'hunt' and time_left <= timedelta(seconds=5): return
-    
-    reminder: reminders.Reminder | None = None
-    try:
-        reminder = await reminders.get_user_reminder(user_settings.user_id, activity)
-    except exceptions.NoDataFoundError:
-        pass
-    if reminder is None: return
-
-    activity_column: str = strings.ACTIVITIES_COLUMNS[activity]
-    alert_settings: users.UserAlert = getattr(user_settings, activity_column)
-
-    # Calculate new multiplier
-    time_left_actual_seconds: float = time_left.total_seconds()
-    time_left_expected_seconds: float = (reminder.end_time - utils.utcnow()).total_seconds()
-    new_multiplier: float =  time_left_actual_seconds / time_left_expected_seconds * alert_settings.multiplier
-    if new_multiplier <= 0: return
-    if new_multiplier > 1 and not user_settings.current_area == 18: new_multiplier = 1.0
-
-    # Round up hunt multiplier to 0.0x
-    """
-    if activity == 'hunt':
-        decimals: int = 3
-        new_multiplier *= 10**decimals
-        new_multiplier = 10 * ceil(new_multiplier / 10)
-        new_multiplier /= 10**decimals
-    """
-
-    # Update multiplier
-    if alert_settings.multiplier != new_multiplier:
-        kwargs: dict[str: float] = {} 
-        kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
-        await user_settings.update(**kwargs)

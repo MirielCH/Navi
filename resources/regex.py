@@ -5,7 +5,7 @@ import re
 from resources import strings
 
 # --- Cooldown timestring ---
-PATTERNS_COOLDOWN_TIMESTRING: tuple[str] = (
+PATTERNS_COOLDOWN_TIMESTRING: tuple[str, ...] = (
     r"wait at least \*\*(.+?)\*\*...", #English
     r"espera al menos \*\*(.+?)\*\*...", #Spanish
     r"espere pelo menos \*\*(.+?)\*\*...", #Portuguese

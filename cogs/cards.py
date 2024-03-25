@@ -87,7 +87,7 @@ class CardsCog(commands.Cog):
                 if time_left < timedelta(0): return
                 activity: str = 'card-hand'
                 if user_settings.multiplier_management_enabled:
-                    await functions.update_multiplier(user_settings, activity, time_left)
+                    await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_card_hand.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, activity, time_left,

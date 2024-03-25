@@ -1756,7 +1756,7 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
                     self.view.remove_item(child)
                     self.view.add_item(
                         ManageMultipliersSelect(
-                        self.view, disabled=select_disabled
+                        self.view, disabled=False # TODO: Set to "select_disabled" when hunt multiplier is fixed
                         )
                     )
         embed: discord.Embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)

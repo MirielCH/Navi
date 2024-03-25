@@ -43,7 +43,7 @@ class HuntCog(commands.Cog):
             message_author = message_title = icon_url = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
-                icon_url = embed.author.icon_url
+                icon_url = str(embed.author.icon_url)
             if embed.title is not None: message_title = str(embed.title)
 
             # Hunt cooldown
@@ -132,7 +132,7 @@ class HuntCog(commands.Cog):
                 if time_left < timedelta(0): return
                 activity: str = 'hunt'
                 if (user_settings.multiplier_management_enabled and interaction_user in embed_users):
-                    await functions.update_multiplier(user_settings, activity, time_left)
+                    await user_settings.update_multiplier(activity, time_left)
                 time_left_seconds = time_left.total_seconds()
                 if user_settings.hunt_rotation_enabled: # This doesn't make much sense?
                     if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
@@ -168,8 +168,7 @@ class HuntCog(commands.Cog):
                     if (user_settings.partner_donor_tier < user_settings.user_donor_tier
                         and interaction_user in embed_users):
                         time_left_seconds = (time_left_seconds
-                                            + (partner_cooldown - user_cooldown)
-                                            - time_elapsed.total_seconds())
+                                            + (partner_cooldown - user_cooldown))
                         if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 time_left = timedelta(seconds=ceil(time_left_seconds))
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)

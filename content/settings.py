@@ -294,11 +294,6 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
             f'{syntax}'
         )
     else:
-        if user_settings.multiplier_management_enabled and user_settings.current_area != 20:
-            await ctx.reply(
-                'Changing multipliers is not possible with automatic multiplier management.'
-            )
-            return
         multiplier_found: float | None = None
         activities_found: list[str] = []
         ignored_activities: list[str] = []
@@ -319,11 +314,16 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                     return
                 activity: str
                 for activity in activities_found:
+                    if activity != 'hunt' and user_settings.multiplier_management_enabled and user_settings.current_area != 20:
+                        await ctx.reply(
+                            f'Changing multipliers (except `hunt`) with this command is not possible with automatic multiplier management.'
+                        )
+                        return
                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
                 activities_found = []
             except ValueError:
                 if arg == 'all':
-                    activities_found = strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER
+                    activities_found = list(strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER)
                 else:
                     if arg in strings.ACTIVITIES_ALIASES: arg = strings.ACTIVITIES_ALIASES[arg]
                     if arg in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER and not arg in activities_found:
@@ -1030,7 +1030,8 @@ async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.Ap
     field_settings: str = (
         f'{emojis.BP} **Automatic multipliers**: {multiplier_management}\n'
         f'{emojis.DETAIL} _Multipiers are not changeable in automatic mode._\n'
-        f'{emojis.DETAIL} _Note that automatic multipliers are inactive in area 20._\n'
+        f'{emojis.DETAIL} _Automatic multipliers are inactive in area 20._\n'
+        f'{emojis.DETAIL} _**Does currently not work for `hunt`**._\n'
     )
     field_multipliers: str = (
         f'{emojis.BP} **`{f'Adventure':<10}`** `{round(user_settings.alert_adventure.multiplier, 3):>5}`\n'

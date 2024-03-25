@@ -536,7 +536,7 @@ class SettingsMultipliersView(discord.ui.View):
         select_disabled: bool = False
         if user_settings.multiplier_management_enabled and user_settings.current_area != 20:
             select_disabled = True
-        self.add_item(components.ManageMultipliersSelect(self, disabled=select_disabled))
+        self.add_item(components.ManageMultipliersSelect(self, disabled=False)) # TODO: Set to "select_disabled" when hunt multiplier is fixed
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

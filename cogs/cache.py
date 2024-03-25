@@ -19,7 +19,7 @@ class CacheCog(commands.Cog):
         if message.author.bot: return
         if message.embeds or message.content is None: return
         correct_mention = False
-        if message.content.lower().startswith('rpg ') or message.content.lower().startswith('testy '):
+        if message.content.lower().startswith(('rpg ', 'testy ')):
             await messages.store_message(message)
             return
         if message.mentions:

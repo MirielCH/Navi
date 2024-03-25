@@ -84,6 +84,17 @@ else:
         print(f'Can\'t convert value "{_embed_color_env}" of variable EMBED_COLOR in the .env file to an integer.')
         sys.exit()
 
+_emoji_guilds_env: str | None = os.getenv('EMOJI_GUILDS')
+if not _emoji_guilds_env:
+    print(ENV_VARIABLE_MISSING.format(var='EMOJI_GUILDS'))
+    sys.exit()
+else:
+    try:
+        EMOJI_GUILDS: Final[list[int]] = [int(guild_id.strip('" ')) for guild_id in _emoji_guilds_env.split(',')]
+    except Exception as error:
+        print(f'{error}\nCheck the syntax of the .env variable EMOJI_GUILDS.')
+        sys.exit()
+
 _link_invite_env: str | None = os.getenv('LINK_INVITE')
 if _link_invite_env:
     LINK_INVITE: Final[str | None] = _link_invite_env.strip('" ')

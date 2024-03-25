@@ -4,6 +4,7 @@
 
 from argparse import ArgumentError
 import sqlite3
+from typing import Any
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -42,7 +43,7 @@ async def get_settings() -> dict:
 
 
 # Write Data
-async def update_setting(name: str, value: str) -> None:
+async def update_setting(name: str, value: Any) -> None:
     """Updates a setting record.
 
     Arguments
@@ -59,12 +60,8 @@ async def update_setting(name: str, value: str) -> None:
     table = 'settings'
     function_name = 'update_setting'
     if name is None or value is None:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_INVALID_ARGUMENTS.format(
-                value=f'value: {value}, name: {name}', argument='name / value', table=table, function=function_name
-            )
-        )
-        raise ArgumentError('Arguments can\'t be None.')
+        await errors.log_error(f'Function {function_name} needs at least one defined argument.')
+        raise ArgumentError(None, 'Arguments can\'t be None.')
     cur = settings.NAVI_DB.cursor()
     all_settings = await get_settings()
     setting = all_settings.get(name, 'No record')
