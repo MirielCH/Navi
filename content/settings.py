@@ -987,7 +987,7 @@ async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.Appli
             title = title if embed_no < 2 else None
         )
         allowed_placeholders = ''
-        for placeholder_match in re.finditer(r'\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
+        for placeholder_match in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
             placeholder = placeholder_match.group(1)
             placeholder_description = strings.PLACEHOLDER_DESCRIPTIONS.get(placeholder, '')
             allowed_placeholders = (

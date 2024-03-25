@@ -624,9 +624,9 @@ class AutoFlexCog(commands.Cog):
                     time_travel_count = 0
                 else:
                     search_patterns = [
-                        r'time travels\*\*: (.+?)(?:$|\n)', #English
-                        r'el tiempo\*\*: (.+?)(?:$|\n)', #Spanish
-                        r'no tempo\*\*: (.+?)(?:$|\n)', #Portuguese
+                        'time travels\*\*: (.+?)(?:$|\n)', #English
+                        'el tiempo\*\*: (.+?)(?:$|\n)', #Spanish
+                        'no tempo\*\*: (.+?)(?:$|\n)', #Portuguese
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
                     if not tt_match:
@@ -686,12 +686,12 @@ class AutoFlexCog(commands.Cog):
                     else:
                         next_tt = False
                     search_patterns = [
-                        r'time travels\*\*: (.+?)\n', #English
-                        r'extra pet slots\*\*: (.+?)\n', #English
-                        r'viajes en el tiempo\*\*: (.+?)\n', #Spanish
-                        r'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
-                        r'viagem no tempo\*\*: (.+?)\n', #Portuguese
-                        r'espaços extras para pets\*\*: (.+?)\n', #Portuguese
+                        'time travels\*\*: (.+?)\n', #English
+                        'extra pet slots\*\*: (.+?)\n', #English
+                        'viajes en el tiempo\*\*: (.+?)\n', #Spanish
+                        'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
+                        'viagem no tempo\*\*: (.+?)\n', #Portuguese
+                        'espaços extras para pets\*\*: (.+?)\n', #Portuguese
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                     if tt_match:

@@ -1,6 +1,6 @@
 # Navi
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python: 3.12](https://img.shields.io/badge/Python-3.12+-brightgreen.svg)](https://www.python.org/) [![Database: SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://www.sqlite.org/index.html)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Python: 3.8](https://img.shields.io/badge/Python-3.8+-brightgreen.svg)](https://www.python.org/) [![Database: SQLite](https://img.shields.io/badge/Database-SQLite-blue.svg)](https://www.sqlite.org/index.html)
 
 Reminder / Helper for EPIC RPG.  
 
@@ -12,7 +12,7 @@ If you don't want to run Navi yourself, you can invite [Navi Lite](https://canar
 
 ## How to run Navi
 
-• Install python 3.12.  
+• Install python 3.8 or higher. I recommend the newest version (3.11).  
 • Install all third party libraries mentioned in `requirements.txt`.  
 • Create a Discord application with a bot user, activate the required intents (see below) and generate a bot token.  
 • Rename `default.env` to `.env` and set all required variables mentioned in the file.  

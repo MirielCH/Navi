@@ -7,9 +7,9 @@ from resources import strings
 
 # --- Cooldown timestring ---
 PATTERNS_COOLDOWN_TIMESTRING = [
-    r"wait at least \*\*(.+?)\*\*...", #English
-    r"espera al menos \*\*(.+?)\*\*...", #Spanish
-    r"espere pelo menos \*\*(.+?)\*\*...", #Portuguese
+    "wait at least \*\*(.+?)\*\*...", #English
+    "espera al menos \*\*(.+?)\*\*...", #Spanish
+    "espere pelo menos \*\*(.+?)\*\*...", #Portuguese
 ]
 
 
