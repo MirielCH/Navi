@@ -14,6 +14,7 @@ from resources import emojis, exceptions, functions, regex, settings, strings
 
 FLEX_TITLES = {
     'artifacts': strings.FLEX_TITLES_ARTIFACTS,
+    'artifacts_bunny_mask': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_claus_belt': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_TITLES_CARD_DROP,
@@ -91,6 +92,7 @@ FLEX_TITLES = {
 
 FLEX_THUMBNAILS = {
     'artifacts': strings.FLEX_THUMBNAILS_ARTIFACTS,
+    'artifacts_bunny_mask': strings.FLEX_THUMBNAILS_ARTIFACTS_BUNNY_MASK,
     'artifacts_claus_belt': strings.FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
@@ -168,6 +170,7 @@ FLEX_THUMBNAILS = {
 
 # Auto flexes that have a column name that differs from the event name
 FLEX_COLUMNS = {
+    'artifacts_bunny_mask': 'artifacts',
     'artifacts_claus_belt': 'artifacts',
     'card_drop_partner': 'card_drop',
     'epic_berry_partner': 'epic_berry',
@@ -1231,6 +1234,13 @@ class AutoFlexCog(commands.Cog):
                         f'Also, thank you for helping our effort to lessen the stuck-in-chimney-spam.'
                     )
                     event = 'artifacts_claus_belt'
+                elif artifact_name == 'bunny mask':
+                    description = (
+                        f'Now what is this then. **{user.name}** found a {artifact_emoji} **{artifact_name}**!\n'
+                        f'This looks a little silly, dear, but sure, wear it.\n'
+                        f'We won\'t judge.'
+                    )
+                    event = 'artifacts_bunny_mask'    
                 else:
                     description = (
                         f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
