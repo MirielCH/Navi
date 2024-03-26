@@ -1656,6 +1656,14 @@ FLEX_THUMBNAILS_ARTIFACTS: Final[tuple[str, ...]] = (
     'https://media.tenor.com/wVOgdD9hHrEAAAAC/anime-treasure.gif',
 )
 
+FLEX_THUMBNAILS_ARTIFACTS_BUNNY_MASK: Final[tuple[str, ...]] = (
+    'https://media1.tenor.com/m/1zya5psiGUQAAAAd/he-is-risen-praise-him.gif',
+    'https://media1.tenor.com/m/62qzG52IPegAAAAC/bunny-floss-dancing.gif',
+    'https://media1.tenor.com/m/itoD_tHWovAAAAAC/easter-happyeaster.gif',
+    'https://media1.tenor.com/m/RCSTVkvYo04AAAAd/happy-easter-my-little-bunnies-aunt-susan.gif',
+    'https://media1.tenor.com/m/eYZDjHIOdKsAAAAd/happy-easter-easter.gif',
+)
+
 FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT: Final[tuple[str, ...]] = (
     'https://media.tenor.com/Gz-aSR82810AAAAd/theodoros.gif',
     'https://media.tenor.com/N_vsbVvbeH4AAAAC/santa-claus-fat.gif',
