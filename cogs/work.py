@@ -168,6 +168,7 @@ class WorkCog(commands.Cog):
                 'claus belt', #All languages, artifacts
                 'vampire teeth', #All languages, artifacts
                 'chocolate box', #All languages, artifacts
+                'bunny mask', #All languages, artifacts
             ]
             search_strings = [
                 '** got ', #English
