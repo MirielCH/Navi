@@ -326,7 +326,8 @@ class FunCog(commands.Cog):
                     'se aburrió y se fue', #Spanish
                     'ficou entediado e foi embora', #Portuguese
                 ]
-                if any(search_string in field.value.lower() for search_string in search_strings):
+                if (any(search_string in field.value.lower() for search_string in search_strings)
+                    and not 'bunny' in field.value.lower()):
                     user = await functions.get_interaction_user(message)
                     if user is None:
                         user_command_message = (
