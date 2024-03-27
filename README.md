@@ -13,20 +13,22 @@ If you don't want to run Navi yourself, you can invite [Navi Lite](https://canar
 ## How to run Navi
 
 • Install python 3.12.  
-• Install all third party libraries mentioned in `requirements.txt`.  
+• Install all third party libraries mentioned in `requirements.txt` (`python3.12 -m pip install -r requirements.txt`).  
 • Create a Discord application with a bot user, activate the required intents (see below) and generate a bot token.  
-• Rename `default.env` to `.env` and set all required variables mentioned in the file.  
+• Rename `default.env` to `.env` and set the variables mentioned in the file.  
 • Rename `database/default_db.db` to `database/navi_db.db`.  
-• Upload all emojis in `images/emojis` to private servers.  
-• Change all emojis in `resources/emojis.py` to the ones you uploaded.  
-• Run `bot.py`.  
+• Upload all emojis in `images/emojis` to private servers. **DO NOT CHANGE THEIR NAMES**.  
+• Run the bot by running `bot.py` (`python3.12 bot.py`).  
 • Invite Navi to all your emoji servers and all other servers you want to use it. Note the required permissions below.  
+• Run the command `/dev emoji-update` to update the emojis in the code to your uploaded ones.  
+• Run the command `/dev emoji-check` to make sure all emojis are present.  
 
 ## How to update Navi
 
-• Merge your old `resources/emojis.py` with the new one, so you have the new code but keep your own emoji IDs.  
 • Replace all other `.py` files with the new ones.  
-• Upload new emojis (if any) and change their ID in `resources/emojis.py`.  
+• Upload new emojis (if any) in `images/emojis` to your emoji servers. **DO NOT CHANGE THEIR NAMES**.  
+• Run the command `/dev emoji-update` to update the emojis in the code to your uploaded ones.  
+• Run the command `/dev emoji-check` to make sure all emojis are present.  
 • Restart the bot.  
 
 ## Required intents
