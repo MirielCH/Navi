@@ -406,7 +406,11 @@ class ChristmasCog(commands.Cog):
                     or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_ADVENTURE_TOP)
                 )
             ):
-                if 'christmas slime' in message_content.lower(): return
+                event_mobs = [
+                   'christmas slime',
+                   'bunny slime', 
+                ]
+                if any(mob in message_content.lower() for mob in event_mobs): return
                 user_id = user_name = partner_name = None
                 together = False
                 user = await functions.get_interaction_user(message)
