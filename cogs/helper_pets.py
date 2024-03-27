@@ -97,7 +97,7 @@ class HelperPetsCog(commands.Cog):
                             user_name = user_name_match.group(1)
                             if not bunny_event:
                                 user_command_message = (
-                                    await messages.find_message(message.channel.id, regex.COMMAND_TRAINING,
+                                    await messages.find_message(message.channel.id, regex.COMMAND_TRAINING_BUNNY_PET,
                                                                 user_name=user_name)
                                 )
                                 if user_command_message is None:
