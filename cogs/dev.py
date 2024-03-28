@@ -342,7 +342,7 @@ class DevCog(commands.Cog):
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
         description = ''
-        guilds = sorted(self.bot.guilds, key=lambda guild: guild.name)
+        guilds = sorted(self.bot.guilds, key=lambda guild: guild.member_count, reverse=True)
         for guild in guilds:
             if len(description) > 4000:
                 description = f'{description}\n{emojis.BP} ... and more'

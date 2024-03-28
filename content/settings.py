@@ -1318,6 +1318,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
+        f'{emojis.DETAIL} _Don\'t like Navi\'s pet reminders? Get [Army Helper]({strings.LINK_ARMY_HELPER})!_\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
         f'{emojis.BP} **Vote**: {await functions.bool_to_text(user_settings.alert_vote.enabled)}\n'

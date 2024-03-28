@@ -317,6 +317,7 @@ class CooldownsCog(commands.Cog):
                 cd_message = cooldown[2]
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
                 if time_left < timedelta(0): continue
+                time_left += timedelta(seconds=1)
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(interaction_user.id, cd_activity, time_left,

@@ -92,6 +92,10 @@ FARM_HELPER_MODES = {
 # Links
 LINK_CHANGELOG = 'https://github.com/MirielCH/Navi/releases'
 LINK_GITHUB = 'https://github.com/MirielCH/Navi'
+LINK_ARMY_HELPER = (
+        'https://discord.com/oauth2/authorize?client_id=902703931275247637&permissions=274878385216&'
+        'scope=applications.commands%20bot'
+    )
 
 # --- Default messages ---
 DEFAULT_MESSAGE = '{name} Hey! It\'s time for {command}!'
