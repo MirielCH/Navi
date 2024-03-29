@@ -94,6 +94,10 @@ FARM_HELPER_MODES: Final[dict[int, str]] = {
 # --- Links ---
 LINK_CHANGELOG: Final[str] = 'https://github.com/MirielCH/Navi/releases'
 LINK_GITHUB: Final[str] = 'https://github.com/MirielCH/Navi'
+LINK_ARMY_HELPER: Final[str] = (
+        'https://discord.com/oauth2/authorize?client_id=902703931275247637&permissions=274878385216&'
+        'scope=applications.commands%20bot'
+    )
 
 # --- Default messages ---
 DEFAULT_MESSAGE: Final[str] = '{name} Hey! It\'s time for {command}!'
@@ -247,6 +251,7 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES: Final[tuple[str, ...]] = (
     'adventure',
     'arena',
     #'boo',
+    'card-hand',
     'chimney',
     'daily',
     'duel',
