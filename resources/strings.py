@@ -249,6 +249,7 @@ SLEEPY_POTION_AFFECTED_ACTIVITIES = (
     'adventure',
     'arena',
     #'boo',
+    'card-hand',
     'chimney',
     'daily',
     'duel',
