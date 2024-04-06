@@ -118,7 +118,6 @@ class BoostsCog(commands.Cog):
                     if active_item_activity == 'flask-potion': potion_flask_active = True
                     if active_item_activity in ('mega-boost', 'potion-potion'): auto_healing_active = True
                     if not user_settings.alert_boosts.enabled: continue
-                    kwargs = {}
                     active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
                     time_left = await functions.calculate_time_left_from_timestring(message, time_string)
@@ -133,6 +132,7 @@ class BoostsCog(commands.Cog):
                         await reminders.insert_user_reminder(interaction_user.id, active_item_activity, time_left,
                                                              message.channel.id, reminder_message)
                     )
+                kwargs = {}
                 if user_settings.auto_healing_active != auto_healing_active:
                     kwargs['auto_healing_active'] = auto_healing_active
                 if user_settings.round_card_active != round_card_active:
