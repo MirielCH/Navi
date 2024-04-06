@@ -165,11 +165,8 @@ class DevCog(commands.Cog):
         interaction = await ctx.respond(
             f'This command will execute the following actions:\n'
             f'{emojis.BP} Create a backup of your `resources/emojis.py` as `resources/emojis.py.backup`\n'
-            f'{emojis.DETAIL} An existing backup will be overwritten!\n'
-            f'{emojis.BP} Check all emojis in `resources/emojis.py` and update the IDs from your emoji guilds\n'
-            f'{emojis.DETAIL} This only detects emojis **with the same name**!\n'
-            f'{emojis.BP} List missing emojis if there are any\n\n'
-            f'Do you want to proceed?',
+            f'{emojis.BP} Update all emojis in `resources/emojis.py` with the emojis in your emoji servers\n'
+            f'{emojis.DETAIL} This only detects emojis **with the same name**!\n',
             view=view,
         )
         view.interaction_message = interaction
@@ -179,6 +176,7 @@ class DevCog(commands.Cog):
                 await interaction.edit(f'**{ctx_author_name}**, you didn\'t answer in time.')
             case 'confirm':
                 start_time: datetime = utils.utcnow()
+                await interaction.edit(view=None)
                 interaction = await ctx.respond('Starting update...')
                 old_emoji_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py')
                 old_emoji_backup_file_path: str = os.path.join(settings.BOT_DIR, 'resources/emojis.py.backup')

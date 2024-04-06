@@ -9,6 +9,7 @@ from typing import Final, NamedTuple, TextIO
 from dotenv import load_dotenv
 
 
+
 ENV_VARIABLE_MISSING: Final[str] = (
     'Required setting {var} in the .env file is missing. Please check your default.env file and update your .env file '
     'accordingly.'

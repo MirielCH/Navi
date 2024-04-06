@@ -426,6 +426,7 @@ BOOSTS_ALIASES: Final[dict[str, str]] = {
     'halloween': 'halloween-boost',
     'horse-festival': 'horse-festival-boost',
     'unepic': 'unepic-boost',
+    '💢-unepic': 'unepic-boost',
 }
 
 ACTIVITIES_SLASH_COMMANDS: Final[dict[str, str]] = {
