@@ -113,22 +113,12 @@ class BoostsCog(commands.Cog):
                     active_item_activity = active_item_match.group(1).replace(' ','-')
                     active_item_activity = strings.BOOSTS_ALIASES.get(active_item_activity, active_item_activity)
                     if active_item_activity in all_boosts: all_boosts.remove(active_item_activity)
-                    if active_item_activity == 'dragon-breath-potion':
-                        potion_dragon_breath_active = True
-                        if not user_settings.potion_dragon_breath_active:
-                            await user_settings.update(potion_dragon_breath_active=True)
-                        if not user_settings.alert_boosts.enabled: return
-                    if active_item_activity == 'round-card':
-                        round_card_active = True
-                        if not user_settings.round_card_active:
-                            await user_settings.update(round_card_active=True)
-                    if active_item_activity == 'flask-potion':
-                        potion_flask_active = True
-                        if not user_settings.potion_flask_active:
-                            await user_settings.update(potion_flask_active=True)
-                    if active_item_activity in ('mega-boost', 'potion-potion'):
-                        auto_healing_active = True
+                    if active_item_activity == 'dragon-breath-potion': potion_dragon_breath_active = True
+                    if active_item_activity == 'round-card': round_card_active = True
+                    if active_item_activity == 'flask-potion': potion_flask_active = True
+                    if active_item_activity in ('mega-boost', 'potion-potion'): auto_healing_active = True
                     if not user_settings.alert_boosts.enabled: continue
+                    kwargs = {}
                     active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
                     time_left = await functions.calculate_time_left_from_timestring(message, time_string)
@@ -143,14 +133,23 @@ class BoostsCog(commands.Cog):
                         await reminders.insert_user_reminder(interaction_user.id, active_item_activity, time_left,
                                                              message.channel.id, reminder_message)
                     )
+                if user_settings.auto_healing_active != auto_healing_active:
+                    kwargs['auto_healing_active'] = auto_healing_active
+                if user_settings.round_card_active != round_card_active:
+                    kwargs['round_card_active'] = round_card_active
+                if user_settings.potion_flask_active != potion_flask_active:
+                    kwargs['potion_flask_active'] = potion_flask_active
+                if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
+                    kwargs['potion_dragon_breath_active'] = potion_dragon_breath_active
+                if kwargs:
+                    await user_settings.update(**kwargs)
+                if not user_settings.alert_boosts.enabled: return
                 for activity in all_boosts:
                     try:
                         active_reminder = await reminders.get_user_reminder(interaction_user.id, activity)
                         await active_reminder.delete()
                     except exceptions.NoDataFoundError:
                         continue
-                if user_settings.auto_healing_active != auto_healing_active:
-                    await user_settings.update(auto_healing_active=auto_healing_active)
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
