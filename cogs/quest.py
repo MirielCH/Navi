@@ -385,7 +385,7 @@ class QuestCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if not user_settings.bot_enabled: return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
                 except exceptions.NoDataFoundError:

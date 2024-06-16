@@ -1271,14 +1271,6 @@ FLEX_TITLES_CARD_DROP_PARTNER: Final[tuple[str, ...]] = (
     'Maybe it was an act of kindness? Just kidding.',
 )
 
-FLEX_TITLES_CARD_HAND: Final[tuple[str, ...]] = (
-    'I thought this was an RPG?',
-    'Did they just rob the casino?',
-    'Quite the impressive card trick there',
-    'Congratulations, your cheat worked',
-    'Oh look, it\'s Danny Ocean',
-)
-
 FLEX_TITLES_CARD_SLOTS: Final[tuple[str, ...]] = (
     'But... do you have a full set yet?',
     'You sure this card is legit?',
@@ -1421,6 +1413,21 @@ FLEX_TITLES_LB_VOID_PARTNER: Final[tuple[str, ...]] = (
     'Noone was ever supposed to see this line',
     'That\'s it, there\'s nothing else to achieve',
     'Bloody hell',
+)
+
+FLEX_TITLES_LB_ETERNAL: Final[tuple[str, ...]] = (
+    'Wait, is this new?',
+    'It\'s so.... blue!',
+    'Sparkly sparkly',
+    'But is it ACTUALLY eternal?',
+    'Should I open it? Should I open it?',
+)
+
+FLEX_TITLES_LB_ETERNAL_PARTNER: Final[tuple[str, ...]] = (
+    'Shut the front door and call me Sally',
+    '... what?',
+    'Maybe a divorce ain\'t the worst idea',
+    'That\'s it, I\'m going polyamorous',
 )
 
 FLEX_TITLES_EDGY_ULTRA: Final[tuple[str, ...]] = (
@@ -1702,14 +1709,6 @@ FLEX_THUMBNAILS_CARD_DROP_PARTNER: Final[tuple[str, ...]] = (
     'https://media.tenor.com/a4qDuOMfC4IAAAAC/its-mine-lotr.gif',
 )
 
-FLEX_THUMBNAILS_CARD_HAND: Final[tuple[str, ...]] = (
-    'https://media1.tenor.com/m/sN90GsIvQaMAAAAd/joker-card-with-v-for-vendetta2005-card.gif',
-    'https://media1.tenor.com/m/IS9iZvS1zp4AAAAC/%E0%A4%87%E0%A4%95%E0%A5%8D%E0%A4%95%E0%A4%BE-utkarsh.gif',
-    'https://media1.tenor.com/m/SGwiW6exaA8AAAAC/fringe-joshuajackson.gif',
-    'https://media1.tenor.com/m/_kvMjbg2F9gAAAAC/snoopy-poker.gif',
-    'https://media1.tenor.com/m/Nc5wxoSpLY0AAAAC/cat-money.gif',
-)
-
 FLEX_THUMBNAILS_CARD_SLOTS: Final[tuple[str, ...]] = (
     'https://media.tenor.com/S593fyjCciAAAAAi/monkey-chimp.gif',
     'https://media.tenor.com/NZB5RaiKFcAAAAAC/poker-face-poker.gif',
@@ -1844,6 +1843,19 @@ FLEX_THUMBNAILS_LB_VOID: Final[tuple[str, ...]] = (
 FLEX_THUMBNAILS_LB_VOID_PARTNER: Final[tuple[str, ...]] = (
     'https://media.tenor.com/kumodwVv1bcAAAAC/patrick-the-maniacs-in-mail-box.gif',
     'https://media.giphy.com/media/atfHlwAhizfxdtdw60/giphy.gif',
+)
+
+FLEX_THUMBNAILS_LB_ETERNAL: Final[tuple[str, ...]] = (
+    'https://media1.tenor.com/m/WF9ahkVEZZUAAAAC/eevee-eevee-wow.gif',
+    'https://media1.tenor.com/m/B0CyGcl_eIEAAAAC/shiny-moana.gif',
+    'https://media1.tenor.com/m/CZUsUDsW07cAAAAC/firefly-thinking.gif',
+    'https://media1.tenor.com/m/ETzkr7t7pfwAAAAC/tally-craven-motherland-fort-salem.gif',
+    'https://media1.tenor.com/m/WAmX-u888l0AAAAd/lets-open-it-up-unlock.gif',
+)
+
+FLEX_THUMBNAILS_LB_ETERNAL_PARTNER: Final[tuple[str, ...]] = (
+    'https://media1.tenor.com/m/zblEiac5pUkAAAAd/hugh-jackman-shocked.gif',
+    'https://media1.tenor.com/m/Mkbsp1hUhMMAAAAC/shocked-surprised.gif',
 )
 
 FLEX_THUMBNAILS_EDGY_ULTRA: Final[tuple[str, ...]] = (

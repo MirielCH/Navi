@@ -483,6 +483,10 @@ def update_database() -> bool:
             "ALTER TABLE users ADD multiplier_management_enabled INTEGER NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_boo_multiplier REAL NOT NULL DEFAULT (1)",
         ]
+    if db_version < 23:
+        sqls += [
+            "ALTER TABLE guilds ADD auto_flex_lb_eternal_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
 
     # Run SQLs
     sql: str

@@ -36,6 +36,7 @@ class Guild():
     auto_flex_hal_boo_enabled: bool
     auto_flex_lb_a18_enabled: bool
     auto_flex_lb_edgy_ultra_enabled: bool
+    auto_flex_lb_eternal_enabled: bool
     auto_flex_lb_godly_enabled: bool
     auto_flex_lb_godly_tt_enabled: bool
     auto_flex_lb_omega_enabled: bool
@@ -83,6 +84,7 @@ class Guild():
         self.auto_flex_hal_boo_enabled = new_settings.auto_flex_hal_boo_enabled
         self.auto_flex_lb_a18_enabled = new_settings.auto_flex_lb_a18_enabled
         self.auto_flex_lb_edgy_ultra_enabled = new_settings.auto_flex_lb_edgy_ultra_enabled
+        self.auto_flex_lb_eternal_enabled = new_settings.auto_flex_lb_eternal_enabled
         self.auto_flex_lb_godly_enabled = new_settings.auto_flex_lb_godly_enabled
         self.auto_flex_lb_godly_tt_enabled = new_settings.auto_flex_lb_godly_tt_enabled
         self.auto_flex_lb_omega_enabled = new_settings.auto_flex_lb_omega_enabled
@@ -130,6 +132,7 @@ class Guild():
             auto_flex_hal_boo_enabled: bool
             auto_flex_lb_a18_enabled: bool
             auto_flex_lb_edgy_ultra_enabled: bool
+            auto_flex_lb_eternal_enabled: bool
             auto_flex_lb_godly_enabled: bool
             auto_flex_lb_godly_tt_enabled: bool
             auto_flex_lb_omega_enabled: bool
@@ -195,6 +198,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_hal_boo_enabled = bool(record['auto_flex_hal_boo_enabled']),
             auto_flex_lb_a18_enabled = bool(record['auto_flex_lb_a18_enabled']),
             auto_flex_lb_edgy_ultra_enabled = bool(record['auto_flex_lb_edgy_ultra_enabled']),
+            auto_flex_lb_eternal_enabled = bool(record['auto_flex_lb_eternal_enabled']),
             auto_flex_lb_godly_enabled = bool(record['auto_flex_lb_godly_enabled']),
             auto_flex_lb_godly_tt_enabled = bool(record['auto_flex_lb_godly_tt_enabled']),
             auto_flex_lb_omega_enabled = bool(record['auto_flex_lb_omega_enabled']),
