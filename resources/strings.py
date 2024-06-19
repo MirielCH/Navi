@@ -104,6 +104,15 @@ DEFAULT_MESSAGE: Final[str] = '{name} Hey! It\'s time for {command}!'
 DEFAULT_MESSAGE_EVENT: Final[str] = (
     '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485>.'
 )
+DEFAULT_MESSAGES_EVENT_PINGS: Final[dict[str, str]] = {
+    'arena': '@here Hey! Click or type `JOIN` to get some cookies!',
+    'coin': '@here Hey! Click or type `CATCH` to get some coins!',
+    'fish': '@here Hey! Click or type `LURE` to get some fish!',
+    'legendary_boss': '@here Hey! Click or type `TIME TO FIGHT` to kill a dragon!',
+    'log': '@here Hey! Click or type `CUT` to get some logs!',
+    'lootbox': '@here Hey! Click or type `SUMMON` to get a lootbox!',
+    'miniboss': '@here Hey! Click or type `FIGHT` to get some coins!',
+}
 DEFAULT_MESSAGE_CUSTOM_REMINDER: Final[str] = 'Hey! This is your reminder for **{message}**!'
 
 DEFAULT_MESSAGES: Final[dict[str, str]] = {
@@ -137,6 +146,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'minirace': DEFAULT_MESSAGE,
     'partner': '{name} Hey! **{partner}** found {loot} for you!',
+    'hunt-partner': '{name} Hey! Your partner **{partner}** is ready to {command}!',
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
@@ -322,6 +332,7 @@ ACTIVITIES: Final[tuple[str, ...]] = (
     'horse',
     'horse-race',
     'hunt',
+    'hunt-partner',
     'lootbox',
     'lottery',
     'love-share',
@@ -362,6 +373,7 @@ ACTIVITIES_COMMANDS: Final[tuple[str, ...]] = (
     'guild',
     'horse',
     'hunt',
+    'hunt-partner',
     'lootbox',
     #'love-share',
     #'megarace',
@@ -454,6 +466,7 @@ ACTIVITIES_SLASH_COMMANDS: Final[dict[str, str]] = {
     'horse': 'horse breeding',
     'horse-race': 'horse race',
     'hunt': 'hunt',
+    'hunt-partner': 'hunt',
     'inverted-potion': 'alchemy',
     'juice-potion': 'alchemy',
     'jumpy-potion': 'alchemy',
@@ -556,6 +569,11 @@ ACTIVITIES_ALIASES: Final[dict[str, str]] = {
     'boost': 'boosts',
     'potion': 'boosts',
     'potions': 'boosts',
+    'partnerhunt': 'hunt-partner',
+    'hunttogether': 'hunt-partner',
+    'hunt-together': 'hunt-partner',
+    'partner-hunt': 'hunt-partner',
+    'huntpartner': 'hunt-partner',
 }
 
 ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
@@ -607,6 +625,7 @@ ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
     'mod-buff': 'alert_boosts',
     'monster-potion': 'alert_boosts',
     'partner': 'alert_partner',
+    'hunt-partner': 'alert_hunt_partner',
     'party-popper': 'alert_boosts',
     'pet-tournament': 'alert_pet_tournament',
     'pets': 'alert_pets',
@@ -657,6 +676,7 @@ ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: Final[tuple[str, ...]] = (
     'epic',
     'farm',
     'hunt',
+    'hunt-partner',
     'lootbox',
     'quest',
     'training',
@@ -664,6 +684,15 @@ ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: Final[tuple[str, ...]] = (
     'work',
 )
 
+EVENT_PINGS: Final[dict[str, str]] = {
+    'arena': 'Arena',
+    'coin': 'Coin rain',
+    'log': 'Epic tree',
+    'legendary_boss': 'Legendary boss',
+    'lootbox': 'Lootbox summoning',
+    'fish': 'Megalodon',
+    'miniboss': 'Miniboss',
+}
 
 # --- Lootboxes ---
 LOOTBOXES: Final[dict[str, str]] = {

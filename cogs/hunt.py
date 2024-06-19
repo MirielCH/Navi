@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import timedelta
-from math import ceil
+from math import ceil, floor
 import re
 
 import discord
@@ -92,28 +92,16 @@ class HuntCog(commands.Cog):
                     user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
                     user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
                     user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
-                    if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
-                        together = True
-                    if 'hardmode'in user_command_message_content.lower():
-                        hardmode = True
-                    if 'together'in user_command_message_content.lower():
-                        together = True
-                        if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
-                            together = False
-                    if 'alone'in user_command_message_content.lower():
-                        alone = True
-                    if 'old'in user_command_message_content.lower():
-                        old = True
+                    if 'hardmode'in user_command_message_content.lower(): hardmode = True
+                    if 'together'in user_command_message_content.lower(): together = True
+                    if 'alone'in user_command_message_content.lower(): alone = True
+                    if 'old'in user_command_message_content.lower(): old = True
                     last_hunt_mode = ''
                     if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
-                    if together: last_hunt_mode = f'{last_hunt_mode} together'
                     if alone: last_hunt_mode = f'{last_hunt_mode} alone'
                     if old: last_hunt_mode = f'{last_hunt_mode} old'
                     last_hunt_mode = last_hunt_mode.strip()
-                    if not user_settings.hunt_rotation_enabled:
-                        if last_hunt_mode == '': last_hunt_mode = None
-                        await user_settings.update(last_hunt_mode=last_hunt_mode)
-                if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled: return
+                if not user_settings.bot_enabled or not user_settings.alert_hunt.enabled or not user_settings.alert_hunt_partner.enabled: return
                 if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
                 user_command = await functions.get_slash_command(user_settings, 'hunt')
                 if user_settings.last_hunt_mode != '':
@@ -129,54 +117,44 @@ class HuntCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                if time_left < timedelta(0): return
-                activity: str = 'hunt'
                 if (user_settings.multiplier_management_enabled and interaction_user in embed_users):
-                    await user_settings.update_multiplier(activity, time_left)
+                    await user_settings.update_multiplier('hunt', time_left)
+                if user_settings.hunt_reminders_combined:
+                    try:
+                        hunt_reminder = await reminders.get_user_reminder(interaction_user.id, 'hunt')
+                        if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                        return
+                    except exceptions.NoDataFoundError:
+                        pass
+                else:
+                    try:
+                        hunt_partner_reminder = await reminders.get_user_reminder(interaction_user.id, 'hunt-partner')
+                    except exceptions.NoDataFoundError:
+                        hunt_partner_reminder = None
+                    if hunt_partner_reminder:
+                        time_left = max(time_left, hunt_partner_reminder.end_time - utils.utcnow())
+                if time_left < timedelta(0): return
                 time_left_seconds = time_left.total_seconds()
-                if user_settings.hunt_rotation_enabled: # This doesn't make much sense?
-                    if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                    time_left_seconds = time_left_seconds * user_settings.alert_hunt.multiplier * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier)))
-                    if not together and user_settings.round_card_active:
-                        time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
-                    if not together and user_settings.potion_flask_active:
-                        time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
-                    if not together and user_settings.chocolate_box_unlocked:
-                        time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER
-                elif together:
-                    partner_settings = None
-                    if user_settings.partner_id is not None:
-                        try:
-                            partner_settings: users.User = await users.get_user(user_settings.partner_id)
-                        except exceptions.FirstTimeUserError:
-                            pass
-                    cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
-                    actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
-                    partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
-                    user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                    partner_hunt_multiplier = partner_settings.alert_hunt.multiplier if partner_settings is not None else 1
-                    partner_cooldown = (actual_cooldown
-                                        * (settings.DONOR_COOLDOWNS[partner_donor_tier] - (1 - user_settings.partner_pocket_watch_multiplier))
-                                        * partner_hunt_multiplier)
-                    if user_settings.partner_chocolate_box_unlocked:
-                        partner_cooldown *= settings.CHOCOLATE_BOX_MULTIPLIER
-                    user_cooldown = (actual_cooldown
-                                    * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - user_settings.user_pocket_watch_multiplier))
-                                    * user_settings.alert_hunt.multiplier)
-                    if user_settings.chocolate_box_unlocked:
-                        user_cooldown *= settings.CHOCOLATE_BOX_MULTIPLIER
-                    if (user_settings.partner_donor_tier < user_settings.user_donor_tier
-                        and interaction_user in embed_users):
-                        time_left_seconds = (time_left_seconds
-                                            + (partner_cooldown - user_cooldown))
-                        if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 time_left = timedelta(seconds=ceil(time_left_seconds))
-                reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
-                overwrite_message = False if user_settings.hunt_rotation_enabled else True
+                if user_settings.hunt_reminders_combined:
+                    activity: str = 'hunt'
+                    command: str = user_command
+                    reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
+                else:
+                    if interaction_user in embed_users:
+                        activity: str = 'hunt'
+                        command: str = user_command
+                        reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
+                    else:
+                        activity: str = 'hunt-partner'
+                        command: str = await functions.get_slash_command(user_settings, 'hunt')
+                        reminder_message = (user_settings.alert_hunt_partner.message
+                                            .replace('{command}', command)
+                                            .replace('{partner}', user_settings.partner_name))
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(interaction_user.id, activity, time_left,
                                                          message.channel.id, reminder_message,
-                                                         overwrite_message=overwrite_message)
+                                                         overwrite_message=False)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
@@ -222,7 +200,7 @@ class HuntCog(commands.Cog):
                 if any(search_string in message_content.lower() for search_string in search_strings_hardmode):
                     hardmode = True
                 if any(search_string in message_content.lower() for search_string in search_strings_together):
-                    together = found_together = True
+                    together = True
                 if any(search_string in message_content.lower() for search_string in search_strings_alone):
                     alone = True
                 old = True if '__**' not in message_content.lower() else False
@@ -238,9 +216,9 @@ class HuntCog(commands.Cog):
                         'both players', #English
                     ]
                     if any(search_string in message_content.lower() for search_string in search_strings_together):
-                        together = found_together = True
+                        together = True
                     event_mob = True
-                if found_together:
+                if together:
                     search_patterns = [
                         r"\*\*(.+?)\*\* and \*\*(.+?)\*\*", #English
                         r"\*\*(.+?)\*\* y \*\*(.+?)\*\*", #Spanish
@@ -291,22 +269,22 @@ class HuntCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if found_together:
+                if together:
                     await user_settings.update(partner_name=partner_name)
                 if not user_settings.bot_enabled: return
                 current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                    command = 'hunt' if not together else 'hunt together'
+                    await tracking.insert_log_entry(user.id, message.guild.id, command, current_time)
                 if user_settings.partner_id is not None:
                     partner: users.User = await users.get_user(user_settings.partner_id)
                     if partner.partner_channel_id is not None and partner.alert_partner.enabled and partner.bot_enabled:
                         partner_alerts_enabled = True
-                if not user_settings.alert_hunt.enabled and not partner_alerts_enabled: return
+                if not user_settings.alert_hunt.enabled and not partner_alerts_enabled and not user_settings.alert_hunt_partner.enabled: return
                 user_global_name = user.global_name if user.global_name is not None else user.name
-                if user_settings.alert_hunt.enabled:
-                    user_command = await functions.get_slash_command(user_settings, 'hunt')
+                if user_settings.alert_hunt.enabled or user_settings.alert_hunt_partner.enabled:
+                    hunt_command = user_command = await functions.get_slash_command(user_settings, 'hunt')
                     last_hunt_mode = ''
-                    if user_settings.hunt_rotation_enabled: together = not found_together
                     if not event_mob:
                         if hardmode:
                             last_hunt_mode = f'{last_hunt_mode} hardmode'
@@ -333,19 +311,12 @@ class HuntCog(commands.Cog):
                             user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
                             user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
                             user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
-                            if 'hardmode'in user_command_message_content.lower():
-                                hardmode = True
-                            if 'together'in user_command_message_content.lower():
-                                together = True
-                                if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
-                                    together = False
-                            if 'alone'in user_command_message_content.lower():
-                                alone = True
-                            if 'old'in user_command_message_content.lower():
-                                old = True
+                            if 'hardmode'in user_command_message_content.lower(): hardmode = True
+                            if 'together'in user_command_message_content.lower(): together = True
+                            if 'alone' in user_command_message_content.lower(): alone = True
+                            if 'old' in user_command_message_content.lower(): old = True
                             last_hunt_mode = ''
                             if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
-                            if together: last_hunt_mode = f'{last_hunt_mode} together'
                             if alone: last_hunt_mode = f'{last_hunt_mode} alone'
                             if old: last_hunt_mode = f'{last_hunt_mode} old'
                             last_hunt_mode = last_hunt_mode.strip()
@@ -354,7 +325,7 @@ class HuntCog(commands.Cog):
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 time_elapsed = current_time - bot_answer_time
-                if found_together:
+                if together:
                     monsters_christmas = [
                         '**Elf**',
                         '**Christmas Reindeer**',
@@ -371,68 +342,77 @@ class HuntCog(commands.Cog):
                         if monster.lower() in message_content_partner.lower():
                             partner_christmas_area = True
                             break
-                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier):
-                    donor_tier_partner_hunt = user_settings.partner_donor_tier
-                    if not user_settings.hunt_rotation_enabled:
-                        donor_tier = user_settings.partner_donor_tier
-                    else:
-                        donor_tier = user_settings.user_donor_tier
-                else:
-                    donor_tier = donor_tier_partner_hunt = user_settings.user_donor_tier
+                donor_tier = user_settings.user_donor_tier
                 donor_tier = 3 if donor_tier > 3 else donor_tier
+                donor_tier_partner_hunt = user_settings.partner_donor_tier
                 donor_tier_partner_hunt = 3 if donor_tier_partner_hunt > 3 else donor_tier_partner_hunt
                 actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 if cooldown.donor_affected:
                     time_left_seconds = (actual_cooldown
-                                        * settings.DONOR_COOLDOWNS[donor_tier]
-                                        - time_elapsed.total_seconds())
+                                         * settings.DONOR_COOLDOWNS[donor_tier]
+                                         - floor(time_elapsed.total_seconds()))
                     time_left_seconds_partner_hunt = (actual_cooldown
-                                                    * settings.DONOR_COOLDOWNS[donor_tier_partner_hunt]
-                                                    - time_elapsed.total_seconds())
+                                                      * settings.DONOR_COOLDOWNS[donor_tier_partner_hunt]
+                                                      - floor(time_elapsed.total_seconds()))
                 else:
-                    time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - time_elapsed.total_seconds()
-                if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                    and user_settings.partner_donor_tier < 3 and partner_christmas_area):
+                    time_left_seconds = time_left_seconds_partner_hunt = actual_cooldown - floor(time_elapsed.total_seconds())
+                    
+                if user_settings.christmas_area_enabled:
                     time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                elif user_settings.christmas_area_enabled and not found_together:
-                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                elif (user_settings.christmas_area_enabled and not partner_christmas_area
-                      and user_settings.hunt_rotation_enabled and found_together):
-                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                elif user_settings.christmas_area_enabled and partner_christmas_area and found_together:
-                    time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
-                if user_settings.round_card_active and not found_together:
+                if user_settings.round_card_active:
                     time_left_seconds *= settings.ROUND_CARD_MULTIPLIER                    
-                if user_settings.potion_flask_active and not found_together:
+                if user_settings.potion_flask_active:
                     time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
-                if user_settings.chocolate_box_unlocked and not found_together:
-                    time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER
-                partner_hunt_multiplier = partner.alert_hunt.multiplier if partner is not None else 1
-                chocolate_box_multiplier = 1
-                if together and not user_settings.hunt_rotation_enabled:
-                    pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))
-                    if user_settings.partner_chocolate_box_unlocked:
-                        chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
+                    
+                if together and partner_christmas_area:
+                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIER
+                if together and partner is not None:
+                    if partner.round_card_active:
+                        time_left_seconds_partner_hunt *= settings.ROUND_CARD_MULTIPLIER                    
+                    if partner.potion_flask_active:
+                        time_left_seconds_partner_hunt *= settings.POTION_FLASK_MULTIPLIER
+                    if partner.chocolate_box_unlocked:
                         time_left_seconds_partner_hunt *= settings.CHOCOLATE_BOX_MULTIPLIER
-                else:
-                    pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))
-                    if user_settings.chocolate_box_unlocked:
-                        chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
+
+                partner_hunt_multiplier = partner.alert_hunt.multiplier if partner is not None else 1
+                chocolate_box_multiplier = chocolate_box_multiplier_partner = 1
+                pocket_watch_multiplier = 1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))
+                pocket_watch_multiplier_partner = 1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier))
+                if user_settings.chocolate_box_unlocked:
+                    chocolate_box_multiplier = settings.CHOCOLATE_BOX_MULTIPLIER
+                if partner is not None:
+                    if partner.chocolate_box_unlocked:
+                        chocolate_box_multiplier_partner = settings.CHOCOLATE_BOX_MULTIPLIER
                 time_left = timedelta(seconds=(time_left_seconds * user_settings.alert_hunt.multiplier
                                       * pocket_watch_multiplier * chocolate_box_multiplier))
                 time_left_partner_hunt = timedelta(seconds=(time_left_seconds_partner_hunt * partner_hunt_multiplier
-                                                   * (1 - (1.535 * (1 - user_settings.partner_pocket_watch_multiplier)))))
-                if time_left < timedelta(0): return
-                if user_settings.alert_hunt.enabled:
+                                                   * user_settings.alert_hunt_partner.multiplier
+                                                   * pocket_watch_multiplier_partner * chocolate_box_multiplier_partner))
+                await user_settings.update(hunt_end_time=current_time + time_left)
+                if user_settings.hunt_reminders_combined:
+                    time_left = max(time_left, time_left_partner_hunt)
+                reminder_created = False
+                if user_settings.alert_hunt.enabled and time_left >= timedelta(0):
                     reminder_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(user.id, 'hunt', time_left,
                                                              message.channel.id, reminder_message)
                     )
+                    reminder_created = True
+                if (user_settings.alert_hunt_partner.enabled and time_left_partner_hunt >= timedelta(0) and together
+                    and not user_settings.hunt_reminders_combined):
+                    reminder_message = (user_settings.alert_hunt_partner.message.replace('{command}', hunt_command)
+                                        .replace('{partner}', user_settings.partner_name))
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user.id, 'hunt-partner', time_left_partner_hunt,
+                                                             message.channel.id, reminder_message)
+                    )
+                    reminder_created = True
+                if reminder_created:
                     asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'hunt'))
                     await functions.add_reminder_reaction(message, reminder, user_settings)
                 partner_start = len(message_content)
-                if found_together and partner is not None:
+                if together and partner is not None:
                     await partner.update(partner_hunt_end_time=current_time + time_left_partner_hunt)
                     if partner_alerts_enabled:
                         partner_discord = await functions.get_discord_user(self.bot, user_settings.partner_id)
@@ -540,7 +520,7 @@ class HuntCog(commands.Cog):
                 interaction = await functions.get_interaction_user(message)
                 if interaction is None:
                     user_name = user_command = last_hunt_mode = user_command_message = None
-                    hardmode = together = found_together = alone = old = False
+                    hardmode = together = alone = old = False
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE, message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
@@ -561,27 +541,20 @@ class HuntCog(commands.Cog):
                     if user_settings.tracking_enabled:
                         await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
                     if not user_settings.alert_hunt.enabled: return
-                    if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
-                        together = True
                     user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
                     user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
                     user_command_message_content = re.sub(r'\ba\b', 'alone', user_command_message_content)
                     user_command_message_content = re.sub(r'\bo\b', 'old', user_command_message_content)
-                    if user_settings.hunt_rotation_enabled and 'together' not in user_settings.last_hunt_mode:
-                        together = True
                     if 'hardmode'in user_command_message_content.lower():
                         hardmode = True
                     if 'together'in user_command_message_content.lower():
                         together = True
-                        if user_settings.hunt_rotation_enabled and 'together' in user_settings.last_hunt_mode:
-                            together = False
                     if 'alone'in user_command_message_content.lower():
                         alone = True
                     if 'old'in user_command_message_content.lower():
                         old = True
                     last_hunt_mode = ''
                     if hardmode: last_hunt_mode = f'{last_hunt_mode} hardmode'
-                    if together: last_hunt_mode = f'{last_hunt_mode} together'
                     if alone: last_hunt_mode = f'{last_hunt_mode} alone'
                     if old: last_hunt_mode = f'{last_hunt_mode} old'
                     last_hunt_mode = last_hunt_mode.strip()
@@ -593,18 +566,14 @@ class HuntCog(commands.Cog):
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     time_elapsed = current_time - bot_answer_time
-                    if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                        and not user_settings.hunt_rotation_enabled):
-                        donor_tier = user_settings.partner_donor_tier
-                    else:
-                        donor_tier = user_settings.user_donor_tier
+                    donor_tier = user_settings.user_donor_tier
                     donor_tier = 3 if donor_tier > 3 else donor_tier
                     if cooldown.donor_affected:
                         time_left_seconds = (cooldown.actual_cooldown_mention()
                                             * settings.DONOR_COOLDOWNS[donor_tier]
-                                            - time_elapsed.total_seconds())
+                                            - floor(time_elapsed.total_seconds()))
                     else:
-                        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                        time_left_seconds = actual_cooldown - floor(time_elapsed.total_seconds())
                     if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                     if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
                     if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
@@ -638,32 +607,22 @@ class HuntCog(commands.Cog):
                     if not user_settings.alert_hunt.enabled: return
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     time_elapsed = current_time - bot_answer_time
-                    found_together = True if user_settings.partner_id is not None else False
+                    together = True if user_settings.partner_id is not None else False
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
-                    if user_settings.hunt_rotation_enabled:
-                        if 'together' in user_settings.last_hunt_mode:
-                            last_hunt_mode = user_settings.last_hunt_mode.replace('together','').replace(' ','')
-                        else:
-                            last_hunt_mode = f'{user_settings.last_hunt_mode} together'.strip()
-                        await user_settings.update(last_hunt_mode=last_hunt_mode)
                     if user_settings.last_hunt_mode != '':
                         if user_settings.slash_mentions_enabled:
                             user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
                         else:
                             user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
-                    if (found_together and user_settings.partner_donor_tier < user_settings.user_donor_tier
-                        and not user_settings.hunt_rotation_enabled):
-                        donor_tier = user_settings.partner_donor_tier
-                    else:
-                        donor_tier = user_settings.user_donor_tier
+                    donor_tier = user_settings.user_donor_tier
                     donor_tier = 3 if donor_tier > 3 else donor_tier
                     if cooldown.donor_affected:
                         time_left_seconds = (cooldown.actual_cooldown_slash()
                                             * settings.DONOR_COOLDOWNS[donor_tier]
-                                            - time_elapsed.total_seconds())
+                                            - floor(time_elapsed.total_seconds()))
                     else:
-                        time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                        time_left_seconds = actual_cooldown - floor(time_elapsed.total_seconds())
                     time_left = timedelta(seconds=time_left_seconds * user_settings.alert_hunt.multiplier
                                           * (1 - (1.535 * (1 - user_settings.user_pocket_watch_multiplier))))
                     if time_left < timedelta(0): return

@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from math import floor
 import re
 
 import discord
@@ -144,7 +145,7 @@ class ValentineCog(commands.Cog):
                 actual_cooldown = cooldown.actual_cooldown_slash() if slash_command else cooldown.actual_cooldown_mention()
                 time_left_seconds = (actual_cooldown
                                      * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - user_settings.user_pocket_watch_multiplier))
-                                     - time_elapsed.total_seconds())
+                                     - floor(time_elapsed.total_seconds()))
                 if user_settings.chocolate_box_unlocked:
                     time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER # Unclear if accurate
                 time_left = timedelta(seconds=time_left_seconds)

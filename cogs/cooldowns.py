@@ -93,7 +93,6 @@ class CooldownsCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
             # Anniversary event reduction update
             search_patterns = [
                 r'anniversary event cooldown reduction\*\*: (\d+?)%',
@@ -316,6 +315,8 @@ class CooldownsCog(commands.Cog):
                 cd_activity = cooldown[0]
                 cd_timestring = cooldown[1]
                 cd_message = cooldown[2]
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20 and cd_activity != 'vote':
+                    continue
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()

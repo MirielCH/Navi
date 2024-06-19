@@ -17,22 +17,23 @@ from resources import functions, logs, settings
 intents: discord.Intents = discord.Intents.none()
 intents.guilds = True   # for on_guild_join() and all guild objects
 intents.messages = True   # for command detection
-intents.members = True  # To be able to look up user info
+intents.members = True  # to be able to look up user info
 intents.message_content = True # for command detection
 
 allowed_mentions: discord.AllowedMentions = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
-
-
+member_cache_flags = discord.MemberCacheFlags(joined=True, voice=False, interaction=False)
 bot_activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name='your commands')
+
 if settings.DEBUG_MODE:
     bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
                                                        case_insensitive=True, intents=intents, owner_id=settings.OWNER_ID,
                                                        allowed_mentions=allowed_mentions, debug_guilds=settings.DEV_GUILDS,
-                                                       activity=bot_activity)
+                                                       activity=bot_activity, member_cache_flags=member_cache_flags)
 else:
     bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
                                                        case_insensitive=True, intents=intents, allowed_mentions=allowed_mentions,
-                                                       owner_id=settings.OWNER_ID, activity=bot_activity)
+                                                       owner_id=settings.OWNER_ID, activity=bot_activity,
+                                                       member_cache_flags=member_cache_flags)
 
 
 @bot.event
@@ -96,6 +97,7 @@ EXTENSIONS: list[str] = [
         'cogs.dungeon_miniboss',
         'cogs.epic_items',
         'cogs.epic_shop',
+        'cogs.event_pings',
         'cogs.events',
         'cogs.farm',
         'cogs.fun',
@@ -115,11 +117,13 @@ EXTENSIONS: list[str] = [
         'cogs.lottery',
         'cogs.main',
         'cogs.maintenance',
+        'cogs.misc',
         'cogs.nsmb_bigarena',
         'cogs.patreon',
         'cogs.pets_tournament',
         'cogs.pets',
         'cogs.portals',
+        'cogs.profile',
         'cogs.quest',
         'cogs.reminders_custom',
         'cogs.reminders_lists',

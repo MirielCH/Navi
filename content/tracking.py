@@ -129,6 +129,7 @@ async def design_field(timeframe: timedelta, user: discord.User | discord.Member
     report: tracking.LogReport = await tracking.get_log_report(user.id, timeframe)
     field_content: str = (
         f'{emojis.BP} `hunt`: {report.hunt_amount:,}\n'
+        f'{emojis.BP} `hunt together`: {report.hunt_together_amount:,}\n'
         f'{emojis.BP} `work`: {report.work_amount:,}\n'
         f'{emojis.BP} `farm`: {report.farm_amount:,}\n'
         f'{emojis.BP} `training`: {report.training_amount:,}\n'

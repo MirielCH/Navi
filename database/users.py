@@ -3,8 +3,9 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+from math import ceil
 import sqlite3
-from typing import Any, NamedTuple, Tuple, TYPE_CHECKING
+from typing import Any, NamedTuple, Tuple
 
 from discord import utils
 
@@ -57,6 +58,7 @@ class User():
     alert_horse_breed: UserAlert
     alert_horse_race: UserAlert
     alert_hunt: UserAlert
+    alert_hunt_partner: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
     alert_love_share: UserAlert
@@ -96,7 +98,8 @@ class User():
     halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
-    hunt_rotation_enabled: bool
+    hunt_end_time: datetime
+    hunt_reminders_combined: bool
     inventory: UserInventory
     last_adventure_mode: str
     last_farm_seed: str
@@ -194,6 +197,7 @@ class User():
         self.alert_horse_breed = new_settings.alert_horse_breed
         self.alert_horse_race = new_settings.alert_horse_race
         self.alert_hunt = new_settings.alert_hunt
+        self.alert_hunt_partner = new_settings.alert_hunt_partner
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
         self.alert_love_share = new_settings.alert_love_share
@@ -233,7 +237,8 @@ class User():
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
-        self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
+        self.hunt_end_time = new_settings.hunt_end_time
+        self.hunt_reminders_combined = new_settings.hunt_reminders_combined
         self.inventory = new_settings.inventory
         self.last_adventure_mode = new_settings.last_adventure_mode
         self.last_farm_seed = new_settings.last_farm_seed
@@ -396,6 +401,10 @@ class User():
             alert_hunt_message: str
             alert_hunt_multiplier: float
             alert_hunt_visible: bool
+            alert_hunt_partner_enabled: bool
+            alert_hunt_partner_message: str
+            alert_hunt_partner_multiplier: float
+            alert_hunt_partner_visible: bool
             alert_lootbox_enabled: bool
             alert_lootbox_message: str
             alert_lootbox_multiplier: float
@@ -468,7 +477,8 @@ class User():
             halloween_helper_enabled: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
-            hunt_rotation_enabled: bool
+            hunt_end_time: datetime
+            hunt_reminders_combined: bool
             inventory_bread: int
             inventory_carrot: int
             inventory_potato: int
@@ -551,18 +561,23 @@ class User():
             time_left (timedelta): The time left found in the cooldown embed.
         """
         if self.current_area == 20: return
-        if activity == 'hunt': return # TODO: Remove this line when fixed
         if activity not in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: return
 
         # TODO: Once refactored to proper activities, make these 2 lines a percentage of the activity cooldown
-        if time_left != 'hunt' and time_left <= timedelta(seconds=10): return
-        if time_left == 'hunt' and time_left <= timedelta(seconds=5): return
+        if activity != 'hunt' and time_left <= timedelta(seconds=10): return
+        if activity =='hunt' and time_left <= timedelta(seconds=5): return
 
+        current_time = utils.utcnow()
         # Get active reminder. If no reminder is active, there is nothing to do.
-        try:
-            reminder: reminders.Reminder = await reminders.get_user_reminder(self.user_id, activity)
-        except exceptions.NoDataFoundError:
-            return
+        if activity != 'hunt':
+            try:
+                reminder: reminders.Reminder = await reminders.get_user_reminder(self.user_id, activity)
+                time_left_expected_seconds = (reminder.end_time - current_time).total_seconds()
+            except exceptions.NoDataFoundError:
+                return
+        else:
+            if self.hunt_end_time <= current_time: return
+            time_left_expected_seconds = (self.hunt_end_time - current_time).total_seconds()
 
         # Get the current multiplier
         activity_column: str = strings.ACTIVITIES_COLUMNS[activity]
@@ -571,19 +586,16 @@ class User():
 
         # Calculate the new multiplier
         time_left_actual_seconds: float = time_left.total_seconds()
-        time_left_expected_seconds: float = (reminder.end_time - utils.utcnow()).total_seconds()
         new_multiplier: float =  time_left_actual_seconds / time_left_expected_seconds * current_multiplier
         if new_multiplier <= 0: return
         if new_multiplier > 1 and not self.current_area == 18: new_multiplier = 1.0
 
         # Round up hunt multiplier to 0.0x to avoid super small fluctuations
-        """
         if activity == 'hunt':
             decimals: int = 3
             new_multiplier *= 10**decimals
             new_multiplier = 10 * ceil(new_multiplier / 10)
             new_multiplier /= 10**decimals
-        """
 
         # Update multiplier
         if current_multiplier != new_multiplier:
@@ -700,6 +712,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                    message=record['alert_hunt_message'],
                                    multiplier=float(record['alert_hunt_multiplier']),
                                    visible=bool(record['alert_hunt_visible'])),
+            alert_hunt_partner = UserAlert(enabled=bool(record['alert_hunt_partner_enabled']),
+                                   message=record['alert_hunt_partner_message'],
+                                   multiplier=float(record['alert_hunt_partner_multiplier']),
+                                   visible=bool(record['alert_hunt_partner_visible'])),
             alert_lootbox = UserAlert(enabled=bool(record['alert_lootbox_enabled']),
                                       message=record['alert_lootbox_message'],
                                       multiplier=float(record['alert_lootbox_multiplier']),
@@ -784,7 +800,8 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
-            hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
+            hunt_end_time = datetime.fromisoformat(record['hunt_end_time']).replace(tzinfo=timezone.utc),
+            hunt_reminders_combined = bool(record['hunt_reminders_combined']),
             inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
                                       potato=(record['inventory_potato']),
                                       present_eternal=(record['inventory_present_eternal']),
@@ -1085,6 +1102,10 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_hunt_message: str
         alert_hunt_multiplier: float
         alert_hunt_visible: bool
+        alert_hunt_partner_enabled: bool
+        alert_hunt_partner_message: str
+        alert_hunt_partner_multiplier: float
+        alert_hunt_partner_visible: bool
         alert_lootbox_enabled: bool
         alert_lootbox_message: str
         alert_lootbox_multiplier: float
@@ -1157,7 +1178,8 @@ async def _update_user(user: User, **kwargs) -> None:
         halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
-        hunt_rotation_enabled: bool
+        hunt_end_time: datetime
+        hunt_reminders_combined: bool
         inventory_bread: int
         inventory_carrot: int
         inventory_potato: int

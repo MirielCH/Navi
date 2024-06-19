@@ -2,7 +2,7 @@
 
 from argparse import ArgumentError
 from datetime import datetime, timedelta, timezone
-from math import ceil
+from math import ceil, floor
 import re
 from typing import Any, Coroutine,List
 
@@ -176,9 +176,9 @@ async def calculate_time_left_from_cooldown(message: discord.Message, user_setti
     if cooldown.donor_affected:
         time_left_seconds: float = (actual_cooldown
                              * (settings.DONOR_COOLDOWNS[user_donor_tier] - (1 - pocket_watch_multiplier))
-                             - time_elapsed.total_seconds())
+                             - floor(time_elapsed.total_seconds()))
     else:
-        time_left_seconds: float = (actual_cooldown - time_elapsed.total_seconds()) * pocket_watch_multiplier
+        time_left_seconds: float = (actual_cooldown - floor(time_elapsed.total_seconds())) * pocket_watch_multiplier
     if activity in strings.XMAS_AREA_AFFECTED_ACTIVITIES and user_settings.christmas_area_enabled:
         time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
     if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
@@ -192,7 +192,7 @@ async def calculate_time_left_from_timestring(message: discord.Message, timestri
     """Returns the time left for a reminder based on a timestring."""
     time_left: timedelta = await parse_timestring_to_timedelta(timestring.lower())
     bot_answer_time: datetime = message.edited_at if message.edited_at else message.created_at
-    time_elapsed: timedelta = bot_answer_time - utils.utcnow()
+    time_elapsed: timedelta = utils.utcnow() - bot_answer_time
     return time_left - time_elapsed + timedelta(seconds=1)
 
 
@@ -1122,3 +1122,32 @@ async def parse_embed(message: discord.Message) -> dict[str, str]:
         if embed.title:
             embed_data['title'] = embed.title
     return embed_data
+
+
+async def update_area(user_settings: users.User, new_area: int) -> None:
+    """
+    Updates the current area. If leaving area 18 with active multiplier management,
+    it will also reset multipliers.
+
+    Args:
+        user_settings (users.User)
+        new_area (int)
+    """
+    kwargs: dict[str, Any] = {
+        'current_area': new_area,
+    }
+    # Reset multipliers when entering area 20
+    if new_area == 20 and user_settings.current_area != 20 and user_settings.multiplier_management_enabled:
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
+        kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+    await user_settings.update(**kwargs)

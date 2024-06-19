@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from math import floor
 import re
 
 import discord
@@ -337,9 +338,9 @@ class QuestCog(commands.Cog):
                 if cooldown.donor_affected:
                     time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                        - time_elapsed.total_seconds())
+                                        - floor(time_elapsed.total_seconds()))
                 else:
-                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                    time_left_seconds = actual_cooldown - floor(time_elapsed.total_seconds())
                 if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
                 if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
@@ -495,9 +496,9 @@ class QuestCog(commands.Cog):
                 if cooldown.donor_affected:
                     time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                        - time_elapsed.total_seconds())
+                                        - floor(time_elapsed.total_seconds()))
                 else:
-                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                    time_left_seconds = actual_cooldown - floor(time_elapsed.total_seconds())
                 if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
                 if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER

@@ -99,10 +99,10 @@ class MainCog(commands.Cog):
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
         elif isinstance(error, commands.BotMissingPermissions):
+            missing_permissions = ', '.join([permission.title().replace('_',' ') for permission in error.missing_permissions])
             await ctx.respond(
                 f'You can\'t use this command in this channel.\n'
-                f'To enable this, I need the permission `View Channel` / '
-                f'`Read Messages` in this channel.',
+                f'To enable this, I need the permission(s) `{missing_permissions}` in this channel.',
                 ephemeral=True
             )
         elif isinstance(error, commands.CommandOnCooldown):

@@ -349,6 +349,9 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = '`chimney unstuck lol`'
         elif activity == 'maintenance':
             command = '`maintenance`'
+        elif activity == 'hunt-partner':
+            command = await functions.get_slash_command(user_settings, 'hunt', False)
+            command = f'{command} `({user_settings.partner_name})`'
         else:
             command = await functions.get_slash_command(user_settings, strings.ACTIVITIES_SLASH_COMMANDS[activity], False)
 
@@ -403,6 +406,20 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
     current_time = utils.utcnow()
     if 'hunt' in ready_command_activities and user_settings.partner_hunt_end_time > current_time:
         ready_command_activities.remove('hunt')
+    if 'hunt-partner' in ready_command_activities:
+        if user_settings.partner_id is not None:
+            try:
+                partner_hunt_reminder: reminders.Reminder = await reminders.get_user_reminder(user_settings.partner_id, 'hunt')
+                ready_command_activities.remove('hunt-partner')
+            except exceptions.NoDataFoundError:
+                pass
+        try:
+            if user_settings.hunt_reminders_combined:
+                ready_command_activities.remove('hunt-partner')
+            if user_settings.partner_name is None:
+                ready_command_activities.remove('hunt-partner')
+        except ValueError:
+            pass
     if 'farm' in ready_command_activities and not user_settings.ascended and user_settings.current_area in [1,2,3]:
         ready_command_activities.remove('farm')
     if 'training' in ready_command_activities and not user_settings.ascended and user_settings.current_area == 1:

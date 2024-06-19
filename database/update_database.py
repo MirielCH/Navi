@@ -487,6 +487,29 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE guilds ADD auto_flex_lb_eternal_enabled INTEGER NOT NULL DEFAULT (1)",
         ]
+    if db_version < 24:
+        sqls += [
+            "ALTER TABLE users ADD alert_hunt_partner_enabled INTEGER DEFAULT (1) NOT NULL",
+            "ALTER TABLE users ADD alert_hunt_partner_message TEXT NOT NULL DEFAULT ('{name} Hey! Your partner {partner} is ready to {command}!')",
+            "ALTER TABLE users ADD alert_hunt_partner_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_hunt_partner_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD hunt_reminders_combined INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD hunt_end_time DATETIME NOT NULL DEFAULT ('1970-01-01 00:00:00')",
+            "ALTER TABLE guilds ADD event_arena_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_arena_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `JOIN` to get some cookies!')",
+            "ALTER TABLE guilds ADD event_coin_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_coin_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `CATCH` to get some coins!')",
+            "ALTER TABLE guilds ADD event_fish_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_fish_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `LURE` to get some fish!')",
+            "ALTER TABLE guilds ADD event_legendary_boss_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_legendary_boss_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `TIME TO FIGHT` to kill a dragon!')",
+            "ALTER TABLE guilds ADD event_log_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_log_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `CUT` to get some logs!')",
+            "ALTER TABLE guilds ADD event_lootbox_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_lootbox_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `SUMMON` to get a lootbox!')",
+            "ALTER TABLE guilds ADD event_miniboss_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_miniboss_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `FIGHT` to get some coins!')",
+        ]
 
     # Run SQLs
     sql: str

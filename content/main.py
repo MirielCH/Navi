@@ -7,7 +7,7 @@ import os
 import psutil
 import random
 import sys
-from typing import List, Union
+from typing import Any, List, Union
 
 import discord
 from discord import utils
@@ -66,7 +66,7 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
     api_latency: timedelta = end_time - start_time
     img_navi = discord.File
     embed = discord.Embed
-    img_navi, embed = await embed_about(bot, api_latency)
+    img_navi, embed = await embed_about(bot, ctx, api_latency)
     view: LinksView = LinksView()
     channel_permissions = ctx.channel.permissions_for(ctx.guild.me) # TODO: Typing
     if not channel_permissions.attach_files:
@@ -177,13 +177,19 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{await functions.get_navi_slash_command(bot, "purge")}, `{prefix}purge`\n'
         f'{emojis.BP} **[Slash command overview]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "slashboard")}, `{prefix}sb`\n'
+        f'{emojis.BP} **[Calculator]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "calculator")}, `{prefix}calc`\n'
         f'{emojis.BP} **[About Navi]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "about")}, `{prefix}about`\n'
     )
     server_settings = (
+        f'_Requires `Manage server` permission._\n'
         f'{emojis.BP} **[Manage server settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings server")}, `{prefix}ss`\n'
-        f'{emojis.DETAIL} _Requires `Manage server` permission._\n'
+        f'{await functions.get_navi_slash_command(bot, "server-settings main")}, `{prefix}ss`\n'
+        f'{emojis.BP} **[Manage auto-flex settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "server-settings auto-flex")}, `{prefix}ssa`\n'
+        f'{emojis.BP} **[Manage event-ping settings]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "server-settings event-pings")}, `{prefix}sse`\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'
@@ -213,7 +219,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     return embed
 
 
-async def embed_about(bot: bridge.AutoShardedBot, api_latency: timedelta) -> discord.Embed:
+async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_latency: timedelta) -> tuple[discord.File, discord.Embed]:
     """Bot info embed"""
     user_count: int = await users.get_user_count()
     all_settings: dict[str, str] = await settings_db.get_settings()
@@ -223,11 +229,20 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: timedelta) -> dis
     general: str = (
         f'{emojis.BP} `{len(bot.guilds):,}` servers\n'
         f'{emojis.BP} `{user_count:,}` users\n'
-        f'{emojis.BP} `{round(bot.latency * 1000):,}` ms bot latency\n'
+        f'{emojis.BP} `{len(bot.shards):,}` shards\n'
+        f'{emojis.BP} `{round(bot.latency * 1000):,}` ms average bot latency\n'
         f'{emojis.BP} `{round(api_latency.total_seconds() * 1000):,}` ms API latency\n'
         f'{emojis.BP} Online for {format_timespan(uptime)}\n'
         f'{emojis.BP} Bot owner: <@{settings.OWNER_ID}>\n'
     )
+    if ctx.guild is not None:
+        current_shard: discord.ShardInfo | None = bot.get_shard(ctx.guild.shard_id)
+        bot_latency: str = f'`{round(current_shard.latency * 1000):,}` ms' if current_shard is not None else '`N/A`'
+        current_shard_status: str = (
+            f'{emojis.BP} Shard `{ctx.guild.shard_id + 1}` of `{len(bot.shards):,}`\n'
+            f'{emojis.BP} {bot_latency} bot latency\n'
+            f'{emojis.BP} `{round(api_latency.total_seconds() * 1000):,}` ms API latency'
+        )
     app_process: psutil.Process = psutil.Process(os.getpid())
     navi_memory: float = app_process.memory_info().vms / (1024 ** 2)
     system_memory: psutil = psutil.virtual_memory()
@@ -272,6 +287,8 @@ async def embed_about(bot: bridge.AutoShardedBot, api_latency: timedelta) -> dis
         description = 'I am as free as a fairy.'
     )
     embed.add_field(name='BOT STATS', value=general, inline=False)
+    if ctx.guild is not None:
+        embed.add_field(name='CURRENT SHARD', value=current_shard_status, inline=False)
     embed.add_field(name='CREATOR', value=creator, inline=False)
     embed.add_field(name='DEV STUFF', value=dev_stuff, inline=False)
     embed.add_field(name='SPECIAL THANKS TO', value=f'{emojis.BP} {random.choice(thanks_to)}', inline=False)

@@ -11,35 +11,6 @@ from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings, strings
 
 
-async def update_area(user_settings: users.User, new_area: int) -> None:
-    """
-    Updates the current area. If leaving area 18 with active multiplier management,
-    it will also reset multipliers.
-
-    Args:
-        user_settings (users.User)
-        new_area (int)
-    """
-    kwargs: dict[str, Any] = {
-        'current_area': new_area,
-    }
-    # Reset multipliers when entering area 20
-    if new_area == 20 and user_settings.current_area != 20 and user_settings.multiplier_management_enabled:
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
-    await user_settings.update(**kwargs)
-
-
 class CurrentAreaCog(commands.Cog):
     """Cog that contains all commands related to the ruby counter"""
     def __init__(self, bot: bridge.AutoShardedBot):
@@ -68,7 +39,6 @@ class CurrentAreaCog(commands.Cog):
             embed: discord.Embed = message.embeds[0]
             embed_description = embed_field = embed_author = ''
             if embed.description is not None: embed_description = str(embed.description)
-            if embed.fields: embed_field = str(embed.fields[0].value)
             if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
@@ -104,58 +74,13 @@ class CurrentAreaCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                await update_area(user_settings, 1)
+                await functions.update_area(user_settings, 1)
                 try:
                     time_potion_reminder = await reminders.get_user_reminder(user.id, 'time-potion')
                     await time_potion_reminder.delete()
                 except exceptions.NoDataFoundError:
                     pass
-
-            # Set current area from profile
-            search_strings = [
-                "— profile", #All languages
-                "— progress", #All languages
-            ]
-            if (any(search_string in embed_author.lower() for search_string in search_strings)
-                and not 'epic npc' in embed_author.lower()):
-                embed_users = []
-                interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is None:
-                    user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS)
-                    )
-                    if user_command_message is None: return
-                    interaction_user = user_command_message.author
-                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                if user_id_match:
-                    user_id = int(user_id_match.group(1))
-                    embed_users.append(message.guild.get_member(user_id))
-                else:
-                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
-                    if user_name_match:
-                        user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
-                    if not user_name_match or not embed_users:
-                        await functions.add_warning_reaction(message)
-                        return
-                if interaction_user not in embed_users: return
-                try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled: return
-                area_match = re.search(r'rea\*\*: (.+?) \(', embed_field.lower())
-                if not area_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Area not found in current area profile or progress message.', message)
-                    return
-                new_area = area_match.group(1)
-                if new_area == 'top':
-                    new_area = 21
-                else:
-                    new_area = int(new_area)
-                if user_settings.current_area != new_area:
-                    await update_area(user_settings, new_area)
+                
 
         if not message.embeds:
             message_content = message.content
@@ -242,7 +167,7 @@ class CurrentAreaCog(commands.Cog):
                 new_area = await functions.get_area(f'**{mob_name}**')
                 if user_settings.current_area != new_area:
                     if new_area == 20 and user_settings.current_area != 19: return
-                    await update_area(user_settings, new_area)
+                    await functions.update_area(user_settings, new_area)
 
             # Set current area from move command
             search_strings = [
@@ -287,7 +212,7 @@ class CurrentAreaCog(commands.Cog):
                                            message)
                     return
                 new_area = int(area_match.group(1))
-                await update_area(user_settings, new_area)
+                await functions.update_area(user_settings, new_area)
 
             # Set current area from hunt event
             if ':zombie' in message_content.lower() and '#2' in message_content.lower():

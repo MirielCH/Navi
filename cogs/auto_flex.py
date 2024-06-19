@@ -616,54 +616,6 @@ class AutoFlexCog(commands.Cog):
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'event_coinflip',
                                                   description)
 
-            # Update time travel count from profile
-            search_strings = [
-                "— profile", #All languages
-                "— progress", #All languages
-            ]
-            if (any(search_string in embed_autor.lower() for search_string in search_strings)
-                and not 'epic npc' in embed_autor.lower()):
-                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
-                if not guild_settings.auto_flex_enabled: return
-                user = await functions.get_interaction_user(message)
-                if user is None:
-                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                    if user_id_match:
-                        user_id = int(user_id_match.group(1))
-                        user = message.guild.get_member(user_id)
-                    if user is None:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_autor)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS,
-                                                            user_name=user_name)
-                            )
-                        if not user_name_match or user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            return
-                        user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
-                if len(embed_field0_value.split('\n')) < 4:
-                    time_travel_count = 0
-                else:
-                    search_patterns = [
-                        r'time travels\*\*: (.+?)(?:$|\n)', #English
-                        r'el tiempo\*\*: (.+?)(?:$|\n)', #Spanish
-                        r'no tempo\*\*: (.+?)(?:$|\n)', #Portuguese
-                    ]
-                    tt_match = await functions.get_match_from_patterns(search_patterns, embed_field0_value)
-                    if not tt_match:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Time travel count not found in profile or progress message.', message)
-                        return
-                    time_travel_count = int(tt_match.group(1))
-                await user_settings.update(time_travel_count=time_travel_count)
-
             # Update time travel count from time travel message
             search_strings = [
                 "— time travel", #All languages

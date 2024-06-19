@@ -79,6 +79,7 @@ class LogReport(NamedTuple):
     farm_amount: int
     guild_id: int # Set to None if no guild_id was provided
     hunt_amount: str
+    hunt_together_amount: str
     timeframe: timedelta
     training_amount: int
     ultraining_amount: int
@@ -478,6 +479,7 @@ async def get_log_report(user_id: int, timeframe: timedelta,
         'epic guard': 0,
         'farm': 0,
         'hunt': 0,
+        'hunt together': 0,
         'training': 0,
         'ultraining': 0,
         'work': 0,
@@ -490,6 +492,7 @@ async def get_log_report(user_id: int, timeframe: timedelta,
         epic_guard_amount = records_data['epic guard'],
         farm_amount = records_data['farm'],
         hunt_amount = records_data['hunt'],
+        hunt_together_amount = records_data['hunt together'],
         training_amount = records_data['training'],
         ultraining_amount = records_data['ultraining'],
         work_amount = records_data['work'],

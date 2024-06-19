@@ -63,6 +63,28 @@ class TasksCog(commands.Cog):
                             message = f'{reminder_message.replace("{name}", user.mention)}\n'
                         mob_drop_emoji = emojis.MONSTER_DROP_AREAS_EMOJIS.get(user_settings.current_area, '')
                         message = message.replace('{drop_emoji}', mob_drop_emoji)
+                        if reminder.activity == 'hunt' and not user_settings.hunt_reminders_combined:
+                            try:
+                                hunt_partner_reminder = await reminders.get_user_reminder(user.id, 'hunt-partner')
+                            except exceptions.NoDataFoundError:
+                                hunt_partner_reminder = None
+                            if hunt_partner_reminder is not None:
+                                if not hunt_partner_reminder.triggered:
+                                    time_left_hunt_partner = hunt_partner_reminder.end_time - reminder.end_time
+                                    if time_left_hunt_partner.total_seconds() >= 1:
+                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt_partner)
+                                        message = f'{message}➜ **{user_settings.partner_name}** will be ready in **{timestring}**.\n'
+                        if reminder.activity == 'hunt-partner':
+                            try:
+                                hunt_reminder = await reminders.get_user_reminder(user.id, 'hunt')
+                            except exceptions.NoDataFoundError:
+                                hunt_reminder = None
+                            if hunt_reminder is not None:
+                                if not hunt_reminder.triggered:
+                                    time_left_hunt = hunt_reminder.end_time - reminder.end_time
+                                    if time_left_hunt.total_seconds() >= 1:
+                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
+                                        message = f'{message}➜ You will be ready in **{timestring}**.\n'
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''

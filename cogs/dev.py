@@ -173,7 +173,7 @@ class DevCog(commands.Cog):
         await view.wait()
         match view.value:
             case None:
-                await interaction.edit(f'**{ctx_author_name}**, you didn\'t answer in time.')
+                await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.')
             case 'confirm':
                 start_time: datetime = utils.utcnow()
                 await interaction.edit(view=None)
@@ -258,8 +258,7 @@ class DevCog(commands.Cog):
                 await interaction.edit(content=None, embed=embed)
                 
             case _:
-                await interaction.edit(view=None)
-                await interaction.edit('Updating aborted.')
+                await interaction.edit(content='Updating aborted.', view=None)
 
 
     @dev_group.command(name='event-reductions', aliases=('er',), description='Manage global event reductions',
@@ -294,10 +293,9 @@ class DevCog(commands.Cog):
         view.interaction_message = interaction
         await view.wait()
         if view.value is None:
-            await interaction.edit(f'**{ctx_author_name}**, you didn\'t answer in time.')
+            await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.')
         elif view.value != 'confirm':
-            await interaction.edit(view=None)
-            await interaction.edit('Backup aborted.')
+            await interaction.edit(content='Backup aborted.', view=None)
         else:
             start_time = utils.utcnow()
             interaction = await ctx.respond('Starting backup...')

@@ -117,7 +117,7 @@ class ToggleServerSettingsSelect(discord.ui.Select):
         options.append(discord.SelectOption(label='Disable all', value='disable_all', emoji=None))
         for label, setting in toggled_settings.items():
             setting_enabled = getattr(view.guild_settings, setting)
-            if isinstance(setting_enabled, users.UserAlert):
+            if isinstance(setting_enabled, guilds.EventPing):
                 setting_enabled = getattr(setting_enabled, 'enabled')
             emoji = emojis.ENABLED if setting_enabled else emojis.DISABLED
             options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
@@ -135,11 +135,73 @@ class ToggleServerSettingsSelect(discord.ui.Select):
                 kwargs[setting] = enabled
         else:
             setting_value = getattr(self.view.guild_settings, select_value)
-            if isinstance(setting_value, users.UserAlert):
+            if isinstance(setting_value, guilds.EventPing):
                 setting_value = getattr(setting_value, 'enabled')
             if not select_value.endswith('_enabled'):
                 select_value = f'{select_value}_enabled'
             kwargs[select_value] = not setting_value
+        await self.view.guild_settings.update(**kwargs)
+        for child in self.view.children.copy():
+            if child.custom_id == self.custom_id:
+                self.view.remove_item(child)
+                self.view.add_item(ToggleServerSettingsSelect(self.view, self.toggled_settings,
+                                                            self.placeholder, self.custom_id))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+        await interaction.response.edit_message(embed=embed, view=self.view)
+
+        
+class ToggleEventPingsSelect(discord.ui.Select):
+    """Toggle select that shows and toggles event pings."""
+    def __init__(self, view: discord.ui.View, toggled_settings: Dict[str, str], placeholder: str,
+                 custom_id: Optional[str] = 'toggle_event_pings_settings', row: Optional[int] = None):
+        self.toggled_settings = toggled_settings
+        options = []
+        options.append(discord.SelectOption(label='Enable all', value='enable_all', emoji=None))
+        options.append(discord.SelectOption(label='Disable all', value='disable_all', emoji=None))
+        for label, setting in toggled_settings.items():
+            setting_enabled = getattr(view.guild_settings, setting)
+            if isinstance(setting_enabled, guilds.EventPing):
+                setting_enabled = getattr(setting_enabled, 'enabled')
+            emoji = emojis.ENABLED if setting_enabled else emojis.DISABLED
+            options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id=custom_id)
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        kwargs = {}
+        if select_value in ('enable_all','disable_all'):
+            enabled = True if select_value == 'enable_all' else False
+            if enabled:
+                channel_permissions = self.view.ctx.channel.permissions_for(self.view.ctx.guild.me)
+                if not channel_permissions.mention_everyone:
+                    await interaction.response.send_message(
+                        f'Enabling event pings requires Navi to have the `Mention everyone, here and all roles` '
+                        f'permission first.',
+                        ephemeral=True
+                    )
+                    return
+            for setting in self.toggled_settings.values():
+                if not setting.endswith('_enabled'):
+                    setting = f'{setting}_enabled'
+                kwargs[setting] = enabled
+        else:
+            setting_value = getattr(self.view.guild_settings, select_value)
+            if isinstance(setting_value, guilds.EventPing):
+                setting_value = getattr(setting_value, 'enabled')
+            if not select_value.endswith('_enabled'):
+                select_value = f'{select_value}_enabled'
+            kwargs[select_value] = not setting_value
+            if not setting_value == True:
+                channel_permissions = self.view.ctx.channel.permissions_for(self.view.ctx.guild.me)
+                if not channel_permissions.mention_everyone:
+                    await interaction.response.send_message(
+                        f'Enabling event pings requires Navi to have the `Mention everyone, here and all roles` '
+                        f'permission first.',
+                        ephemeral=True
+                    )
+                    return
         await self.view.guild_settings.update(**kwargs)
         for child in self.view.children.copy():
             if child.custom_id == self.custom_id:
@@ -585,18 +647,18 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
-        hunt_emoji = emojis.ENABLED if view.user_settings.hunt_rotation_enabled else emojis.DISABLED
         mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
         a20_cd_emoji = emojis.ENABLED if view.user_settings.area_20_cooldowns_enabled else emojis.DISABLED
+        hunt_combine_emoji = emojis.ENABLED if view.user_settings.hunt_reminders_combined else emojis.DISABLED
         #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
         options.append(discord.SelectOption(label='DND mode', emoji=dnd_emoji,
                                             value='toggle_dnd'))
-        options.append(discord.SelectOption(label='Hunt rotation', emoji=hunt_emoji,
-                                            value='toggle_hunt'))
         options.append(discord.SelectOption(label='Slash command reminders', emoji=mentions_emoji,
                                             value='toggle_mentions'))
         options.append(discord.SelectOption(label='Read cooldowns in area 20', emoji=a20_cd_emoji,
                                             value='toggle_a20_cd'))
+        options.append(discord.SelectOption(label='Combine hunt reminders', emoji=hunt_combine_emoji,
+                                            value='toggle_hunt_reminders_combined'))
         options.append(discord.SelectOption(label='Add this channel as reminder channel', emoji=emojis.ADD,
                                             value='set_channel'))
         options.append(discord.SelectOption(label='Remove reminder channel', emoji=emojis.REMOVE,
@@ -611,12 +673,18 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
         user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
         if select_value == 'toggle_dnd':
             await self.view.user_settings.update(dnd_mode_enabled=not self.view.user_settings.dnd_mode_enabled)
-        elif select_value == 'toggle_hunt':
-            await self.view.user_settings.update(hunt_rotation_enabled=not self.view.user_settings.hunt_rotation_enabled)
         elif select_value == 'toggle_mentions':
             await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
         elif select_value == 'toggle_a20_cd':
             await self.view.user_settings.update(area_20_cooldowns_enabled=not self.view.user_settings.area_20_cooldowns_enabled)
+        elif select_value == 'toggle_hunt_reminders_combined':
+            if not self.view.user_settings.hunt_reminders_combined and not self.view.user_settings.alert_hunt_partner.enabled:
+                await interaction.response.send_message(
+                    'To use this setting, you need to enable the `hunt partner` reminder first.',
+                    ephemeral=True
+                )
+                return
+            await self.view.user_settings.update(hunt_reminders_combined=not self.view.user_settings.hunt_reminders_combined)
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
@@ -811,9 +879,11 @@ class ManagePartnerSettingsSelect(discord.ui.Select):
             await confirm_view.wait()
             if confirm_view.value == 'confirm':
                 await self.view.user_settings.update(partner_id=None, partner_donor_tier=0,
-                                                     partner_pocket_watch_multiplier=1, partner_chocolate_box_unlocked=False)
+                                                     partner_pocket_watch_multiplier=1, partner_chocolate_box_unlocked=False,
+                                                     partner_name=None)
                 await self.view.partner_settings.update(partner_id=None, partner_donor_tier=0,
-                                                        partner_pocket_watch_multiplier=1, partner_chocolate_box_unlocked=False)
+                                                        partner_pocket_watch_multiplier=1, partner_chocolate_box_unlocked=False,
+                                                        partner_name=None)
                 self.view.partner_settings = None
                 await confirm_interaction.edit_original_response(content='Partner reset.', view=None)
                 for child in self.view.children.copy():
@@ -1429,14 +1499,12 @@ class SetFarmHelperModeSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
 
-class ManageServerSettingsSelect(discord.ui.Select):
-    """Select to change server settings"""
+class ManageServerSettingsAutoFlexSelect(discord.ui.Select):
+    """Select to change auto-flex server settings"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
         options = []
         auto_flex_emoji = emojis.ENABLED if view.guild_settings.auto_flex_enabled else emojis.DISABLED
         reminder_action = 'Disable' if view.guild_settings.auto_flex_enabled else 'Enable'
-        options.append(discord.SelectOption(label='Change prefix',
-                                            value='set_prefix', emoji=None))
         options.append(discord.SelectOption(label=f'{reminder_action} auto flex alerts',
                                             value='toggle_auto_flex', emoji=auto_flex_emoji))
         options.append(discord.SelectOption(label='Set this channel as auto flex channel',
@@ -1454,10 +1522,6 @@ class ManageServerSettingsSelect(discord.ui.Select):
                 await interaction.response.send_message('You need to set an auto flex channel first.', ephemeral=True)
                 return
             await self.view.guild_settings.update(auto_flex_enabled=not self.view.guild_settings.auto_flex_enabled)
-        elif select_value == 'set_prefix':
-            modal = modals.SetPrefixModal(self.view)
-            await interaction.response.send_modal(modal)
-            return
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
@@ -1506,18 +1570,62 @@ class ManageServerSettingsSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
 
+            
+class ManageServerSettingsMainSelect(discord.ui.Select):
+    """Select to change main server settings"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        options.append(discord.SelectOption(label='Change prefix',
+                                            value='set_prefix', emoji=None))
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_server_settings')
 
-class ManageMultipliersSelect(discord.ui.Select):
-    """Select to change multipliers"""
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
+        if select_value == 'set_prefix':
+            modal = modals.SetPrefixModal(self.view)
+            await interaction.response.send_modal(modal)
+            return
+        for child in self.view.children.copy():
+            if isinstance(child, ManageServerSettingsSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageServerSettingsSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class ManageManagedMultipliersSelect(discord.ui.Select):
+    """Select to change managed multipliers"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None, disabled: bool = False):
         options = []
         options.append(discord.SelectOption(label=f'All',
                                             value='all'))
         for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+            if activity == 'hunt-partner': continue
             options.append(discord.SelectOption(label=activity.replace("-"," ").capitalize(),
                                                 value=activity))
-        super().__init__(placeholder='Change multipliers', min_values=1, max_values=1, options=options, row=row,
-                         custom_id='manage_multipliers', disabled=disabled)
+        super().__init__(placeholder='Change managed multipliers', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_managed_multipliers', disabled=disabled)
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        modal = modals.SetMultiplierModal(self.view, select_value)
+        await interaction.response.send_modal(modal)
+
+        
+class ManageManualMultipliersSelect(discord.ui.Select):
+    """Select to change manual multipliers"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None, disabled: bool = False):
+        options = []
+        options.append(discord.SelectOption(label='Hunt partner',
+                                            value='hunt-partner'))
+        super().__init__(placeholder='Change manual multipliers', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_manual_multipliers', disabled=disabled)
 
     async def callback(self, interaction: discord.Interaction):
         select_value = self.values[0]
@@ -1748,18 +1856,113 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
             if isinstance(child, ManageMultiplierSettingsSelect):
                 self.view.remove_item(child)
                 self.view.add_item(ManageMultiplierSettingsSelect(self.view))
-            if isinstance(child, ManageMultipliersSelect):
+            if isinstance(child, ManageManagedMultipliersSelect):
                 select_disabled: bool = False
                 if self.view.user_settings.multiplier_management_enabled and self.view.user_settings.current_area != 20:
                     select_disabled = True
                 if child.disabled != select_disabled:
                     self.view.remove_item(child)
                     self.view.add_item(
-                        ManageMultipliersSelect(
-                        self.view, disabled=False # TODO: Set to "select_disabled" when hunt multiplier is fixed
+                        ManageManagedMultipliersSelect(
+                        self.view, disabled=select_disabled
                         )
                     )
         embed: discord.Embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class ManageEventPingMessagesSelect(discord.ui.Select):
+    """Select to change event ping messages"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for event, name in strings.EVENT_PINGS.items():
+            options.append(discord.SelectOption(label=name,
+                                                value=f'set_{event}_message'))
+        options.append(discord.SelectOption(label='Reset all messages',
+                                            value='reset_messages'))
+        super().__init__(placeholder='Change messages', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='manage_event_messages')
+
+    async def callback(self, interaction: discord.Interaction):
+        def check(m: discord.Message) -> bool:
+            return m.author == interaction.user and m.channel == interaction.channel
+
+        select_value = self.values[0]
+        if select_value == 'reset_messages':
+            confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+            confirm_interaction = await interaction.response.send_message(
+                f'**{interaction.user.display_name}**, this will reset **all** event ping messages to the default one. '
+                f'Are you sure?',
+                view=confirm_view,
+                ephemeral=True
+            )
+            confirm_view.interaction_message = confirm_interaction
+            await confirm_view.wait()
+            if confirm_view.value == 'confirm':
+                kwargs = {}
+                for event in strings.EVENT_PINGS.keys():
+                    kwargs[f'event_{event}_message'] = strings.DEFAULT_MESSAGES_EVENT_PINGS[event]
+                await self.view.guild_settings.update(**kwargs)
+                await interaction.edit_original_response(
+                    content=(
+                        f'Changed all event messages back to their default message.'
+                    ),
+                    view=None,
+                )
+                embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+                await interaction.message.edit(embed=embed, view=self.view)
+                return
+            else:
+                await confirm_interaction.edit_original_response(content='Aborted', view=None)
+                return
+        else:
+            event = re.search(r'set_(\w+)_message', select_value).group(1)
+            event_settings = getattr(self.view.guild_settings, f'event_{event}', None)
+            if event_settings is None:
+                await interaction.response.send_message(strings.MSG_ERROR)
+                embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+                await interaction.message.edit(embed=embed, view=self.view)
+                return
+            await interaction.response.send_message(
+                f'**{interaction.user.display_name}**, please send the new message for the {strings.EVENT_PINGS[event]} '
+                f'event to this channel (or `abort` to abort):',
+            )
+            try:
+                answer = await self.view.bot.wait_for('message', check=check, timeout=60)
+            except asyncio.TimeoutError:
+                await interaction.edit_original_response(content=f'**{interaction.user.display_name}**, you didn\'t answer in time.')
+                return
+            new_message = answer.content
+            if new_message.lower() in ('abort','cancel','stop'):
+                await interaction.delete_original_response(delay=3)
+                followup_message = await interaction.followup.send('Aborted.')
+                await followup_message.delete(delay=3)
+                embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+                await interaction.message.edit(embed=embed, view=self.view)
+                return
+            if len(new_message) > 800:
+                await interaction.delete_original_response(delay=5)
+                followup_message = await interaction.followup.send(
+                    'This is a command to set a new message, not to write a novel :thinking:',
+                )
+                await followup_message.delete(delay=5)
+                embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
+                await interaction.message.edit(embed=embed, view=self.view)
+                return
+            await interaction.delete_original_response(delay=3)
+            kwargs = {f'event_{event}_message': new_message}
+            await self.view.guild_settings.update(**kwargs)
+            followup_message = await interaction.followup.send('Message updated!')
+            await followup_message.delete(delay=3)
+        for child in self.view.children.copy():
+            if isinstance(child, ManageEventPingMessagesSelect):
+                self.view.remove_item(child)
+                self.view.add_item(ManageEventPingMessagesSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
         else:
