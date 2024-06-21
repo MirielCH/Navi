@@ -1,7 +1,7 @@
 # sleepy_potion.py
 
-import asyncio
 from datetime import timedelta
+from typing import TYPE_CHECKING
 
 import discord
 from discord.ext import bridge, commands
@@ -9,6 +9,9 @@ from discord.ext import bridge, commands
 from cache import messages
 from database import errors, reminders, users
 from resources import emojis, exceptions, functions, regex, settings, strings
+
+if TYPE_CHECKING:
+    import re
 
 
 class SleepyPotionCog(commands.Cog):
@@ -20,11 +23,13 @@ class SleepyPotionCog(commands.Cog):
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
         if message_before.pinned != message_after.pinned: return
-        embed_data_before = await functions.parse_embed(message_before)
-        embed_data_after = await functions.parse_embed(message_after)
+        embed_data_before: dict[str, str] = await functions.parse_embed(message_before)
+        embed_data_after: dict[str, str] = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.ActionRow
         for row in message_after.components:
+            component: discord.Button | discord.SelectMenu
             for component in row.children:
                 if component.disabled:
                     return
@@ -35,23 +40,22 @@ class SleepyPotionCog(commands.Cog):
         """Runs when a message is sent in a channel."""
         if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds: return
-        message_content = message.content
         # Sleepy Potion
-        search_strings = [
+        search_strings: tuple[str] = (
             'has slept for a day', #English
             'ha dormido durante un día', #Spanish
             'dormiu por um dia', #Portuguese
-        ]
-        if any(search_string in message_content.lower() for search_string in search_strings):
-            user_name = user = user_command_message = None
-            user = await functions.get_interaction_user(message)
-            slash_command = True if user is not None else False
+        )
+        if any(search_string in message.content.lower() for search_string in search_strings):
+            user_name: str | None = None
+            user_command_message: discord.Message | None = None
+            user: discord.User | discord.Member | None = await functions.get_interaction_user(message)
             if user is None:
-                search_patterns = [
+                search_patterns: tuple[str] = (
                     r'^\*\*(.+?)\*\* drinks', #English
                     r'^\*\*(.+?)\*\* bebe', #Spanish, Portuguese
-                ]
-                user_name_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                )
+                user_name_match: re.Match[str] = await functions.get_match_from_patterns(search_patterns, message.content)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     user_command_message = (
@@ -73,5 +77,5 @@ class SleepyPotionCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(SleepyPotionCog(bot))

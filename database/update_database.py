@@ -1,15 +1,15 @@
 # update_database.py
-"""Migrates the database to the newest version."""
-
+"""Updates the database to the newest version."""
 import sys
 
 if __name__ == '__main__':
-    print('As of 2.39.0, database is automatically updated on startup. Please start the bot normally.')
+    print('As of 2.39.0, the database is automatically updated on startup. Please start the bot normally.')
     sys.exit()
 
-    
+
 import os
 import sqlite3
+from typing import Any
 
 from resources import logs, settings
 
@@ -17,28 +17,28 @@ from resources import logs, settings
 def get_user_version() -> int:
     """Returns the current user version from the database"""
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute('PRAGMA user_version')
-        record = cur.fetchone()
+        record: Any = cur.fetchone()
         return int(dict(record)['user_version'])
     except sqlite3.Error as error:
-        error_message = f'Unable to read database version. Error: {error}'
+        error_message: str = f'Unable to read database version. Error: {error}'
         print(error_message)
         logs.logger.error(f'Database: Unable to read database version. Error: {error}')
         raise
 
 def update_database() -> bool:
     """Updates the database. Returns True if the db_version after the update equals NACVI_DB_VERSION."""
-    cur = settings.NAVI_DB.cursor()
-    db_version = get_user_version()
+    cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+    db_version: int = get_user_version()
     logs.logger.info(f'Database: Current database version: {db_version}')
     logs.logger.info(f'Database: Target database version: {settings.NAVI_DB_VERSION}')
     if db_version == settings.NAVI_DB_VERSION:
         logs.logger.info('Database Update: Nothing to do, exiting.')
         return True
     logs.logger.info('Database: Backing up database to /database/navi_db_backup.db...')
-    backup_db_file = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
-    navi_backup_db = sqlite3.connect(backup_db_file)
+    backup_db_file: str = os.path.join(settings.BOT_DIR, 'database/navi_db_backup.db')
+    navi_backup_db: sqlite3.Connection = sqlite3.connect(backup_db_file)
     settings.NAVI_DB.backup(navi_backup_db)
     navi_backup_db.close()
     logs.logger.info('Database: Starting database update...')
@@ -46,7 +46,7 @@ def update_database() -> bool:
     # Recreate users table if database was never updated yet to make sure everything is as it should be
     if db_version == 0:
         cur.execute('ALTER TABLE users RENAME TO users_old')
-        sql = (
+        sql: tuple[str, ...] = (
             "CREATE TABLE users "
             "(user_id INTEGER UNIQUE PRIMARY KEY NOT NULL, "
             "user_donor_tier INTEGER DEFAULT (0) NOT NULL, "
@@ -186,17 +186,18 @@ def update_database() -> bool:
         )
         cur.execute(sql)
         cur.execute('PRAGMA table_info(users_old)')
-        columns = cur.fetchall()
-        columns_sql = ''
+        columns: list[Any] = cur.fetchall()
+        columns_sql: str = ''
+        column: Any
         for column in columns:
-            column = dict(column)
+            column: dict[str, str] = dict(column)
             columns_sql = f'{columns_sql}, {column["name"]}'
         columns_sql = columns_sql.strip(' ,')
         cur.execute(f'INSERT INTO users ({columns_sql}) SELECT {columns_sql} FROM users_old')
         cur.execute('DROP TABLE users_old')
 
         # Make sure all records exist in table cooldowns
-        cooldowns = {
+        cooldowns: dict[str, tuple[int, int]] = {
             'adventure': (3600, 1),
             'arena': (86400, 1),
             'chimney': (10800, 0),
@@ -215,10 +216,14 @@ def update_database() -> bool:
             'weekly': (604200, 0),
             'work': (300, 1),
         }
+        activity: str
+        cooldown_data: tuple[int, int]
         for activity, cooldown_data in cooldowns.items():
+            cooldown_time: int
+            donor_affected: int
             cooldown_time, donor_affected = cooldown_data
             cur.execute('SELECT cooldown, donor_affected FROM cooldowns WHERE activity = ?', (activity,))
-            record = cur.fetchone()
+            record: Any = cur.fetchone()
             if record:
                 record = dict(record)
                 if cooldown_time != int(record['cooldown']) or donor_affected != int(record['donor_affected']):
@@ -233,7 +238,7 @@ def update_database() -> bool:
                 )
 
     # Update database with new stuff added in later versions.
-    sqls = []
+    sqls: list[str] = []
     if db_version < 1:
         sqls += [
             'ALTER TABLE guilds ADD auto_flex_enabled INTEGER NOT NULL DEFAULT (0)',
@@ -330,24 +335,27 @@ def update_database() -> bool:
         ]
 
         # Update default event messages
-        default_message_event_old = (
+        default_message_event_old: str = (
             '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485> on the '
             f'official EPIC RPG server.'
         )
-        default_message_event_new = (
+        default_message_event_new: str = (
             '{name} Hey! The **{event}** event just finished! You can check the results in <#604410216385085485>.'
         )
         cur.execute('SELECT * FROM users')
-        all_users = cur.fetchall()
+        all_users: list[Any] = cur.fetchall()
         if all_users:
+            user: Any
             for user in all_users:
                 user = dict(user)
-                new_values = {}
+                new_values: dict[str, str] = {}
+                column: str
+                value: str
                 for column, value in user.items():
                     if value == default_message_event_old:
                         new_values[column] = default_message_event_new
                 if new_values:
-                    sql = f'UPDATE users SET'
+                    sql: str = f'UPDATE users SET'
                     for value in new_values:
                         sql = f'{sql} {value} = :{value},'
                     sql = sql.strip(",")
@@ -368,7 +376,7 @@ def update_database() -> bool:
             "CREATE UNIQUE INDEX users_unique ON alts (user1_id, user2_id)",
             "ALTER TABLE users ADD reminder_channel_id INTEGER",
         ]
-        
+
     if db_version < 8:
         sqls += [
             "ALTER TABLE users ADD user_pocket_watch_multiplier REAL NOT NULL DEFAULT (1)",
@@ -377,7 +385,7 @@ def update_database() -> bool:
             "ALTER TABLE users ADD ready_ping_user INTEGER NOT NULL DEFAULT (0)",
             "ALTER TABLE guilds ADD auto_flex_artifacts_enabled INTEGER NOT NULL DEFAULT (1)",
         ]
-        
+
     if db_version < 9:
         sqls += [
             "ALTER TABLE users ADD alert_cel_dailyquest_enabled INTEGER NOT NULL DEFAULT (1)",
@@ -470,13 +478,46 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE users ADD auto_healing_active INTEGER NOT NULL DEFAULT (0)",
         ]
+    if db_version < 22:
+        sqls += [
+            "ALTER TABLE users ADD multiplier_management_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_boo_multiplier REAL NOT NULL DEFAULT (1)",
+        ]
+    if db_version < 23:
+        sqls += [
+            "ALTER TABLE guilds ADD auto_flex_lb_eternal_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
+    if db_version < 24:
+        sqls += [
+            "ALTER TABLE users ADD alert_hunt_partner_enabled INTEGER DEFAULT (1) NOT NULL",
+            "ALTER TABLE users ADD alert_hunt_partner_message TEXT NOT NULL DEFAULT ('{name} Hey! Your partner **{partner}** is ready to {command}!')",
+            "ALTER TABLE users ADD alert_hunt_partner_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_hunt_partner_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD hunt_reminders_combined INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD hunt_end_time DATETIME NOT NULL DEFAULT ('1970-01-01 00:00:00')",
+            "ALTER TABLE guilds ADD event_arena_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_arena_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `JOIN` to get some cookies!')",
+            "ALTER TABLE guilds ADD event_coin_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_coin_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `CATCH` to get some coins!')",
+            "ALTER TABLE guilds ADD event_fish_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_fish_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `LURE` to get some fish!')",
+            "ALTER TABLE guilds ADD event_legendary_boss_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_legendary_boss_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `TIME TO FIGHT` to kill a dragon!')",
+            "ALTER TABLE guilds ADD event_log_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_log_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `CUT` to get some logs!')",
+            "ALTER TABLE guilds ADD event_lootbox_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_lootbox_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `SUMMON` to get a lootbox!')",
+            "ALTER TABLE guilds ADD event_miniboss_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_miniboss_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `FIGHT` to get some coins!')",
+        ]
 
     # Run SQLs
+    sql: str
     for sql in sqls:
         try:
             cur.execute(sql)
         except sqlite3.Error as error:
-            error_msg = error.args[0].lower()
+            error_msg: str = error.args[0].lower()
             if 'duplicate column name' in error_msg:
                 continue
             elif 'no such column' in error_msg:

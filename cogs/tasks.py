@@ -9,6 +9,7 @@ import sqlite3
 from typing import List
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands, tasks
 
 from cache import messages
@@ -28,7 +29,7 @@ class TasksCog(commands.Cog):
     async def background_task(self, reminders_list: List[reminders.Reminder]) -> None:
         """Background task for scheduling reminders"""
         first_reminder = reminders_list[0]
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = utils.utcnow()
         def get_time_left() -> timedelta:
             time_left = first_reminder.end_time - current_time
             if time_left.total_seconds() < 0: time_left = timedelta(seconds=0)
@@ -45,6 +46,7 @@ class TasksCog(commands.Cog):
                     reminder_channel_id = first_reminder.channel_id
                 channel = await functions.get_discord_channel(self.bot, reminder_channel_id)
                 if channel is None: return
+                hunt_reminder = None
                 message_no = 1
                 messages = {message_no: ''}
                 for reminder in reminders_list:
@@ -62,6 +64,27 @@ class TasksCog(commands.Cog):
                             message = f'{reminder_message.replace("{name}", user.mention)}\n'
                         mob_drop_emoji = emojis.MONSTER_DROP_AREAS_EMOJIS.get(user_settings.current_area, '')
                         message = message.replace('{drop_emoji}', mob_drop_emoji)
+                        if reminder.activity == 'hunt' and not user_settings.hunt_reminders_combined:
+                            try:
+                                hunt_partner_reminder = await reminders.get_user_reminder(user.id, 'hunt-partner')
+                            except exceptions.NoDataFoundError:
+                                hunt_partner_reminder = None
+                            if hunt_partner_reminder is not None:
+                                if not hunt_partner_reminder.triggered:
+                                    time_left_hunt_partner = hunt_partner_reminder.end_time - reminder.end_time
+                                    if time_left_hunt_partner.total_seconds() >= 1:
+                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt_partner)
+                                        message = f'{message}➜ **{user_settings.partner_name}** will be ready in **{timestring}**.\n'
+                        if reminder.activity == 'hunt-partner':
+                            try:
+                                hunt_reminder = await reminders.get_user_reminder(user.id, 'hunt')
+                            except exceptions.NoDataFoundError:
+                                hunt_reminder = None
+                            if hunt_reminder is not None:
+                                time_left_hunt = hunt_reminder.end_time - reminder.end_time
+                                if time_left_hunt.total_seconds() >= 1:
+                                    timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
+                                    message = f'{message}➜ You will be ready in **{timestring}**.\n'
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''
@@ -119,6 +142,13 @@ class TasksCog(commands.Cog):
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
                                 message = re.sub(rf'<@!?{found_id}>', '-Removed alt-', message)
+                            if hunt_reminder is not None:
+                                await hunt_reminder.refresh()
+                                if hunt_reminder.record_exists:
+                                    time_left_hunt = hunt_reminder.end_time - reminder.end_time
+                                    if time_left_hunt.total_seconds() >= 1:
+                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
+                                        re.sub(r'➜ You will be ready in \*\*(.+?)\*\*', message, timestring)
                         await channel.send(message.strip())
                 except asyncio.CancelledError:
                     return
@@ -202,10 +232,11 @@ class TasksCog(commands.Cog):
         Reminders that fire at the same second for the same user in the same channel are combined into one task.
         """
         user_reminders = {}
+        reminder: reminders.Reminder
         for reminder in reminders.scheduled_for_tasks.copy().values():
             reminders.scheduled_for_tasks.pop(reminder.task_name, None)
             if reminder.reminder_type == 'user':
-                reminder_user_channel = f'{reminder.user_id}-{reminder.channel_id}-{reminder.end_time}'
+                reminder_user_channel = f'{reminder.user_id}-{reminder.channel_id}-{reminder.end_time.replace(microsecond=0)}'
                 if reminder_user_channel in user_reminders:
                     user_reminders[reminder_user_channel].append(reminder)
                 else:
@@ -253,7 +284,7 @@ class TasksCog(commands.Cog):
     async def reset_clans(self) -> None:
         """Task that creates the weekly reports and resets the clans"""
         clan_reset_time = settings.ClanReset()
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = utils.utcnow()
         if (
             (datetime.today().weekday() == clan_reset_time.weekday)
             and
@@ -316,9 +347,8 @@ class TasksCog(commands.Cog):
     @tasks.loop(seconds=60)
     async def consolidate_tracking_log(self) -> None:
         """Task that consolidates tracking log entries older than 28 days into summaries"""
-        start_time = datetime.utcnow().replace(microsecond=0)
+        start_time = utils.utcnow()
         if start_time.hour == 0 and start_time.minute == 15:
-            start_time = datetime.utcnow().replace(microsecond=0)
             log_entry_count = 0
             try:
                 old_log_entries = await tracking.get_old_log_entries(28)
@@ -340,7 +370,7 @@ class TasksCog(commands.Cog):
                 await tracking.delete_log_entries(user_id, guild_id, command, date_time_min, date_time_max)
                 await asyncio.sleep(0.01)
             cur = settings.NAVI_DB.cursor()
-            date_time = datetime.utcnow() - timedelta(days=366)
+            date_time = utils.utcnow() - timedelta(days=366)
             date_time = date_time.replace(hour=0, minute=0, second=0)
             sql = 'DELETE FROM tracking_log WHERE date_time<?'
             try:
@@ -349,14 +379,14 @@ class TasksCog(commands.Cog):
             except sqlite3.Error as error:
                 logs.logger.error(f'Error while consolidating: {error}')
                 raise
-            end_time = datetime.utcnow().replace(microsecond=0)
+            end_time = utils.utcnow()
             time_passed = end_time - start_time
             logs.logger.info(f'Consolidated {log_entry_count:,} log entries in {format_timespan(time_passed)}.')
             
     @tasks.loop(seconds=60)
     async def reset_trade_daily_done(self) -> None:
         """Task that resets the daily trade amounts to 0"""
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = utils.utcnow()
         if current_time.hour == 0 and current_time.minute == 0:
             all_user_settings = await users.get_all_users()
             for user_settings in all_user_settings:
@@ -374,7 +404,7 @@ class TasksCog(commands.Cog):
         """Task that sets all event reductions to 0. Set time when needed (UTC)."""
         year, month, day = 2024, 2, 29
         hour, minute = 23, 55
-        start_time = datetime.utcnow().replace(microsecond=0)
+        start_time = utils.utcnow()
         if (start_time.year == year and start_time.month == month and start_time.day == day and start_time.hour == hour
             and start_time.minute == minute):
             from database import cooldowns
@@ -383,5 +413,5 @@ class TasksCog(commands.Cog):
                 await cooldown.update(event_reduction_slash=0, event_reduction_mention=0)
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(TasksCog(bot))

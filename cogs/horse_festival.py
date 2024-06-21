@@ -1,11 +1,12 @@
 # horse_festival.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import random
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -76,8 +77,8 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'minirace')
-                current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                midnight_today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=6, seconds=random.randint(60, 300))
                 time_left = end_time - current_time
                 reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
@@ -203,8 +204,8 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'minirace')
-                current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                midnight_today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=6)
                 time_left = end_time - current_time
                 reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
@@ -244,8 +245,8 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'minirace')
-                current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_today = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                midnight_today = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=6, seconds=random.randint(60, 300))
                 time_left = end_time - current_time
                 reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
@@ -468,5 +469,5 @@ class HorseFestivalCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HorseFestivalCog(bot))

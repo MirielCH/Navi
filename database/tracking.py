@@ -3,10 +3,11 @@
 
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sqlite3
 from typing import NamedTuple, Optional, Tuple
 
+from discord import utils
 from discord.ext import tasks
 
 from database import errors, users
@@ -78,6 +79,7 @@ class LogReport(NamedTuple):
     farm_amount: int
     guild_id: int # Set to None if no guild_id was provided
     hunt_amount: str
+    hunt_together_amount: str
     timeframe: timedelta
     training_amount: int
     ultraining_amount: int
@@ -203,7 +205,7 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
         log_entry = LogEntry(
             command = record['command'],
             command_count = record['command_count'],
-            date_time = datetime.fromisoformat(record['date_time']),
+            date_time = datetime.fromisoformat(record['date_time']).replace(tzinfo=timezone.utc),
             entry_type = record['type'],
             guild_id = record['guild_id'],
             user_id = record['user_id'],
@@ -245,7 +247,7 @@ async def _dict_to_leaderboard_user(record: dict) -> LogEntry:
             last_4w = record['last_4w'],
             last_12m = record['last_12m'],
             report_type = 'global' if record['guild_id'] is None else 'guild',
-            updated = datetime.fromisoformat(record['updated']),
+            updated = datetime.fromisoformat(record['updated']).replace(tzinfo=timezone.utc),
             user_id = record['user_id'],
         )
 
@@ -323,7 +325,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     sql = (
         f'SELECT * FROM {table} WHERE user_id=? AND date_time>=? AND command=?'
     )
-    date_time = datetime.utcnow() - timeframe
+    date_time = utils.utcnow() - timeframe
     if guild_id is not None: sql = f'{sql} AND guild_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
@@ -417,7 +419,7 @@ async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
     sql = (
         f'SELECT * FROM {table} WHERE date_time<? AND type=?'
     )
-    date_time = datetime.utcnow() - timedelta(days=days)
+    date_time = utils.utcnow() - timedelta(days=days)
     date_time = date_time.replace(hour=0, minute=0, second=0)
     try:
         cur = settings.NAVI_DB.cursor()
@@ -457,7 +459,7 @@ async def get_log_report(user_id: int, timeframe: timedelta,
     table = 'tracking_log'
     function_name = 'get_log_report'
     sql = f'SELECT command, SUM(command_count) FROM {table} WHERE user_id=? AND date_time>=?'
-    date_time = datetime.utcnow() - timeframe
+    date_time = utils.utcnow() - timeframe
     if guild_id is not None: sql = f'{sql} AND guild_id=?'
     sql = f'{sql} GROUP BY command'
     try:
@@ -477,6 +479,7 @@ async def get_log_report(user_id: int, timeframe: timedelta,
         'epic guard': 0,
         'farm': 0,
         'hunt': 0,
+        'hunt together': 0,
         'training': 0,
         'ultraining': 0,
         'work': 0,
@@ -489,6 +492,7 @@ async def get_log_report(user_id: int, timeframe: timedelta,
         epic_guard_amount = records_data['epic guard'],
         farm_amount = records_data['farm'],
         hunt_amount = records_data['hunt'],
+        hunt_together_amount = records_data['hunt together'],
         training_amount = records_data['training'],
         ultraining_amount = records_data['ultraining'],
         work_amount = records_data['work'],
@@ -640,9 +644,8 @@ async def _update_log_leaderboard_user(log_leaderboard_user: LogLeaderboardUser,
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    current_time = datetime.utcnow().replace(microsecond=0)
     if 'updated' not in kwargs:
-        kwargs['updated'] = current_time
+        kwargs['updated'] = utils.utcnow()
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'

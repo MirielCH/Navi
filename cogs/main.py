@@ -1,6 +1,8 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
+from typing import TYPE_CHECKING
+
 import discord
 from discord import slash_command
 from discord.ext import bridge, commands
@@ -9,6 +11,9 @@ from content import main
 from database import errors, guilds
 from resources import exceptions, functions, logs, settings
 
+if TYPE_CHECKING:
+    from discord.ext.commands import Command
+        
 
 class MainCog(commands.Cog):
     """Cog with events and help and about commands"""
@@ -37,24 +42,24 @@ class MainCog(commands.Cog):
         await main.command_about(self.bot, ctx)
 
     # Slash commands
-    if settings.LINK_INVITE is not None:
+    if settings.LINK_INVITE:
         @slash_command(name='invite', description='Invite Navi to your server!')
         async def invite(self, ctx: discord.ApplicationContext) -> None:
-            """Sends and invite link"""
+            """Sends an invite link"""
             await ctx.respond(f'Click [here]({settings.LINK_INVITE}) to invite me!')
 
     # Text commands
     @commands.command(name='invite', aliases=('inv',))
     @commands.bot_has_permissions(send_messages=True)
     async def invite_prefix(self, ctx: commands.Context) -> None:
-        """Invite command"""
-        if settings.LINK_INVITE is not None:
-            answer = (
+        """Text invite command"""
+        if settings.LINK_INVITE:
+            answer: str = (
                 f'Click [here]({settings.LINK_INVITE}) to invite me!'
             )
         else:
-            navi_lite_invite = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
-            answer = (
+            navi_lite_invite: str = 'https://canary.discord.com/api/oauth2/authorize?client_id=1213487623688167494&permissions=378944&scope=bot'
+            answer: str = (
                 f'Sorry, you can\'t invite this Navi.\n\n'
                 f'However, you can:\n'
                 f'1. [Invite Navi Lite]({navi_lite_invite}), a global version of Navi with a few limitations.\n'
@@ -68,11 +73,11 @@ class MainCog(commands.Cog):
         """Runs when an error occurs and handles them accordingly.
         Interesting errors get written to the database for further review.
         """
-        command_name = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
+        command_name: str = f'{ctx.command.full_parent_name} {ctx.command.name}'.strip()
         command_name = await functions.get_navi_slash_command(self.bot, command_name)
         async def send_error() -> None:
             """Sends error message as embed"""
-            embed = discord.Embed(title='An error occured')
+            embed: discord.Embed = discord.Embed(title='An error occured')
             embed.add_field(name='Command', value=f'{command_name}', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.respond(embed=embed, ephemeral=True)
@@ -94,10 +99,10 @@ class MainCog(commands.Cog):
                                 commands.TooManyArguments, commands.BadArgument)):
             await send_error()
         elif isinstance(error, commands.BotMissingPermissions):
+            missing_permissions = ', '.join([permission.title().replace('_',' ') for permission in error.missing_permissions])
             await ctx.respond(
                 f'You can\'t use this command in this channel.\n'
-                f'To enable this, I need the permission `View Channel` / '
-                f'`Read Messages` in this channel.',
+                f'To enable this, I need the permission(s) `{missing_permissions}` in this channel.',
                 ephemeral=True
             )
         elif isinstance(error, commands.CommandOnCooldown):
@@ -106,7 +111,7 @@ class MainCog(commands.Cog):
                 ephemeral=True
             )
         elif isinstance(error, exceptions.FirstTimeUserError):
-            ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+            ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
             await ctx.respond(
                 f'Hey! **{ctx_author_name}**, looks like I don\'t know you yet.\n'
                 f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
@@ -131,13 +136,13 @@ class MainCog(commands.Cog):
         """
         async def send_error() -> None:
             """Sends error message as embed"""
-            embed = discord.Embed(title='An error occured')
+            embed: discord.Embed = discord.Embed(title='An error occured')
             embed.add_field(name='Command', value=f'`{ctx.command.qualified_name}`', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.reply(embed=embed)
 
         error = getattr(error, 'original', error)
-        ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+        ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
         if isinstance(error, (commands.CommandNotFound, commands.NotOwner)):
             return
         elif isinstance(error, commands.CommandOnCooldown):
@@ -159,11 +164,11 @@ class MainCog(commands.Cog):
             else:
                 await send_error()
         elif isinstance(error, commands.MissingRequiredArgument):
-            parameters = ''
-            full_command_name = f'{ctx.command.full_parent_name} {ctx.invoked_with}'.strip()
+            parameters: str = ''
+            full_command_name: str = f'{ctx.command.full_parent_name} {ctx.invoked_with}'.strip()
             for param_name in ctx.command.clean_params.keys():
                 parameters = f'{parameters} <{param_name}>'
-            answer = (
+            answer: str = (
                 f'**{ctx_author_name}**, this command is missing the parameter `<{error.param.name}>`.\n\n'
                 f'Syntax: `{ctx.clean_prefix}{full_command_name} {parameters.strip()}`'
             )
@@ -200,24 +205,22 @@ class MainCog(commands.Cog):
             and (message.content.lower().replace('<@!','').replace('<@','').replace('>','')
                  .replace(str(self.bot.user.id),'')) == ''
         ):
-            command = self.bot.get_command(name='help')
+            command: Command = self.bot.get_command(name='help')
             if command is not None: await command.callback(command.cog, message)
 
     # Events
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Fires when bot has finished starting"""
-        startup_info = f'{self.bot.user.name} has connected to Discord!'
+        startup_info: str = f'{self.bot.user.name} has connected to Discord!'
         print(startup_info)
         logs.logger.info(startup_info)
-        await self.bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching,
-                                                                  name='your commands'))
     @commands.Cog.listener()
     async def on_guild_join(self, guild: discord.Guild) -> None:
         """Fires when bot joins a guild. Sends a welcome message to the system channel."""
         try:
             guild_settings: guilds.Guild = await guilds.get_guild(guild.id)
-            welcome_message = (
+            welcome_message: str = (
                 f'Hey! **{guild.name}**! I\'m here to remind you to do your EPIC RPG commands!\n\n'
                 f'Note that reminders are off by default. If you want to get reminded, please use '
                 f'{await functions.get_navi_slash_command(self.bot, "on")} or `{guild_settings.prefix}on` to activate me.'
@@ -228,5 +231,5 @@ class MainCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(MainCog(bot))

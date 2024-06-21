@@ -1,12 +1,12 @@
 # cooldowns.py
 """Provides access to the table "errors" in the database"""
 
-from datetime import datetime
 import sqlite3
 import traceback
 from typing import Optional, Union
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from resources import exceptions, logs, settings, strings
@@ -37,7 +37,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.Bri
         if module is None or module == str.__class__.__module__:
             error_message = f'{error_message.strip()}\n- Module: {error.__class__.__name__}'
         if hasattr(error, '__traceback__'):
-            traceback_str = "".join(traceback.format_tb(error.__traceback__))
+            traceback_str = "".join(traceback.format_tb(error.__traceback__)) # pyright: ignore
         else:
             traceback_str = 'N/A'
         if isinstance(error, Exception):
@@ -59,7 +59,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.Bri
         message = ctx
     if message is not None:
         user_settings = message_content = 'N/A'
-        date_time = message.created_at
+        date_time = message.edited_at if message.edited_at else message.created_at
         jump_url = message.jump_url
         if message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
             message_content = f'---Message content---\n{message.content}'
@@ -84,7 +84,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.Bri
                 except exceptions.FirstTimeUserError:
                     pass
     else:
-        date_time = datetime.utcnow()
+        date_time = utils.utcnow()
         message_content = 'N/A'
         jump_url = 'N/A'
         user_settings = 'N/A'

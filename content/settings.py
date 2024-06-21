@@ -2,9 +2,8 @@
 """Contains settings commands"""
 
 import asyncio
-from datetime import timezone
 import re
-from typing import List, Optional, Union
+from typing import Any, List, Optional
 
 import discord
 from discord.ext import bridge, commands
@@ -83,7 +82,6 @@ SETTINGS_USER = [
     'auto-ready-ping',
     'dnd-mode',
     'hardmode-mode',
-    'hunt-rotation',
     'slash-mentions',
     'tracking',
     'area-20-cooldowns',
@@ -99,11 +97,6 @@ SETTINGS_USER_ALIASES = {
     'hardmodemode': 'hardmode-mode',
     'hm-mode': 'hardmode-mode',
     'hmmode': 'hardmode-mode',
-    'huntrotation': 'hunt-rotation',
-    'rotation': 'hunt-rotation',
-    'huntswitch': 'hunt-rotation',
-    'switch': 'hunt-rotation',
-    'hunt-switch': 'hunt-rotation',
     'slash': 'slash-mentions',
     'mention': 'slash-mentions',
     'mentions': 'slash-mentions',
@@ -140,7 +133,6 @@ SETTINGS_USER_COLUMNS = {
     'auto-ready': 'auto_ready',
     'dnd-mode': 'dnd_mode',
     'hardmode-mode': 'hardmode_mode',
-    'hunt-rotation': 'hunt_rotation',
     'slash-mentions': 'slash_mentions',
     'tracking': 'tracking',
     'area-20-cooldowns': 'area_20_cooldowns',
@@ -270,32 +262,41 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
 async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
     user_settings: users.User = await users.get_user(ctx.author.id)
     async def get_current_multipliers() -> str:
-        current_multipliers = ''
+        current_multipliers: str = '**Managed**'
+        activity: str
         for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-            alert_settings = getattr(user_settings, f'alert_{activity.replace("-","_")}')
+            if activity == 'hunt-partner': continue
+            alert_settings: users.UserAlert = getattr(user_settings, f'alert_{activity.replace("-","_")}')
             current_multipliers = (
                 f'{current_multipliers}\n'
-                f'{emojis.BP} **{activity.capitalize()}**: `{alert_settings.multiplier}`'
+                f'{emojis.BP} **`{f'{activity.capitalize()}':<12}`** `{round(alert_settings.multiplier, 3):>5}`'
             )
+        current_multipliers = (
+            f'{current_multipliers}\n\n'
+            f'**Manual**\n'
+            f'{emojis.BP} **`Hunt-partner`** `{round(user_settings.alert_hunt_partner.multiplier, 3):>5}`'
+        )
         return current_multipliers.strip()
-    
-    syntax = (
-        f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
-        f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
-        f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
-    )
+
+    syntax: str = ''
+    if not user_settings.multiplier_management_enabled or user_settings.current_area == 20:
+        syntax = (
+            f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
+            f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
+            f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
+        )
     if not args:
-        current_multipliers = await get_current_multipliers()
+        current_multipliers: str = await get_current_multipliers()
         await ctx.reply(
-            f'Current multipliers:\n'
             f'{current_multipliers}\n\n'
             f'{syntax}'
         )
     else:
-        multiplier_found = None
-        activities_found = []
-        ignored_activities = []
-        kwargs = {}
+        multiplier_found: float | None = None
+        activities_found: list[str] = []
+        ignored_activities: list[str] = []
+        kwargs: dict[str, Any] = {}
+        arg: str
         for arg in args:
             try:
                 multiplier_found = float(arg)
@@ -309,12 +310,19 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                         f'Invalid syntax.\n\n{syntax}'
                     )
                     return
+                activity: str
                 for activity in activities_found:
+                    if activity != 'hunt-partner' and user_settings.multiplier_management_enabled and user_settings.current_area != 20:
+                        await ctx.reply(
+                            f'Changing managed multipliers with this command is not possible if automatic multiplier management is enabled.'
+                        )
+                        return
                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
                 activities_found = []
             except ValueError:
                 if arg == 'all':
-                    activities_found = strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER
+                    activities_found = list(strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER)
+                    activities_found.remove('hunt-partner')
                 else:
                     if arg in strings.ACTIVITIES_ALIASES: arg = strings.ACTIVITIES_ALIASES[arg]
                     if arg in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER and not arg in activities_found:
@@ -327,11 +335,12 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                 f'Invalid syntax.\n\n{syntax}'
             )
             return
-        await user_settings.update(**kwargs)
-        answer = (
-            f'Multiplier(s) updated.'
-        )
-        current_multipliers = await get_current_multipliers()
+        if not kwargs:
+            answer: str = 'No valid multipliers found.'
+        else:
+            await user_settings.update(**kwargs)
+            answer: str = 'Multiplier(s) updated.'
+        current_multipliers: str = await get_current_multipliers()
         answer = (
             f'{answer}\n\n'
             f'{current_multipliers}'
@@ -341,6 +350,7 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                 f'{answer}\n\n'
                 f'Couldn\'t find the following activities:'
             )
+            activity: str
             for activity in ignored_activities:
                 answer = f'{answer}\n{emojis.BP} `{activity}`'
         await ctx.reply(answer)
@@ -451,12 +461,12 @@ async def command_off(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> 
         interaction = await ctx.respond(f'{answer} `[yes/no]`')
         try:
             answer = await bot.wait_for('message', check=check, timeout=30)
+            if answer.content.lower() in ['yes','y']:
+                confirmed = True
+            else:
+                aborted = True
         except asyncio.TimeoutError:
             timeout = True
-        if answer.content.lower() in ['yes','y']:
-            confirmed = True
-        else:
-            aborted = True
     if timeout:
         await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
     elif confirmed:
@@ -486,17 +496,19 @@ async def command_purge_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeConte
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     answer_aborted = f'**{ctx_author_name}**, phew, was worried there for a second.'
     answer_timeout = f'**{ctx_author_name}**, you didn\'t answer in time.'
+    support_server = f'[SUPPORT SERVER]({settings.LINK_SUPPORT})' if settings.LINK_SUPPORT is not None else 'SUPPORT SERVER'
     answer = (
-        f'{emojis.WARNING} **{ctx_author_name}**, this will purge your user data **completely** {emojis.WARNING}\n\n'
+        f'{emojis.WARNING} **{ctx_author_name}**, this will delete **ALL** your user data {emojis.WARNING}\n\n'
         f'This includes the following:\n'
         f'{emojis.BP} Your alts\n'
         f'{emojis.BP} All reminders\n'
         f'{emojis.BP} All raids in the current guild leaderboard\n'
-        f'{emojis.BP} Your complete command tracking history\n'
+        f'{emojis.BP} Your complete command tracking history (!)\n'
         f'{emojis.BP} Your user portals\n'
         f'{emojis.BP} And finally, your user settings\n\n'
-        f'**There is no coming back from this**.\n'
-        f'You will of course be able to start using me again, but all of your data will start '
+        f'**THIS COMMAND IS NOT HERE TO FIX PROBLEMS WITH NAVI.**\n'
+        f'**IF YOU HAVE ISSUES, STOP RIGHT NOW AND JOIN THE {support_server} INSTEAD.**\n\n'
+        f'You will be able to start using Navi again after purging, but you will start '
         f'from scratch.\n'
         f'Are you **SURE**?'
     )
@@ -767,12 +779,79 @@ async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.Bri
     await view.wait()
 
 
-async def command_settings_server(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> None:
-    """Server settings command"""
-    guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
-    view = views.SettingsServerView(ctx, bot, guild_settings, embed_settings_server)
-    embed = await embed_settings_server(bot, ctx, guild_settings)
-    interaction = await ctx.respond(embed=embed, view=view)
+async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                            switch_view: Optional[discord.ui.View] = None) -> None:
+    """Server settings auto-flex command"""
+    interaction = guild_settings = None
+    if switch_view is not None:
+        guild_settings = getattr(switch_view, 'guild_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if guild_settings is None:
+        guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    if switch_view is not None: switch_view.stop()
+    view = views.SettingsServerAutoFlexView(ctx, bot, guild_settings, embed_server_settings_auto_flex)
+    embed = await embed_server_settings_auto_flex(bot, ctx, guild_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+    
+async def command_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                              switch_view: Optional[discord.ui.View] = None) -> None:
+    """Server settings auto-flex command (page)"""
+    interaction = guild_settings = None
+    if switch_view is not None:
+        guild_settings = getattr(switch_view, 'guild_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if guild_settings is None:
+        guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    view = views.SettingsServerAutoFlex2View(ctx, bot, guild_settings, embed_server_settings_auto_flex)
+    embed = await embed_server_settings_auto_flex_2(bot, ctx, guild_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+    
+async def command_server_settings_main(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                       switch_view: Optional[discord.ui.View] = None) -> None:
+    """Server settings main command"""
+    interaction = guild_settings = None
+    if switch_view is not None:
+        guild_settings = getattr(switch_view, 'guild_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if guild_settings is None:
+        guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    view = views.SettingsServerMainView(ctx, bot, guild_settings, embed_server_settings_main)
+    embed = await embed_server_settings_main(bot, ctx, guild_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
+    
+async def command_server_settings_event_pings(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                              switch_view: Optional[discord.ui.View] = None) -> None:
+    """Server settings event ping command"""
+    interaction = guild_settings = None
+    if switch_view is not None:
+        guild_settings = getattr(switch_view, 'guild_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+    if guild_settings is None:
+        guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
+    view = views.SettingsServerEventPingsView(ctx, bot, guild_settings, embed_server_settings_event_pings)
+    embed = await embed_server_settings_event_pings(bot, ctx, guild_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
     view.interaction = interaction
     await view.wait()
 
@@ -1008,32 +1087,49 @@ async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.Appli
 async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                      user_settings: users.User) -> discord.Embed:
     """Reminder multiplier settings embed"""
-    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
-    multipliers = (
-        f'{emojis.BP} **Adventure**: `{user_settings.alert_adventure.multiplier}`\n'
-        f'{emojis.BP} **Card hand**: `{user_settings.alert_card_hand.multiplier}`\n'
-        f'{emojis.BP} **Daily**: `{user_settings.alert_daily.multiplier}`\n'
-        f'{emojis.BP} **Duel**: `{user_settings.alert_duel.multiplier}`\n'
-        f'{emojis.BP} **EPIC items**: `{user_settings.alert_epic.multiplier}`\n'
-        f'{emojis.BP} **Farm**: `{user_settings.alert_farm.multiplier}`\n'
-        f'{emojis.BP} **Hunt**: `{user_settings.alert_hunt.multiplier}`\n'
-        f'{emojis.BP} **Lootbox**: `{user_settings.alert_lootbox.multiplier}`\n'
-        f'{emojis.BP} **Quest**: `{user_settings.alert_quest.multiplier}`\n'
-        f'{emojis.BP} **Training**: `{user_settings.alert_training.multiplier}`\n'
-        f'{emojis.BP} **Weekly**: `{user_settings.alert_weekly.multiplier}`\n'
-        f'{emojis.BP} **Work**: `{user_settings.alert_work.multiplier}`\n'
+    ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
+    if user_settings.multiplier_management_enabled:
+        if user_settings.current_area == 20:
+            multiplier_management: str = f'{emojis.ENABLED}`Enabled (Inactive)`'
+        else:
+            multiplier_management: str = f'{emojis.ENABLED}`Enabled`'
+    else:
+        multiplier_management: str = f'{emojis.DISABLED}`Disabled`'
+    
+    field_settings: str = (
+        f'{emojis.BP} **Automatic managed multipliers**: {multiplier_management}\n'
+        f'{emojis.DETAIL} _Managed multipliers are not changeable in automatic mode._\n'
+        f'{emojis.DETAIL} _Automatic multipliers are inactive in area 20._\n'
     )
-    embed = discord.Embed(
+    field_managed_multipliers: str = (
+        f'{emojis.BP} **`{f'Adventure':<12}`** `{round(user_settings.alert_adventure.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Boo':<12}`** `{round(user_settings.alert_boo.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Card hand':<12}`** `{round(user_settings.alert_card_hand.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Daily':<12}`** `{round(user_settings.alert_daily.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Duel':<12}`** `{round(user_settings.alert_duel.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'EPIC items':<12}`** `{round(user_settings.alert_epic.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Farm':<12}`** `{round(user_settings.alert_farm.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Hunt':<12}`** `{round(user_settings.alert_hunt.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Lootbox':<12}`** `{round(user_settings.alert_lootbox.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Quest':<12}`** `{round(user_settings.alert_quest.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Training':<12}`** `{round(user_settings.alert_training.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Weekly':<12}`** `{round(user_settings.alert_weekly.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Work':<12}`** `{round(user_settings.alert_work.multiplier, 3):>5}`\n'
+    )
+    field_manual_multipliers: str = (
+        f'{emojis.BP} **`{f'Hunt partner':<12}`** `{round(user_settings.alert_hunt_partner.multiplier, 3):>5}`\n'
+    )
+    embed: discord.Embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx_author_name.upper()}\'S REMINDER MULTIPLIERS',
         description = (
-            f'_Multipliers are applied to all reminder times._\n'
-            f'_These are for **personal** differences (e.g. area 18, returning event)._\n'
-            f'_These are **not** for global event reductions. Those are set by your Navi bot owner and can be '
-            f'viewed in {await functions.get_navi_slash_command(bot, "event-reductions")}._\n'
+            f'_Multipliers are applied after all other reductions._\n'
+            f'_Unless you know what you\'re doing, leave it on automatic._\n'
         )
     )
-    embed.add_field(name='MULTIPLIERS', value=multipliers, inline=False)
+    embed.add_field(name='SETTINGS', value=field_settings, inline=False)
+    embed.add_field(name='MANAGED MULTIPLIERS', value=field_managed_multipliers, inline=False)
+    embed.add_field(name='MANUAL MULTIPLIERS', value=field_manual_multipliers, inline=False)
     return embed
 
 
@@ -1219,6 +1315,7 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
     )
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
+        f'{emojis.BP} **Hunt partner**: {await bool_to_text(user_settings.alert_hunt_partner.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
         #f'{emojis.BP} **Love share** ❤️: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
         #f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
@@ -1269,12 +1366,13 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     behaviour = (
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
         f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
-        f'{emojis.BP} **Hunt rotation**: {await functions.bool_to_text(user_settings.hunt_rotation_enabled)}\n'
-        f'{emojis.DETAIL} _Rotates hunt reminders between `hunt` and `hunt together`._\n'
         f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
         f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
         f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
         f'{emojis.DETAIL} _If disabled, Navi will ignore command cooldowns and `rpg cd` when in area 20._\n'
+        f'{emojis.BP} **Combine hunt reminders**: {await functions.bool_to_text(user_settings.hunt_reminders_combined)}\n'
+        f'{emojis.DETAIL} _If enabled, Navi will never send or show the `hunt partner` reminder._\n'
+        f'{emojis.DETAIL} _Instead the `hunt` reminder will be long enough for both players to be ready._\n'
         f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
         f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
         #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
@@ -1309,6 +1407,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     )
     command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
+        f'{emojis.BP} **Hunt partner**: {await functions.bool_to_text(user_settings.alert_hunt_partner.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
         #f'{emojis.BP} **Love share** ❤️: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
         f'{emojis.BP} **Maintenance**: {await functions.bool_to_text(user_settings.alert_maintenance.enabled)}\n'
@@ -1347,16 +1446,32 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     return embed
 
 
-async def embed_settings_server(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
-                                guild_settings: guilds.Guild) -> discord.Embed:
-    """Server settings embed"""
+async def embed_server_settings_main(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                     guild_settings: guilds.Guild) -> discord.Embed:
+    """Server settings main embed"""
+    server_settings = (
+        f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
+        f'{emojis.DETAIL} _If you want to have a space after the prefix, you need to input it as `"prefix "`._'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.guild.name.upper()} SERVER SETTINGS: MAIN',
+        description = (
+            f'_Serverwide settings._'
+        )
+    )
+    embed.add_field(name='SETTINGS', value=server_settings, inline=False)
+    return embed
+
+
+async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                     guild_settings: guilds.Guild) -> discord.Embed:
+    """Server settings auto-flex embed"""
     if guild_settings.auto_flex_channel_id is not None:
         auto_flex_channel = f'<#{guild_settings.auto_flex_channel_id}>'
     else:
         auto_flex_channel = '`N/A`'
-    server_settings = (
-        f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
-        f'{emojis.DETAIL} _If you want to have a space after the prefix, you need to input it as `"prefix "`._'
+    main_settings = (
         f'{emojis.BP} **Auto flex**: {await functions.bool_to_text(guild_settings.auto_flex_enabled)}\n'
         f'{emojis.BP} **Auto flex channel**: {auto_flex_channel}\n'
     )
@@ -1365,32 +1480,32 @@ async def embed_settings_server(bot: bridge.AutoShardedBot, ctx: discord.Applica
         f'{await functions.bool_to_text(guild_settings.auto_flex_brew_electronical_enabled)}\n'
         f'{emojis.BP} Artifacts: **Craft artifact**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_artifacts_enabled)}\n'
-        f'{emojis.BP} Cards: **Drop rare or higher card**: '
+        f'{emojis.BP} Cards: **Drop EPIC+ card**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_card_drop_enabled)}\n'
-        f'{emojis.BP} Cards: **Full house+ from `card hand`**: '
-        f'{await functions.bool_to_text(guild_settings.auto_flex_card_hand_enabled)}\n'
         f'{emojis.BP} Cards: **Card from `card slots`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_card_slots_enabled)}\n'
-        f'{emojis.BP} Drop: **EPIC berries from `hunt` & `adventure`**: '
+        f'{emojis.BP} Drop: **EPIC berries from `hunt`/`adventure` (`5`+)**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_epicberry_enabled)}\n'
-        f'{emojis.BP} Drop: **GODLY lootbox from `hunt` & `adventure`**: '
+        f'{emojis.BP} Drop: **ETERNAL lootbox from `hunt`/`adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_eternal_enabled)}\n'
+        f'{emojis.BP} Drop: **GODLY lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_enabled)}\n'
         f'{emojis.BP} Drop: **HYPER logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_hyperlog_enabled)}\n'
-        f'{emojis.BP} Drop: **OMEGA lootbox from `hunt` & `adventure`**: '
+        f'{emojis.BP} Drop: **OMEGA lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_enabled)}\n'
-        f'{emojis.DETAIL} _Hardmode drops only count if `3` or more._\n'
-        f'{emojis.BP} Drop: **Lost lootboxes in area 18**: '
-        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_a18_enabled)}\n'
+        f'{emojis.DETAIL} _Hardmode drops only count if `3`+._\n'
     )
     auto_flex_alerts_2 = (
+        f'{emojis.BP} Drop: **Lost lootboxes in area 18**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_a18_enabled)}\n'
         f'{emojis.BP} Drop: **Party popper from lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_party_popper_enabled)}\n'
         f'{emojis.BP} Drop: **SUPER fish from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_superfish_enabled)}\n'
-        f'{emojis.BP} Drop: **TIME capsule from GODLY/VOID lootbox**: '
+        f'{emojis.BP} Drop: **TIME capsule from lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
         f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
@@ -1400,7 +1515,7 @@ async def embed_settings_server(bot: bridge.AutoShardedBot, ctx: discord.Applica
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_ultra_enabled)}\n'
         f'{emojis.BP} Drop: **ULTRA logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultralog_enabled)}\n'
-        f'{emojis.BP} Drop: **VOID lootbox from `hunt` or `adventure`**: '
+        f'{emojis.BP} Drop: **VOID lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_void_enabled)}\n'
         f'{emojis.BP} Drop: **Watermelons from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_watermelon_enabled)}\n'
@@ -1409,6 +1524,22 @@ async def embed_settings_server(bot: bridge.AutoShardedBot, ctx: discord.Applica
         f'{emojis.BP} Event: **Get 20 levels in farm event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_farm_enabled)}\n'
     )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.guild.name.upper()} SERVER SETTINGS: AUTO FLEX (1/2)',
+        description = (
+            f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
+        )
+    )
+    embed.add_field(name='SETTINGS', value=main_settings, inline=False)
+    embed.add_field(name='AUTO FLEXES (I)', value=auto_flex_alerts_1, inline=False)
+    embed.add_field(name='AUTO FLEXES (II)', value=auto_flex_alerts_2, inline=False)
+    return embed
+
+
+async def embed_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                     guild_settings: guilds.Guild) -> discord.Embed:
+    """Server settings auto-flex 2 embed"""
     auto_flex_alerts_3 = (
         f'{emojis.BP} Event: **Kill mysterious man in heal event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_heal_enabled)}\n'
@@ -1447,17 +1578,35 @@ async def embed_settings_server(bot: bridge.AutoShardedBot, ctx: discord.Applica
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx.guild.name.upper()} SERVER SETTINGS',
+        title = f'{ctx.guild.name.upper()} SERVER SETTINGS: AUTO FLEX (2/2)',
         description = (
-            f'_Serverwide settings._\n'
             f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
         )
     )
-    embed.add_field(name='SETTINGS', value=server_settings, inline=False)
-    embed.add_field(name='AUTO FLEXES (I)', value=auto_flex_alerts_1, inline=False)
-    embed.add_field(name='AUTO FLEXES (II)', value=auto_flex_alerts_2, inline=False)
     embed.add_field(name='AUTO FLEXES (III)', value=auto_flex_alerts_3, inline=False)
     embed.add_field(name='AUTO FLEXES (SEASONAL)', value=auto_flex_alerts_seasonal, inline=False)
+    return embed
+
+
+async def embed_server_settings_event_pings(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                            guild_settings: guilds.Guild) -> discord.Embed:
+    """Server settings event ping embed"""
+    
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx.guild.name.upper()} SERVER SETTINGS: EVENT PINGS',
+        description = (
+            f'_Event pings require the `Mention everyone, here and all roles` permission._\n'
+        )
+    )
+    for event, name in strings.EVENT_PINGS.items():
+        event_settings = getattr(guild_settings, f'event_{event}', None)
+        if event_settings is None: continue
+        field_value = (
+            f'{emojis.BP} **Event ping**: {await functions.bool_to_text(event_settings.enabled)}\n'
+            f'{emojis.BP} **Message**: {event_settings.message}'
+        )
+        embed.add_field(name=name.upper(), value=field_value, inline=False)
     return embed
 
 
@@ -1466,7 +1615,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     """User settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     try:
-        tt_timestamp = int(user_settings.last_tt.replace(tzinfo=timezone.utc).timestamp())
+        tt_timestamp = int(user_settings.last_tt.timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
     prefix = await guilds.get_prefix(ctx)

@@ -1,9 +1,10 @@
 # horse.py
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -135,11 +136,11 @@ class HorseCog(commands.Cog):
                     return
                 await reminder.delete()
                 if reminder.record_exists:
-                    logs.logger.error(f'{datetime.utcnow()}: Had an error deleting the horse reminder.')
+                    logs.logger.error(f'{utils.utcnow()}: Had an error deleting the horse reminder.')
                 else:
                     if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HorseCog(bot))

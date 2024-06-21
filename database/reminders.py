@@ -2,11 +2,11 @@
 """Provides access to the tables "reminders_users" and "reminders_clans" in the database"""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sqlite3
 from typing import List, Optional, Tuple, Union
 
-import discord
+from discord import utils
 from discord.ext import tasks
 
 from database import cooldowns, errors
@@ -152,7 +152,7 @@ async def _dict_to_reminder(record: dict) -> Reminder:
             channel_id = record['channel_id'],
             clan_name = record.get('clan_name', None),
             custom_id = record.get('custom_id', None),
-            end_time = datetime.fromisoformat(record['end_time'], ),
+            end_time = datetime.fromisoformat(record['end_time'], ).replace(tzinfo=timezone.utc),
             message = record['message'],
             reminder_type = reminder_type,
             task_name = task_name,
@@ -275,8 +275,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
     function_name = 'get_active_user_reminders'
     sql = f'SELECT * FROM {table} WHERE end_time>?'
     if end_time is None:
-        current_time = datetime.utcnow().replace(microsecond=0)
-        end_time_str = current_time.isoformat(sep=' ')
+        end_time_str = utils.utcnow().isoformat(sep=' ')
     else:
         end_time_str = end_time.isoformat(sep=' ')
     queries = [end_time_str,]
@@ -331,8 +330,7 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
-        current_time_str = current_time.isoformat(sep=' ')
+        current_time_str = utils.utcnow().isoformat(sep=' ')
         cur.execute(sql, (current_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, current_time_str))
         records = cur.fetchall()
     except sqlite3.Error as error:
@@ -376,7 +374,7 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         sql = f'SELECT * FROM {table} WHERE user_id=? AND triggered=? AND end_time BETWEEN ? AND ?'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = utils.utcnow()
         end_time = current_time + timedelta(seconds=15)
         current_time_str = current_time.isoformat(sep=' ')
         end_time_str = end_time.isoformat(sep=' ')
@@ -427,7 +425,7 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND triggered=? AND end_time BETWEEN ? AND ?'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
+        current_time = utils.utcnow()
         end_time  = current_time + timedelta(seconds=15)
         current_time_str = current_time.isoformat(sep=' ')
         end_time_str = end_time.isoformat(sep=' ')
@@ -478,8 +476,7 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
         sql = f'SELECT * FROM {table} WHERE user_id=? AND end_time < ?'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
-        end_time  = current_time - timedelta(seconds=20)
+        end_time = utils.utcnow() - timedelta(seconds=20)
         end_time_str = end_time.isoformat(sep=' ')
         cur.execute(sql, (end_time_str,)) if user_id is None else cur.execute(sql, (user_id, end_time_str))
         records = cur.fetchall()
@@ -524,8 +521,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time < ?'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time = datetime.utcnow().replace(microsecond=0)
-        end_time  = current_time - timedelta(seconds=20)
+        end_time = utils.utcnow() - timedelta(seconds=20)
         end_time_str = end_time.isoformat(sep=' ')
         cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time_str))
         records = cur.fetchall()
@@ -610,9 +606,8 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    current_time = datetime.utcnow().replace(microsecond=0)
     end_time = kwargs['end_time'] if 'end_time' in kwargs else reminder.end_time
-    time_left = end_time - current_time
+    time_left = end_time - utils.utcnow()
     triggered = False if time_left.total_seconds() > 15 else True
     if 'triggered' not in kwargs: kwargs['triggered'] = triggered
     try:
@@ -663,8 +658,8 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
     """
     function_name = 'insert_user_reminder'
     table = 'reminders_users'
-    current_time = datetime.utcnow().replace(microsecond=0)
-    end_time = current_time + time_left
+    end_time = (utils.utcnow() + time_left)
+    end_time = end_time.replace(microsecond=999_999)
     custom_id = None
     triggered = False if time_left.total_seconds() > 15 else True
     try:
@@ -752,8 +747,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
         reminder = await get_clan_reminder(clan_name)
     except exceptions.NoDataFoundError:
         pass
-    current_time = datetime.utcnow().replace(microsecond=0)
-    end_time = current_time + time_left
+    end_time = utils.utcnow() + time_left
     triggered = False if time_left.total_seconds() > 15 else True
     if reminder is not None:
         await reminder.update(end_time=end_time, channel_id=channel_id, message=message, triggered=triggered)
@@ -794,7 +788,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
     ------
     ValueError if time_reduction is neither time_delta nor the string 'half'
     """
-    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = utils.utcnow()
     try:
         reminders = await get_active_user_reminders(user_id)
     except exceptions.NoDataFoundError:
@@ -838,7 +832,7 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: float, activ
     ------
     ValueError if time_reduction is neither time_delta nor the string 'half'
     """
-    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = utils.utcnow()
     try:
         reminders = await get_active_user_reminders(user_id)
     except exceptions.NoDataFoundError:
@@ -884,7 +878,7 @@ async def increase_reminder_time_percentage(user_id: int, percentage: float, act
     ------
     ValueError if time_reduction is neither time_delta nor the string 'half'
     """
-    current_time = datetime.utcnow().replace(microsecond=0)
+    current_time = utils.utcnow()
     try:
         reminders = await get_active_user_reminders(user_id)
     except exceptions.NoDataFoundError:

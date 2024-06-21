@@ -4,6 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 from datetime import timedelta
 
@@ -92,7 +93,6 @@ class CooldownsCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20: return
             # Anniversary event reduction update
             search_patterns = [
                 r'anniversary event cooldown reduction\*\*: (\d+?)%',
@@ -315,9 +315,17 @@ class CooldownsCog(commands.Cog):
                 cd_activity = cooldown[0]
                 cd_timestring = cooldown[1]
                 cd_message = cooldown[2]
+                if not user_settings.area_20_cooldowns_enabled and user_settings.current_area == 20 and cd_activity != 'vote':
+                    continue
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): continue
-                time_left += timedelta(seconds=1)
+                time_left = timedelta(seconds=time_left.total_seconds() + 1)
+                if user_settings.multiplier_management_enabled:
+                    await user_settings.update_multiplier(cd_activity, time_left)
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (
                         await reminders.insert_user_reminder(interaction_user.id, cd_activity, time_left,
@@ -425,5 +433,5 @@ class CooldownsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(CooldownsCog(bot))

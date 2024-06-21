@@ -4,6 +4,7 @@ from datetime import timedelta
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -79,8 +80,6 @@ class BoostsCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
                     if not user_name_match or not embed_users:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find embed user for the boosts message.', message)
                         return
                 if interaction_user not in embed_users: return
                 try:
@@ -144,15 +143,13 @@ class BoostsCog(commands.Cog):
                     kwargs['potion_dragon_breath_active'] = potion_dragon_breath_active
                 if kwargs:
                     await user_settings.update(**kwargs)
-                if not user_settings.alert_boosts.enabled: return               
+                if not user_settings.alert_boosts.enabled: return
                 for activity in all_boosts:
                     try:
                         active_reminder = await reminders.get_user_reminder(interaction_user.id, activity)
                         await active_reminder.delete()
                     except exceptions.NoDataFoundError:
                         continue
-                if user_settings.auto_healing_active != auto_healing_active:
-                    await user_settings.update(auto_healing_active=auto_healing_active)
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
@@ -303,6 +300,10 @@ class BoostsCog(commands.Cog):
                 if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -470,6 +471,10 @@ class BoostsCog(commands.Cog):
                 if not user_settings.alert_boosts.enabled: return
                 timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 await reminders.reduce_reminder_time_percentage(user.id, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
                                                                 user_settings)
@@ -544,5 +549,5 @@ class BoostsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(BoostsCog(bot))

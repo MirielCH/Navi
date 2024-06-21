@@ -196,7 +196,7 @@ class HelperHealCog(commands.Cog):
                     'mas perdeu a luta', #Portuguese 2
                     'mas perdeu a luta', #TODO: Portuguese 3
                 ]
-                if all(search_string not in message_content for search_string in search_strings):
+                if all(search_string not in message_content.lower() for search_string in search_strings):
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Health not found in hunt/adventure message for heal warning.', message)
                     return
@@ -290,5 +290,5 @@ class HelperHealCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HelperHealCog(bot))

@@ -1,11 +1,12 @@
 # lottery.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
 import random
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -147,9 +148,9 @@ class LotteryCog(commands.Cog):
                     return
                 except exceptions.NoDataFoundError:
                     pass
-                current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
-                today_12pm = datetime.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
-                today_12am = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                today_12pm = current_time.replace(hour=12, minute=0, second=0, microsecond=0)
+                today_12am = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 tomorrow_12am = today_12am + timedelta(days=1)
                 if today_12am > current_time:
                     time_left = today_12am - current_time
@@ -245,9 +246,9 @@ class LotteryCog(commands.Cog):
                     user_command = f"{user_command} `amount: [1-200]`"
                 else:
                     user_command = f"{user_command} `buy [1-200]`".replace('` `', ' ')
-                current_time = datetime.utcnow().replace(microsecond=0, tzinfo=None)
-                today_12pm = datetime.utcnow().replace(hour=12, minute=0, second=0, microsecond=0)
-                today_12am = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+                current_time = utils.utcnow()
+                today_12pm = current_time.replace(hour=12, minute=0, second=0, microsecond=0)
+                today_12am = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
                 tomorrow_12am = today_12am + timedelta(days=1)
                 if today_12am > current_time:
                     time_left = today_12am - current_time
@@ -266,5 +267,5 @@ class LotteryCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(LotteryCog(bot))

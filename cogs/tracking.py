@@ -1,10 +1,10 @@
 # tracking.py
 """Contains commands related to command tracking"""
 
-from datetime import datetime
 import re
 
 import discord
+from discord import utils
 from discord.commands import slash_command
 from discord.ext import bridge, commands
 
@@ -86,8 +86,8 @@ class TrackingCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if user_settings.tracking_enabled and user_settings.bot_enabled:
-                        current_time = datetime.utcnow().replace(microsecond=0)
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'epic guard', current_time)
+                        await tracking.insert_log_entry(user.id, message.guild.id, 'epic guard',
+                                                        utils.utcnow())
 
             if message.embeds:
                 # Last time travel
@@ -125,7 +125,7 @@ class TrackingCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if not user_settings.bot_enabled: return
-                    tt_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                    tt_time = message.created_at
                     kwargs = {
                         'last_tt': tt_time.isoformat(sep=' '),
                         'inventory_bread': 0,
@@ -154,5 +154,5 @@ class TrackingCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(TrackingCog(bot))

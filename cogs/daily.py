@@ -87,9 +87,12 @@ class DailyCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                activity: str = 'daily'
+                if user_settings.multiplier_management_enabled:
+                    await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_daily.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'daily', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
@@ -138,5 +141,5 @@ class DailyCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(DailyCog(bot))

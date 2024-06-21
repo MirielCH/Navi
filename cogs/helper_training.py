@@ -1,15 +1,16 @@
 # helper_training.py
 
 import re
-from datetime import datetime
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
 from database import settings as settings_db
 from resources import emojis, exceptions, functions, settings, regex, views
+
 
 
 class HelperTrainingCog(commands.Cog):
@@ -59,7 +60,10 @@ class HelperTrainingCog(commands.Cog):
                             area_no = int(field.name[-2:])
                             seal_timestring = seal_timestring_match.group(1).replace(' ','')
                             seal_time_left = await functions.parse_timestring_to_timedelta(seal_timestring.lower())
-                            current_time = datetime.utcnow().replace(microsecond=0)
+                            bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                            current_time = utils.utcnow()
+                            time_elapsed = current_time - bot_answer_time
+                            seal_time_left -= time_elapsed
                             seal_time = current_time + seal_time_left
                             await settings_db.update_setting(f'a{area_no}_seal_time', seal_time)
                             updated_settings = True
@@ -159,5 +163,5 @@ class HelperTrainingCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(HelperTrainingCog(bot))

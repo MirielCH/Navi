@@ -1,10 +1,12 @@
 # quest.py
 
 import asyncio
-from datetime import datetime, timedelta
+from datetime import timedelta
+from math import floor
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -95,7 +97,7 @@ class QuestCog(commands.Cog):
                             miniboss_reminder = None
                         command_miniboss = await functions.get_slash_command(user_settings, 'miniboss')
                         if miniboss_reminder is not None:
-                            current_time = datetime.utcnow().replace(microsecond=0)
+                            current_time = utils.utcnow()
                             time_left = miniboss_reminder.end_time - current_time
                             timestring = await functions.parse_timedelta_to_timestring(time_left)
                             answer = f'🕓 {command_miniboss} is ready in **{timestring}**.'
@@ -148,7 +150,7 @@ class QuestCog(commands.Cog):
                                 return
                             command_raid = await functions.get_slash_command(user_settings, 'guild raid')
                             if clan_reminder is not None:
-                                current_time = datetime.utcnow().replace(microsecond=0)
+                                current_time = utils.utcnow()
                                 time_left = clan_reminder.end_time - current_time
                                 timestring = await functions.parse_timedelta_to_timestring(time_left)
                                 raid_ready = f'🕓 {command_raid} is ready in **{timestring}**.'
@@ -171,7 +173,7 @@ class QuestCog(commands.Cog):
                             clan_user_reminder = None
                         command_guild_raid = await functions.get_slash_command(user_settings, 'guild raid')
                         if clan_user_reminder is not None:
-                            current_time = datetime.utcnow().replace(microsecond=0)
+                            current_time = utils.utcnow()
                             time_left = clan_user_reminder.end_time - current_time
                             timestring = await functions.parse_timedelta_to_timestring(time_left)
                             answer = f'🕓 {command_guild_raid} is ready in **{timestring}**.'
@@ -239,9 +241,12 @@ class QuestCog(commands.Cog):
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
+                activity: str = 'quest'
+                if user_settings.multiplier_management_enabled:
+                    await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_quest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'quest', time_left,
+                    await reminders.insert_user_reminder(user.id, activity, time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
@@ -324,8 +329,8 @@ class QuestCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'epic quest')
                 await user_settings.update(last_quest_command='epic quest')
-                current_time = datetime.utcnow().replace(microsecond=0)
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                current_time = utils.utcnow()
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 time_elapsed = current_time - bot_answer_time
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest')
                 user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
@@ -333,9 +338,9 @@ class QuestCog(commands.Cog):
                 if cooldown.donor_affected:
                     time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                        - time_elapsed.total_seconds())
+                                        - floor(time_elapsed.total_seconds()))
                 else:
-                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                    time_left_seconds = actual_cooldown - floor(time_elapsed.total_seconds())
                 if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
                 if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
@@ -381,7 +386,7 @@ class QuestCog(commands.Cog):
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
-                if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
+                if not user_settings.bot_enabled: return
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
                 except exceptions.NoDataFoundError:
@@ -426,7 +431,7 @@ class QuestCog(commands.Cog):
                     )
                 except exceptions.NoDataFoundError:
                     clan_reminder = None
-                current_time = datetime.utcnow().replace(microsecond=0)
+                current_time = utils.utcnow()
                 for member_id in clan.member_ids:
                     if member_id == user.id: continue
                     try:
@@ -479,8 +484,8 @@ class QuestCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_quest.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'quest')
                 await user_settings.update(last_quest_command='quest')
-                current_time = datetime.utcnow().replace(microsecond=0)
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                current_time = utils.utcnow()
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 time_elapsed = current_time - bot_answer_time
                 if quest_declined:
                     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('quest-decline')
@@ -491,9 +496,9 @@ class QuestCog(commands.Cog):
                 if cooldown.donor_affected:
                     time_left_seconds = (actual_cooldown
                                         * settings.DONOR_COOLDOWNS[user_donor_tier]
-                                        - time_elapsed.total_seconds())
+                                        - floor(time_elapsed.total_seconds()))
                 else:
-                    time_left_seconds = actual_cooldown - time_elapsed.total_seconds()
+                    time_left_seconds = actual_cooldown - floor(time_elapsed.total_seconds())
                 if user_settings.christmas_area_enabled: time_left_seconds *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if user_settings.round_card_active: time_left_seconds *= settings.ROUND_CARD_MULTIPLIER
                 if user_settings.potion_flask_active: time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
@@ -565,5 +570,5 @@ class QuestCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(QuestCog(bot))

@@ -6,6 +6,7 @@ import random
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
@@ -70,8 +71,8 @@ class CelebrationCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_cel_dailyquest.enabled: return
                 
-                current_time = datetime.utcnow().replace(microsecond=0)
-                midnight_today = datetime.utcnow().replace(hour=0, minute=2, microsecond=0)
+                current_time = utils.utcnow()
+                midnight_today = current_time.replace(hour=0, minute=2, microsecond=0)
                 end_time = midnight_today + timedelta(days=1, minutes=2, seconds=random.randint(60, 300))
                 time_to_midnight = end_time - current_time
                 user_command = await functions.get_slash_command(user_settings, 'cel dailyquest')
@@ -111,8 +112,8 @@ class CelebrationCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_cel_multiply.enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                current_time = utils.utcnow()
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(hours=12) - time_elapsed
                 if time_left < timedelta(0): return
@@ -152,8 +153,8 @@ class CelebrationCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_cel_sacrifice.enabled: return
-                current_time = datetime.utcnow().replace(microsecond=0)
-                bot_answer_time = message.created_at.replace(microsecond=0, tzinfo=None)
+                current_time = utils.utcnow()
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 time_elapsed = current_time - bot_answer_time
                 time_left = timedelta(hours=12) - time_elapsed
                 if time_left < timedelta(0): return
@@ -179,6 +180,10 @@ class CelebrationCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_cel_multiply.enabled: return
                 timestring_match = re.search(r"another \*\*(.+?)\*\*", message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'cel multiply')
                 reminder_message = user_settings.alert_cel_multiply.message.replace('{command}', user_command)
@@ -201,6 +206,10 @@ class CelebrationCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_cel_dailyquest.enabled: return
                 timestring_match = re.search(r"in \*\*(.+?)\*\*", message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 user_command = await functions.get_slash_command(user_settings, 'cel dailyquest')
                 reminder_message = user_settings.alert_cel_dailyquest.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -222,6 +231,10 @@ class CelebrationCog(commands.Cog):
                 if not user_settings.bot_enabled or not user_settings.alert_cel_sacrifice.enabled: return
                 timestring_match = re.search(r"another \*\*(.+?)\*\*", message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
+                bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                current_time = utils.utcnow()
+                time_elapsed = current_time - bot_answer_time
+                time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'cel sacrifice')
                 reminder_message = user_settings.alert_cel_sacrifice.message.replace('{command}', user_command)
@@ -233,5 +246,5 @@ class CelebrationCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(CelebrationCog(bot))

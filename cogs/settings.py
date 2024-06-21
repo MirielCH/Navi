@@ -123,25 +123,53 @@ class SettingsCog(commands.Cog):
         await settings_cmd.command_settings_ready(self.bot, ctx)
 
     aliases_settings_reminders = (
-        'slashmentions','ping-mode','pingmode','hunt-totation','huntrotation','huntrotate',
-        'hunt-rotate','huntswitch','hunt-switch','dnd','slash-mentions','reminder','rm',
+        'slashmentions','ping-mode','pingmode','dnd','slash-mentions','reminder','rm',
     )
     @settings_group.command(name='reminders', aliases=aliases_settings_reminders, description='Manage reminder settings')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def settings_reminders(self, ctx: bridge.BridgeContext):
         """Reminder settings command"""
         await settings_cmd.command_settings_reminders(self.bot, ctx)
+
+    @bridge.bridge_group(name='server-settings', aliases=('serversettings','server','ss','admin'), invoke_without_command=True)
+    async def server_settings_group(self, ctx: bridge.BridgeContext):
+        """Server Settings command group"""
+        command = self.bot.get_command(name='server-settings main')
+        if command is not None: await command.callback(command.cog, ctx)
         
-    @settings_group.command(name='server', aliases=('s','srv'))
+    @server_settings_group.command(name='main', aliases=('s','srv'), description='Manage server settings')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def settings_server(self, ctx: bridge.BridgeContext, description='Manage server settings'):
-        """Server settings command"""
+    async def server_settings_main(self, ctx: bridge.BridgeContext):
+        """Server settings main command"""
         if (not ctx.author.guild_permissions.manage_guild
             and not (ctx.guild.id == 713541415099170836 and ctx.author.id == 619879176316649482)):
             raise commands.MissingPermissions(['manage_guild',])
             # This is to give me (Miriel) server settings access in RPG ARMY. This does NOT give me backdoor access
             # in any other server.
-        await settings_cmd.command_settings_server(self.bot, ctx)
+        await settings_cmd.command_server_settings_main(self.bot, ctx)
+        
+    @server_settings_group.command(name='auto-flex', aliases=('flex','auto_flex','autoflex','a',), description='Manage auto-flex server settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def server_settings_auto_flex(self, ctx: bridge.BridgeContext):
+        """Server settings auto-flex command"""
+        if (not ctx.author.guild_permissions.manage_guild
+            and not (ctx.guild.id == 713541415099170836 and ctx.author.id == 619879176316649482)):
+            raise commands.MissingPermissions(['manage_guild',])
+            # This is to give me (Miriel) server settings access in RPG ARMY. This does NOT give me backdoor access
+            # in any other server.
+        await settings_cmd.command_server_settings_auto_flex(self.bot, ctx)
+        
+    @server_settings_group.command(name='event-pings', aliases=('ping','event','events','eventpings','eventping','pings'),
+                                   description='Manage event ping server settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def server_settings_event_pings(self, ctx: bridge.BridgeContext):
+        """Server settings event ping command"""
+        if (not ctx.author.guild_permissions.manage_guild
+            and not (ctx.guild.id == 713541415099170836 and ctx.author.id == 619879176316649482)):
+            raise commands.MissingPermissions(['manage_guild',])
+            # This is to give me (Miriel) server settings access in RPG ARMY. This does NOT give me backdoor access
+            # in any other server.
+        await settings_cmd.command_server_settings_event_pings(self.bot, ctx)
 
     @settings_group.command(name='user', aliases=('me','u','donor','track','tracking','last-tt','lasttt','donator'),
                       description='Manage user settings')
@@ -158,7 +186,7 @@ class SettingsCog(commands.Cog):
         """Multiplier settings (text version)"""
         await settings_cmd.command_multipliers(self.bot, ctx, args)
         
-    @commands.command(name='sa', aliases=('srm','sm','srd','sp','sh','spt','sg','smulti','ss','su'))
+    @commands.command(name='sa', aliases=('srm','sm','srd','sp','sh','spt','sg','smulti','su','ssa','sse','ssm'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def settings_shortcuts(self, ctx: commands.Context, *args: str) -> None:
         """Settings shortcuts"""
@@ -172,7 +200,9 @@ class SettingsCog(commands.Cog):
             'spt': 'settings portals',
             'srd': 'settings ready',
             'srm': 'settings reminders',
-            'ss': 'settings server',
+            'ssa': 'server-settings auto-flex',
+            'sse': 'server-settings event-pings',
+            'ssm': 'server-settings main',
             'su': 'settings user',
         }
         command = self.bot.get_command(name=settings_commands[ctx.invoked_with.lower()])
@@ -342,5 +372,5 @@ class SettingsCog(commands.Cog):
 
 
 # Initialization
-def setup(bot):
+def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(SettingsCog(bot))

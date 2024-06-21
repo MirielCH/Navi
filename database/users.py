@@ -2,12 +2,15 @@
 """Provides access to the table "users" in the database"""
 
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from math import ceil
 import sqlite3
-from typing import NamedTuple, Tuple
+from typing import Any, NamedTuple, Tuple
+
+from discord import utils
 
 from database import alts as alts_db
-from database import errors
+from database import errors, reminders
 from resources import exceptions, settings, strings
 
 
@@ -55,6 +58,7 @@ class User():
     alert_horse_breed: UserAlert
     alert_horse_race: UserAlert
     alert_hunt: UserAlert
+    alert_hunt_partner: UserAlert
     alert_lootbox: UserAlert
     alert_lottery: UserAlert
     alert_love_share: UserAlert
@@ -90,10 +94,12 @@ class User():
     current_area: int
     dnd_mode_enabled: bool
     farm_helper_mode: int
+    guild_quest_prompt_active: bool
     halloween_helper_enabled: bool
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
-    hunt_rotation_enabled: bool
+    hunt_end_time: datetime
+    hunt_reminders_combined: bool
     inventory: UserInventory
     last_adventure_mode: str
     last_farm_seed: str
@@ -104,6 +110,7 @@ class User():
     last_tt: datetime
     last_work_command: str
     megarace_helper_enabled: bool
+    multiplier_management_enabled: bool
     partner_alert_threshold: int
     partner_channel_id: int
     partner_chocolate_box_unlocked: bool
@@ -118,7 +125,6 @@ class User():
     ping_after_message: bool
     portals_as_embed: bool
     portals_spacing_enabled: bool
-    guild_quest_prompt_active: bool
     potion_dragon_breath_active: bool
     potion_flask_active: bool
     reactions_enabled: bool
@@ -155,6 +161,17 @@ class User():
     user_id: int
     user_pocket_watch_multiplier: float
 
+    def __str__(self) -> str:
+        """Returns all attributes of the User object separated by newlines."""
+        response: str = ''
+        attribute_name: str
+        for attribute_name in dir(self):
+            if attribute_name.startswith('__'): continue
+            attribute_value = getattr(self, attribute_name)
+            if 'method' in str(attribute_value): continue
+            response = f'{response}\n{attribute_name}: {attribute_value}'
+        return response.strip()
+            
     async def refresh(self) -> None:
         """Refreshes user data from the database."""
         new_settings: User = await get_user(self.user_id)
@@ -180,6 +197,7 @@ class User():
         self.alert_horse_breed = new_settings.alert_horse_breed
         self.alert_horse_race = new_settings.alert_horse_race
         self.alert_hunt = new_settings.alert_hunt
+        self.alert_hunt_partner = new_settings.alert_hunt_partner
         self.alert_lootbox = new_settings.alert_lootbox
         self.alert_lottery = new_settings.alert_lottery
         self.alert_love_share = new_settings.alert_love_share
@@ -215,10 +233,12 @@ class User():
         self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
         self.farm_helper_mode = new_settings.farm_helper_mode
+        self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
-        self.hunt_rotation_enabled = new_settings.hunt_rotation_enabled
+        self.hunt_end_time = new_settings.hunt_end_time
+        self.hunt_reminders_combined = new_settings.hunt_reminders_combined
         self.inventory = new_settings.inventory
         self.last_adventure_mode = new_settings.last_adventure_mode
         self.last_farm_seed = new_settings.last_farm_seed
@@ -229,6 +249,7 @@ class User():
         self.last_tt = new_settings.last_tt
         self.last_work_command = new_settings.last_work_command
         self.megarace_helper_enabled = new_settings.megarace_helper_enabled
+        self.multiplier_management_enabled = new_settings.multiplier_management_enabled
         self.partner_alert_threshold = new_settings.partner_alert_threshold
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_chocolate_box_unlocked = new_settings.partner_chocolate_box_unlocked
@@ -245,7 +266,6 @@ class User():
         self.portals_spacing_enabled = new_settings.portals_spacing_enabled
         self.potion_dragon_breath_active = new_settings.potion_dragon_breath_active
         self.potion_flask_active = new_settings.potion_flask_active
-        self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.reactions_enabled = new_settings.reactions_enabled
         self.ready_after_all_commands = new_settings.ready_after_all_commands
         self.ready_as_embed = new_settings.ready_as_embed
@@ -321,6 +341,7 @@ class User():
             alert_big_arena_visible: bool
             alert_boo_enabled: bool
             alert_boo_message: str
+            alert_boo_multiplier: float
             alert_boo_visible: bool
             alert_boosts_enabled: bool
             alert_boosts_message: str
@@ -380,6 +401,10 @@ class User():
             alert_hunt_message: str
             alert_hunt_multiplier: float
             alert_hunt_visible: bool
+            alert_hunt_partner_enabled: bool
+            alert_hunt_partner_message: str
+            alert_hunt_partner_multiplier: float
+            alert_hunt_partner_visible: bool
             alert_lootbox_enabled: bool
             alert_lootbox_message: str
             alert_lootbox_multiplier: float
@@ -452,7 +477,8 @@ class User():
             halloween_helper_enabled: bool
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
-            hunt_rotation_enabled: bool
+            hunt_end_time: datetime
+            hunt_reminders_combined: bool
             inventory_bread: int
             inventory_carrot: int
             inventory_potato: int
@@ -470,6 +496,7 @@ class User():
             last_tt: datetime UTC
             last_workt_command: str
             megarace_helper_enabled: bool
+            multiplier_management_enabled: bool
             partner_alert_threshold: int
             partner_channel_id: int
             partner_chocolate_box_unlocked: bool
@@ -522,9 +549,63 @@ class User():
         await _update_user(self, **kwargs)
         await self.refresh()
 
+    async def update_multiplier(self, activity: str, time_left: timedelta) -> None:
+        """
+        Checks if the provided time left differs from the time left of the active reminder.
+        If yes, it will calculate the difference between the two, and then calculate the new multiplier and update it.
+        To not deviate too much, if the provided time left is <= 10 seconds (hunt: <= 5s), no calculation takes place.
+
+        Arguments
+        ---------
+            activity (str)
+            time_left (timedelta): The time left found in the cooldown embed.
+        """
+        if self.current_area == 20: return
+        if activity not in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: return
+
+        # TODO: Once refactored to proper activities, make these 2 lines a percentage of the activity cooldown
+        if activity != 'hunt' and time_left <= timedelta(seconds=10): return
+        if activity =='hunt' and time_left <= timedelta(seconds=5): return
+
+        current_time = utils.utcnow()
+        # Get active reminder. If no reminder is active, there is nothing to do.
+        if activity != 'hunt':
+            try:
+                reminder: reminders.Reminder = await reminders.get_user_reminder(self.user_id, activity)
+                time_left_expected_seconds = (reminder.end_time - current_time).total_seconds()
+            except exceptions.NoDataFoundError:
+                return
+        else:
+            if self.hunt_end_time <= current_time: return
+            time_left_expected_seconds = (self.hunt_end_time - current_time).total_seconds()
+
+        # Get the current multiplier
+        activity_column: str = strings.ACTIVITIES_COLUMNS[activity]
+        alert_settings: UserAlert = getattr(self, activity_column)
+        current_multiplier: float = alert_settings.multiplier
+
+        # Calculate the new multiplier
+        time_left_actual_seconds: float = time_left.total_seconds()
+        new_multiplier: float =  time_left_actual_seconds / time_left_expected_seconds * current_multiplier
+        if new_multiplier <= 0: return
+        if new_multiplier > 1 and not self.current_area == 18: new_multiplier = 1.0
+
+        # Round up hunt multiplier to 0.0x to avoid super small fluctuations
+        if activity == 'hunt':
+            decimals: int = 3
+            new_multiplier *= 10**decimals
+            new_multiplier = 10 * ceil(new_multiplier / 10)
+            new_multiplier /= 10**decimals
+
+        # Update multiplier
+        if current_multiplier != new_multiplier:
+            kwargs: dict[str, float] = {} 
+            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
+            await self.update(**kwargs)
+
 
 # Miscellaneous functions
-async def _dict_to_user(record: dict) -> User:
+async def _dict_to_user(record: dict[str, Any]) -> User:
     """Creates a User object from a database record
 
     Arguments
@@ -539,8 +620,8 @@ async def _dict_to_user(record: dict) -> User:
     ------
     LookupError if something goes wrong reading the dict. Also logs this error to the database.
     """
-    function_name = '_dict_to_user'
-    none_date = datetime(1970, 1, 1, 0, 0, 0)
+    function_name: str = '_dict_to_user'
+    none_date: datetime = datetime(1970, 1, 1, 0, 0, 0)
     try:
         user = User(
             alert_advent = UserAlert(enabled=bool(record['alert_advent_enabled']),
@@ -557,7 +638,7 @@ async def _dict_to_user(record: dict) -> User:
                                     visible=bool(record['alert_arena_visible'])),
             alert_boo = UserAlert(enabled=bool(record['alert_boo_enabled']),
                                     message=record['alert_boo_message'],
-                                    multiplier=1.0,
+                                    multiplier=record['alert_boo_multiplier'],
                                     visible=bool(record['alert_boo_visible'])),
             alert_boosts = UserAlert(enabled=bool(record['alert_boosts_enabled']),
                                      message=record['alert_boosts_message'],
@@ -569,7 +650,7 @@ async def _dict_to_user(record: dict) -> User:
                                         visible=bool(record['alert_card_hand_visible'])),
             alert_chimney = UserAlert(enabled=bool(record['alert_chimney_enabled']),
                                       message=record['alert_chimney_message'],
-                                      multiplier=1.0,
+                                      multiplier=record['alert_chimney_multiplier'],
                                       visible=bool(record['alert_chimney_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
@@ -631,6 +712,10 @@ async def _dict_to_user(record: dict) -> User:
                                    message=record['alert_hunt_message'],
                                    multiplier=float(record['alert_hunt_multiplier']),
                                    visible=bool(record['alert_hunt_visible'])),
+            alert_hunt_partner = UserAlert(enabled=bool(record['alert_hunt_partner_enabled']),
+                                   message=record['alert_hunt_partner_message'],
+                                   multiplier=float(record['alert_hunt_partner_multiplier']),
+                                   visible=bool(record['alert_hunt_partner_visible'])),
             alert_lootbox = UserAlert(enabled=bool(record['alert_lootbox_enabled']),
                                       message=record['alert_lootbox_message'],
                                       multiplier=float(record['alert_lootbox_multiplier']),
@@ -715,7 +800,8 @@ async def _dict_to_user(record: dict) -> User:
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
-            hunt_rotation_enabled = bool(record['hunt_rotation_enabled']),
+            hunt_end_time = datetime.fromisoformat(record['hunt_end_time']).replace(tzinfo=timezone.utc),
+            hunt_reminders_combined = bool(record['hunt_reminders_combined']),
             inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
                                       potato=(record['inventory_potato']),
                                       present_eternal=(record['inventory_present_eternal']),
@@ -728,14 +814,15 @@ async def _dict_to_user(record: dict) -> User:
             last_lootbox = '' if record['last_lootbox'] is None else record['last_lootbox'],
             last_quest_command = '' if record['last_quest_command'] is None else record['last_quest_command'],
             last_training_command = record['last_training_command'],
-            last_tt = datetime.fromisoformat(record['last_tt']) if record['last_tt'] is not None else none_date,
+            last_tt = datetime.fromisoformat(record['last_tt']).replace(tzinfo=timezone.utc) if record['last_tt'] is not None else none_date,
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
+            multiplier_management_enabled = bool(record['multiplier_management_enabled']),
             partner_alert_threshold = record['partner_alert_threshold'],
             partner_channel_id = record['partner_channel_id'],
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
             partner_donor_tier = record['partner_donor_tier'],
-            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']),
+            partner_hunt_end_time = datetime.fromisoformat(record['partner_hunt_end_time']).replace(tzinfo=timezone.utc),
             partner_id = record['partner_id'],
             partner_name = record['partner_name'],
             partner_pocket_watch_multiplier = float(record['partner_pocket_watch_multiplier']),
@@ -805,13 +892,13 @@ async def get_user(user_id: int) -> User:
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """
-    table = 'users'
-    function_name = 'get_user'
-    sql = f'SELECT * FROM {table} WHERE user_id=?'
+    table: str = 'users'
+    function_name: str = 'get_user'
+    sql: str = f'SELECT * FROM {table} WHERE user_id=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql, (user_id,))
-        record = cur.fetchone()
+        record: Any = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -819,14 +906,14 @@ async def get_user(user_id: int) -> User:
         raise
     if not record:
         raise exceptions.FirstTimeUserError(f'No user data found in database for user "{user_id}".')
-    record = dict(record)
+    record: dict[str, Any] = dict(record)
     record['alts'] = await alts_db.get_alts(user_id)
-    user = await _dict_to_user(record)
+    user: User = await _dict_to_user(record)
 
     return user
 
 
-async def get_all_users() -> Tuple[User]:
+async def get_all_users() -> tuple[User,...]:
     """Gets all user settings of all users.
 
     Returns
@@ -840,13 +927,13 @@ async def get_all_users() -> Tuple[User]:
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """
-    table = 'users'
-    function_name = 'get_all_users'
-    sql = f'SELECT * FROM {table}'
+    table: str = 'users'
+    function_name: str = 'get_all_users'
+    sql: str = f'SELECT * FROM {table}'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql)
-        records = cur.fetchall()
+        records: list[Any] = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -854,17 +941,17 @@ async def get_all_users() -> Tuple[User]:
         raise
     if not records:
         raise exceptions.FirstTimeUserError(f'No user data found in database (how likely is that).')
-    users = []
+    users: list[User] = []
     for record in records:
-        record = dict(record)
+        record: dict[str, Any] = dict(record)
         record['alts'] = await alts_db.get_alts(record['user_id'])
-        user = await _dict_to_user(record)
+        user: User = await _dict_to_user(record)
         users.append(user)
 
     return tuple(users)
 
 
-async def get_users_by_clan_name(clan_name: str) -> Tuple[User]:
+async def get_users_by_clan_name(clan_name: str) -> tuple[User,...]:
     """Gets all user settings of all users that have a certain clan_name set.
 
     Returns
@@ -878,13 +965,13 @@ async def get_users_by_clan_name(clan_name: str) -> Tuple[User]:
     LookupError if something goes wrong reading the dict.
     Also logs all errors to the database.
     """
-    table = 'users'
-    function_name = 'get_users_by_clan_name'
-    sql = f'SELECT * FROM {table} WHERE clan_name=?'
+    table: str = 'users'
+    function_name: str = 'get_users_by_clan_name'
+    sql: str = f'SELECT * FROM {table} WHERE clan_name=?'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan_name,))
-        records = cur.fetchall()
+        records: list[Any] = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -892,11 +979,11 @@ async def get_users_by_clan_name(clan_name: str) -> Tuple[User]:
         raise
     if not records:
         raise exceptions.FirstTimeUserError(f'No users found for clan {clan_name} ')
-    users = []
+    users: list[User] = []
     for record in records:
-        record = dict(record)
+        record: dict[str, Any] = dict(record)
         record['alts'] = await alts_db.get_alts(record['user_id'])
-        user = await _dict_to_user(record)
+        user: User = await _dict_to_user(record)
         users.append(user)
 
     return tuple(users)
@@ -913,18 +1000,19 @@ async def get_user_count() -> int:
     ------
     sqlite3.Error if something happened within the database. Also logs this error to the log file.
     """
-    table = 'users'
-    function_name = 'get_user_count'
-    sql = f'SELECT COUNT(user_id) FROM {table}'
+    table: str = 'users'
+    function_name: str = 'get_user_count'
+    sql: str = f'SELECT COUNT(user_id) FROM {table}'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql)
-        record = cur.fetchone()
+        record: Any = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
+    user_count: int
     (user_count,) = record
 
     return user_count
@@ -954,6 +1042,7 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_big_arena_visible: bool
         alert_boo_enabled: bool
         alert_boo_message: str
+        alert_boo_multiplier: float
         alert_boo_visible: bool
         alert_boosts_enabled: bool
         alert_boosts_message: str
@@ -1013,6 +1102,10 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_hunt_message: str
         alert_hunt_multiplier: float
         alert_hunt_visible: bool
+        alert_hunt_partner_enabled: bool
+        alert_hunt_partner_message: str
+        alert_hunt_partner_multiplier: float
+        alert_hunt_partner_visible: bool
         alert_lootbox_enabled: bool
         alert_lootbox_message: str
         alert_lootbox_multiplier: float
@@ -1085,7 +1178,8 @@ async def _update_user(user: User, **kwargs) -> None:
         halloween_helper_enabled: bool
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
-        hunt_rotation_enabled: bool
+        hunt_end_time: datetime
+        hunt_reminders_combined: bool
         inventory_bread: int
         inventory_carrot: int
         inventory_potato: int
@@ -1103,6 +1197,7 @@ async def _update_user(user: User, **kwargs) -> None:
         last_tt: datetime UTC
         last_workt_command: str
         megarace_helper_enabled: bool
+        multiplier_management_enabled: bool
         partner_alert_threshold: int
         partner_channel_id: int
         partner_chocolate_box_unlocked: bool
@@ -1158,16 +1253,16 @@ async def _update_user(user: User, **kwargs) -> None:
     NoArgumentsError if no kwargs are passed (need to pass at least one)
     Also logs all errors to the database.
     """
-    table = 'users'
-    function_name = '_update_user'
+    table: str = 'users'
+    function_name: str = '_update_user'
     if not kwargs:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     try:
-        cur = settings.NAVI_DB.cursor()
-        sql = f'UPDATE {table} SET'
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
+        sql: str = f'UPDATE {table} SET'
         for kwarg in kwargs:
             sql = f'{sql} {kwarg} = :{kwarg},'
         sql = sql.strip(",")
@@ -1175,7 +1270,7 @@ async def _update_user(user: User, **kwargs) -> None:
         sql = f'{sql} WHERE user_id = :user_id'
         cur.execute(sql, kwargs)
         if 'user_donor_tier' in kwargs and user.partner_id is not None:
-            partner = await get_user(user.partner_id)
+            partner: User = await get_user(user.partner_id)
             await partner.update(partner_donor_tier=kwargs['user_donor_tier'])
     except sqlite3.Error as error:
         await errors.log_error(
@@ -1196,31 +1291,32 @@ async def insert_user(user_id: int) -> User:
     sqlite3.Error if something happened within the database.
     Also logs all errors to the database.
     """
-    function_name = 'insert_user'
-    table = 'users'
-    columns = ''
+    function_name: str = 'insert_user'
+    table: str = 'users'
+    columns: str = ''
     if settings.LITE_MODE:
-        reactions_enabled = 0
-        ready_after_all_commands = 0
+        reactions_enabled: int = 0
+        ready_after_all_commands: int = 0
     else:
-        reactions_enabled = 1
-        ready_after_all_commands = 1
-    values = [user_id, reactions_enabled, ready_after_all_commands]
+        reactions_enabled: int = 1
+        ready_after_all_commands: int = 1
+    values: list[int] = [user_id, reactions_enabled, ready_after_all_commands]
     for activity, default_message in strings.DEFAULT_MESSAGES.items():
         columns = f'{columns},{strings.ACTIVITIES_COLUMNS[activity]}_message'
         values.append(default_message)
-    sql = f'INSERT INTO {table} (user_id, reactions_enabled, ready_after_all_commands{columns}) VALUES ('
+    sql: str = f'INSERT INTO {table} (user_id, reactions_enabled, ready_after_all_commands{columns}) VALUES ('
+    value: int
     for value in values:
         sql = f'{sql}?,'
     sql = f'{sql.strip(",")})'
     try:
-        cur = settings.NAVI_DB.cursor()
+        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql, values)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    user = await get_user(user_id)
+    user: User = await get_user(user_id)
 
     return user
