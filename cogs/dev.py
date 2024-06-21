@@ -414,12 +414,12 @@ class DevCog(commands.Cog):
             interaction = await ctx.respond(f'{answer} `[yes/no]`')
             try:
                 answer = await self.bot.wait_for('message', check=check, timeout=30)
+                if answer.content.lower() in ['yes','y']:
+                    confirmed = True
+                else:
+                    aborted = True
             except asyncio.TimeoutError:
                 timeout = True
-            if answer.content.lower() in ['yes','y']:
-                confirmed = True
-            else:
-                aborted = True
         if timeout:
             await interaction.edit(interaction, content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
         elif confirmed:

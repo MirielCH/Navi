@@ -122,7 +122,7 @@ class EventsCog(commands.Cog):
                     time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     current_time = utils.utcnow()
-                    time_elapsed = bot_answer_time - current_time
+                    time_elapsed = current_time - bot_answer_time
                     time_left -= time_elapsed
                     if cd_activity == 'pet-tournament': time_left += timedelta(minutes=1)
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at

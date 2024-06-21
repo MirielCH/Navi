@@ -146,11 +146,12 @@ class HuntCog(commands.Cog):
                         command: str = user_command
                         reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
                     else:
-                        activity: str = 'hunt-partner'
-                        command: str = await functions.get_slash_command(user_settings, 'hunt')
-                        reminder_message = (user_settings.alert_hunt_partner.message
-                                            .replace('{command}', command)
-                                            .replace('{partner}', user_settings.partner_name))
+                        if user_settings.partner_name is not None:
+                            activity: str = 'hunt-partner'
+                            command: str = await functions.get_slash_command(user_settings, 'hunt')
+                            reminder_message = (user_settings.alert_hunt_partner.message
+                                                .replace('{command}', command)
+                                                .replace('{partner}', user_settings.partner_name))
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(interaction_user.id, activity, time_left,
                                                          message.channel.id, reminder_message,

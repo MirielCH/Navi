@@ -56,7 +56,7 @@ class MaintenanceCog(commands.Cog):
                 time_left: timedelta = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 time_left = time_left + timedelta(seconds=random.randint(0, 5))

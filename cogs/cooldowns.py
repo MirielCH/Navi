@@ -320,7 +320,7 @@ class CooldownsCog(commands.Cog):
                 time_left = await functions.parse_timestring_to_timedelta(cd_timestring)
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if time_left < timedelta(0): continue
                 time_left = timedelta(seconds=time_left.total_seconds() + 1)

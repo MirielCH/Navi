@@ -46,6 +46,7 @@ class TasksCog(commands.Cog):
                     reminder_channel_id = first_reminder.channel_id
                 channel = await functions.get_discord_channel(self.bot, reminder_channel_id)
                 if channel is None: return
+                hunt_reminder = None
                 message_no = 1
                 messages = {message_no: ''}
                 for reminder in reminders_list:
@@ -80,11 +81,10 @@ class TasksCog(commands.Cog):
                             except exceptions.NoDataFoundError:
                                 hunt_reminder = None
                             if hunt_reminder is not None:
-                                if not hunt_reminder.triggered:
-                                    time_left_hunt = hunt_reminder.end_time - reminder.end_time
-                                    if time_left_hunt.total_seconds() >= 1:
-                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
-                                        message = f'{message}➜ You will be ready in **{timestring}**.\n'
+                                time_left_hunt = hunt_reminder.end_time - reminder.end_time
+                                if time_left_hunt.total_seconds() >= 1:
+                                    timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
+                                    message = f'{message}➜ You will be ready in **{timestring}**.\n'
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''
@@ -142,6 +142,13 @@ class TasksCog(commands.Cog):
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
                                 message = re.sub(rf'<@!?{found_id}>', '-Removed alt-', message)
+                            if hunt_reminder is not None:
+                                await hunt_reminder.refresh()
+                                if hunt_reminder.record_exists:
+                                    time_left_hunt = hunt_reminder.end_time - reminder.end_time
+                                    if time_left_hunt.total_seconds() >= 1:
+                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
+                                        re.sub(r'➜ You will be ready in \*\*(.+?)\*\*', message, timestring)
                         await channel.send(message.strip())
                 except asyncio.CancelledError:
                     return

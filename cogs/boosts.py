@@ -302,7 +302,7 @@ class BoostsCog(commands.Cog):
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
@@ -473,7 +473,7 @@ class BoostsCog(commands.Cog):
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 await reminders.reduce_reminder_time_percentage(user.id, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES,

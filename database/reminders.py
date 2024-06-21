@@ -658,7 +658,8 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
     """
     function_name = 'insert_user_reminder'
     table = 'reminders_users'
-    end_time = utils.utcnow() + time_left
+    end_time = (utils.utcnow() + time_left)
+    end_time = end_time.replace(microsecond=999_999)
     custom_id = None
     triggered = False if time_left.total_seconds() > 15 else True
     try:

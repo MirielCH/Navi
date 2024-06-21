@@ -557,7 +557,7 @@ class ChristmasCog(commands.Cog):
                 timestring_match = re.search(r"for \*\*(.+?)\*\*", message_content.lower())
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
-                time_elapsed = bot_answer_time - utils.utcnow()
+                time_elapsed = utils.utcnow() - bot_answer_time
                 time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'xmas open')

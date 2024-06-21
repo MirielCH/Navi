@@ -1,6 +1,7 @@
 # pets.py
 
 from datetime import timedelta
+from math import ceil
 import re
 
 import discord
@@ -299,7 +300,7 @@ class PetsCog(commands.Cog):
                     current_time = utils.utcnow()
                     time_left = await functions.parse_timestring_to_timedelta(pet_timestring.lower())
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at
-                    time_elapsed = bot_answer_time - current_time
+                    time_elapsed = current_time - bot_answer_time
                     time_left -= time_elapsed
                     end_time = current_time + time_left
                     if time_left < timedelta(0): return # This can happen because the timeout edits pets list one last time

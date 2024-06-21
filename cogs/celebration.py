@@ -182,7 +182,7 @@ class CelebrationCog(commands.Cog):
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'cel multiply')
@@ -208,7 +208,7 @@ class CelebrationCog(commands.Cog):
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 user_command = await functions.get_slash_command(user_settings, 'cel dailyquest')
                 reminder_message = user_settings.alert_cel_dailyquest.message.replace('{command}', user_command)
@@ -233,7 +233,7 @@ class CelebrationCog(commands.Cog):
                 time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1))
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
                 current_time = utils.utcnow()
-                time_elapsed = bot_answer_time - current_time
+                time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if time_left < timedelta(0): return
                 user_command = await functions.get_slash_command(user_settings, 'cel sacrifice')

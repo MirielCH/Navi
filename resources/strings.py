@@ -138,6 +138,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'horse': DEFAULT_MESSAGE,
     'horse-race': DEFAULT_MESSAGE_EVENT,
     'hunt': '{name} Hey! It\'s time for {command}! {drop_emoji}',
+    'hunt-partner': '{name} Hey! Your partner **{partner}** is ready to {command}!',
     'lootbox': DEFAULT_MESSAGE,
     'lottery': '{name} Hey! The lottery just finished. Use </lottery:957815874063061072> to check out who won and {command} to enter the next draw!',
     'love-share': DEFAULT_MESSAGE,
@@ -146,7 +147,6 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'minintboss': DEFAULT_MESSAGE_EVENT,
     'minirace': DEFAULT_MESSAGE,
     'partner': '{name} Hey! **{partner}** found {loot} for you!',
-    'hunt-partner': '{name} Hey! Your partner **{partner}** is ready to {command}!',
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
     'quest': DEFAULT_MESSAGE,
@@ -232,7 +232,6 @@ POCKET_WATCH_AFFECTED_ACTIVITIES: Final[tuple[str,...]] = (
 ROUND_CARD_AFFECTED_ACTIVITIES: Final[tuple[str,...]] = (
     'adventure',
     'arena',
-    'duel',
     'farm',
     'hunt',
     'quest',

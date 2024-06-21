@@ -62,7 +62,7 @@ class HelperTrainingCog(commands.Cog):
                             seal_time_left = await functions.parse_timestring_to_timedelta(seal_timestring.lower())
                             bot_answer_time = message.edited_at if message.edited_at else message.created_at
                             current_time = utils.utcnow()
-                            time_elapsed = bot_answer_time - current_time
+                            time_elapsed = current_time - bot_answer_time
                             seal_time_left -= time_elapsed
                             seal_time = current_time + seal_time_left
                             await settings_db.update_setting(f'a{area_no}_seal_time', seal_time)

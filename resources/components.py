@@ -476,8 +476,11 @@ class SwitchReadyAltSelect(discord.ui.Select):
         options = [discord.SelectOption(label=user_global_name, value=str(view.user.id), emoji=emoji),]
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            alt_name = alt.global_name if alt.global_name is not None else alt.name
-            label = str(alt_id) if alt is None else alt_name
+            label = str(alt_id)
+            if alt is not None:
+                alt_name = alt.global_name if alt.global_name is not None else alt.name
+            else:
+                alt_name = label
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
@@ -511,8 +514,11 @@ class SwitchStatsAltSelect(discord.ui.Select):
         options = [discord.SelectOption(label=user_global_name, value=str(view.user.id), emoji=emoji),]
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            alt_name = alt.global_name if alt.global_name is not None else alt.name
-            label = str(alt_id) if alt is None else alt_name
+            label = str(alt_id)
+            if alt is not None:
+                alt_name = alt.global_name if alt.global_name is not None else alt.name
+            else:
+                alt_name = label
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
@@ -542,8 +548,11 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
         options = [discord.SelectOption(label=user_global_name, value=str(view.user.id), emoji=emoji),]
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            alt_name = alt.global_name if alt.global_name is not None else alt.name
-            label = str(alt_id) if alt is None else alt_name
+            label = str(alt_id)
+            if alt is not None:
+                alt_name = alt.global_name if alt.global_name is not None else alt.name
+            else:
+                alt_name = label
             emoji = emojis.BP if alt_id == view.active_alt_id else None
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,

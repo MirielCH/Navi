@@ -104,7 +104,7 @@ class EpicShopCog(commands.Cog):
                     time_left_timestring = await functions.parse_timestring_to_timedelta(timestring)
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     current_time = utils.utcnow()
-                    time_elapsed = bot_answer_time - current_time
+                    time_elapsed = current_time - bot_answer_time
                     time_left_timestring -= time_elapsed
                     time_left = midnight_tomorrow - current_time + timedelta(seconds=random.randint(0, 600))
                     if time_left_timestring >= timedelta(days=1):

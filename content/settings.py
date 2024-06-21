@@ -335,10 +335,11 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                 f'Invalid syntax.\n\n{syntax}'
             )
             return
-        await user_settings.update(**kwargs)
-        answer: str = (
-            f'Multiplier(s) updated.'
-        )
+        if not kwargs:
+            answer: str = 'No valid multipliers found.'
+        else:
+            await user_settings.update(**kwargs)
+            answer: str = 'Multiplier(s) updated.'
         current_multipliers: str = await get_current_multipliers()
         answer = (
             f'{answer}\n\n'
@@ -460,12 +461,12 @@ async def command_off(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> 
         interaction = await ctx.respond(f'{answer} `[yes/no]`')
         try:
             answer = await bot.wait_for('message', check=check, timeout=30)
+            if answer.content.lower() in ['yes','y']:
+                confirmed = True
+            else:
+                aborted = True
         except asyncio.TimeoutError:
             timeout = True
-        if answer.content.lower() in ['yes','y']:
-            confirmed = True
-        else:
-            aborted = True
     if timeout:
         await interaction.edit(content=f'**{ctx_author_name}**, you didn\'t answer in time.', view=None)
     elif confirmed:

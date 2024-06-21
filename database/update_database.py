@@ -490,7 +490,7 @@ def update_database() -> bool:
     if db_version < 24:
         sqls += [
             "ALTER TABLE users ADD alert_hunt_partner_enabled INTEGER DEFAULT (1) NOT NULL",
-            "ALTER TABLE users ADD alert_hunt_partner_message TEXT NOT NULL DEFAULT ('{name} Hey! Your partner {partner} is ready to {command}!')",
+            "ALTER TABLE users ADD alert_hunt_partner_message TEXT NOT NULL DEFAULT ('{name} Hey! Your partner **{partner}** is ready to {command}!')",
             "ALTER TABLE users ADD alert_hunt_partner_multiplier REAL NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_hunt_partner_visible INTEGER NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD hunt_reminders_combined INTEGER NOT NULL DEFAULT (0)",
