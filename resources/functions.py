@@ -1137,17 +1137,19 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
         'current_area': new_area,
     }
     # Reset multipliers when entering area 20
-    if new_area == 20 and user_settings.current_area != 20 and user_settings.multiplier_management_enabled:
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
-        kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+    if user_settings.multiplier_management_enabled:
+        if (new_area == 20 and user_settings.current_area != 20
+            or new_area != 20 and user_settings.current_area == 18):
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
     await user_settings.update(**kwargs)

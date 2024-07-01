@@ -1301,11 +1301,11 @@ class SetReminderMessageButton(discord.ui.Button):
                 )
                 await followup_message.delete(delay=5)
                 return
-            for placeholder in re.finditer('\{(.+?)\}', new_message):
+            for placeholder in re.finditer(r'\{(.+?)\}', new_message):
                 placeholder_str = placeholder.group(1)
                 if placeholder_str not in strings.DEFAULT_MESSAGES[self.view.activity]:
                     allowed_placeholders = ''
-                    for placeholder in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[self.view.activity]):
+                    for placeholder in re.finditer(r'\{(.+?)\}', strings.DEFAULT_MESSAGES[self.view.activity]):
                         allowed_placeholders = (
                             f'{allowed_placeholders}\n'
                             f'{emojis.BP} {{{placeholder.group(1)}}}'
@@ -1569,9 +1569,9 @@ class ManageServerSettingsAutoFlexSelect(discord.ui.Select):
                 await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
         for child in self.view.children.copy():
-            if isinstance(child, ManageServerSettingsSelect):
+            if isinstance(child, ManageServerSettingsAutoFlexSelect):
                 self.view.remove_item(child)
-                self.view.add_item(ManageServerSettingsSelect(self.view))
+                self.view.add_item(ManageServerSettingsAutoFlexSelect(self.view))
                 break
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
         if interaction.response.is_done():

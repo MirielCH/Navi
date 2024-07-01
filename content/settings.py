@@ -298,6 +298,10 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
         kwargs: dict[str, Any] = {}
         arg: str
         for arg in args:
+            if arg == 'reset':
+                for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = 1
+                break
             try:
                 multiplier_found = float(arg)
                 if not 0.01 <= multiplier_found <= 5.0:

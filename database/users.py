@@ -568,13 +568,17 @@ class User():
         if activity =='hunt' and time_left <= timedelta(seconds=5): return
 
         current_time = utils.utcnow()
+        time_left_actual_seconds: float = time_left.total_seconds()
+        
         # Get active reminder. If no reminder is active, there is nothing to do.
+        reminder: reminders.Reminder | None = None
+        time_left_expected_seconds: float = 0
         if activity != 'hunt':
             try:
-                reminder: reminders.Reminder = await reminders.get_user_reminder(self.user_id, activity)
+                reminder = await reminders.get_user_reminder(self.user_id, activity)
                 time_left_expected_seconds = (reminder.end_time - current_time).total_seconds()
             except exceptions.NoDataFoundError:
-                return
+                pass
         else:
             if self.hunt_end_time <= current_time: return
             time_left_expected_seconds = (self.hunt_end_time - current_time).total_seconds()
@@ -585,11 +589,12 @@ class User():
         current_multiplier: float = alert_settings.multiplier
 
         # Calculate the new multiplier
-        time_left_actual_seconds: float = time_left.total_seconds()
-        new_multiplier: float =  time_left_actual_seconds / time_left_expected_seconds * current_multiplier
-        if new_multiplier <= 0: return
+        new_multiplier: float = 1.0
+        if time_left_expected_seconds > 0:
+            new_multiplier =  time_left_actual_seconds / time_left_expected_seconds * current_multiplier
+        if new_multiplier <= 0: new_multiplier = 1.0
         if new_multiplier > 1 and not self.current_area == 18: new_multiplier = 1.0
-
+        
         # Round up hunt multiplier to 0.0x to avoid super small fluctuations
         if activity == 'hunt':
             decimals: int = 3

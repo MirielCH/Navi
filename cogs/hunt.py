@@ -136,27 +136,22 @@ class HuntCog(commands.Cog):
                 if time_left < timedelta(0): return
                 time_left_seconds = time_left.total_seconds()
                 time_left = timedelta(seconds=ceil(time_left_seconds))
-                if user_settings.hunt_reminders_combined:
-                    activity: str = 'hunt'
-                    command: str = user_command
-                    reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
-                else:
-                    if interaction_user in embed_users:
-                        activity: str = 'hunt'
-                        command: str = user_command
-                        reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
-                    else:
-                        if user_settings.partner_name is not None:
-                            activity: str = 'hunt-partner'
-                            command: str = await functions.get_slash_command(user_settings, 'hunt')
-                            reminder_message = (user_settings.alert_hunt_partner.message
-                                                .replace('{command}', command)
-                                                .replace('{partner}', user_settings.partner_name))
+                activity = 'hunt'
+                command: str = user_command
+                reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
+                if not user_settings.hunt_reminders_combined and interaction_user not in embed_users and user_settings.partner_name is not None:
+                    activity: str = 'hunt-partner'
+                    command: str = await functions.get_slash_command(user_settings, 'hunt')
+                    reminder_message = (user_settings.alert_hunt_partner.message
+                                        .replace('{command}', command)
+                                        .replace('{partner}', user_settings.partner_name))
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(interaction_user.id, activity, time_left,
                                                          message.channel.id, reminder_message,
                                                          overwrite_message=False)
                 )
+                if activity == 'hunt':
+                    await user_settings.update(hunt_end_time=utils.utcnow() + time_left)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
         if not message.embeds:

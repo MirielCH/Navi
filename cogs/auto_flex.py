@@ -2370,6 +2370,8 @@ class AutoFlexCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if not user_name_match:
+                        user_name_match = re.search(r'__\*\*(.+?)\*\* ', message_content)
                     if user_name_match:
                         user_name = user_name_match.group(1)
                     else:

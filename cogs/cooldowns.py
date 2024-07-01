@@ -84,9 +84,10 @@ class CooldownsCog(commands.Cog):
                 alt_found = False
                 if user_alts:
                     for embed_user in embed_users:
-                        if embed_user.id in user_alts:
-                            interaction_user = message.guild.get_member(embed_user.id)
-                            alt_found = True
+                        if embed_user is not None:
+                            if embed_user.id in user_alts:
+                                interaction_user = message.guild.get_member(embed_user.id)
+                                alt_found = True
                 if not alt_found: return
             try:
                 user_settings: users.User = await users.get_user(interaction_user.id)
@@ -334,6 +335,8 @@ class CooldownsCog(commands.Cog):
                     if not reminder.record_exists:
                         await message.channel.send(strings.MSG_ERROR)
                         return
+                if cd_activity == 'hunt':
+                    await user_settings.update(hunt_end_time=current_time + time_left)
             for activity in ready_commands:
                 try:
                     reminder: reminders.Reminder = await reminders.get_user_reminder(interaction_user.id, activity)

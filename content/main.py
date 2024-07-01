@@ -7,7 +7,7 @@ import os
 import psutil
 import random
 import sys
-from typing import Any, List, Union
+from typing import List, Union
 
 import discord
 from discord import utils
@@ -256,7 +256,7 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_laten
         f'{emojis.BP} Library: Pycord `{discord.__version__}`\n'
         f'{emojis.BP} Navi RAM usage: `{navi_memory:,.2f}` MB\n'
         f'{emojis.BP} System CPU usage: `{psutil.cpu_percent():g}`%\n'
-        f'{emojis.BP} System RAM usage: `{system_memory_percent}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
+        f'{emojis.BP} System RAM usage: `{system_memory[2]}`% (`{system_memory_used:,}` / `{system_memory_total:,}` MB)\n'
     )
     thanks_to: list[str] = [
         'Swiss cheese',

@@ -133,6 +133,8 @@ class EpicShopCog(commands.Cog):
                 'maxed the purchases', #All languages
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):
+                interaction = await functions.get_interaction(message)
+                if interaction is not None: return
                 user_command_message = None
                 user = message.mentions[0]
                 user_command_message = (
