@@ -7,7 +7,6 @@ from discord.ext import bridge, commands
 from cache import messages
 from resources import settings
 
-
 class CacheCog(commands.Cog):
     """Cog that contains the cache commands"""
     def __init__(self, bot: bridge.AutoShardedBot):

@@ -510,7 +510,17 @@ def update_database() -> bool:
             "ALTER TABLE guilds ADD event_miniboss_enabled INTEGER NOT NULL DEFAULT (0)",
             "ALTER TABLE guilds ADD event_miniboss_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `FIGHT` to get some coins!')",
         ]
-
+    if db_version < 25:
+        sqls += [
+            "ALTER TABLE guilds ADD auto_flex_card_golden_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
+        cur.execute("SELECT * FROM settings WHERE name = 'seasonal_event'")
+        record: Any = cur.fetchone()
+        if not record:
+            sqls += [
+                "INSERT INTO settings (name, value) VALUES ('seasonal_event', 'none')",
+            ]
+        
     # Run SQLs
     sql: str
     for sql in sqls:

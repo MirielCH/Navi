@@ -45,6 +45,7 @@ class ChristmasCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -340,7 +341,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if not user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
-                    await reminders.reduce_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.reduce_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -384,7 +385,7 @@ class ChristmasCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 if user_settings.christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
-                    await reminders.increase_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.increase_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
@@ -409,6 +410,7 @@ class ChristmasCog(commands.Cog):
                 event_mobs = [
                    'christmas slime',
                    'bunny slime', 
+                   'horslime', 
                 ]
                 if any(mob in message_content.lower() for mob in event_mobs): return
                 user_id = user_name = partner_name = None
@@ -482,13 +484,13 @@ class ChristmasCog(commands.Cog):
                         break
                 if not user_settings.christmas_area_enabled and christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=True)
-                    await reminders.reduce_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.reduce_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_ENABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )
                 if user_settings.christmas_area_enabled and not christmas_area_enabled:
                     await user_settings.update(christmas_area_enabled=False)
-                    await reminders.increase_reminder_time_percentage(user.id, 10, ACTIVITIES_AFFECTED_BY_A0, user_settings)
+                    await reminders.increase_reminder_time_percentage(user_settings, 10, ACTIVITIES_AFFECTED_BY_A0)
                     await message.reply(
                         CHRISTMAS_AREA_DISABLED.format(cd=await functions.get_slash_command(user_settings, 'cd'))
                     )

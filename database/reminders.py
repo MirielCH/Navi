@@ -4,7 +4,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import sqlite3
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple, TYPE_CHECKING, Union
 
 from discord import utils
 from discord.ext import tasks
@@ -773,13 +773,14 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     return reminder
 
 
-async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, str], activities: List[str]) -> None:
+async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, str], activities: List[str]) -> None:
     """Reduces the end time of all user reminders affected by sleepy potions of one user by a certain amount.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
 
     Arguments
     ---------
+    user_settings: User settings
     time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
     for half of their remaining amount.
     activities: List with the affected activities
@@ -789,8 +790,18 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
     ValueError if time_reduction is neither time_delta nor the string 'half'
     """
     current_time = utils.utcnow()
+    if 'hunt' in activities and user_settings.hunt_end_time > current_time:
+        if isinstance(time_reduction, str):
+            if time_reduction == 'half':
+                remaining_time = user_settings.hunt_end_time - current_time
+                reduced_time = remaining_time / 2
+            else:
+                raise ValueError('Argument "time_reduction" is neither a timedelta nor the string \'half\'.')
+        else:
+            reduced_time = time_reduction
+        await user_settings.update(hunt_end_time=user_settings.hunt_end_time - reduced_time)
     try:
-        reminders = await get_active_user_reminders(user_id)
+        reminders = await get_active_user_reminders(user_settings.user_id)
     except exceptions.NoDataFoundError:
         return
     for reminder in reminders:
@@ -815,7 +826,7 @@ async def reduce_reminder_time(user_id: int, time_reduction: Union[timedelta, st
             await reminder.update(end_time=new_end_time)
 
 
-async def reduce_reminder_time_percentage(user_id: int, percentage: float, activities: List[str], user_settings) -> None:
+async def reduce_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:
     """Reduces the end time of user reminders by a certain percentage of the cooldown.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -823,18 +834,31 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: float, activ
 
     Arguments
     ---------
+    user_settings: user settings
     percentage: Percentage to reduce (1-100)
     for half of their remaining amount.
     activities: List with the affected activities
-    user_settings: The user settings
 
     Raises
     ------
     ValueError if time_reduction is neither time_delta nor the string 'half'
     """
     current_time = utils.utcnow()
+    if 'hunt' in activities and user_settings.hunt_end_time > current_time:
+        cooldown = await cooldowns.get_cooldown('hunt')
+        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+        if cooldown.donor_affected:
+            cooldown_seconds = (cooldown.actual_cooldown_mention()
+                                * settings.DONOR_COOLDOWNS[user_donor_tier])
+        else:
+            cooldown_seconds = cooldown.actual_cooldown_mention()
+        time_left = user_settings.hunt_end_time - current_time
+        time_left_new_seconds = time_left.total_seconds() - (cooldown_seconds * ((percentage) / 100))
+        time_left_new = timedelta(seconds=time_left_new_seconds)
+        new_end_time = current_time + time_left_new
+        await user_settings.update(hunt_end_time=user_settings.hunt_end_time + time_left_new)
     try:
-        reminders = await get_active_user_reminders(user_id)
+        reminders = await get_active_user_reminders(user_settings.user_id)
     except exceptions.NoDataFoundError:
         return
     for reminder in reminders:
@@ -862,25 +886,38 @@ async def reduce_reminder_time_percentage(user_id: int, percentage: float, activ
             await reminder.update(end_time=new_end_time)
 
 
-async def increase_reminder_time_percentage(user_id: int, percentage: float, activities: List[str], user_settings) -> None:
+async def increase_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:
     """Increases the end time of user reminders by a certain percentage of the cooldown.
     Doesn't affect reminders already scheduled.
     Note that the percentage is calculated based on the full cooldown.
 
     Arguments
     ---------
+    user_settings: The user settings
     percentage: Percentage to increase (1-100)
     for half of their remaining amount.
     activities: List with the affected activities
-    user_settings: The user settings
-
+    
     Raises
     ------
     ValueError if time_reduction is neither time_delta nor the string 'half'
     """
     current_time = utils.utcnow()
+    if 'hunt' in activities and user_settings.hunt_end_time > current_time:
+        cooldown = await cooldowns.get_cooldown('hunt')
+        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
+        if cooldown.donor_affected:
+            cooldown_seconds = (cooldown.actual_cooldown_mention()
+                                * settings.DONOR_COOLDOWNS[user_donor_tier])
+        else:
+            cooldown_seconds = cooldown.actual_cooldown_mention()
+        time_left = user_settings.hunt_end_time - current_time
+        time_left_new_seconds = time_left.total_seconds() + (cooldown_seconds * ((percentage) / 100))
+        time_left_new = timedelta(seconds=time_left_new_seconds)
+        new_end_time = current_time + time_left_new
+        await user_settings.update(hunt_end_time=user_settings.hunt_end_time + time_left_new)
     try:
-        reminders = await get_active_user_reminders(user_id)
+        reminders = await get_active_user_reminders(user_settings.user_id)
     except exceptions.NoDataFoundError:
         return
     for reminder in reminders:

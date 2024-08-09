@@ -127,7 +127,7 @@ class HorseFestivalCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                await reminders.reduce_reminder_time(user.id, 'half', strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
+                await reminders.reduce_reminder_time(user_settings, 'half', strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'horse')
                 if user_settings.alert_horse_breed.enabled:
                     user_command = await functions.get_slash_command(user_settings, 'horse breeding')
@@ -178,7 +178,7 @@ class HorseFestivalCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            """
+            
             search_strings = [
                 'you are now in the list of pending players for a tournament', #English
                 'ahora estás en la lista de jugadores pendientes de un torneo', #Spanish
@@ -213,8 +213,6 @@ class HorseFestivalCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'minirace', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'minirace'))
-                await functions.add_reminder_reaction(message, reminder, user_settings)
 
             search_strings = [
                 'started riding!', #English
@@ -256,7 +254,6 @@ class HorseFestivalCog(commands.Cog):
                 )
                 asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'minirace'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
-            """
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]

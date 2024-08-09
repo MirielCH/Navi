@@ -973,8 +973,6 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
         f'{emojis.DETAIL} _Shows some helpful slash commands depending on context (mostly slash only)._\n'
         f'{emojis.BP} **Heal warning**: {await functions.bool_to_text(user_settings.heal_warning_enabled)}\n'
         f'{emojis.DETAIL} _Warns you when you are about to die._\n'
-        #f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
-        #f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
         f'{emojis.BP} **Pet catch helper**: {await functions.bool_to_text(user_settings.pet_helper_enabled)}\n'
         f'{emojis.DETAIL} _Tells you which commands to use when you encounter a pet._\n'
         f'{emojis.BP} **Ruby counter**: {await functions.bool_to_text(user_settings.ruby_counter_enabled)}\n'
@@ -987,9 +985,13 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
         f'{emojis.DETAIL} _Provides the answers for all training types except ruby training._\n'
         f'{emojis.BP} **Farm helper mode**: `{strings.FARM_HELPER_MODES[user_settings.farm_helper_mode]}`\n'
         f'{emojis.DETAIL} _Changes your farm reminder according to the mode and your inventory._\n'
-        #f'{emojis.BP} **Pumpkin bat helper** {emojis.PET_PUMPKIN_BAT}: '
-        #f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
-        #f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
+    )
+    seasonal_helpers = (
+        f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
+        f'{emojis.BP} **Pumpkin bat helper**: '
+        f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
     )
     helper_settings = (
         f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'
@@ -1005,6 +1007,7 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
     )
     embed.add_field(name='HELPERS (I)', value=helpers, inline=False)
     embed.add_field(name='HELPERS (II)', value=helpers2, inline=False)
+    embed.add_field(name='SEASONAL HELPERS', value=seasonal_helpers, inline=False)
     embed.add_field(name='HELPER SETTINGS', value=helper_settings, inline=False)
     return embed
 
@@ -1070,7 +1073,7 @@ async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.Appli
             title = title if embed_no < 2 else None
         )
         allowed_placeholders = ''
-        for placeholder_match in re.finditer('\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
+        for placeholder_match in re.finditer(r'\{(.+?)\}', strings.DEFAULT_MESSAGES[activity]):
             placeholder = placeholder_match.group(1)
             placeholder_description = strings.PLACEHOLDER_DESCRIPTIONS.get(placeholder, '')
             allowed_placeholders = (
@@ -1295,23 +1298,12 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         channel_horse = '`N/A`'
 
     command_reminders = (
-        #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_advent.visible)}\n'
         f'{emojis.BP} **Adventure**: {await bool_to_text(user_settings.alert_adventure.visible)}\n'
         f'{emojis.BP} **Arena**: {await bool_to_text(user_settings.alert_arena.visible)}\n'
-        #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await bool_to_text(user_settings.alert_boo.visible)}\n'
         f'{emojis.BP} **Card hand**: {await bool_to_text(user_settings.alert_card_hand.visible)}\n'
-        #f'{emojis.BP} **Cel dailyquest** {emojis.COIN_CELEBRATION}: '
-        #f'{await bool_to_text(user_settings.alert_cel_dailyquest.visible)}\n'
-        #f'{emojis.BP} **Cel multiply** {emojis.COIN_CELEBRATION}: '
-        #f'{await bool_to_text(user_settings.alert_cel_multiply.visible)}\n'
-        #f'{emojis.BP} **Cel sacrifice** {emojis.COIN_CELEBRATION}: '
-        #f'{await bool_to_text(user_settings.alert_cel_sacrifice.visible)}\n'
-        #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await bool_to_text(user_settings.alert_chimney.visible)}\n'
         f'{emojis.BP} **Daily**: {await bool_to_text(user_settings.alert_daily.visible)}\n'
         f'{emojis.BP} **Duel**: {await bool_to_text(user_settings.alert_duel.visible)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await bool_to_text(user_settings.alert_dungeon_miniboss.visible)}\n'
-        #f'{emojis.BP} **ETERNAL presents** {emojis.PRESENT_ETERNAL}: '
-        #f'{await bool_to_text(user_settings.alert_eternal_present.visible)}\n'
         f'{emojis.BP} **EPIC items**: {await bool_to_text(user_settings.alert_epic.visible)}\n'
         f'{emojis.BP} **Farm**: {await bool_to_text(user_settings.alert_farm.visible)}\n'
         f'{emojis.BP} **Guild**: {await bool_to_text(user_settings.alert_guild.visible)}\n'
@@ -1321,9 +1313,6 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Hunt partner**: {await bool_to_text(user_settings.alert_hunt_partner.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
-        #f'{emojis.BP} **Love share** ❤️: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
-        #f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
-        #f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
@@ -1337,6 +1326,22 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         f'{emojis.BP} **Lottery**: {await bool_to_text(user_settings.alert_lottery.visible)}\n'
         f'{emojis.BP} **Minin\'tboss**: {await bool_to_text(user_settings.alert_not_so_mini_boss.visible)}\n'
         f'{emojis.BP} **Pet tournament**: {await bool_to_text(user_settings.alert_pet_tournament.visible)}\n'
+    )
+    seasonal_reminders = (
+        f'{emojis.BP} **Advent calendar**: {await bool_to_text(user_settings.alert_advent.visible)}\n'
+        f'{emojis.BP} **Boo**: {await bool_to_text(user_settings.alert_boo.visible)}\n'
+        f'{emojis.BP} **Cel dailyquest**: '
+        f'{await bool_to_text(user_settings.alert_cel_dailyquest.visible)}\n'
+        f'{emojis.BP} **Cel multiply**: '
+        f'{await bool_to_text(user_settings.alert_cel_multiply.visible)}\n'
+        f'{emojis.BP} **Cel sacrifice**: '
+        f'{await bool_to_text(user_settings.alert_cel_sacrifice.visible)}\n'
+        f'{emojis.BP} **Chimney**: {await bool_to_text(user_settings.alert_chimney.visible)}\n'
+        f'{emojis.BP} **ETERNAL presents**: '
+        f'{await bool_to_text(user_settings.alert_eternal_present.visible)}\n'
+        f'{emojis.BP} **Love share**: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
+        f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
+        f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
     )
     command_channels = (
         f'_Command channels are shown below the corresponding ready command._\n'
@@ -1356,6 +1361,7 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
     embed.add_field(name='COMMAND REMINDERS I', value=command_reminders, inline=False)
     embed.add_field(name='COMMAND REMINDERS II', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='SEASONAL REMINDERS', value=seasonal_reminders, inline=False)
     embed.add_field(name='COMMAND CHANNELS', value=command_channels, inline=False)
     return embed
 
@@ -1371,37 +1377,23 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
         f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
         f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
-        f'{emojis.DETAIL} _If you can\'t see slash mentions properly, update your Discord app._\n'
         f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
-        f'{emojis.DETAIL} _If disabled, Navi will ignore command cooldowns and `rpg cd` when in area 20._\n'
         f'{emojis.BP} **Combine hunt reminders**: {await functions.bool_to_text(user_settings.hunt_reminders_combined)}\n'
         f'{emojis.DETAIL} _If enabled, Navi will never send or show the `hunt partner` reminder._\n'
         f'{emojis.DETAIL} _Instead the `hunt` reminder will be long enough for both players to be ready._\n'
         f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
         f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
-        #f'{emojis.BP} **Christmas area mode** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
-        #f'{emojis.DETAIL} _Reduces your reminders by 10%. Toggled automatically as you play._\n'
+        f'{emojis.BP} **Christmas area mode**: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
+        f'{emojis.DETAIL} _Reduces your reminders by 10%. Toggled automatically as you play._\n'
     )
     command_reminders = (
-        #f'{emojis.BP} **Advent calendar** {emojis.XMAS_SOCKS}: '
-        #f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
-        #f'{emojis.BP} **Boo** {emojis.PUMPKIN}: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
-        #f'{emojis.BP} **Chimney** {emojis.XMAS_SOCKS}: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
         f'{emojis.BP} **Boost items**: {await functions.bool_to_text(user_settings.alert_boosts.enabled)}\n'
         f'{emojis.BP} **Card hand**: {await functions.bool_to_text(user_settings.alert_card_hand.enabled)}\n'
-        #f'{emojis.BP} **Cel dailyquest** {emojis.COIN_CELEBRATION}: '
-        #f'{await functions.bool_to_text(user_settings.alert_cel_dailyquest.enabled)}\n'
-        #f'{emojis.BP} **Cel multiply** {emojis.COIN_CELEBRATION}: '
-        #f'{await functions.bool_to_text(user_settings.alert_cel_multiply.enabled)}\n'
-        #f'{emojis.BP} **Cel sacrifice** {emojis.COIN_CELEBRATION}: '
-        #f'{await functions.bool_to_text(user_settings.alert_cel_sacrifice.enabled)}\n'
-        f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **Duel**: {await functions.bool_to_text(user_settings.alert_duel.enabled)}\n'
         f'{emojis.BP} **Dungeon / Miniboss**: {await functions.bool_to_text(user_settings.alert_dungeon_miniboss.enabled)}\n'
-        #f'{emojis.BP} **ETERNAL presents** {emojis.PRESENT_ETERNAL}: '
-        #f'{await functions.bool_to_text(user_settings.alert_eternal_present.enabled)}\n'
+        f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **EPIC items**: {await functions.bool_to_text(user_settings.alert_epic.enabled)}\n'
         f'{emojis.BP} **EPIC shop restocks**: {await functions.bool_to_text(user_settings.alert_epic_shop.enabled)}\n'
         f'{emojis.BP} **Farm**: {await functions.bool_to_text(user_settings.alert_farm.enabled)}\n'
@@ -1413,10 +1405,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Hunt partner**: {await functions.bool_to_text(user_settings.alert_hunt_partner.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
-        #f'{emojis.BP} **Love share** ❤️: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
         f'{emojis.BP} **Maintenance**: {await functions.bool_to_text(user_settings.alert_maintenance.enabled)}\n'
-        #f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
-        #f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
@@ -1435,6 +1424,23 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Minin\'tboss**: {await functions.bool_to_text(user_settings.alert_not_so_mini_boss.enabled)}\n'
         f'{emojis.BP} **Pet tournament**: {await functions.bool_to_text(user_settings.alert_pet_tournament.enabled)}\n'
     )
+    seasonal_reminders = (
+        f'{emojis.BP} **Advent calendar**: '
+        f'{await functions.bool_to_text(user_settings.alert_advent.enabled)}\n'
+        f'{emojis.BP} **Boo**: {await functions.bool_to_text(user_settings.alert_boo.enabled)}\n'
+        f'{emojis.BP} **Cel dailyquest**: '
+        f'{await functions.bool_to_text(user_settings.alert_cel_dailyquest.enabled)}\n'
+        f'{emojis.BP} **Cel multiply**: '
+        f'{await functions.bool_to_text(user_settings.alert_cel_multiply.enabled)}\n'
+        f'{emojis.BP} **Cel sacrifice**: '
+        f'{await functions.bool_to_text(user_settings.alert_cel_sacrifice.enabled)}\n'
+        f'{emojis.BP} **Chimney**: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
+        f'{emojis.BP} **ETERNAL presents**: '
+        f'{await functions.bool_to_text(user_settings.alert_eternal_present.enabled)}\n'
+        f'{emojis.BP} **Love share**: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
+        f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
+        f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
+    )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS',
@@ -1447,6 +1453,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
     embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
+    embed.add_field(name='SEASONAL REMINDERS', value=seasonal_reminders, inline=False)
     return embed
 
 
@@ -1488,6 +1495,8 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
         f'{await functions.bool_to_text(guild_settings.auto_flex_card_drop_enabled)}\n'
         f'{emojis.BP} Cards: **Card from `card slots`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_card_slots_enabled)}\n'
+        f'{emojis.BP} Cards: **Goldening cards**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_card_golden_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from `hunt`/`adventure` (`5`+)**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_epic_berry_enabled)}\n'
         f'{emojis.BP} Drop: **EPIC berries from work commands**: '

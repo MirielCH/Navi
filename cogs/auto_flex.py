@@ -16,9 +16,11 @@ FLEX_TITLES = {
     'artifacts': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_bunny_mask': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_claus_belt': strings.FLEX_TITLES_ARTIFACTS,
+    'artifacts_cowboy_boots': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_TITLES_CARD_DROP,
     'card_drop_partner': strings.FLEX_TITLES_CARD_DROP_PARTNER,
+    'card_golden': strings.FLEX_TITLES_CARD_GOLDEN,
     'card_slots': strings.FLEX_TITLES_CARD_SLOTS,
     'epic_berry': strings.FLEX_TITLES_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_TITLES_EPIC_BERRY_PARTNER,
@@ -96,9 +98,11 @@ FLEX_THUMBNAILS = {
     'artifacts': strings.FLEX_THUMBNAILS_ARTIFACTS,
     'artifacts_bunny_mask': strings.FLEX_THUMBNAILS_ARTIFACTS_BUNNY_MASK,
     'artifacts_claus_belt': strings.FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT,
+    'artifacts_cowboy_boots': strings.FLEX_THUMBNAILS_ARTIFACTS_COWBOY_BOOTS,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
     'card_drop_partner': strings.FLEX_THUMBNAILS_CARD_DROP_PARTNER,
+    'card_golden': strings.FLEX_THUMBNAILS_CARD_GOLDEN,
     'card_slots': strings.FLEX_THUMBNAILS_CARD_SLOTS,
     'epic_berry': strings.FLEX_THUMBNAILS_EPIC_BERRY,
     'epic_berry_partner': strings.FLEX_THUMBNAILS_EPIC_BERRY_PARTNER,
@@ -176,6 +180,7 @@ FLEX_THUMBNAILS = {
 FLEX_COLUMNS = {
     'artifacts_bunny_mask': 'artifacts',
     'artifacts_claus_belt': 'artifacts',
+    'artifacts_cowboy_boots': 'artifacts',
     'card_drop_partner': 'card_drop',
     'epic_berry_partner': 'epic_berry',
     'lb_a18_partner': 'lb_a18',
@@ -666,12 +671,12 @@ class AutoFlexCog(commands.Cog):
                     else:
                         next_tt = False
                     search_patterns = [
-                        'time travels\*\*: (.+?)\n', #English
-                        'extra pet slots\*\*: (.+?)\n', #English
-                        'viajes en el tiempo\*\*: (.+?)\n', #Spanish
-                        'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
-                        'viagem no tempo\*\*: (.+?)\n', #Portuguese
-                        'espaços extras para pets\*\*: (.+?)\n', #Portuguese
+                        r'time travels\*\*: (.+?)\n', #English
+                        r'extra pet slots\*\*: (.+?)\n', #English
+                        r'viajes en el tiempo\*\*: (.+?)\n', #Spanish
+                        r'espacio adicional para mascotas\*\*: (.+?)\n', #Spanish
+                        r'viagem no tempo\*\*: (.+?)\n', #Portuguese
+                        r'espaços extras para pets\*\*: (.+?)\n', #Portuguese
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                     if tt_match:
@@ -1168,6 +1173,12 @@ class AutoFlexCog(commands.Cog):
                         f'We won\'t judge.'
                     )
                     event = 'artifacts_bunny_mask'
+                elif artifact_name == 'cowboy boots':
+                    description = (
+                        f'Ew **{user.name}**. Really? Now you\'re crafting old {artifact_emoji} **{artifact_name}**? What\'s next? Old Roman socks?\n'
+                        f'Well, you do you.'
+                    )
+                    event = 'artifacts_cowboy_boots'
                 else:
                     description = (
                         f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
@@ -1578,10 +1589,13 @@ class AutoFlexCog(commands.Cog):
 
                 if together:
                     search_patterns_together_new = [
-                        fr"\+(.+?) (.+?)", #All languages
+                        fr"\+(.+?) (.+?)", #All languages, slash
+                        fr"got (.+?) (.+?)", #English, prefix
+                        fr"cons(?:e|i)gui(?:ó|u) (.+?) (.+?)", #Spanish, Portuguese, prefix
                     ]
                     search_patterns_together_new_lost = [
-                        fr"\-(.+?) (.+?)", #All languages
+                        fr"\-(.+?) (.+?)", #All languages, slash
+                        fr"lost (.+?) (.+?)", #English, prefix
                     ]
                     search_patterns_together_old_partner = [
                         fr"{re.escape(partner_name)}\*\* got (.+?) (.+?)", #English
@@ -2419,6 +2433,48 @@ class AutoFlexCog(commands.Cog):
                         f'What a loser, lol.'
                     )
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
+                                                  description)
+
+                
+            # Golden cards
+            search_strings = [
+                'goldened these cards!',
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if not user_name_match:
+                        user_name_match = re.search(r'^\*\*(.+?)\*\* ', message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for autoflex golden card message.', message)
+                        return
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the autoflex golden card message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
+                
+                description = (
+                    f'**{user.name}** played some poker, won (clearly cheated) and goldened all their cards.\n'
+                    f'These EPIC RPG players get more decadent every day.'
+                )
+                
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'card_golden',
                                                   description)
                     
 

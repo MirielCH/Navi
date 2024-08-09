@@ -10,6 +10,7 @@ from discord.ext import bridge, commands
 
 from content import settings as settings_cmd
 from database import clans, reminders, users
+from database import settings as settings_db
 from resources import emojis, functions, exceptions, settings, strings, views
 
 
@@ -391,7 +392,9 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         command_upgrade = await functions.get_slash_command(user_settings, 'guild upgrade', False)
         command_raid = await functions.get_slash_command(user_settings, 'guild raid', False)
         clan_command = f"{command_upgrade} or {command_raid}"
-    ready_command_activities = list(strings.ACTIVITIES_COMMANDS[:])
+
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    ready_command_activities = await functions.get_ready_command_activities(all_settings['seasonal_event'])
     ready_event_activities = list(strings.ACTIVITIES_EVENTS[:])
     active_pet_reminders = False
     for reminder in user_reminders:
@@ -647,5 +650,8 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 )
     if auto_ready:
         embed.set_footer(text=f"See '/ready' if you want to disable this message.")
+
+    if all_settings['seasonal_event'] in strings.SEASONAL_EVENTS:
+        embed.set_footer(text=f'{all_settings["seasonal_event"].replace("_"," ").capitalize()} event mode active.')
 
     return (embed, answer)

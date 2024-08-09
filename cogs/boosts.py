@@ -476,8 +476,7 @@ class BoostsCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
-                await reminders.reduce_reminder_time_percentage(user.id, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
-                                                                user_settings)
+                await reminders.reduce_reminder_time_percentage(user_settings, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES)
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', emojis.CARD_ROUND)

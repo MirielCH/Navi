@@ -1153,3 +1153,49 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
             kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
             kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
     await user_settings.update(**kwargs)
+
+
+async def get_ready_command_activities(seasonal_event: str) -> list[str]:
+    """
+    Returns the currently visible ready command activities according to the currently active seasonal event.
+
+    Returns:
+        list[str]: List of activities
+    """
+
+    activities_commands: list[str] = [
+        'adventure',
+        'arena',
+        'card-hand',
+        'daily',
+        'duel',
+        'dungeon-miniboss',
+        'epic',
+        'farm',
+        'guild',
+        'horse',
+        'hunt',
+        'hunt-partner',
+        'lootbox',
+        'quest',
+        'training',
+        'vote',
+        'weekly',
+        'work',
+    ]
+
+    match seasonal_event:
+        case 'christmas':
+            activities_commands += ['advent-calendar', 'chimney', 'eternal-presents']
+        case 'celebration':
+            activities_commands += ['cel-dailyquest', 'cel-multiply', 'cel-sacrifice']
+        case 'halloween':
+            activities_commands += ['boo',]
+        case 'horse_festival':
+            activities_commands += ['megarace', 'minirace']
+        case 'valentine':
+            activities_commands += ['love-share',]
+
+    activities_commands.sort()
+    
+    return activities_commands

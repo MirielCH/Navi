@@ -53,8 +53,6 @@ class ProfileCog(commands.Cog):
             ]
             if (any(search_string in embed_author.lower() for search_string in search_strings)
                 and not 'epic npc' in embed_author.lower()):
-                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
-                if not guild_settings.auto_flex_enabled: return
                 embed_users = []
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
@@ -87,6 +85,7 @@ class ProfileCog(commands.Cog):
                 
                 kwargs = {}
                 # Update time travel count
+                time_travel_count = -1
                 if len(embed_field0_value.split('\n')) < 4:
                     time_travel_count = 0
                 else:
@@ -99,27 +98,28 @@ class ProfileCog(commands.Cog):
                     if not tt_match:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Time travel count not found in profile or progress message.', message)
-                        return
-                    time_travel_count = int(tt_match.group(1))
-                if time_travel_count != user_settings.time_travel_count:
-                    kwargs['time_travel_count'] = time_travel_count
-                trade_daily_total = floor(100 * (time_travel_count + 1) ** 1.35)
-                if trade_daily_total != user_settings.trade_daily_total:
-                    kwargs['trade_daily_total'] = trade_daily_total
+                    else:
+                        time_travel_count = int(tt_match.group(1))
+                if time_travel_count > -1:
+                    if time_travel_count != user_settings.time_travel_count:
+                        kwargs['time_travel_count'] = time_travel_count
+                    trade_daily_total = floor(100 * (time_travel_count + 1) ** 1.35)
+                    if trade_daily_total != user_settings.trade_daily_total:
+                        kwargs['trade_daily_total'] = trade_daily_total
 
                 # Update current area
                 area_match = re.search(r'rea\*\*: (.+?) \(', embed_field0_value.lower())
                 if not area_match:
                     await functions.add_warning_reaction(message)
                     await errors.log_error('Area not found in current area profile or progress message.', message)
-                    return
-                new_area = area_match.group(1)
-                if new_area == 'top':
-                    new_area = 21
                 else:
-                    new_area = int(new_area)
-                if user_settings.current_area != new_area:
-                    kwargs['current_area'] = new_area
+                    new_area = area_match.group(1)
+                    if new_area == 'top':
+                        new_area = 21
+                    else:
+                        new_area = int(new_area)
+                    if user_settings.current_area != new_area:
+                        kwargs['current_area'] = new_area
 
                 # Remove partner name if not married
                 partner_match = re.search(r'married to (.+?)$', embed_footer.lower())

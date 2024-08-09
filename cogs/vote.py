@@ -19,6 +19,7 @@ class VoteCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)

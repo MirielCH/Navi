@@ -82,7 +82,7 @@ class TimeCookieCog(commands.Cog):
                 await errors.log_error('Time not found in time cookie message.', message)
                 return
             minutes: int = int(time_match.group(1))
-            await reminders.reduce_reminder_time(user.id, timedelta(minutes=minutes), strings.TIME_COOKIE_AFFECTED_ACTIVITIES)
+            await reminders.reduce_reminder_time(user_settings, timedelta(minutes=minutes), strings.TIME_COOKIE_AFFECTED_ACTIVITIES)
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 

@@ -15,7 +15,6 @@ from resources import functions, logs, settings
 
 _MESSAGE_CACHE = {}
 
-
 async def find_message(channel_id: int, regex: Union[str, re.Pattern] = None,
                       user: Optional[discord.User] = None, user_name: Optional[str] = None) -> discord.Message:
     """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns

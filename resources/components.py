@@ -9,6 +9,7 @@ import discord
 
 from content import settings as settings_cmd
 from database import cooldowns, guilds, portals, reminders, users
+from database import settings as settings_db
 from resources import emojis, exceptions, functions, modals, settings, strings, views
 
 
@@ -1976,3 +1977,32 @@ class ManageEventPingMessagesSelect(discord.ui.Select):
             await interaction.message.edit(embed=embed, view=self.view)
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
+
+
+class SetSeasonalEventSelect(discord.ui.Select):
+    """Seasonal Event Select"""
+    def __init__(self, seasonal_events: list[str], active_event: str, placeholder: str, row: Optional[int] = None):
+        self.seasonal_events = seasonal_events
+        options = []
+        for event in seasonal_events:
+            label = event.replace('_',' ').title()
+            emoji = '🔹' if event == active_event else None
+            options.append(discord.SelectOption(label=label, value=event, emoji=emoji))
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id='select_event')
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        self.view.active_event = select_value
+        await settings_db.update_setting('seasonal_event', select_value)
+        for child in self.view.children:
+            if child.custom_id == 'select_event':
+                options = []
+                for event in self.seasonal_events:
+                    label = event.replace('_',' ').title()
+                    emoji = '🔹' if event == self.view.active_event else None
+                    options.append(discord.SelectOption(label=label, value=event, emoji=emoji))
+                child.options = options
+                break
+        embed = await self.view.embed_function(self.view.bot)
+        await interaction.response.edit_message(embed=embed, view=self.view)

@@ -204,6 +204,7 @@ DONOR_TIERS_EMOJIS: Final[dict[str, str | None]] = {
 ARTIFACTS_EMOJIS: Final[dict[str, str]] = {
     'bunny mask': emojis.ARTIFACT_BUNNY_MASK,
     'chocolate box': emojis.ARTIFACT_CHOCOLATE_BOX,
+    'cowboy boots': emojis.ARTIFACT_COWBOY_BOOTS,
     'claus belt': emojis.ARTIFACT_CLAUS_BELT,
     'coin ring': emojis.ARTIFACT_COIN_RING,
     'golden pan': emojis.ARTIFACT_GOLDEN_PAN,
@@ -336,9 +337,9 @@ ACTIVITIES: Final[tuple[str, ...]] = (
     'lottery',
     'love-share',
     'maintenance',
-    #'megarace',
+    'megarace',
     'minintboss',
-    #'minirace',
+    'minirace',
     'partner',
     'pets',
     'pet-tournament',
@@ -352,37 +353,6 @@ ACTIVITIES: Final[tuple[str, ...]] = (
 ACTIVITIES_ALL: list[str] = list(ACTIVITIES[:])
 ACTIVITIES_ALL.sort()
 ACTIVITIES_ALL.insert(0, 'all')
-
-ACTIVITIES_COMMANDS: Final[tuple[str, ...]] = (
-    #'advent-calendar',
-    'adventure',
-    'arena',
-    #'boo',
-    #'cel-dailyquest',
-    #'cel-multiply',
-    #'cel-sacrifice',
-    'card-hand',
-    #'chimney',
-    'daily',
-    'duel',
-    'dungeon-miniboss',
-    'epic',
-    #'eternal-presents',
-    'farm',
-    'guild',
-    'horse',
-    'hunt',
-    'hunt-partner',
-    'lootbox',
-    #'love-share',
-    #'megarace',
-    #'minirace',
-    'quest',
-    'training',
-    'vote',
-    'weekly',
-    'work',
-)
 
 ACTIVITIES_EVENTS: Final[tuple[str, ...]] = (
     'big-arena',
@@ -692,6 +662,15 @@ EVENT_PINGS: Final[dict[str, str]] = {
     'fish': 'Megalodon',
     'miniboss': 'Miniboss',
 }
+
+
+SEASONAL_EVENTS: Final[list[str]] = [
+    'christmas',
+    'celebration',
+    'halloween',
+    'horse_festival',
+    'valentine',
+]
 
 # --- Lootboxes ---
 LOOTBOXES: Final[dict[str, str]] = {
@@ -1291,6 +1270,14 @@ FLEX_TITLES_CARD_DROP: Final[tuple[str, ...]] = (
     'What do you mean, I need another 2 of those',
 )
 
+FLEX_TITLES_CARD_GOLDEN: Final[tuple[str, ...]] = (
+    'GOLD! WE GOT GOLD!',
+    'Normal cards are apparently not good enough',
+    'It\'s poker cards. But fancy.',
+    'Good luck getting all of those',
+    'Why is nothing ever good enough for you?',
+)
+
 FLEX_TITLES_CARD_DROP_PARTNER: Final[tuple[str, ...]] = (
     'CALL THE POLICE',
     'Hello support, I\'d like to replace my partner',
@@ -1713,6 +1700,14 @@ FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT: Final[tuple[str, ...]] = (
     'https://media.tenor.com/rpnFMRgGHsgAAAAi/vodafone-vodafone-xmas.gif',
 )
 
+FLEX_THUMBNAILS_ARTIFACTS_COWBOY_BOOTS: Final[tuple[str, ...]] = (
+    'https://media1.tenor.com/m/fJV5-t-jC6EAAAAd/new-boot.gif',
+    'https://media1.tenor.com/m/NmB6i7DZFHUAAAAC/querida-piso21.gif',
+    'https://media1.tenor.com/m/lBEJu36EtYsAAAAd/cowboy-boots-western-boots.gif',
+    'https://media1.tenor.com/m/aADNFJFpOzcAAAAC/boots-shoes.gif',
+    'https://media1.tenor.com/m/S83c-j-wvpoAAAAC/cowboy-boots-cowboy.gif',
+)
+
 FLEX_THUMBNAILS_BREW_ELECTRONICAL: Final[tuple[str, ...]] = (
     'https://media.tenor.com/wlpMSYaDoYkAAAAd/tea-time-heure-du-th%C3%A9.gif',
     'https://media.tenor.com/YBIZSm5Hl8YAAAAi/cat-drink.gif',
@@ -1727,6 +1722,14 @@ FLEX_THUMBNAILS_CARD_DROP: Final[tuple[str, ...]] = (
     'https://media.tenor.com/O45wQ8fW9qsAAAAC/if-you-cheat-you-will-win-qotd.gif',
     'https://media.tenor.com/nZDQaGBpSpIAAAAC/cast-them-out-hiram-epps.gif',
     'https://media.tenor.com/wZIJPJMG6cQAAAAC/star-citizen-aurora-get-this-man-a-ban.gif',
+)
+
+FLEX_THUMBNAILS_CARD_GOLDEN: Final[tuple[str, ...]] = (
+    'https://media1.tenor.com/m/eoXNSS9OlVIAAAAd/crypto-gemology-salt-bae.gif',
+    'https://media1.tenor.com/m/38IipBkBL6sAAAAC/fff-gold.gif',
+    'https://media1.tenor.com/m/nFrhSMnzrU4AAAAC/rougo-ni-sonaete-isekai-de8manmai-no-kinka-o-tamemasu-cute.gif',
+    'https://media1.tenor.com/m/Ft_i04ZwRuEAAAAd/monkey-give-gold.gif',
+    'https://media1.tenor.com/m/MH08oeqr_P8AAAAC/ohm-money.gif',
 )
 
 FLEX_THUMBNAILS_CARD_DROP_PARTNER: Final[tuple[str, ...]] = (

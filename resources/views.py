@@ -290,12 +290,12 @@ class SettingsHelpersView(discord.ui.View):
         toggled_settings = {
             'Context helper': 'context_helper_enabled',
             'Heal warning': 'heal_warning_enabled',
-            #'Megarace helper': 'megarace_helper_enabled',
             'Pet catch helper': 'pet_helper_enabled',
             'Ruby counter': 'ruby_counter_enabled',
             'Time potion warning': 'time_potion_warning_enabled',
             'Training helper': 'training_helper_enabled',
-            #'Pumpkin bat helper': 'halloween_helper_enabled',
+            'Megarace helper': 'megarace_helper_enabled',
+            'Pumpkin bat helper': 'halloween_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
         self.add_item(components.SetFarmHelperModeSelect(self))
@@ -446,29 +446,19 @@ class SettingsReadyRemindersView(discord.ui.View):
         self.clan_settings = clan_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
-            #'Boo': 'alert_boo',
-            #'Cel dailyquest': 'alert_cel_dailyquest',
-            #'Cel multiply': 'alert_cel_multiply',
-            #'Cel sacrifice': 'alert_cel_sacrifice',
             'Card hand': 'alert_card_hand',
-            #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
-            'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
             'Hunt partner': 'alert_hunt_partner',
             'Lootbox': 'alert_lootbox',
-            #'Love share': 'alert_love_share',
-            #'Megarace': 'alert_megarace',
-            #'Minirace': 'alert_minirace',
             'Quest': 'alert_quest',
             'Pets claim': 'alert_pets',
             'Training': 'alert_training',
@@ -484,10 +474,25 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_seasonal = {
+            'Advent calendar': 'alert_advent',
+            'Boo': 'alert_boo',
+            'Cel dailyquest': 'alert_cel_dailyquest',
+            'Cel multiply': 'alert_cel_multiply',
+            'Cel sacrifice': 'alert_cel_sacrifice',
+            'Chimney': 'alert_chimney',
+            'ETERNAL presents': 'alert_eternal_present',
+            'Love share': 'alert_love_share',
+            'Megarace': 'alert_megarace',
+            'Minirace': 'alert_minirace',
+        }
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                            'toggle_event_reminders'))
+        if toggled_settings_commands:
+            self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_seasonal, 'Toggle seasonal reminders',
+                                                               'toggle_seasonal_reminders'))
         self.add_item(components.ManageReadyReminderChannelsSelect(self))
 
     @discord.ui.button(label="< Back", style=discord.ButtonStyle.grey, row=4)
@@ -588,31 +593,21 @@ class SettingsRemindersView(discord.ui.View):
         self.user_settings = user_settings
         self.embed_function = embed_function
         toggled_settings_commands = {
-            #'Advent calendar': 'alert_advent',
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
-            #'Boo': 'alert_boo',
             'Boost items': 'alert_boosts',
             'Card hand': 'alert_card_hand',
-            #'Cel dailyquest': 'alert_cel_dailyquest',
-            #'Cel multiply': 'alert_cel_multiply',
-            #'Cel sacrifice': 'alert_cel_sacrifice',
-            #'Chimney': 'alert_chimney',
             'Daily': 'alert_daily',
             'Duel': 'alert_duel',
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
             'EPIC shop restocks': 'alert_epic_shop',
-            #'ETERNAL presents': 'alert_eternal_present',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
             'Hunt': 'alert_hunt',
             'Hunt partner': 'alert_hunt_partner',
-            #'Megarace': 'alert_megarace',
-            #'Minirace': 'alert_minirace',
             'Lootbox': 'alert_lootbox',
-            #'Love share': 'alert_love_share',
             'Maintenance': 'alert_maintenance',
             'Partner alert': 'alert_partner',
             'Pets': 'alert_pets',
@@ -621,7 +616,6 @@ class SettingsRemindersView(discord.ui.View):
             'Vote': 'alert_vote',
             'Weekly': 'alert_weekly',
             'Work': 'alert_work',
-
         }
         toggled_settings_events = {
             'Big arena': 'alert_big_arena',
@@ -630,11 +624,26 @@ class SettingsRemindersView(discord.ui.View):
             'Minin\'tboss': 'alert_not_so_mini_boss',
             'Pet tournament': 'alert_pet_tournament',
         }
+        toggled_settings_seasonal = {
+            'Advent calendar': 'alert_advent',
+            'Boo': 'alert_boo',
+            'Cel dailyquest': 'alert_cel_dailyquest',
+            'Cel multiply': 'alert_cel_multiply',
+            'Cel sacrifice': 'alert_cel_sacrifice',
+            'Chimney': 'alert_chimney',
+            'ETERNAL presents': 'alert_eternal_present',
+            'Love share': 'alert_love_share',
+            'Megarace': 'alert_megarace',
+            'Minirace': 'alert_minirace',
+        }
         self.add_item(components.ManageReminderBehaviourSelect(self))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
+        if toggled_settings_seasonal:
+            self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_seasonal, 'Toggle seasonal reminders',
+                                                              'toggle_seasonal_reminders'))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -965,6 +974,7 @@ class SettingsServerAutoFlexView(discord.ui.View):
             'Brew electronical potion': 'auto_flex_brew_electronical_enabled',
             'Artifact crafting': 'auto_flex_artifacts_enabled',
             'Cards from drop': 'auto_flex_card_drop_enabled',
+            'Card goldening': 'auto_flex_card_golden_enabled',
             'Cards from card slots': 'auto_flex_card_slots_enabled',
             'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
             'EPIC berries from work commands': 'auto_flex_work_epicberry_enabled',
@@ -1185,7 +1195,7 @@ class DevEventReductionsView(discord.ui.View):
     ---------
     bot: Bot.
     user_settings: User object with the settings of the user.
-    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    embed_function: Function that returns the settings embed. The function expects the following arguments:
     - bot: Bot
     - user_settings: User object with the settings of the user
 
@@ -1210,6 +1220,46 @@ class DevEventReductionsView(discord.ui.View):
                                                            'Copy slash > text'))
         self.add_item(components.CopyEventReductionsButton(discord.ButtonStyle.grey, 'copy_text_slash',
                                                            'Copy text > slash'))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+
+class DevSeasonalEventView(discord.ui.View):
+    """View with a all components to manage the seasonal event.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    embed_function: Function that returns the settings embed. The function expects no arguments.
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, active_event: str,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        seasonal_events = ['none',] + strings.SEASONAL_EVENTS
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.active_event = active_event
+        self.user = ctx.author
+        self.embed_function = embed_function
+        self.add_item(components.SetSeasonalEventSelect(seasonal_events, active_event,
+                                                 'Set seasonal event ...'))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
         if interaction.user != self.user:

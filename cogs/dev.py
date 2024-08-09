@@ -18,7 +18,8 @@ from discord.ext.bridge import BridgeOption
 from humanfriendly import format_timespan
 
 from database import cooldowns, users
-from resources import emojis, exceptions, logs, settings, views
+from database import settings as settings_db
+from resources import emojis, exceptions, functions, logs, settings, views
 
 if TYPE_CHECKING:
     from datetime import datetime, timedelta
@@ -55,6 +56,7 @@ class DevCog(commands.Cog):
             f'{emojis.BP} `{ctx.prefix}dev leave-server <server id>`\n'
             f'{emojis.BP} `{ctx.prefix}dev post-message`, `pm` `<message id> <channel id> <embed title>`\n'
             f'{emojis.BP} `{ctx.prefix}dev reload <modules>`\n'
+            f'{emojis.BP} `{ctx.prefix}dev seasonal-event`, `se`\n'
             f'{emojis.BP} `{ctx.prefix}dev server-list`\n'
             f'{emojis.BP} `{ctx.prefix}dev support`\n'
             f'{emojis.BP} `{ctx.prefix}dev shutdown`\n'
@@ -554,6 +556,21 @@ class DevCog(commands.Cog):
             await interaction.edit(content='Aborted.', view=None)
 
 
+    @dev_group.command(name='seasonal-event', aliases=('se','seasonal'), description='Manage the active seasonal event',
+                       guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def dev_seasonal_event(self, ctx: bridge.BridgeContext) -> None:
+        """Manage seasonal event"""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        all_settings = await settings_db.get_settings()
+        view = views.DevSeasonalEventView(ctx, self.bot, all_settings['seasonal_event'], embed_dev_seasonal_event)
+        embed = await embed_dev_seasonal_event(self.bot)
+        interaction = await ctx.respond(embed=embed, view=view)
+        view.interaction = interaction
+        
+
     @dev_group.command(name='user-settings', aliases=('user',),
                        description='Returns settings of a user', guild_ids=settings.DEV_GUILDS)
     @commands.bot_has_permissions(send_messages=True, attach_files=True)
@@ -614,4 +631,31 @@ async def embed_dev_event_reductions(all_cooldowns: List[cooldowns.Cooldown]) ->
     )
     embed.add_field(name='SLASH COMMANDS', value=reductions_slash, inline=False)
     embed.add_field(name='TEXT & MENTION COMMANDS', value=reductions_text, inline=False)
+    return embed
+
+
+async def embed_dev_seasonal_event(bot: bridge.AutoShardedBot) -> discord.Embed:
+    """Seasonal event embed"""
+
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    active_event: str = all_settings['seasonal_event'].replace('_', ' ').title()
+    field_active_event = f'{emojis.BP} **{active_event}**'
+    field_command_list = (
+        f'{emojis.BP} Celebration: `cel dailyquest`, `cel multiply`, `cel sacrifice`\n'
+        f'{emojis.BP} Christmas: `xmas advent-calendar`, `xmas chimney`, `open eternal present`\n'
+        f'{emojis.BP} Halloween: `hal boo`\n'
+        f'{emojis.BP} Horse Festival: `hf megarace`, `hf minirace`\n'
+        f'{emojis.BP} Valentine: `love share`'
+    )
+
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = 'SEASONAL EVENT SETTINGS',
+        description = (
+            f'_The currently active event controls whether the corresponding event commands will show up in '
+            f'{await functions.get_navi_slash_command(bot, 'ready')}._'
+        )
+    )
+    embed.add_field(name='CURRENTLY ACTIVE EVENT', value=field_active_event, inline=False)
+    embed.add_field(name='AFFECTED COMMANDS', value=field_command_list, inline=False)
     return embed

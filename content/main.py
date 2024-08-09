@@ -196,6 +196,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{emojis.BP} :flag_es: Spanish\n'
         f'{emojis.BP} :flag_br: Portuguese\n'
     )
+        
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -216,6 +217,9 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
     embed.add_field(name='SERVER', value=server_settings, inline=False)
     embed.add_field(name='MISC', value=misc_settings, inline=False)
     embed.add_field(name='SUPPORTED EPIC RPG LANGUAGES', value=supported_languages, inline=False)
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    if all_settings['seasonal_event'] in strings.SEASONAL_EVENTS:
+        embed.set_footer(text=f'{all_settings["seasonal_event"].replace("_"," ").capitalize()} event mode active.')
     return embed
 
 

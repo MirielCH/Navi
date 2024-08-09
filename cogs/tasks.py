@@ -125,8 +125,7 @@ class TasksCog(commands.Cog):
                     if reminder.activity == 'dragon-breath-potion':
                         await user_settings.update(potion_dragon_breath_active=False)
                     elif reminder.activity == 'round-card':
-                        await reminders.increase_reminder_time_percentage(user.id, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES,
-                                                                          user_settings)
+                        await reminders.increase_reminder_time_percentage(user_settings, 95, strings.ROUND_CARD_AFFECTED_ACTIVITIES)
                         await user_settings.update(round_card_active=False)
                     elif reminder.activity == 'mega-boost':
                         try:
@@ -212,18 +211,88 @@ class TasksCog(commands.Cog):
             running_tasks.pop(task_name, None)
         return
 
+    @commands.command(name='task-start')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def task_start(self, ctx: commands.Context, *args: str) -> None:
+        """Manually start tasks"""
+        if ctx.author.id not in settings.DEV_IDS: return
+        errors = []
+        try:
+            reminders.schedule_reminders.start()
+        except Exception as error:
+            errors.append(f'Task "schedule_reminders": {error}')
+        try:
+            self.schedule_tasks.start()
+        except Exception as error:
+            errors.append(f'Task "schedule_tasks": {error}')
+        try:
+            self.delete_old_reminders.start()
+        except Exception as error:
+            errors.append(f'Task "delete_old_reminders": {error}')
+        try:
+            self.reset_clans.start()
+        except Exception as error:
+            errors.append(f'Task "reset_clans": {error}')
+        try:
+            self.consolidate_tracking_log.start()
+        except Exception as error:
+            errors.append(f'Task "consolidate_tracking_log": {error}')
+        try:
+            self.delete_old_messages_from_cache.start()
+        except Exception as error:
+            errors.append(f'Task "delete_olde_messages_from_cache": {error}')
+        try:
+            self.reset_trade_daily_done.start()
+        except Exception as error:
+            errors.append(f'Task "trade_daily_done": {error}')
+        try:
+            self.disable_event_reduction.start()
+        except Exception as error:
+            errors.append(f'Task "disable_event_reduction": {error}')
+        errors_list = ''
+        if errors:
+            errors_list = '```'
+            for error in errors:
+                errors_list = f'{errors_list}\n{error}'
+            errors_list = f'{errors_list}\n```'
+        await ctx.reply(f'Done\n{errors_list}'.strip())
+
     # Events
     @commands.Cog.listener()
     async def on_ready(self) -> None:
         """Fires when bot has finished starting"""
-        reminders.schedule_reminders.start()
-        self.delete_old_reminders.start()
-        self.reset_clans.start()
-        self.schedule_tasks.start()
-        self.consolidate_tracking_log.start()
-        self.delete_old_messages_from_cache.start()
-        self.reset_trade_daily_done.start()
-        self.disable_event_reduction.start()
+        try:
+            reminders.schedule_reminders.start()
+        except RuntimeError:
+            pass
+        try:
+            self.schedule_tasks.start()
+        except RuntimeError:
+            pass
+        try:
+            self.delete_old_reminders.start()
+        except RuntimeError:
+            pass
+        try:
+            self.reset_clans.start()
+        except RuntimeError:
+            pass
+        try:
+            self.consolidate_tracking_log.start()
+        except RuntimeError:
+            pass
+        try:
+            self.delete_old_messages_from_cache.start()
+        except RuntimeError:
+            pass 
+        try:
+            self.reset_trade_daily_done.start()
+        except RuntimeError:
+            pass
+        try:
+            self.disable_event_reduction.start()
+        except RuntimeError:
+            pass
 
     # Tasks
     @tasks.loop(seconds=0.5)
