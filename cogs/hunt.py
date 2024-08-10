@@ -22,6 +22,7 @@ class HuntCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
         embed_data_before = await functions.parse_embed(message_before)
         embed_data_after = await functions.parse_embed(message_after)
@@ -361,7 +362,7 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                     
                 if together and partner_christmas_area:
-                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIER
+                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIERP
                 if together and partner is not None:
                     if partner.round_card_active:
                         time_left_seconds_partner_hunt *= settings.ROUND_CARD_MULTIPLIER                    

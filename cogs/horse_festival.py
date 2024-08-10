@@ -11,7 +11,7 @@ from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
-from resources import emojis, exceptions, functions, regex, strings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class HorseFestivalCog(commands.Cog):
@@ -22,23 +22,9 @@ class HorseFestivalCog(commands.Cog):
     @commands.Cog.listener()
     async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
         """Runs when a message is edited in a channel."""
-        if message_before.pinned != message_after.pinned: return
-        embed_data_before = await functions.parse_embed(message_before)
-        embed_data_after = await functions.parse_embed(message_after)
-        if (message_before.content == message_after.content and embed_data_before == embed_data_after
-            and message_before.components == message_after.components): return
-        for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
-        await self.on_message(message_after)
-
-    @commands.Cog.listener()
-    async def on_message_edit(self, message_before: discord.Message, message_after: discord.Message) -> None:
-        """Runs when a message is edited in a channel."""
-        message = message_after
-        if message.embeds:
-            embed: discord.Embed = message.embeds[0]
+        if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
+        if message_after.embeds:
+            embed: discord.Embed = message_after.embeds[0]
             message_author = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
@@ -47,28 +33,28 @@ class HorseFestivalCog(commands.Cog):
             # Minirace embed
             if '— minirace' in message_author.lower():
                 user_name = user_id = None
-                user = await functions.get_interaction_user(message)
+                user = await functions.get_interaction_user(message_after)
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
-                        user = message.guild.get_member(user_id)
+                        user = message_after.guild.get_member(user_id)
                     if user is None:
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                            user = await functions.get_guild_member_by_name(message.guild, user_name)
+                            user = await functions.get_guild_member_by_name(message_after.guild, user_name)
                         else:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in minirace embed.', message)
+                            await functions.add_warning_reaction(message_after)
+                            await errors.log_error('User not found in minirace embed.', message_after)
                             return
                         user_command_message = (
-                            await messages.find_message(message.channel.id, regex.COMMAND_HF_MINIRACE,
+                            await messages.find_message(message_after.channel.id, regex.COMMAND_HF_MINIRACE,
                                                         user_name=user_name)
                         )
                         if user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('Couldn\'t find a command for minirace embed.', message)
+                            await functions.add_warning_reaction(message_after)
+                            await errors.log_error('Couldn\'t find a command for minirace embed.', message_after)
                             return
                         user = user_command_message.author
                 try:
@@ -84,9 +70,20 @@ class HorseFestivalCog(commands.Cog):
                 reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'minirace', time_left,
-                                                         message.channel.id, reminder_message)
+                                                         message_after.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)
+                await functions.add_reminder_reaction(message_after, reminder, user_settings)
+        
+        if message_before.pinned != message_after.pinned: return
+        embed_data_before = await functions.parse_embed(message_before)
+        embed_data_after = await functions.parse_embed(message_after)
+        if (message_before.content == message_after.content and embed_data_before == embed_data_after
+            and message_before.components == message_after.components): return
+        for row in message_after.components:
+            for component in row.children:
+                if component.disabled:
+                    return
+        await self.on_message(message_after)
 
 
     @commands.Cog.listener()
