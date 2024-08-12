@@ -132,9 +132,8 @@ class DevCog(commands.Cog):
         else:
             description = (
                 '- _Invalid emojis have an error in their definition in `emojis.py`._\n'
-                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see and set '
-                'the correct IDs in `emojis.py`._\n\n'
-                '_Run `/dev emoji-update` to change the emoji IDs to the ones in your emoji guilds._'
+                '- _Missing emojis are valid but not found on Discord. Upload them to a server Navi can see, run '
+                ' `/dev emoji-update` and restart the bot._\n\n'
             )
         if invalid_emojis:
             description = f'{description}\n\n**Invalid emojis**'
