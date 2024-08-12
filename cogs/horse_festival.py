@@ -1,7 +1,7 @@
 # horse_festival.py
 
+from datetime import datetime, timedelta, timezone
 import asyncio
-from datetime import timedelta
 import random
 import re
 
@@ -324,16 +324,18 @@ class HorseFestivalCog(commands.Cog):
                 'puedes entrar a la megacarrera cada semana', #Spanish
                 'você pode entrar na mega corrida toda semana', #Portuguese
             ]
-            search_strings_completed = [
-                'megarace completed', #English
+            search_strings_not_started = [
                 'megarace not started', #English 2
-                'megacarrera completada', #Spanish
                 'la megacarrera no comenzó', #Spanish 2
-                'megacorrida completa', #Portuguese
                 'a megacorrida não começou', #Portuguese 2
             ]
+            search_strings_completed = [
+                'megarace completed', #English
+                'megacarrera completada', #Spanish
+                'megacorrida completa', #Portuguese
+            ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
-                and not any(search_string in message_field0_value.lower() for search_string in search_strings_completed)):
+                and not any(search_string in message_field0_value.lower() for search_string in search_strings_not_started)):
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
                 if user is None:
@@ -351,14 +353,20 @@ class HorseFestivalCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_megarace.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'megarace')
-                search_patterns = [
-                    r'time remaining\*\*: (.+?)\n', #English
-                    r'ti?empo restante\*\*: (.+?)\n', #Spanish, Portuguese
-                ]
-                timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
-                timestring = timestring_match.group(1)
-                if timestring in ('0d 0h 0m 0s', '0h 0m 0s'): return
-                time_left = await functions.calculate_time_left_from_timestring(message, timestring)
+                if any(search_string in message_field0_value.lower() for search_string in search_strings_completed):
+                    current_time = utils.utcnow()
+                    next_monday = current_time.date() + timedelta(days=(0 - current_time.weekday() - 1) % 7 + 1)
+                    next_monday_dt = datetime(year=next_monday.year, month=next_monday.month, day=next_monday.day, hour=0, minute=5, second=0, microsecond=0, tzinfo=timezone.utc)
+                    time_left = next_monday_dt - utils.utcnow() + timedelta(seconds=random.randint(0, 600))
+                else:
+                    search_patterns = [
+                        r'time remaining\*\*: (.+?)\n', #English
+                        r'ti?empo restante\*\*: (.+?)\n', #Spanish, Portuguese
+                    ]
+                    timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
+                    timestring = timestring_match.group(1)
+                    if timestring in ('0d 0h 0m 0s', '0h 0m 0s'): return
+                    time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 reminder_message = user_settings.alert_megarace.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'megarace', time_left,

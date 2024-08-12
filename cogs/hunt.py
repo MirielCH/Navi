@@ -175,7 +175,7 @@ class HuntCog(commands.Cog):
                 )
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
-                hardmode = together = alone = event_mob = found_together = partner_alerts_enabled = False
+                hardmode = together = alone = event_mob = partner_alerts_enabled = False
                 partner_christmas_area = False
                 user = await functions.get_interaction_user(message)
                 slash_command = False if user is None else True
@@ -386,7 +386,7 @@ class HuntCog(commands.Cog):
                                                    * user_settings.alert_hunt_partner.multiplier
                                                    * pocket_watch_multiplier_partner * chocolate_box_multiplier_partner))
                 await user_settings.update(hunt_end_time=current_time + time_left)
-                if user_settings.hunt_reminders_combined:
+                if user_settings.hunt_reminders_combined and together:
                     time_left = max(time_left, time_left_partner_hunt)
                 reminder_created = False
                 if user_settings.alert_hunt.enabled and time_left >= timedelta(0):
