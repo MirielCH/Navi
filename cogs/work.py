@@ -175,6 +175,7 @@ class WorkCog(commands.Cog):
                 'chocolate box', #All languages, artifacts
                 'bunny mask', #All languages, artifacts
                 'cowboy boots', #All languages, artifacts
+                '`boost`', #All languages, boost from party popper
             ]
             search_strings = [
                 '** got ', #English

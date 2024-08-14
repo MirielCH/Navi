@@ -170,7 +170,7 @@ class CooldownsCog(commands.Cog):
                     cooldowns.append(['card-hand', card_hand_timestring.lower(), card_hand_message])
                 else:
                     ready_commands.append('card-hand')
-            if user_settings.alert_hunt.enabled:
+            if user_settings.alert_hunt.enabled and not user_settings.hunt_reminders_combined:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
@@ -186,15 +186,6 @@ class CooldownsCog(commands.Cog):
                             else:
                                 user_command = f"{user_command} `hardmode`".replace('` `', ' ')
                     hunt_timestring = hunt_match.group(1)
-                    if ('together' in user_settings.last_hunt_mode
-                        and user_settings.partner_donor_tier < user_settings.user_donor_tier):
-                        time_left = await functions.parse_timestring_to_timedelta(hunt_timestring.lower())
-                        partner_donor_tier = 3 if user_settings.partner_donor_tier > 3 else user_settings.partner_donor_tier
-                        user_donor_tier = 3 if user_settings.user_donor_tier > 3 else user_settings.user_donor_tier
-                        time_difference = ((60 * settings.DONOR_COOLDOWNS[partner_donor_tier])
-                                        - (60 * settings.DONOR_COOLDOWNS[user_donor_tier]))
-                        time_left_seconds = time_left.total_seconds() + time_difference
-                        hunt_timestring = await functions.parse_timedelta_to_timestring(timedelta(seconds=time_left_seconds))
                     hunt_message = user_settings.alert_hunt.message.replace('{command}', user_command)
                     cooldowns.append(['hunt', hunt_timestring.lower(), hunt_message])
                 else:

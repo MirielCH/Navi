@@ -127,13 +127,6 @@ class HuntCog(commands.Cog):
                         return
                     except exceptions.NoDataFoundError:
                         pass
-                else:
-                    try:
-                        hunt_partner_reminder = await reminders.get_user_reminder(interaction_user.id, 'hunt-partner')
-                    except exceptions.NoDataFoundError:
-                        hunt_partner_reminder = None
-                    if hunt_partner_reminder:
-                        time_left = max(time_left, hunt_partner_reminder.end_time - utils.utcnow())
                 if time_left < timedelta(0): return
                 time_left_seconds = time_left.total_seconds()
                 time_left = timedelta(seconds=ceil(time_left_seconds))

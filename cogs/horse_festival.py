@@ -386,14 +386,14 @@ class HorseFestivalCog(commands.Cog):
                     user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_field0_name)
                     if not user_name_match:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found in megarace boost message.', message)
+                        await errors.log_error('User not found in megarace boost done message.', message)
                         return
                     user_name = user_name_match.group(1)
                     guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
                     if not guild_users: return
                     if len(guild_users) > 1:
                         await functions.add_warning_reaction(message)
-                        await errors.log_error(f'User {user_name} not unique in megarace boost message. Found {guild_users}.', message)
+                        await errors.log_error(f'User {user_name} not unique in megarace boost done message. Found {guild_users}.', message)
                         return
                     user = guild_users[0]
                 try:
@@ -409,7 +409,7 @@ class HorseFestivalCog(commands.Cog):
                 timestring_match = await functions.get_match_from_patterns(search_patterns, message_field0_value.lower())
                 if not timestring_match:
                     await functions.add_warning_reaction(message)
-                    await errors.log_error('Timestring not found in megarace boost message.', message)
+                    await errors.log_error('Timestring not found in megarace boost done message.', message)
                     return
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 try:
@@ -430,6 +430,64 @@ class HorseFestivalCog(commands.Cog):
                     new_end_time = reminder.end_time - time_left
                 await reminder.update(end_time=new_end_time)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
+            search_strings = [
+                'megaraceboost',
+            ]
+            if any(search_string in message_field0_name.lower() for search_string in search_strings):
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_field0_name)
+                    if not user_name_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in megarace boost message.', message)
+                        return
+                    user_name = user_name_match.group(1)
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user command for the megarace boost message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.megarace_helper_enabled: return
+                answer = f'Hey! A **megarace boost** just appeared!'
+                answer = f'{answer} {user.mention}' if user_settings.ping_after_message else f'{user.mention} {answer}'
+                await message.channel.send(answer)
+
+            search_strings = [
+                'did not pass through the boost',
+            ]
+            if any(search_string in message_field0_name.lower() for search_string in search_strings):
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_field0_name)
+                    if not user_name_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in megarace boost missed message.', message)
+                        return
+                    user_name = user_name_match.group(1)
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, user_name=user_name)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user command for the megarace boost missed message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.reactions_enabled: return
+                await message.add_reaction(emojis.PEPE_LAUGH)
 
             # Megarace helper
             if '— megarace' in message_author.lower():
