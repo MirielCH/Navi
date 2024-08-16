@@ -316,11 +316,13 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                     return
                 activity: str
                 for activity in activities_found:
-                    if activity != 'hunt-partner' and user_settings.multiplier_management_enabled and user_settings.current_area != 20:
-                        await ctx.reply(
-                            f'Changing managed multipliers with this command is not possible if automatic multiplier management is enabled.'
-                        )
-                        return
+                    if activity != 'hunt-partner' and user_settings.multiplier_management_enabled:
+                        if ((user_settings.multiplier_management_scope == 0 and user_settings.current_area == 18)
+                            or (user_settings.multiplier_management_scope == 1 and user_settings.current_area != 20)):
+                            await ctx.reply(
+                                f'Changing managed multipliers is not possible in your current area because they are managed automatically.'
+                            )
+                            return
                     kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = multiplier_found
                 activities_found = []
             except ValueError:
@@ -782,7 +784,7 @@ async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.Bri
     view.interaction = interaction
     await view.wait()
 
-
+    
 async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                             switch_view: Optional[discord.ui.View] = None) -> None:
     """Server settings auto-flex command"""
@@ -1096,18 +1098,12 @@ async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.Ap
                                      user_settings: users.User) -> discord.Embed:
     """Reminder multiplier settings embed"""
     ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
-    if user_settings.multiplier_management_enabled:
-        if user_settings.current_area == 20:
-            multiplier_management: str = f'{emojis.ENABLED}`Enabled (Inactive)`'
-        else:
-            multiplier_management: str = f'{emojis.ENABLED}`Enabled`'
-    else:
-        multiplier_management: str = f'{emojis.DISABLED}`Disabled`'
     
     field_settings: str = (
-        f'{emojis.BP} **Automatic managed multipliers**: {multiplier_management}\n'
-        f'{emojis.DETAIL} _Managed multipliers are not changeable in automatic mode._\n'
-        f'{emojis.DETAIL} _Automatic multipliers are inactive in area 20._\n'
+        f'{emojis.BP} **Automatic managed multipliers**: {await functions.bool_to_text(user_settings.multiplier_management_enabled)}\n'
+        f'{emojis.BP} **Managed multiplier scope**: `{strings.MANAGED_MULTIPLIER_SCOPES[user_settings.multiplier_management_scope]}`\n'
+        f'{emojis.DETAIL} _Managed multipliers are not changeable within managed areas._\n'
+        f'{emojis.DETAIL} _Note that managed multipliers are always inactive in area 20._\n'
     )
     field_managed_multipliers: str = (
         f'{emojis.BP} **`{f'Adventure':<12}`** `{round(user_settings.alert_adventure.multiplier, 3):>5}`\n'

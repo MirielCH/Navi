@@ -99,6 +99,7 @@ class User():
     hardmode_mode_enabled: bool
     heal_warning_enabled: bool
     hunt_end_time: datetime
+    hunt_reminder_mode: int
     hunt_reminders_combined: bool
     inventory: UserInventory
     last_adventure_mode: str
@@ -111,6 +112,7 @@ class User():
     last_work_command: str
     megarace_helper_enabled: bool
     multiplier_management_enabled: bool
+    multiplier_management_scope: int
     partner_alert_threshold: int
     partner_channel_id: int
     partner_chocolate_box_unlocked: bool
@@ -238,6 +240,7 @@ class User():
         self.hardmode_mode_enabled = new_settings.hardmode_mode_enabled
         self.heal_warning_enabled = new_settings.heal_warning_enabled
         self.hunt_end_time = new_settings.hunt_end_time
+        self.hunt_reminder_mode = new_settings.hunt_reminder_mode
         self.hunt_reminders_combined = new_settings.hunt_reminders_combined
         self.inventory = new_settings.inventory
         self.last_adventure_mode = new_settings.last_adventure_mode
@@ -250,6 +253,7 @@ class User():
         self.last_work_command = new_settings.last_work_command
         self.megarace_helper_enabled = new_settings.megarace_helper_enabled
         self.multiplier_management_enabled = new_settings.multiplier_management_enabled
+        self.multiplier_management_scope = new_settings.multiplier_management_scope
         self.partner_alert_threshold = new_settings.partner_alert_threshold
         self.partner_channel_id = new_settings.partner_channel_id
         self.partner_chocolate_box_unlocked = new_settings.partner_chocolate_box_unlocked
@@ -478,6 +482,7 @@ class User():
             hardmode_mode_enabled: bool
             heal_warning_enabled: bool
             hunt_end_time: datetime
+            hunt_reminder_mode: int
             hunt_reminders_combined: bool
             inventory_bread: int
             inventory_carrot: int
@@ -497,6 +502,7 @@ class User():
             last_workt_command: str
             megarace_helper_enabled: bool
             multiplier_management_enabled: bool
+            multiplier_management_scope: int
             partner_alert_threshold: int
             partner_channel_id: int
             partner_chocolate_box_unlocked: bool
@@ -561,6 +567,7 @@ class User():
             time_left (timedelta): The time left found in the cooldown embed.
         """
         if self.current_area == 20: return
+        if self.multiplier_management_scope == 0 and self.current_area != 18: return
         if activity not in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: return
 
         # TODO: Once refactored to proper activities, make these 2 lines a percentage of the activity cooldown
@@ -806,6 +813,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             hardmode_mode_enabled = bool(record['hardmode_mode_enabled']),
             heal_warning_enabled = bool(record['heal_warning_enabled']),
             hunt_end_time = datetime.fromisoformat(record['hunt_end_time']).replace(tzinfo=timezone.utc),
+            hunt_reminder_mode = record['hunt_reminder_mode'],
             hunt_reminders_combined = bool(record['hunt_reminders_combined']),
             inventory = UserInventory(bread=(record['inventory_bread']), carrot=(record['inventory_carrot']),
                                       potato=(record['inventory_potato']),
@@ -823,6 +831,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             last_work_command = '' if record['last_work_command'] is None else record['last_work_command'],
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             multiplier_management_enabled = bool(record['multiplier_management_enabled']),
+            multiplier_management_scope = record['multiplier_management_scope'],
             partner_alert_threshold = record['partner_alert_threshold'],
             partner_channel_id = record['partner_channel_id'],
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
@@ -1184,6 +1193,7 @@ async def _update_user(user: User, **kwargs) -> None:
         hardmode_mode_enabled: bool
         heal_warning_enabled: bool
         hunt_end_time: datetime
+        hunt_reminder_mode: int
         hunt_reminders_combined: bool
         inventory_bread: int
         inventory_carrot: int
@@ -1203,6 +1213,7 @@ async def _update_user(user: User, **kwargs) -> None:
         last_workt_command: str
         megarace_helper_enabled: bool
         multiplier_management_enabled: bool
+        multiplier_management_scope: int
         partner_alert_threshold: int
         partner_channel_id: int
         partner_chocolate_box_unlocked: bool

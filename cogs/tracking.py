@@ -132,6 +132,7 @@ class TrackingCog(commands.Cog):
                     time_travel_count_new = user_settings.time_travel_count - lost_tt_count
                     trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
                     await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.PEEPO_NOOB)
                         
 
             if message.embeds:

@@ -520,6 +520,34 @@ def update_database() -> bool:
             sqls += [
                 "INSERT INTO settings (name, value) VALUES ('seasonal_event', 'none')",
             ]
+    if db_version < 26:
+        sqls += [
+            "ALTER TABLE users ADD hunt_reminder_mode INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD multiplier_management_scope INTEGER NOT NULL DEFAULT (0)",
+        ]
+
+        # Reset managed multipliers unless user is in area 18
+        cur.execute("SELECT * FROM users")
+        records: list[Any] = cur.fetchall()
+        record_db: Any
+        for record_db in records:
+            record: dict[str, Any] = dict(record_db)
+            if record['current_area'] == 18: continue
+            kwargs = {}
+            for column_name in record.keys():
+                if column_name.startswith('alert_') and column_name.endswith('_multiplier'):
+                    decimal_digits = len(str(record[column_name]).split('.')[1])
+                    if decimal_digits > 10:
+                        kwargs[column_name] = 1.0
+            sql: str = 'UPDATE users SET'
+            if kwargs:
+                for kwarg in kwargs:
+                    sql = f'{sql} {kwarg} = :{kwarg},'
+                sql = sql.strip(",")
+                kwargs['user_id'] = record['user_id']
+                sql = f'{sql} WHERE user_id = :user_id'
+                cur.execute(sql, kwargs)
+
         
     # Run SQLs
     sql: str

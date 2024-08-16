@@ -1508,6 +1508,31 @@ class SetFarmHelperModeSelect(discord.ui.Select):
         else:
             await interaction.response.edit_message(embed=embed, view=self.view)
 
+            
+class SetHuntReminderModeSelect(discord.ui.Select):
+    """Select to change hunt reminder mode"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for value, label in strings.HUNT_REMINDER_MODES.items():
+            emoji = emojis.ENABLED if view.user_settings.hunt_reminder_mode == value else None
+            options.append(discord.SelectOption(label=label, value=str(value), emoji=emoji))
+        super().__init__(placeholder='Change hunt reminder mode', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='set_hunt_reminder_mode')
+
+    async def callback(self, interaction: discord.Interaction):
+        await self.view.user_settings.update(hunt_reminder_mode=int(self.values[0]))
+        #TODO: Add logic when changing mode
+        for child in self.view.children.copy():
+            if isinstance(child, SetHuntReminderModeSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SetHuntReminderModeSelect(self.view))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
 
 class ManageServerSettingsAutoFlexSelect(discord.ui.Select):
     """Select to change auto-flex server settings"""
@@ -1828,8 +1853,14 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
     def __init__(self, view: discord.ui.View, row: int | None = None):
         options: list[discord.SelectOption] = []
         multiplier_management_emoji: str = emojis.ENABLED if view.user_settings.multiplier_management_enabled else emojis.DISABLED
-        options.append(discord.SelectOption(label='Automatic multipliers',
-                                                      value='multiplier_management', emoji=multiplier_management_emoji))
+        if view.user_settings.multiplier_management_scope == 0:
+            multipier_management_scope_str: str = strings.MANAGED_MULTIPLIER_SCOPES[1].lower()
+        else:
+            multipier_management_scope_str: str = strings.MANAGED_MULTIPLIER_SCOPES[0].lower()
+        options.append(discord.SelectOption(label='Managed multipliers',
+                                            value='multiplier_management', emoji=multiplier_management_emoji))
+        options.append(discord.SelectOption(label=f'Set scope to {multipier_management_scope_str}',
+                                            value='multiplier_management_scope', emoji=None))
         options.append(discord.SelectOption(label='Print current multipliers',
                                                       value='print_multipliers', emoji=None))
         super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
@@ -1842,6 +1873,9 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
                 await self.view.user_settings.update(
                     multiplier_management_enabled=not self.view.user_settings.multiplier_management_enabled
                 )
+            case "multiplier_management_scope":
+                multiplier_management_scope: int = 1 if self.view.user_settings.multiplier_management_scope == 0 else 0
+                await self.view.user_settings.update(multiplier_management_scope=multiplier_management_scope)
             case "print_multipliers":
                 prefix: str = await guilds.get_prefix(self.view.ctx)
                 answer: str = (

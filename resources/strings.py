@@ -90,6 +90,17 @@ FARM_HELPER_MODES: Final[dict[int, str]] = {
     3: 'Carrotato chips (balance carrots & potatoes)',
 }
 
+HUNT_REMINDER_MODES: Final[dict[int, str]] = {
+    0: 'Separate',
+    1: 'Combined',
+    2: 'Adaptive',
+}
+
+MANAGED_MULTIPLIER_SCOPES: Final[dict[int, str]] = {
+    0: 'Area 18 only',
+    1: 'All areas',
+}
+
 
 # --- Links ---
 LINK_CHANGELOG: Final[str] = 'https://github.com/MirielCH/Navi/releases'

@@ -547,8 +547,11 @@ class SettingsMultipliersView(discord.ui.View):
         self.embed_function = embed_function
         self.add_item(components.ManageMultiplierSettingsSelect(self))
         select_disabled: bool = False
-        if user_settings.multiplier_management_enabled and user_settings.current_area != 20:
-            select_disabled = True
+        if user_settings.multiplier_management_enabled:
+            if user_settings.multiplier_management_scope == 1 and user_settings.current_area != 20:
+                select_disabled = True
+            elif user_settings.multiplier_management_scope == 0 and user_settings.current_area == 18:
+                select_disabled = True
         self.add_item(components.ManageManagedMultipliersSelect(self, disabled=select_disabled))
         self.add_item(components.ManageManualMultipliersSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
