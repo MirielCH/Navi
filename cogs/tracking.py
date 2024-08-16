@@ -1,6 +1,7 @@
 # tracking.py
 """Contains commands related to command tracking"""
 
+from math import floor
 import re
 
 import discord
@@ -69,6 +70,7 @@ class TrackingCog(commands.Cog):
         if message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
             if not message.embeds:
                 message_content = message.content
+
                 # Epic Guard
                 search_strings = [
                     'we have to check you are actually playing', #English
@@ -89,6 +91,48 @@ class TrackingCog(commands.Cog):
                     if user_settings.tracking_enabled and user_settings.bot_enabled:
                         await tracking.insert_log_entry(user.id, message.guild.id, 'epic guard',
                                                         utils.utcnow())
+                        
+                # Losing time travel in area 20
+                search_strings = [
+                    'was severely affected by the effects of this area and lost', #English
+                    'was severely affected by the effects of this area and lost', #TODO: Spanish
+                    'was severely affected by the effects of this area and lost', #TODO: Portuguese
+                ]
+                if any(search_string in message_content.lower() for search_string in search_strings):
+                    user = await functions.get_interaction_user(message)
+                    if user is None:
+                        user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                        else:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a user for a20 lost time travel message.', message)
+                            return
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, user_name=user_name)
+                        )
+                        if user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Couldn\'t find a command for a20 lost time travel message.',
+                                                message)
+                            return
+                        user = user_command_message.author
+                    try:
+                        user_settings: users.User = await users.get_user(user.id)
+                    except exceptions.FirstTimeUserError:
+                        return
+                    if not user_settings.bot_enabled: return
+                    lost_tt_count_match = re.search(r' (\d+) <:', message_content)
+                    if lost_tt_count_match:
+                        lost_tt_count = int(lost_tt_count_match.group(1))
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a  lost tt count in a20 lost time travel message.', message)
+                        return
+                    time_travel_count_new = user_settings.time_travel_count - lost_tt_count
+                    trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
+                    await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
+                        
 
             if message.embeds:
                 # Last time travel

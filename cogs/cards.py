@@ -26,6 +26,27 @@ class CardsCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        if message_before.edited_at == message_after.edited_at: return
+        if message_after.channel.id == 1018269454641156147:
+            await errors.log_error(
+                f'Before Message ID: {message_before.id}\n'
+                f'Before Message edit time: {message_before.edited_at}\n'
+                f'Before Message flags: {message_before.flags}\n'
+                f'Before Message embed data: {embed_data_before}\n'
+                f'Before Message reference: {message_before.reference}\n'
+                f'Before Message components: {message_before.components}\n'
+                f'Before Message attachments: {message_before.attachments}\n'
+                f'Before Message content: {message_before.content}\n'
+                f'---\n'
+                f'After Message ID: {message_after.id}\n'
+                f'After Message edit time: {message_after.edited_at}\n'
+                f'After Message flags: {message_after.flags}\n'
+                f'After Message embed data: {embed_data_after}\n'
+                f'After Message reference: {message_after.reference}\n'
+                f'After Message components: {message_after.components}\n'
+                f'After Message attachments: {message_after.attachments}\n'
+                f'After Message content: {message_after.content}\n'
+            )
         await self.on_message(message_after)
 
     @commands.Cog.listener()

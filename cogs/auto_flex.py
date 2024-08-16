@@ -684,7 +684,8 @@ class AutoFlexCog(commands.Cog):
                         if next_tt: time_travel_count -= 1
                     else:
                         return
-                await user_settings.update(time_travel_count=time_travel_count)
+                trade_daily_total = floor(100 * (time_travel_count + 1) ** 1.35)
+                await user_settings.update(time_travel_count=time_travel_count, trade_daily_total=trade_daily_total)
 
             # Time travel
             search_strings = [

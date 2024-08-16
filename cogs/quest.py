@@ -28,6 +28,7 @@ class QuestCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        if message_before.edited_at == message_after.edited_at: return
         for row in message_after.components:
             for component in row.children:
                 if component.disabled:

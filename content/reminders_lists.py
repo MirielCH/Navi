@@ -590,16 +590,18 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         )
     if user_settings.ready_trade_daily_visible and user_settings.top_hat_unlocked:
         if user_settings.trade_daily_total == 0:
-            trade_daily_total = trade_daily_total_str = '?'
+            trade_daily_total = 0
+            trade_daily_total_str = '?'
             trade_daily_left = ''
         else:
             trade_daily_total = user_settings.trade_daily_total
             trade_daily_total_str = f'{trade_daily_total:,}'
-            trade_daily_left = f'(`{user_settings.trade_daily_total - user_settings.trade_daily_done:,}` left)'
-        if (user_settings.trade_daily_done != trade_daily_total
-            or user_settings.trade_daily_done == trade_daily_total and user_settings.ready_trade_daily_completed_visible):
+            trade_daily_left = user_settings.trade_daily_total - user_settings.trade_daily_done
+            if trade_daily_left < 0: trade_daily_left = 0
+        if (user_settings.trade_daily_done < trade_daily_total
+            or (user_settings.trade_daily_done >= trade_daily_total and user_settings.ready_trade_daily_completed_visible)):
             field_trade_daily = (
-                f'{emojis.BP} `{user_settings.trade_daily_done:,}`/`{trade_daily_total_str}` {trade_daily_left}'
+                f'{emojis.BP} `{user_settings.trade_daily_done:,}`/`{trade_daily_total_str}` (`{trade_daily_left:,}` left)'
             ).strip()
             if user_settings.trade_daily_total == 0:
                 trade_command = await functions.get_slash_command(user_settings, 'trade list')
