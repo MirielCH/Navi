@@ -96,9 +96,10 @@ HUNT_REMINDER_MODES: Final[dict[int, str]] = {
     2: 'Adaptive',
 }
 
-MANAGED_MULTIPLIER_SCOPES: Final[dict[int, str]] = {
-    0: 'Area 18 only',
-    1: 'All areas',
+MULTIPLIER_MANAGEMENT_MODES: Final[dict[int, str]] = {
+    0: 'Manual',
+    1: 'Managed (area 18 only)',
+    2: 'Managed (all areas)',
 }
 
 
@@ -271,7 +272,7 @@ POTION_FLASK_AFFECTED_ACTIVITIES: Final[tuple[str,...]] = (
 SLEEPY_POTION_AFFECTED_ACTIVITIES: Final[tuple[str, ...]] = (
     'adventure',
     'arena',
-    #'boo',
+    'boo',
     'card-hand',
     'chimney',
     'daily',
@@ -1345,6 +1346,14 @@ FLEX_TITLES_WORK_SUPERFISH: Final[tuple[str, ...]] = (
     'Better than an old boot, I guess',
 )
 
+FLEX_TITLES_WORK_WALKINGNORMIEFISH: Final[tuple[str, ...]] = (
+    'Uhm...',
+    'Perfectly normie',
+    'Jesus would be proud',
+    'Do you believe that you can win this fight tonight?',
+    'Kinda weird, but it\'s lume, so.',
+)
+
 FLEX_TITLES_WORK_WATERMELON: Final[tuple[str, ...]] = (
     'One in a melon',
     'Rare doesn\'t mean useful, lol',
@@ -1795,6 +1804,13 @@ FLEX_THUMBNAILS_WORK_ULTRALOG: Final[tuple[str, ...]] = (
     'https://media.giphy.com/media/0eVM7GVxTDDKxn7OyX/giphy.gif',
     'https://media.tenor.com/B984YMYS43IAAAAC/chainsaw-wood-cutting.gif',
     'https://media.tenor.com/oSSU2r9NWrMAAAAC/freddie-chainsaw.gif',
+)
+
+FLEX_THUMBNAILS_WORK_WALKINGNORMIEFISH: Final[tuple[str, ...]] = (
+    'https://media1.tenor.com/m/Wau8wpK5s1UAAAAC/walk-fish-dog.gif',
+    'https://media1.tenor.com/m/Q4FWLCCu4xIAAAAC/walking-awk.gif',
+    'https://media.tenor.com/qmzJwZptSckAAAAi/the-amazing-world-of-gumball-darwin.gif',
+    'https://media.tenor.com/dQ6DVFvSFC8AAAAi/sneak-out-fish.gif',
 )
 
 FLEX_THUMBNAILS_WORK_SUPERFISH: Final[tuple[str, ...]] = (

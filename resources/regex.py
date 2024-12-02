@@ -61,6 +61,7 @@ COMMAND_FORGE_GODLY_COOKIE: re.Pattern = re.compile(rf"\bforge\b\s+\bgodly\b\s+\
 COMMAND_HAL_BOO: re.Pattern = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bboo\b")
 COMMAND_HAL_BUY_HALLOWEEN_BOOST: re.Pattern = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bbuy\b\s+\bhalloween\b\s+\bboost\b")
 COMMAND_HAL_CRAFT_SPOOKY_SCROLL: re.Pattern = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+\bcraft\b\s+\bspooky\b\s+\bscroll\b")
+COMMAND_HAL_USE_HALLOWEEN_BOOX: re.Pattern = re.compile(rf"(?:\bhal\b|\bhalloween\b)\s+(?:\buse\b|\bopen\b)\s+\bhalloween\b\s+\bboox\b")
 COMMAND_HEAL: re.Pattern = re.compile(rf"\bheal\b")
 COMMAND_HF_LIGHTSPEED: re.Pattern = re.compile(rf"\b(?:hf\b|horsefestival\b)\s+lightspeed\b")
 COMMAND_HF_MEGARACE: re.Pattern = re.compile(rf"\b(?:hf\b|horsefestival\b)\s+megarace\b")

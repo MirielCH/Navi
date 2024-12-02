@@ -523,7 +523,12 @@ def update_database() -> bool:
     if db_version < 26:
         sqls += [
             "ALTER TABLE users ADD hunt_reminder_mode INTEGER NOT NULL DEFAULT (0)",
-            "ALTER TABLE users ADD multiplier_management_scope INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD hunt_partner_cooldown_as_timestamp INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE users ADD multiplier_management_mode INTEGER NOT NULL DEFAULT (1)",
+        ]
+    if db_version < 27:
+        sqls += [
+            "ALTER TABLE guilds ADD auto_flex_work_walkingnormiefish_enabled INTEGER NOT NULL DEFAULT (1)",
         ]
 
         # Reset managed multipliers unless user is in area 18

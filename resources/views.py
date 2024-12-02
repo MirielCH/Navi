@@ -21,6 +21,7 @@ COMMANDS_SETTINGS = {
     'Portals': settings_cmd.command_settings_portals,
     'Ready list': settings_cmd.command_settings_ready,
     'Reminders': settings_cmd.command_settings_reminders,
+    'Reminder behaviour': settings_cmd.command_settings_reminder_behaviour,
     'Reminder messages': settings_cmd.command_settings_messages,
     'User': settings_cmd.command_settings_user,
 }
@@ -545,15 +546,15 @@ class SettingsMultipliersView(discord.ui.View):
         self.user = ctx.author
         self.user_settings = user_settings
         self.embed_function = embed_function
-        self.add_item(components.ManageMultiplierSettingsSelect(self))
         select_disabled: bool = False
-        if user_settings.multiplier_management_enabled:
-            if user_settings.multiplier_management_scope == 1 and user_settings.current_area != 20:
-                select_disabled = True
-            elif user_settings.multiplier_management_scope == 0 and user_settings.current_area == 18:
-                select_disabled = True
+        if user_settings.multiplier_management_mode == 2 and user_settings.current_area != 20:
+            select_disabled = True
+        elif user_settings.multiplier_management_mode == 1 and user_settings.current_area == 18:
+            select_disabled = True
+        self.add_item(components.SetManagedMultiplierModeSelect(self))
         self.add_item(components.ManageManagedMultipliersSelect(self, disabled=select_disabled))
         self.add_item(components.ManageManualMultipliersSelect(self))
+        self.add_item(components.ManageMultiplierSettingsSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -639,14 +640,56 @@ class SettingsRemindersView(discord.ui.View):
             'Megarace': 'alert_megarace',
             'Minirace': 'alert_minirace',
         }
-        self.add_item(components.ManageReminderBehaviourSelect(self))
-        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
+        self.add_item(components.ToggleCommandRemindersSelect(self, toggled_settings_commands, 'Toggle reminders',
                                                           'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
         if toggled_settings_seasonal:
             self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_seasonal, 'Toggle seasonal reminders',
                                                               'toggle_seasonal_reminders'))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+        
+class SettingsReminderBehaviourView(discord.ui.View):
+    """View with a all components to manage reminder behaviour settings.
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.embed_function = embed_function
+        self.add_item(components.ManageReminderBehaviourSelect(self))
+        self.add_item(components.SetHuntReminderModeSelect(self))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

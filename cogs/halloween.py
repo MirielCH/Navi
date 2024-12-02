@@ -9,7 +9,7 @@ from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, reminders, users
-from resources import exceptions, functions, regex, settings
+from resources import emojis, exceptions, functions, regex, settings, strings
 
 
 class HalloweenCog(commands.Cog):
@@ -205,6 +205,64 @@ class HalloweenCog(commands.Cog):
                 )
                 asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'boo'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+            # Opening halloween boox
+            search_strings = [
+                '💀',
+                ':skull:',
+            ]
+            if 'halloween boox' in message_content.lower() and any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_name_match = re.match(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_HAL_USE_HALLOWEEN_BOOX,
+                                                        user_name=user_name)
+                        )
+                    if not user_name_match or user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('User not found in halloween boox message.', message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return
+                if 'unepic debuff' in message_content.lower():
+                    if not user_settings.alert_boosts.enabled: return
+                    reminder_message = user_settings
+                    reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', '💢')
+                        .replace('{boost_item}', 'unepic boost')
+                        .replace('  ', ' ')
+                    )
+                    time_left_minutes = 30 if user_settings.user_pocket_watch_multiplier < 1 else 15
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(user_settings.user_id, 'unepic-boost', 
+                                                             timedelta(minutes=time_left_minutes),
+                                                             message.channel.id, reminder_message)
+                    )
+                    if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
+                    return
+                search_patterns = [
+                    r'by (\d+) minutes', #English
+                    r'by (\d+) minutes', #TODO: Spanish
+                    r'by (\d+) minutes', #TODO: Portuguese
+                ]
+                minutes_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if not minutes_match:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Time increase not found in halloween boox message.', message)
+                    return
+                time_increase = timedelta(minutes=int(minutes_match.group(1)))
+                await reminders.increase_reminder_time(user_settings, time_increase, list(strings.TIME_COOKIE_AFFECTED_ACTIVITIES))
+                if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
 # Initialization

@@ -774,7 +774,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
 
 
 async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, str], activities: List[str]) -> None:
-    """Reduces the end time of all user reminders affected by sleepy potions of one user by a certain amount.
+    """Reduces the end time of remindersof one user by a certain amount.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
 
@@ -884,6 +884,37 @@ async def reduce_reminder_time_percentage(user_settings, percentage: float, acti
             scheduled_for_tasks[reminder.task_name] = reminder
         else:
             await reminder.update(end_time=new_end_time)
+
+
+async def increase_reminder_time(user_settings, time_increase: timedelta, activities: List[str]) -> None:
+    """Increases the end time of user reminders of one user by a certain amount.
+
+    Arguments
+    ---------
+    user_settings: User settings
+    time_reduction: timedelta with the time to be removed or the string 'half'. The latter will recude all reminders
+    for half of their remaining amount.
+    activities: List with the affected activities
+
+    Raises
+    ------
+    ValueError if time_reduction is neither time_delta nor the string 'half'
+    """
+    current_time = utils.utcnow()
+    if 'hunt' in activities and user_settings.hunt_end_time > current_time:
+        await user_settings.update(hunt_end_time=user_settings.hunt_end_time + time_increase)
+    try:
+        reminders = await get_active_user_reminders(user_settings.user_id)
+    except exceptions.NoDataFoundError:
+        return
+    for reminder in reminders:
+        if reminder.activity not in activities: continue
+        new_end_time = reminder.end_time + time_increase
+        time_left = new_end_time - current_time
+        if reminder.triggered and time_left.total_seconds() > 15:
+            scheduled_for_deletion[reminder.task_name] = reminder
+            await reminder.update(triggered=False)
+        await reminder.update(end_time=new_end_time)
 
 
 async def increase_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:

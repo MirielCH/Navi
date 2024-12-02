@@ -141,6 +141,8 @@ async def embed_reminders_list(bot: bridge.AutoShardedBot, user: discord.User,
             reminders_boosts_list.append(reminder)
         elif reminder.activity.startswith('epic-shop-'):
             reminders_epic_shop_list.append(reminder)
+        elif reminder.activity == 'hunt-partner' and user_settings.hunt_reminder_mode == 2:
+            continue
         else:
             reminders_commands_list.append(reminder)
 
@@ -367,11 +369,39 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 command = f"{command} `mode: {user_settings.last_adventure_mode}`"
             else:
                 command = f"{command} `{user_settings.last_adventure_mode}`"
-        elif activity == 'hunt' and user_settings.last_hunt_mode != '':
-            if user_settings.slash_mentions_enabled:
-                command = f"{command} `mode: {user_settings.last_hunt_mode}`"
-            else:
-                command = f"{command} `{user_settings.last_hunt_mode}`"
+        elif activity == 'hunt':
+            hunt_mode = ''
+            if user_settings.last_hunt_mode: hunt_mode = user_settings.last_hunt_mode
+            if user_settings.hunt_reminder_mode == 2:
+                hunt_mode = hunt_mode.replace('together', '').strip()
+                hunt_partner_reminder = None
+                current_time = utils.utcnow()
+                hunt_end_time = current_time
+                try:
+                    hunt_reminder = await reminders.get_user_reminder(user_settings.user_id, 'hunt')
+                    if hunt_reminder.end_time >= current_time: hunt_end_time = hunt_reminder.end_time
+                except exceptions.NoDataFoundError:
+                    pass
+                try:
+                    hunt_partner_reminder = await reminders.get_user_reminder(user_settings.user_id, 'hunt-partner')
+                    if hunt_partner_reminder.end_time <= current_time: hunt_partner_reminder = None
+                except exceptions.NoDataFoundError:
+                    if user_settings.partner_id:
+                        try:
+                            hunt_partner_reminder = await reminders.get_user_reminder(user_settings.partner_id, 'hunt')
+                            if hunt_partner_reminder.end_time <= current_time: hunt_partner_reminder = None
+                        except exceptions.NoDataFoundError:
+                            pass
+                if hunt_partner_reminder:
+                    if hunt_partner_reminder.end_time <= hunt_end_time:
+                        hunt_mode = f'{hunt_mode} together'.strip()
+                else:
+                    hunt_mode = f'{hunt_mode} together'.strip()
+            if hunt_mode:
+                if user_settings.slash_mentions_enabled:
+                    command = f"{command} `mode: {hunt_mode}`"
+                else:
+                    command = f"{command} `{hunt_mode}`"
         elif activity == 'eternal-presents':
             if user_settings.slash_mentions_enabled:
                 command = f"{command} `eternal`"
@@ -407,8 +437,9 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
     if not active_pet_reminders or user_settings.ready_pets_claim_active:
         ready_command_activities.append('pets')
     current_time = utils.utcnow()
-    if 'hunt' in ready_command_activities and user_settings.partner_hunt_end_time > current_time:
-        ready_command_activities.remove('hunt')
+    if 'hunt' in ready_command_activities:
+        if user_settings.partner_hunt_end_time > current_time:
+            ready_command_activities.remove('hunt')
     if 'hunt-partner' in ready_command_activities:
         if user_settings.partner_id is not None:
             try:
@@ -417,9 +448,9 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             except exceptions.NoDataFoundError:
                 pass
         try:
-            if user_settings.hunt_reminders_combined:
+            if user_settings.hunt_reminder_mode in (1,2):
                 ready_command_activities.remove('hunt-partner')
-            if user_settings.partner_name is None:
+            if not user_settings.partner_name:
                 ready_command_activities.remove('hunt-partner')
         except ValueError:
             pass
@@ -592,7 +623,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         if user_settings.trade_daily_total == 0:
             trade_daily_total = 0
             trade_daily_total_str = '?'
-            trade_daily_left = ''
+            trade_daily_left = 0
         else:
             trade_daily_total = user_settings.trade_daily_total
             trade_daily_total_str = f'{trade_daily_total:,}'
@@ -625,6 +656,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             current_time = utils.utcnow()
             for reminder in active_reminders:
                 if 'pets' in reminder.activity: continue
+                if reminder.activity == 'hunt-partner' and user_settings.hunt_reminder_mode == 2: continue
                 if (reminder.activity in strings.ACTIVITIES_BOOSTS or reminder.activity in strings.BOOSTS_ALIASES
                     or reminder.activity.startswith('epic-shop')): continue
                 if (not user_settings.ready_up_next_show_hidden_reminders and not 'custom' in reminder.activity

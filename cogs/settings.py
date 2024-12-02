@@ -130,6 +130,12 @@ class SettingsCog(commands.Cog):
     async def settings_reminders(self, ctx: bridge.BridgeContext):
         """Reminder settings command"""
         await settings_cmd.command_settings_reminders(self.bot, ctx)
+        
+    @settings_group.command(name='reminder-behaviour', description='Manage reminder behaviour settings')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def settings_reminder_behaviour(self, ctx: bridge.BridgeContext):
+        """Reminder behaviour settings command"""
+        await settings_cmd.command_settings_reminder_behaviour(self.bot, ctx)
 
     @bridge.bridge_group(name='server-settings', aliases=('serversettings','server','ss','admin'), invoke_without_command=True)
     async def server_settings_group(self, ctx: bridge.BridgeContext):
@@ -180,6 +186,12 @@ class SettingsCog(commands.Cog):
 
 
     # Text commands
+    @commands.command(name='hunt')
+    @commands.bot_has_permissions(send_messages=True, embed_links=True)
+    async def hunt(self, ctx: commands.Context, *args: str) -> None:
+        """Hunt reminder mode settings (text version)"""
+        await settings_cmd.command_hunt_reminder_mode(self.bot, ctx, args)
+        
     @commands.command(name='multipliers', aliases=('multiplier','multi','multis'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def multipliers(self, ctx: commands.Context, *args: str) -> None:
@@ -198,6 +210,7 @@ class SettingsCog(commands.Cog):
             'smulti': 'settings multipliers',
             'sp': 'settings partner',
             'spt': 'settings portals',
+            'srb': 'settings reminder-behaviour',
             'srd': 'settings ready',
             'srm': 'settings reminders',
             'ssa': 'server-settings auto-flex',

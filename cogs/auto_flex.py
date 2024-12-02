@@ -86,6 +86,7 @@ FLEX_TITLES = {
     'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
     'work_ultralog': strings.FLEX_TITLES_WORK_ULTRALOG,
     'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
+    'work_walkingnormiefish': strings.FLEX_TITLES_WORK_WALKINGNORMIEFISH,
     'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_TITLES_XMAS_CHIMNEY,
     'xmas_eternal': strings.FLEX_TITLES_XMAS_ETERNAL,
@@ -168,6 +169,7 @@ FLEX_THUMBNAILS = {
     'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
     'work_ultralog': strings.FLEX_THUMBNAILS_WORK_ULTRALOG,
     'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
+    'work_walkingnormiefish': strings.FLEX_THUMBNAILS_WORK_WALKINGNORMIEFISH,
     'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_THUMBNAILS_XMAS_CHIMNEY,
     'xmas_eternal': strings.FLEX_THUMBNAILS_XMAS_ETERNAL,
@@ -659,7 +661,7 @@ class AutoFlexCog(commands.Cog):
                 ]
                 tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                 if tt_match:
-                    time_travel_count = int(tt_match.group(1)) - 1
+                    time_travel_count = int(tt_match.group(1).replace(',','')) - 1
                 if not tt_match:
                     search_strings = [
                         'are you sure you want to **time travel**?', #English
@@ -680,7 +682,7 @@ class AutoFlexCog(commands.Cog):
                     ]
                     tt_match = await functions.get_match_from_patterns(search_patterns, embed_description)
                     if tt_match:
-                        time_travel_count = int(tt_match.group(1))
+                        time_travel_count = int(tt_match.group(1).replace(',',''))
                         if next_tt: time_travel_count -= 1
                     else:
                         return
@@ -725,7 +727,7 @@ class AutoFlexCog(commands.Cog):
                 if any(search_string in embed_description.lower() for search_string in search_strings):
                     added_tts += 1
                 extra_tt_match = re.search(r'\+(\d+?) <', embed_description)
-                if extra_tt_match: added_tts += int(extra_tt_match.group(1))
+                if extra_tt_match: added_tts += int(extra_tt_match.group(1).replace(',',''))
                 time_travel_count_old = user_settings.time_travel_count
                 time_travel_count_new = time_travel_count_old + added_tts
                 trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
@@ -1196,6 +1198,7 @@ class AutoFlexCog(commands.Cog):
                 'oooooofff!!', #English, super fish
                 'wwwooooooaaa!!!1', #English, hyper logs
                 '**epic berry**', #English, epic berries
+                '**walking normie fish**', #English, walking normie fish
             ]
             search_strings_excluded = [
                 'contribu', #All languages, void contributions
@@ -1214,6 +1217,7 @@ class AutoFlexCog(commands.Cog):
                         r'!!1 (.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English HYPER log
                         r' \*\*(.+?)\*\* got (.+?) (.+?) __\*\*(ultimate log)\*\*__', #English ULTIMATE log
                         r'\*\*(.+?)\*\* also got (.+?) (.+?) \*\*(epic berry)\*\*', #English EPIC berry
+                        r'\*\*(.+?)\*\* also got (.+?) (.+?) __\*\*(walking normie fish)\*\*__', #English walking normie fish
                         r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English SUPER fish, watermelon
                         r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
                         r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
@@ -1225,6 +1229,7 @@ class AutoFlexCog(commands.Cog):
                         'super fish': 'work_superfish',
                         'ultimate log': 'work_ultimatelog',
                         'ultra log': 'work_ultralog',
+                        'walking normie fish': 'work_walkingnormiefish',
                         'watermelon': 'work_watermelon',
                     }
                     match = await functions.get_match_from_patterns(search_patterns, message_content)
@@ -1233,7 +1238,7 @@ class AutoFlexCog(commands.Cog):
                         await errors.log_error('Couldn\'t find auto flex data in work message.', message)
                         return
                     user_name = match.group(1)
-                    item_amount = int(match.group(2))
+                    item_amount = int(match.group(2).replace(',',''))
                     item_name = match.group(4).lower().replace('**','').strip()
                     if item_name not in item_events: return
                     event = item_events[item_name]
@@ -1289,6 +1294,12 @@ class AutoFlexCog(commands.Cog):
                             f'**{item_amount:,}** {emojis.EPIC_BERRY} **EPIC berries** they just randomly found '
                             f'while gathering the rest.\n'
                         )
+                    elif event == 'work_walkingnormiefish':
+                        description = (
+                            f'**{user_name}** is going on a stroll with their friend Gudrunde, the {emojis.FISH_WALKING} **walking normie fish**.\n'
+                            f'Gudrunde is a very nice, perfectly normie fish, wise beyond her years, and her life inside the nuclear power plant cooling system didn\'t '
+                            f'affect her at all.'
+                        )
                     await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
             # Christmas loot, non-embed
@@ -1317,7 +1328,7 @@ class AutoFlexCog(commands.Cog):
                 match = await functions.get_match_from_patterns(search_patterns, message_content)
                 if not match: return
                 user_name = match.group(1)
-                item_amount = match.group(2)
+                item_amount = match.group(2).replace(',','')
                 item_name = match.group(4)
                 event = item_events.get(item_name.lower().replace('**',''), None)
                 if event is None: return
@@ -1648,7 +1659,7 @@ class AutoFlexCog(commands.Cog):
                     pattern = rf'{pattern} epic berry'
                     berry_match = re.search(pattern, message_content_user, re.IGNORECASE)
                     if berry_match:
-                        drop_amount = int(berry_match.group(1))
+                        drop_amount = int(berry_match.group(1).replace(',',''))
                         if (user_settings.current_area == 0
                             or 'pretending' in message_content_user.lower()
                             or 'pretendiendo' in message_content_user.lower()
@@ -1688,7 +1699,7 @@ class AutoFlexCog(commands.Cog):
                         pattern = rf'{pattern} epic berry'
                         berry_match = re.search(pattern, message_content_partner, re.IGNORECASE)
                         if berry_match:
-                            drop_amount = int(berry_match.group(1))
+                            drop_amount = int(berry_match.group(1).replace(',',''))
                             if ('pretending' in message_content_partner.lower()
                                 or 'pretendiendo' in message_content_partner.lower()
                                 or 'fingindo' in message_content_partner.lower()):
@@ -1736,14 +1747,14 @@ class AutoFlexCog(commands.Cog):
                                 f'This would also be a good excuse for a giveaway, you know.'
                             )
                         elif event == 'lb_omega':
-                            if not hardmode and int(amount) >= lb_omega_non_hm_amount:
+                            if not hardmode and int(amount.replace(',','')) >= lb_omega_non_hm_amount:
                                 event = 'lb_omega_no_hardmode'
                                 description = (
                                     f'**{user_name}** found {amount} {lootboxes_user[name]} **{name}** just like that.\n'
                                     f'And by "just like that" I mean **without hardmoding**!\n'
                                     f'See, hardmoders, that\'s how it\'s done!'
                                 )
-                            elif int(amount) >= lb_omega_hm_amount:
+                            elif int(amount.replace(',','')) >= lb_omega_hm_amount:
                                 event = 'lb_omega_multiple'
                                 description = (
                                     f'While an {lootboxes_user[name]} **{name}** isn\'t very exciting, '

@@ -118,9 +118,9 @@ class HuntCog(commands.Cog):
                     return
                 timestring = timestring_match.group(1)
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
-                if (user_settings.multiplier_management_enabled and interaction_user in embed_users):
+                if (user_settings.multiplier_management_mode != 0 and interaction_user in embed_users):
                     await user_settings.update_multiplier('hunt', time_left)
-                if user_settings.hunt_reminders_combined:
+                if user_settings.hunt_reminder_mode == 1:
                     try:
                         hunt_reminder = await reminders.get_user_reminder(interaction_user.id, 'hunt')
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
@@ -133,7 +133,7 @@ class HuntCog(commands.Cog):
                 activity = 'hunt'
                 command: str = user_command
                 reminder_message = user_settings.alert_hunt.message.replace('{command}', command)
-                if not user_settings.hunt_reminders_combined and interaction_user not in embed_users and user_settings.partner_name is not None:
+                if user_settings.hunt_reminder_mode != 1 and interaction_user not in embed_users and user_settings.partner_name is not None:
                     activity: str = 'hunt-partner'
                     command: str = await functions.get_slash_command(user_settings, 'hunt')
                     reminder_message = (user_settings.alert_hunt_partner.message
@@ -285,17 +285,23 @@ class HuntCog(commands.Cog):
                         if old and together and slash_command:
                             last_hunt_mode = f'{last_hunt_mode} old'
                         last_hunt_mode = last_hunt_mode.strip()
-                        if last_hunt_mode != '':
-                            if user_settings.slash_mentions_enabled:
-                                user_command = f"{user_command} `mode: {last_hunt_mode}`"
-                            else:
-                                user_command = f"{user_command} `{last_hunt_mode}`".replace('` `', ' ')
+                        if user_settings.hunt_reminder_mode == 2:
+                            user_command = f"{user_command} {{mode}}"
+                        else:
+                            if last_hunt_mode != '':
+                                if user_settings.slash_mentions_enabled:
+                                    user_command = f"{user_command} `mode: {last_hunt_mode}`"
+                                else:
+                                    user_command = f"{user_command} `{last_hunt_mode}`".replace('` `', ' ')
                     if event_mob:
-                        if user_settings.last_hunt_mode is not None:
-                            if user_settings.slash_mentions_enabled:
-                                user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                        if user_settings.last_hunt_mode:
+                            if user_settings.hunt_reminder_mode == 2:
+                                user_command = f"{user_command} {{mode}}"
                             else:
-                                user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
+                                if user_settings.slash_mentions_enabled:
+                                    user_command = f"{user_command} `mode: {user_settings.last_hunt_mode}`"
+                                else:
+                                    user_command = f"{user_command} `{user_settings.last_hunt_mode}`".replace('` `', ' ')
                         else:
                             user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
                             user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
@@ -311,6 +317,15 @@ class HuntCog(commands.Cog):
                             if old: last_hunt_mode = f'{last_hunt_mode} old'
                             last_hunt_mode = last_hunt_mode.strip()
                             if last_hunt_mode == '': last_hunt_mode = None
+                            if user_settings.hunt_reminder_mode == 2:
+                                user_command = f"{user_command} {{mode}}"
+                            else:
+                                if last_hunt_mode is not None:
+                                    if user_settings.slash_mentions_enabled:
+                                        user_command = f"{user_command} `mode: {last_hunt_mode}`"
+                                    else:
+                                        user_command = f"{user_command} `{last_hunt_mode}`".replace('` `', ' ')
+                                    
                     await user_settings.update(last_hunt_mode=last_hunt_mode)
                 cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown('hunt')
                 bot_answer_time = message.edited_at if message.edited_at else message.created_at
@@ -355,7 +370,7 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                     
                 if together and partner_christmas_area:
-                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIERP
+                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if together and partner is not None:
                     if partner.round_card_active:
                         time_left_seconds_partner_hunt *= settings.ROUND_CARD_MULTIPLIER                    
@@ -379,7 +394,7 @@ class HuntCog(commands.Cog):
                                                    * user_settings.alert_hunt_partner.multiplier
                                                    * pocket_watch_multiplier_partner * chocolate_box_multiplier_partner))
                 await user_settings.update(hunt_end_time=current_time + time_left)
-                if user_settings.hunt_reminders_combined and together:
+                if user_settings.hunt_reminder_mode == 1 and together:
                     time_left = max(time_left, time_left_partner_hunt)
                 reminder_created = False
                 if user_settings.alert_hunt.enabled and time_left >= timedelta(0):
@@ -390,7 +405,7 @@ class HuntCog(commands.Cog):
                     )
                     reminder_created = True
                 if (user_settings.alert_hunt_partner.enabled and time_left_partner_hunt >= timedelta(0) and together
-                    and not user_settings.hunt_reminders_combined):
+                    and user_settings.hunt_reminder_mode != 1):
                     reminder_message = (user_settings.alert_hunt_partner.message.replace('{command}', hunt_command)
                                         .replace('{partner}', user_settings.partner_name))
                     reminder: reminders.Reminder = (

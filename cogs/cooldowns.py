@@ -170,7 +170,7 @@ class CooldownsCog(commands.Cog):
                     cooldowns.append(['card-hand', card_hand_timestring.lower(), card_hand_message])
                 else:
                     ready_commands.append('card-hand')
-            if user_settings.alert_hunt.enabled and not user_settings.hunt_reminders_combined:
+            if user_settings.alert_hunt.enabled and user_settings.hunt_reminder_mode != 1:
                 hunt_match = re.search(r'hunt(?: hardmode)?`\*\* \(\*\*(.+?)\*\*', message_fields.lower())
                 if hunt_match:
                     user_command = await functions.get_slash_command(user_settings, 'hunt')
@@ -317,7 +317,7 @@ class CooldownsCog(commands.Cog):
                 time_left -= time_elapsed
                 if time_left < timedelta(0): continue
                 time_left = timedelta(seconds=time_left.total_seconds() + 1)
-                if user_settings.multiplier_management_enabled:
+                if user_settings.multiplier_management_mode != 0:
                     await user_settings.update_multiplier(cd_activity, time_left)
                 if time_left.total_seconds() > 0:
                     reminder: reminders.Reminder = (

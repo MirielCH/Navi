@@ -38,6 +38,9 @@ class TasksCog(commands.Cog):
         try:
             if first_reminder.reminder_type == 'user':
                 user = await functions.get_discord_user(self.bot, first_reminder.user_id)
+                if user is None:
+                    running_tasks.pop(first_reminder.task_name, None)
+                    return
                 user_global_name = user.global_name if user.global_name is not None else user.name
                 user_settings = await users.get_user(user.id)
                 if user_settings.reminder_channel_id is not None:
@@ -45,7 +48,9 @@ class TasksCog(commands.Cog):
                 else:
                     reminder_channel_id = first_reminder.channel_id
                 channel = await functions.get_discord_channel(self.bot, reminder_channel_id)
-                if channel is None: return
+                if channel is None:
+                    running_tasks.pop(first_reminder.task_name, None)
+                    return
                 hunt_reminder = None
                 message_no = 1
                 messages = {message_no: ''}
@@ -64,18 +69,43 @@ class TasksCog(commands.Cog):
                             message = f'{reminder_message.replace("{name}", user.mention)}\n'
                         mob_drop_emoji = emojis.MONSTER_DROP_AREAS_EMOJIS.get(user_settings.current_area, '')
                         message = message.replace('{drop_emoji}', mob_drop_emoji)
-                        if reminder.activity == 'hunt' and not user_settings.hunt_reminders_combined:
-                            try:
-                                hunt_partner_reminder = await reminders.get_user_reminder(user.id, 'hunt-partner')
-                            except exceptions.NoDataFoundError:
+                        if reminder.activity == 'hunt': 
+                            if user_settings.hunt_reminder_mode == 0:
+                                try:
+                                    hunt_partner_reminder = await reminders.get_user_reminder(user.id, 'hunt-partner')
+                                except exceptions.NoDataFoundError:
+                                    hunt_partner_reminder = None
+                                if hunt_partner_reminder is not None:
+                                    if not hunt_partner_reminder.triggered:
+                                        time_left_hunt_partner = hunt_partner_reminder.end_time - reminder.end_time
+                                        if time_left_hunt_partner.total_seconds() >= 1:
+                                            timestring = await functions.parse_timedelta_to_timestring(time_left_hunt_partner)
+                                            if user_settings.hunt_partner_cooldown_as_timestamp:
+                                                ready_in = utils.format_dt(hunt_partner_reminder.end_time, 'R')
+                                            else:
+                                                ready_in = f'in **{timestring}**'
+                                            message = f'{message}➜ **{user_settings.partner_name}** will be ready {ready_in}.\n'
+                            if user_settings.hunt_reminder_mode == 2:
                                 hunt_partner_reminder = None
-                            if hunt_partner_reminder is not None:
-                                if not hunt_partner_reminder.triggered:
-                                    time_left_hunt_partner = hunt_partner_reminder.end_time - reminder.end_time
-                                    if time_left_hunt_partner.total_seconds() >= 1:
-                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt_partner)
-                                        message = f'{message}➜ **{user_settings.partner_name}** will be ready in **{timestring}**.\n'
+                                try:
+                                    hunt_partner_reminder = await reminders.get_user_reminder(user.id, 'hunt-partner')
+                                    if hunt_partner_reminder.end_time <= reminder.end_time: hunt_partner_reminder = None
+                                except exceptions.NoDataFoundError:
+                                    if user_settings.partner_id:
+                                        try:
+                                            hunt_partner_reminder = await reminders.get_user_reminder(user_settings.partner_id, 'hunt')
+                                            if hunt_partner_reminder.end_time <= reminder.end_time: hunt_partner_reminder = None
+                                        except exceptions.NoDataFoundError:
+                                            pass
+                                last_hunt_mode = user_settings.last_hunt_mode.replace('together', '').strip()
+                                if hunt_partner_reminder is None: last_hunt_mode = f'{last_hunt_mode} together'.strip()
+                                if user_settings.slash_mentions_enabled:
+                                    hunt_mode: str = f'`mode: {last_hunt_mode}`'.replace('  ', ' ')
+                                else:
+                                    hunt_mode: str = f'`{last_hunt_mode}`'.replace('  ', ' ')
+                                message = message.replace('{mode}', hunt_mode)
                         if reminder.activity == 'hunt-partner':
+                            if user_settings.hunt_reminder_mode == 2: continue
                             try:
                                 hunt_reminder = await reminders.get_user_reminder(user.id, 'hunt')
                             except exceptions.NoDataFoundError:
@@ -84,7 +114,11 @@ class TasksCog(commands.Cog):
                                 time_left_hunt = hunt_reminder.end_time - reminder.end_time
                                 if time_left_hunt.total_seconds() >= 1:
                                     timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
-                                    message = f'{message}➜ You will be ready in **{timestring}**.\n'
+                                    if user_settings.hunt_partner_cooldown_as_timestamp:
+                                        ready_in = utils.format_dt(hunt_reminder.end_time, 'R')
+                                    else:
+                                        ready_in = f'in **{timestring}**'
+                                    message = f'{message}➜ You will be ready {ready_in}.\n'
                     if len(f'{messages[message_no]}{message}') > 1900:
                         message_no += 1
                         messages[message_no] = ''
@@ -138,20 +172,29 @@ class TasksCog(commands.Cog):
                         except exceptions.NoDataFoundError:
                             await user_settings.update(auto_healing_active=False)
                     for message in messages.values():
+                        if not message: continue
                         for found_id in re.findall(r'<@!?(\d{16,20})>', message):
                             if int(found_id) not in user_settings.alts and int(found_id) != user_settings.user_id:
                                 message = re.sub(rf'<@!?{found_id}>', '-Removed alt-', message)
-                            if hunt_reminder is not None:
-                                await hunt_reminder.refresh()
-                                if hunt_reminder.record_exists:
-                                    time_left_hunt = hunt_reminder.end_time - reminder.end_time
-                                    if time_left_hunt.total_seconds() >= 1:
-                                        timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
-                                        re.sub(r'➜ You will be ready in \*\*(.+?)\*\*', message, timestring)
+                        """
+                        if hunt_reminder is not None:
+                            await hunt_reminder.refresh()
+                            if hunt_reminder.record_exists:
+                                time_left_hunt = hunt_reminder.end_time - reminder.end_time
+                                if time_left_hunt.total_seconds() >= 1:
+                                    timestring = await functions.parse_timedelta_to_timestring(time_left_hunt)
+                                    if user_settings.hunt_partner_cooldown_as_timestamp:
+                                        ready_in = utils.format_dt(hunt_reminder.end_time, 'R')
+                                    else:
+                                        ready_in = f'in **{timestring}**'
+                                    message = re.sub(r'➜ You will be ready (.+?)$', message, ready_in)
+                        """
                         await channel.send(message.strip())
                 except asyncio.CancelledError:
+                    running_tasks.pop(first_reminder.task_name, None)
                     return
                 except discord.errors.Forbidden:
+                    running_tasks.pop(first_reminder.task_name, None)
                     return
 
             if first_reminder.reminder_type == 'clan':
@@ -177,8 +220,10 @@ class TasksCog(commands.Cog):
                             await reminders.insert_clan_reminder(clan.clan_name, time_left_all_members,
                                                                  clan.channel_id, alert_message)
                         )
+                        running_tasks.pop(first_reminder.task_name, None)
                         return
                     except asyncio.CancelledError:
+                        running_tasks.pop(first_reminder.task_name, None)
                         return
                 message_mentions = ''
                 for member_id in clan.member_ids:
@@ -189,13 +234,17 @@ class TasksCog(commands.Cog):
                     await asyncio.sleep(time_left.total_seconds())
                     await channel.send(f'It\'s time for {first_reminder.message}!\n\n{message_mentions}')
                 except asyncio.CancelledError:
+                    running_tasks.pop(first_reminder.task_name, None)
                     return
                 except discord.errors.Forbidden:
+                    running_tasks.pop(first_reminder.task_name, None)
                     return
             running_tasks.pop(first_reminder.task_name, None)
         except discord.errors.Forbidden:
+            running_tasks.pop(first_reminder.task_name, None)
             return
         except Exception as error:
+            running_tasks.pop(first_reminder.task_name, None)
             await errors.log_error(error)
 
     async def create_task(self, reminders_list: List[reminders.Reminder]) -> None:
@@ -240,7 +289,7 @@ class TasksCog(commands.Cog):
         try:
             self.delete_old_messages_from_cache.start()
         except Exception as error:
-            errors.append(f'Task "delete_olde_messages_from_cache": {error}')
+            errors.append(f'Task "delete_old_messages_from_cache": {error}')
         try:
             self.reset_trade_daily_done.start()
         except Exception as error:

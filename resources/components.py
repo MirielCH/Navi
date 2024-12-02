@@ -108,6 +108,67 @@ class ToggleUserSettingsSelect(discord.ui.Select):
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
+        
+class ToggleCommandRemindersSelect(discord.ui.Select):
+    """Toggle select that shows and toggles the status of command reminders."""
+    def __init__(self, view: discord.ui.View, toggled_settings: Dict[str, str], placeholder: str,
+                 custom_id: Optional[str] = 'toggle_command_reminders', row: Optional[int] = None):
+        self.toggled_settings = toggled_settings
+        options = []
+        options.append(discord.SelectOption(label='Enable all', value='enable_all', emoji=None))
+        options.append(discord.SelectOption(label='Disable all', value='disable_all', emoji=None))
+        for label, setting in toggled_settings.items():
+            setting_enabled = getattr(view.user_settings, setting)
+            if isinstance(setting_enabled, users.UserAlert):
+                setting_enabled = getattr(setting_enabled, 'enabled')
+            emoji = emojis.ENABLED if setting_enabled else emojis.DISABLED
+            options.append(discord.SelectOption(label=label, value=setting, emoji=emoji))
+        super().__init__(placeholder=placeholder, min_values=1, max_values=1, options=options, row=row,
+                         custom_id=custom_id)
+
+    async def callback(self, interaction: discord.Interaction):
+        select_value = self.values[0]
+        kwargs = {}
+        hunt_partner_mode_2_found: bool = False
+        if select_value in ('enable_all','disable_all'):
+            enabled = True if select_value == 'enable_all' else False
+            for setting in self.toggled_settings.values():
+                if not setting.endswith('_enabled'):
+                    setting = f'{setting}_enabled'
+                if setting == 'alert_hunt_partner_enabled' and self.view.user_settings.hunt_reminder_mode == 2 and not enabled:
+                    hunt_partner_mode_2_found = True
+                    continue
+                kwargs[setting] = enabled
+        else:
+            setting_value = getattr(self.view.user_settings, select_value)
+            if isinstance(setting_value, users.UserAlert):
+                setting_value = getattr(setting_value, 'enabled')
+            if not select_value.endswith('_enabled'):
+                select_value = f'{select_value}_enabled'
+            if select_value == 'alert_hunt_partner_enabled' and self.view.user_settings.hunt_reminder_mode == 2 and setting_value:
+                hunt_partner_mode_2_found = True
+            else:
+                kwargs[select_value] = not setting_value
+        if kwargs:
+            await self.view.user_settings.update(**kwargs)
+        if hunt_partner_mode_2_found:
+            await interaction.response.send_message(
+                f'Could not disable the `hunt-partner` reminder, it is required for the `Adaptive` hunt reminder mode.',
+                ephemeral=True
+            )
+        for child in self.view.children.copy():
+            if child.custom_id == self.custom_id:
+                self.view.remove_item(child)
+                self.view.add_item(ToggleCommandRemindersSelect(self.view, self.toggled_settings,
+                                                            self.placeholder, self.custom_id))
+                break
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+
 class ToggleServerSettingsSelect(discord.ui.Select):
     """Toggle select that shows and toggles the status of server settings."""
     def __init__(self, view: discord.ui.View, toggled_settings: Dict[str, str], placeholder: str,
@@ -659,23 +720,20 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
         dnd_emoji = emojis.ENABLED if view.user_settings.dnd_mode_enabled else emojis.DISABLED
         mentions_emoji = emojis.ENABLED if view.user_settings.slash_mentions_enabled else emojis.DISABLED
         a20_cd_emoji = emojis.ENABLED if view.user_settings.area_20_cooldowns_enabled else emojis.DISABLED
-        hunt_combine_emoji = emojis.ENABLED if view.user_settings.hunt_reminders_combined else emojis.DISABLED
-        #christmas_area_emoji = emojis.ENABLED if view.user_settings.christmas_area_enabled else emojis.DISABLED
+        hunt_partner_cooldown_style = 'static time' if view.user_settings.hunt_partner_cooldown_as_timestamp else 'timestamp'
         options.append(discord.SelectOption(label='DND mode', emoji=dnd_emoji,
                                             value='toggle_dnd'))
         options.append(discord.SelectOption(label='Slash command reminders', emoji=mentions_emoji,
                                             value='toggle_mentions'))
         options.append(discord.SelectOption(label='Read cooldowns in area 20', emoji=a20_cd_emoji,
                                             value='toggle_a20_cd'))
-        options.append(discord.SelectOption(label='Combine hunt reminders', emoji=hunt_combine_emoji,
-                                            value='toggle_hunt_reminders_combined'))
         options.append(discord.SelectOption(label='Add this channel as reminder channel', emoji=emojis.ADD,
                                             value='set_channel'))
+        options.append(discord.SelectOption(label=f'Show partner hunt cooldowns with {hunt_partner_cooldown_style}',
+                                            value='toggle_hunt_partner_timestamp'))
         options.append(discord.SelectOption(label='Remove reminder channel', emoji=emojis.REMOVE,
                                             value='reset_channel'))
-        #options.append(discord.SelectOption(label=f'{christmas_area_action} christmas area mode',
-        #                                    value='toggle_christmas_area'))
-        super().__init__(placeholder='Manage reminder behaviour', min_values=1, max_values=1, options=options, row=row,
+        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_reminder_behaviour')
 
     async def callback(self, interaction: discord.Interaction):
@@ -687,14 +745,6 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
             await self.view.user_settings.update(slash_mentions_enabled=not self.view.user_settings.slash_mentions_enabled)
         elif select_value == 'toggle_a20_cd':
             await self.view.user_settings.update(area_20_cooldowns_enabled=not self.view.user_settings.area_20_cooldowns_enabled)
-        elif select_value == 'toggle_hunt_reminders_combined':
-            if not self.view.user_settings.hunt_reminders_combined and not self.view.user_settings.alert_hunt_partner.enabled:
-                await interaction.response.send_message(
-                    'To use this setting, you need to enable the `hunt partner` reminder first.',
-                    ephemeral=True
-                )
-                return
-            await self.view.user_settings.update(hunt_reminders_combined=not self.view.user_settings.hunt_reminders_combined)
         elif select_value == 'set_channel':
             confirm_view = views.ConfirmCancelView(self.view.ctx, styles=[discord.ButtonStyle.blurple, discord.ButtonStyle.grey])
             confirm_interaction = await interaction.response.send_message(
@@ -734,6 +784,10 @@ class ManageReminderBehaviourSelect(discord.ui.Select):
             else:
                 await confirm_interaction.edit_original_response(content='Aborted', view=None)
                 return
+        elif select_value == 'toggle_hunt_partner_timestamp':
+            await self.view.user_settings.update(
+                hunt_partner_cooldown_as_timestamp=not self.view.user_settings.hunt_partner_cooldown_as_timestamp
+            )
         for child in self.view.children.copy():
             if isinstance(child, ManageReminderBehaviourSelect):
                 self.view.remove_item(child)
@@ -1509,6 +1563,57 @@ class SetFarmHelperModeSelect(discord.ui.Select):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
             
+class SetManagedMultiplierModeSelect(discord.ui.Select):
+    """Select to change managed multiplier mode"""
+    def __init__(self, view: discord.ui.View, row: Optional[int] = None):
+        options = []
+        for value, label in strings.MULTIPLIER_MANAGEMENT_MODES.items():
+            emoji = emojis.ENABLED if view.user_settings.multiplier_management_mode == value else None
+            options.append(discord.SelectOption(label=label, value=str(value), emoji=emoji))
+        super().__init__(placeholder='Change multiplier management mode', min_values=1, max_values=1, options=options, row=row,
+                         custom_id='set_multiplier_management_mode')
+
+    async def callback(self, interaction: discord.Interaction):
+        multiplier_management_mode = int(self.values[0])
+        await self.view.user_settings.update(multiplier_management_mode=multiplier_management_mode)
+        if multiplier_management_mode == 1 and self.view.user_settings.current_area != 18:
+            kwargs = {}
+            for attribute_name in dir(self.view.user_settings):
+                attribute_value = getattr(self.view.user_settings, attribute_name)
+                if isinstance(attribute_value, users.UserAlert):
+                    decimal_digits = len(str(float(attribute_value.multiplier)).split('.')[1])
+                    if decimal_digits > 10:
+                        kwargs[f'{attribute_name}_multiplier'] = 1.0
+            if kwargs:
+                await self.view.user_settings.update(**kwargs)
+                await interaction.response.send_message(
+                    'Note: Because you are currently not in area 18, all managed multipliers have been reset to `1.0`.',
+                    ephemeral=True
+                )
+        for child in self.view.children.copy():
+            if isinstance(child, SetManagedMultiplierModeSelect):
+                self.view.remove_item(child)
+                self.view.add_item(SetManagedMultiplierModeSelect(self.view))
+            if isinstance(child, ManageManagedMultipliersSelect):
+                select_disabled: bool = False
+                if self.view.user_settings.multiplier_management_mode == 2 and self.view.user_settings.current_area != 20:
+                    select_disabled = True
+                elif self.view.user_settings.multiplier_management_mode == 1 and self.view.user_settings.current_area == 18:
+                    select_disabled = True
+                if child.disabled != select_disabled:
+                    self.view.remove_item(child)
+                    self.view.add_item(
+                        ManageManagedMultipliersSelect(
+                        self.view, disabled=select_disabled
+                        )
+                    )
+        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
+        if interaction.response.is_done():
+            await interaction.message.edit(embed=embed, view=self.view)
+        else:
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+            
 class SetHuntReminderModeSelect(discord.ui.Select):
     """Select to change hunt reminder mode"""
     def __init__(self, view: discord.ui.View, row: Optional[int] = None):
@@ -1520,8 +1625,34 @@ class SetHuntReminderModeSelect(discord.ui.Select):
                          custom_id='set_hunt_reminder_mode')
 
     async def callback(self, interaction: discord.Interaction):
-        await self.view.user_settings.update(hunt_reminder_mode=int(self.values[0]))
-        #TODO: Add logic when changing mode
+        hunt_reminder_mode: int = int(self.values[0])
+        answer: str = ''
+        if hunt_reminder_mode == 2:
+            if not self.view.user_settings.alert_hunt_partner.enabled:
+                answer = (
+                    f'{answer}\n'
+                    f'Because this mode requires the `hunt partner` reminder, I automatically enabled it.'
+                )
+            await self.view.user_settings.update(hunt_reminder_mode=hunt_reminder_mode, alert_hunt_partner_enabled=True)
+        else:
+            await self.view.user_settings.update(hunt_reminder_mode=hunt_reminder_mode)
+        try:
+            hunt_reminder = await reminders.get_user_reminder(self.view.user_settings.user_id, 'hunt')
+            await hunt_reminder.delete()
+        except exceptions.NoDataFoundError:
+            hunt_reminder = None
+        try:
+            hunt_partner_reminder = await reminders.get_user_reminder(self.view.user_settings.user_id, 'hunt-partner')
+            await hunt_partner_reminder.delete()
+        except exceptions.NoDataFoundError:
+            hunt_partner_reminder = None
+        if hunt_partner_reminder or hunt_reminder:
+            answer = (
+                f'{answer}\n'
+                f'All active hunt reminders were deleted.'
+            )
+        if answer:
+            await interaction.response.send_message(answer.strip(), ephemeral=True)
         for child in self.view.children.copy():
             if isinstance(child, SetHuntReminderModeSelect):
                 self.view.remove_item(child)
@@ -1852,30 +1983,14 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
     """Select to change multiplier settings"""
     def __init__(self, view: discord.ui.View, row: int | None = None):
         options: list[discord.SelectOption] = []
-        multiplier_management_emoji: str = emojis.ENABLED if view.user_settings.multiplier_management_enabled else emojis.DISABLED
-        if view.user_settings.multiplier_management_scope == 0:
-            multipier_management_scope_str: str = strings.MANAGED_MULTIPLIER_SCOPES[1].lower()
-        else:
-            multipier_management_scope_str: str = strings.MANAGED_MULTIPLIER_SCOPES[0].lower()
-        options.append(discord.SelectOption(label='Managed multipliers',
-                                            value='multiplier_management', emoji=multiplier_management_emoji))
-        options.append(discord.SelectOption(label=f'Set scope to {multipier_management_scope_str}',
-                                            value='multiplier_management_scope', emoji=None))
-        options.append(discord.SelectOption(label='Print current multipliers',
-                                                      value='print_multipliers', emoji=None))
-        super().__init__(placeholder='Change settings', min_values=1, max_values=1, options=options, row=row,
+        options.append(discord.SelectOption(label='Print multipliers',
+                                            value='print_multipliers', emoji=None))
+        super().__init__(placeholder='Print multipliers', min_values=1, max_values=1, options=options, row=row,
                          custom_id='manage_multiplier_settings')
 
     async def callback(self, interaction: discord.Interaction):
         select_value: str = self.values[0]
         match select_value:
-            case "multiplier_management":
-                await self.view.user_settings.update(
-                    multiplier_management_enabled=not self.view.user_settings.multiplier_management_enabled
-                )
-            case "multiplier_management_scope":
-                multiplier_management_scope: int = 1 if self.view.user_settings.multiplier_management_scope == 0 else 0
-                await self.view.user_settings.update(multiplier_management_scope=multiplier_management_scope)
             case "print_multipliers":
                 prefix: str = await guilds.get_prefix(self.view.ctx)
                 answer: str = (
@@ -1902,7 +2017,9 @@ class ManageMultiplierSettingsSelect(discord.ui.Select):
                 self.view.add_item(ManageMultiplierSettingsSelect(self.view))
             if isinstance(child, ManageManagedMultipliersSelect):
                 select_disabled: bool = False
-                if self.view.user_settings.multiplier_management_enabled and self.view.user_settings.current_area != 20:
+                if self.view.user_settings.multiplier_management_mode == 2 and self.view.user_settings.current_area != 20:
+                    select_disabled = True
+                elif self.view.user_settings.multiplier_management_mode == 1 and self.view.user_settings.current_area == 18:
                     select_disabled = True
                 if child.disabled != select_disabled:
                     self.view.remove_item(child)

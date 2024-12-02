@@ -605,6 +605,18 @@ class DevCog(commands.Cog):
         os.remove(text_file_path)
 
 
+    @dev_group.command(name='check-size', guild_ids=settings.DEV_GUILDS)
+    @commands.bot_has_permissions(send_messages=True, attach_files=True)
+    async def dev_test(self, ctx: bridge.BridgeContext) -> None:
+        """Miri test command"""
+        if ctx.author.id not in settings.DEV_IDS:
+            if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        from cogs import tasks
+        await ctx.respond(content=f'Length of `running_tasks`: {len(tasks.running_tasks)}')
+        
+
 def setup(bot: bridge.AutoShardedBot):
     bot.add_cog(DevCog(bot))
 

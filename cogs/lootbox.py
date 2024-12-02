@@ -95,7 +95,7 @@ class BuyCog(commands.Cog):
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
                 activity: str = 'lootbox'
-                if user_settings.multiplier_management_enabled:
+                if user_settings.multiplier_management_mode != 0:
                     await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_lootbox.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

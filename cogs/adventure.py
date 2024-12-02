@@ -104,7 +104,7 @@ class AdventureCog(commands.Cog):
                 time_left: timedelta = await functions.calculate_time_left_from_timestring(message, timestring_match.group(1))
                 if time_left < timedelta(0): return
                 activity: str = 'adventure'
-                if user_settings.multiplier_management_enabled:
+                if user_settings.multiplier_management_mode != 0:
                     await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_adventure.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (

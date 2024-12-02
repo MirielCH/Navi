@@ -527,6 +527,7 @@ def encode_message_with_fields_non_async(bot_message: discord.Message) -> str:
 async def get_training_answer_buttons(message: discord.Message) -> dict[int,dict[str,tuple[str,str,bool]]]:
     """Returns the buttons for the TrainingAnswerView to a slash training question based on the message content."""
     buttons = {}
+    correct_button = ''
     message_content = message.content.lower()
     search_strings_river = [
         'river!', #English
@@ -1085,7 +1086,7 @@ async def parse_embed(message: discord.Message) -> dict[str, str]:
     """Parses all data from an embed into a dictionary.
     All keys are guaranteed to exist and have an empty string as value if not set in the embed.
     """
-    embed_data: dict[str, dict[str, str]] = {
+    embed_data: dict[str, Any] = {
         'author': {'icon_url': '', 'name': ''},
         'description': '',
         'field0': {'name': '', 'value': ''},
@@ -1137,9 +1138,23 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
         'current_area': new_area,
     }
     # Reset multipliers when entering area 20
-    if user_settings.multiplier_management_enabled:
-        if (new_area == 20 and user_settings.current_area != 20
-            or new_area != 20 and user_settings.current_area == 18):
+    if user_settings.multiplier_management_mode == 2:
+        if (new_area == 20 and user_settings.current_area == 19
+            or new_area not in (20, 18) and user_settings.current_area == 18):
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
+            kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+    if user_settings.multiplier_management_mode == 1:
+        if new_area not in (20, 18) and user_settings.current_area == 18:
             kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
             kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
             kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
@@ -1192,7 +1207,8 @@ async def get_ready_command_activities(seasonal_event: str) -> list[str]:
         case 'halloween':
             activities_commands += ['boo',]
         case 'horse_festival':
-            activities_commands += ['megarace', 'minirace']
+            #activities_commands += ['megarace', 'minirace']
+            activities_commands += ['minirace',]
         case 'valentine':
             activities_commands += ['love-share',]
 

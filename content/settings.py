@@ -168,6 +168,7 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
         )
         return
 
+    hunt_partner_mode_2_found: bool = False
     for index, setting in enumerate(settings):
         if setting in strings.ACTIVITIES_ALIASES: settings[index] = strings.ACTIVITIES_ALIASES[setting]
         if setting in SETTINGS_HELPER_ALIASES: settings[index] = SETTINGS_HELPER_ALIASES[setting]
@@ -192,6 +193,9 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
             if setting in strings.ACTIVITIES:
                 settings.remove(setting)
         settings += strings.ACTIVITIES
+        if user_settings.hunt_reminder_mode == 2 and not enabled:
+            settings.remove('hunt-partner')
+            hunt_partner_mode_2_found = True
         settings.remove('all')
 
     updated_reminders = []
@@ -201,7 +205,11 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     answer_reminders = answer_helpers = answer_user = answer_ignored = ''
     settings = list(dict.fromkeys(settings))
     for setting in settings:
-        if setting in strings.ACTIVITIES: updated_reminders.append(setting)
+        if setting in strings.ACTIVITIES:
+            if setting == 'hunt-partner' and user_settings.hunt_reminder_mode == 2 and not enabled:
+                hunt_partner_mode_2_found = True
+                continue
+            updated_reminders.append(setting)
         elif setting in SETTINGS_HELPERS: updated_helpers.append(setting)
         elif setting in SETTINGS_USER: updated_user.append(setting)
         else: ignored_settings.append(setting)
@@ -247,16 +255,73 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
             answer_ignored = f'{answer_ignored}\n{emojis.BP}`{setting}`'
 
     answer = ''
-    if answer_reminders != '':
+    if answer_reminders:
         answer = answer_reminders
-    if answer_helpers != '':
+    if answer_helpers:
         answer = f'{answer}\n\n{answer_helpers}'
-    if answer_user != '':
+    if answer_user:
         answer = f'{answer}\n\n{answer_user}'
-    if answer_ignored != '':
+    if answer_ignored:
         answer = f'{answer}\n\n{answer_ignored}'
+    if hunt_partner_mode_2_found:
+        answer = f'{answer}\n\nCould not disable the `hunt-partner` reminder, it is required for the `Adaptive` hunt reminder mode.'
 
     await ctx.respond(answer.strip())
+
+
+async def command_hunt_reminder_mode(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
+    user_settings: users.User = await users.get_user(ctx.author.id)
+    syntax: str = (
+        f'Syntax: `{ctx.prefix}hunt <mode>`\n'
+        f'Examples:\n'
+        f'{emojis.BP} `{ctx.prefix}hunt separate` / `{ctx.prefix}hunt s`\n'
+        f'{emojis.BP} `{ctx.prefix}hunt combined` / `{ctx.prefix}hunt c`\n'
+        f'{emojis.BP} `{ctx.prefix}hunt adaptive` / `{ctx.prefix}hunt a`\n'
+    )
+    if not args:
+        await ctx.reply(f'Current hunt reminder mode: `{strings.HUNT_REMINDER_MODES[user_settings.hunt_reminder_mode]}`.\n\n{syntax}')
+        return
+
+    match args[0]:
+        case 's' | 'separate' | 'seperate' | 'sep':
+            mode: int = 0
+        case 'c' | 'combined' | 'combine' | 'comb':
+            mode: int = 1
+        case 'a' | 'adaptive':
+            mode: int = 2
+        case _:
+            mode: int = -1
+
+    if mode == -1:
+        await ctx.reply(f'Invalid mode.\n\n{syntax}')
+        return
+        
+    answer: str = f'Hunt reminder mode changed to `{strings.HUNT_REMINDER_MODES[mode]}`'
+    if mode == 2 and not user_settings.alert_hunt_partner.enabled:
+        answer = (
+            f'{answer}\n'
+            f'Because this mode requires the `hunt partner` reminder, I automatically enabled it.'
+        )
+        await user_settings.update(hunt_reminder_mode=mode, alert_hunt_partner_enabled=True)
+    else:
+        await user_settings.update(hunt_reminder_mode=mode)
+    try:
+        hunt_reminder = await reminders.get_user_reminder(user_settings.user_id, 'hunt')
+        await hunt_reminder.delete()
+    except exceptions.NoDataFoundError:
+        hunt_reminder = None
+    try:
+        hunt_partner_reminder = await reminders.get_user_reminder(user_settings.user_id, 'hunt-partner')
+        await hunt_partner_reminder.delete()
+    except exceptions.NoDataFoundError:
+        hunt_partner_reminder = None
+    if hunt_partner_reminder or hunt_reminder:
+        answer = (
+            f'{answer}\n'
+            f'All active hunt reminders were deleted.'
+        )
+
+    await ctx.reply(answer)    
 
 
 async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
@@ -278,9 +343,11 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
         )
         return current_multipliers.strip()
 
-    syntax: str = ''
-    if not user_settings.multiplier_management_enabled or user_settings.current_area == 20:
-        syntax = (
+    if ((user_settings.multiplier_management_mode == 2 and user_settings.current_area != 20)
+        or (user_settings.multiplier_management_mode == 1 and user_settings.current_area == 18)):
+        syntax: str = f'You are currently in a managed area. You can therefore not change the managed multipliers.'
+    else:
+        syntax: str = (
             f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
             f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
             f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
@@ -316,9 +383,14 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
                     return
                 activity: str
                 for activity in activities_found:
-                    if activity != 'hunt-partner' and user_settings.multiplier_management_enabled:
-                        if ((user_settings.multiplier_management_scope == 0 and user_settings.current_area == 18)
-                            or (user_settings.multiplier_management_scope == 1 and user_settings.current_area != 20)):
+                    if (
+                        activity != 'hunt-partner'
+                        and (
+                            (user_settings.multiplier_management_mode == 1 and user_settings.current_area == 19)
+                             or
+                            (user_settings.multiplier_management_mode == 2 and user_settings.current_area != 20)
+                        )
+                        ):
                             await ctx.reply(
                                 f'Changing managed multipliers is not possible in your current area because they are managed automatically.'
                             )
@@ -784,6 +856,26 @@ async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.Bri
     view.interaction = interaction
     await view.wait()
 
+
+async def command_settings_reminder_behaviour(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                              switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder behaviour settings command"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsReminderBehaviourView(ctx, bot, user_settings, embed_settings_reminder_behaviour)
+    embed = await embed_settings_reminder_behaviour(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
     
 async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                             switch_view: Optional[discord.ui.View] = None) -> None:
@@ -1100,10 +1192,9 @@ async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.Ap
     ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
     
     field_settings: str = (
-        f'{emojis.BP} **Automatic managed multipliers**: {await functions.bool_to_text(user_settings.multiplier_management_enabled)}\n'
-        f'{emojis.BP} **Managed multiplier scope**: `{strings.MANAGED_MULTIPLIER_SCOPES[user_settings.multiplier_management_scope]}`\n'
+        f'{emojis.BP} **Multiplier management mode**: `{strings.MULTIPLIER_MANAGEMENT_MODES[user_settings.multiplier_management_mode]}`\n'
         f'{emojis.DETAIL} _Managed multipliers are not changeable within managed areas._\n'
-        f'{emojis.DETAIL} _Note that managed multipliers are always inactive in area 20._\n'
+        f'{emojis.DETAIL} _Note that multipliers are never managed in area 20._\n'
     )
     field_managed_multipliers: str = (
         f'{emojis.BP} **`{f'Adventure':<12}`** `{round(user_settings.alert_adventure.multiplier, 3):>5}`\n'
@@ -1367,22 +1458,6 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
                                    user_settings: users.User) -> discord.Embed:
     """Reminder settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
-    reminder_channel = '`Last channel the reminder was updated in`'
-    if user_settings.reminder_channel_id is not None:
-        reminder_channel = f'<#{user_settings.reminder_channel_id}>'
-    behaviour = (
-        f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
-        f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
-        f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
-        f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
-        f'{emojis.BP} **Combine hunt reminders**: {await functions.bool_to_text(user_settings.hunt_reminders_combined)}\n'
-        f'{emojis.DETAIL} _If enabled, Navi will never send or show the `hunt partner` reminder._\n'
-        f'{emojis.DETAIL} _Instead the `hunt` reminder will be long enough for both players to be ready._\n'
-        f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
-        f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
-        f'{emojis.BP} **Christmas area mode**: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
-        f'{emojis.DETAIL} _Reduces your reminders by 10%. Toggled automatically as you play._\n'
-    )
     command_reminders = (
         f'{emojis.BP} **Adventure**: {await functions.bool_to_text(user_settings.alert_adventure.enabled)}\n'
         f'{emojis.BP} **Arena**: {await functions.bool_to_text(user_settings.alert_arena.enabled)}\n'
@@ -1451,6 +1526,44 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
     embed.add_field(name='SEASONAL REMINDERS', value=seasonal_reminders, inline=False)
+    return embed
+
+
+async def embed_settings_reminder_behaviour(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                            user_settings: users.User) -> discord.Embed:
+    """Reminder settings embed"""
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+    reminder_channel = '`Last channel the reminder was updated in`'
+    if user_settings.reminder_channel_id is not None:
+        reminder_channel = f'<#{user_settings.reminder_channel_id}>'
+    partner_hunt_cooldown_style = 'Timestamp' if user_settings.hunt_partner_cooldown_as_timestamp else 'Static time'
+    general = (
+        f'{emojis.BP} **DND mode**: {await functions.bool_to_text(user_settings.dnd_mode_enabled)}\n'
+        f'{emojis.DETAIL} _If DND mode is enabled, Navi won\'t ping you._\n'
+        f'{emojis.BP} **Slash commands in reminders**: {await functions.bool_to_text(user_settings.slash_mentions_enabled)}\n'
+        f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
+        f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
+        f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
+        f'{emojis.BP} **Christmas area mode**: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'
+        f'{emojis.DETAIL} _Reduces your reminders by 10%. Toggled automatically as you play._\n'
+    )
+    hunt_reminder = (
+        f'{emojis.BP} **Hunt reminder mode**: `{strings.HUNT_REMINDER_MODES[user_settings.hunt_reminder_mode]}`\n'
+        f'{emojis.DETAIL} _`Separate`: Separate reminders for you and your partner._\n'
+        f'{emojis.DETAIL} _`Combined`: Reminds when both partners are ready._\n'
+        f'{emojis.DETAIL} _`Adaptive`: Reminds whenever you are ready, adds `together` whenever your partner is also ready._\n'
+        f'{emojis.BP} **Partner hunt cooldown style**: `{partner_hunt_cooldown_style}`\n'
+        f'{emojis.DETAIL} _This cooldown is only used in the `separate` hunt reminder mode._\n'
+    )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx_author_name.upper()}\'S REMINDER BEHAVIOUR',
+        description = (
+            f'_Settings to set how your reminders behave._'
+        )
+    )
+    embed.add_field(name='GENERAL SETTINGS', value=general, inline=False)
+    embed.add_field(name='HUNT REMINDER', value=hunt_reminder, inline=False)
     return embed
 
 
@@ -1527,6 +1640,8 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultralog_enabled)}\n'
         f'{emojis.BP} Drop: **VOID lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_void_enabled)}\n'
+        f'{emojis.BP} Drop: **Walking normie fish from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_walkingnormiefish_enabled)}\n'
         f'{emojis.BP} Drop: **Watermelons from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_watermelon_enabled)}\n'
         f'{emojis.BP} Event: **Get ULTRA-EDGY in enchant event**: '

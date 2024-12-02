@@ -171,23 +171,22 @@ class HelperFarmCog(commands.Cog):
                 message_content = message_content.split('\n')[1]
                 user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
-                if user is None:
-                    search_patterns = [
-                        r"\*\*(.+?)\*\* got (\d+) (?:.+?) \*\*(.+?) seed", #English
-                        r"\*\*(.+?)\*\* cons[ie]gui[óu] (\d+) (?:.+?) \*\*(.+?) seed", #Spanish & Portuguese
-                    ]
-                    data_match = await functions.get_match_from_patterns(search_patterns, message_content)
-                    if data_match:
-                        user_name = data_match.group(1)
-                        user_command_message = (
-                            await messages.find_message(message.channel.id, regex.COMMAND_CLAN_BUY_SPECIAL_SEED,
-                                                        user_name=user_name)
-                        )
-                    if not data_match or user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('User not found for guild buy special seed message.', message)
-                        return
-                    user = user_command_message.author
+                search_patterns = [
+                    r"\*\*(.+?)\*\* got (\d+) (?:.+?) \*\*(.+?) seed", #English
+                    r"\*\*(.+?)\*\* cons[ie]gui[óu] (\d+) (?:.+?) \*\*(.+?) seed", #Spanish & Portuguese
+                ]
+                data_match = await functions.get_match_from_patterns(search_patterns, message_content)
+                if data_match:
+                    user_name = data_match.group(1)
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_CLAN_BUY_SPECIAL_SEED,
+                                                    user_name=user_name)
+                    )
+                if not data_match or user_command_message is None:
+                    await functions.add_warning_reaction(message)
+                    await errors.log_error('Data not found for guild buy special seed message.', message)
+                    return
+                if user is None: user = user_command_message.author
                 try:
                     user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:

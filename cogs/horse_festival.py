@@ -211,9 +211,42 @@ class HorseFestivalCog(commands.Cog):
                                                          message.channel.id, reminder_message)
                 )
 
+            # Megarace complete
+            search_strings = [
+                'you have already completed this week\'s megarace', #English
+                'ya completaste la megacarrera de esta semana', #Spanish
+                'você completou a megacorrida desta semana', #Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user_id = user_name = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    if message.mentions:
+                        user = message.mentions[0]
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a user for the completed megarace message.', message)
+                        return
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_minirace.enabled: return
+                user_command = await functions.get_slash_command(user_settings, 'megarace')
+                current_time = utils.utcnow()
+                next_monday = current_time.date() + timedelta(days=(0 - current_time.weekday() - 1) % 7 + 1)
+                next_monday_dt = datetime(year=next_monday.year, month=next_monday.month, day=next_monday.day, hour=0, minute=5, second=0, microsecond=0, tzinfo=timezone.utc)
+                time_left = next_monday_dt - utils.utcnow() + timedelta(seconds=random.randint(0, 600))
+                reminder_message = user_settings.alert_minirace.message.replace('{command}', user_command)
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'megarace', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
             search_strings = [
                 'started riding!', #English
-                'started riding!', #TODO: Spanish
+                'empezó a cabalgar!', #Spanish
                 'started riding!', #TODO: Portuguese
             ]
             if any(search_string in message_content.lower() for search_string in search_strings):

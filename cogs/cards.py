@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import re
+from typing import Any
 
 import discord
 from discord import utils
@@ -11,6 +12,8 @@ from discord.ext import bridge, commands
 from cache import messages
 from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings
+
+processed_messages = {}
 
 class CardsCog(commands.Cog):
     """Cog that contains the card detection commands"""
@@ -22,11 +25,14 @@ class CardsCog(commands.Cog):
         """Runs when a message is edited in a channel."""
         if message_after.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message_before.pinned != message_after.pinned: return
-        embed_data_before = await functions.parse_embed(message_before)
-        embed_data_after = await functions.parse_embed(message_after)
+        embed_data_before: dict[str, Any] = await functions.parse_embed(message_before)
+        embed_data_after: dict[str, Any] = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        if 'reward' in embed_data_before['field0']['name'].lower() and 'reward' in embed_data_after['field0']['name'].lower():
+            return
         if message_before.edited_at == message_after.edited_at: return
+        """
         if message_after.channel.id == 1018269454641156147:
             await errors.log_error(
                 f'Before Message ID: {message_before.id}\n'
@@ -47,6 +53,7 @@ class CardsCog(commands.Cog):
                 f'After Message attachments: {message_after.attachments}\n'
                 f'After Message content: {message_after.content}\n'
             )
+         """
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -108,7 +115,7 @@ class CardsCog(commands.Cog):
                 time_left = await functions.calculate_time_left_from_timestring(message, timestring)
                 if time_left < timedelta(0): return
                 activity: str = 'card-hand'
-                if user_settings.multiplier_management_enabled:
+                if user_settings.multiplier_management_mode != 0:
                     await user_settings.update_multiplier(activity, time_left)
                 reminder_message = user_settings.alert_card_hand.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
@@ -123,6 +130,11 @@ class CardsCog(commands.Cog):
             ]
             if (any(search_string in message_author.lower() for search_string in search_strings)
                 and '+' in message_field0_value):
+                if message.id in processed_messages: return
+                processed_messages[message.id] = utils.utcnow()
+                for message_id, date_time in processed_messages.copy().items():
+                    if date_time < (utils.utcnow() - timedelta(minutes=5)):
+                        del processed_messages[message_id]
                 user_id = user_name = user_command_message = None
                 user = await functions.get_interaction_user(message)
                 if user is None:

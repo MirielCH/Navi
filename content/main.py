@@ -115,6 +115,8 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{await functions.get_navi_slash_command(bot, "custom-reminder")}, `{prefix}rm`\n'
         f'{emojis.BP} **[Manage reminders]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "settings reminders")}, `{prefix}srm`\n'
+        f'{emojis.BP} **[Manage reminder behaviour]({title_link})**: '
+        f'{await functions.get_navi_slash_command(bot, "settings reminder-behaviour")}, `{prefix}srb`\n'
         f'{emojis.BP} **[Manage reminder messages]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "settings messages")}, `{prefix}sm`\n'
     )
@@ -173,6 +175,7 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> d
         f'{await functions.get_navi_slash_command(bot, "enable")}, `{prefix}e`\n'
         f'{emojis.BP} **[Speed disable settings]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "disable")}, `{prefix}d`\n'
+        f'{emojis.BP} **[Speed switch hunt reminder mode]({title_link})**: `{prefix}hunt`\n'
         f'{emojis.BP} **[Purge your data]({title_link})**: '
         f'{await functions.get_navi_slash_command(bot, "purge")}, `{prefix}purge`\n'
         f'{emojis.BP} **[Slash command overview]({title_link})**: '
