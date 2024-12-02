@@ -133,7 +133,7 @@ class ChristmasCog(commands.Cog):
             ]
             if any(search_string in message_author.lower() for search_string in search_strings):
                 current_time = utils.utcnow()
-                stephans_day = datetime(year=current_time.year, month=12, day=26, hour=0, minute=0, second=0)
+                stephans_day = datetime(year=current_time.year, month=12, day=26, hour=0, minute=0, second=0, tzinfo=current_time.tzinfo)
                 if current_time >= stephans_day: return
                 user_id = user_name = None
                 user = await functions.get_interaction_user(message)
