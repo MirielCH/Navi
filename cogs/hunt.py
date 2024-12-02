@@ -355,7 +355,7 @@ class HuntCog(commands.Cog):
                     time_left_seconds *= settings.POTION_FLASK_MULTIPLIER
                     
                 if together and partner_christmas_area:
-                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIERP
+                    time_left_seconds_partner_hunt *= settings.CHRISTMAS_AREA_MULTIPLIER
                 if together and partner is not None:
                     if partner.round_card_active:
                         time_left_seconds_partner_hunt *= settings.ROUND_CARD_MULTIPLIER                    
