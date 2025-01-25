@@ -105,7 +105,6 @@ class ArtifactsCog(commands.Cog):
                     ]
                     pocket_watch_cooldown_match = await functions.get_match_from_patterns(search_patterns, embed_fields)
                     pocket_watch_cooldown = float(pocket_watch_cooldown_match.group(1))
-                    if pocket_watch_cooldown > 5: pocket_watch_cooldown = 5
                     await user_settings.update(user_pocket_watch_multiplier=(100 - pocket_watch_cooldown) / 100)
                     if user_settings.partner_id is not None:
                         try:
