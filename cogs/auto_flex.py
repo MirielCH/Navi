@@ -1233,7 +1233,7 @@ class AutoFlexCog(commands.Cog):
                         await errors.log_error('Couldn\'t find auto flex data in work message.', message)
                         return
                     user_name = match.group(1)
-                    item_amount = int(match.group(2))
+                    item_amount = int(match.group(2).replace(',', ''))
                     item_name = match.group(4).lower().replace('**','').strip()
                     if item_name not in item_events: return
                     event = item_events[item_name]
