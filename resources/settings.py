@@ -165,7 +165,7 @@ class ClanReset(NamedTuple):
 
 CLAN_DEFAULT_STEALTH_THRESHOLD: Final[int] = 90
 
-CHOCOLATE_BOX_MULTIPLIER: Final[float] = 0.98
+CHOCOLATE_BOX_MULTIPLIER: Final[float] = 0.97
 CHRISTMAS_AREA_MULTIPLIER: Final[float] = 1.0 # Set this to 0.9 during christmas event and to 1 during the rest of the year
 POTION_FLASK_MULTIPLIER: Final[float] = 0.9999 # Why did I even do this
 ROUND_CARD_MULTIPLIER: Final[float] = 0.1

@@ -151,7 +151,7 @@ class ValentineCog(commands.Cog):
                     time_left_seconds *= settings.CHOCOLATE_BOX_MULTIPLIER # Unclear if accurate
                 time_left = timedelta(seconds=time_left_seconds)
                 if time_left < timedelta(0): return
-                reminder_message = strings.DEFAULT_MESSAGE.replace('{command}', user_command)
+                reminder_message = user_settings.alert_love_share.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
                     await reminders.insert_user_reminder(user.id, 'love-share', time_left,
                                                         message.channel.id, reminder_message)
