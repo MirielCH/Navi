@@ -461,10 +461,10 @@ class TasksCog(commands.Cog):
             for user_settings in all_user_settings:
                 if user_settings.trade_daily_done != 0: await user_settings.update(trade_daily_done=0)
 
-    @tasks.loop(minutes=10)
+    @tasks.loop(seconds=60)
     async def delete_old_messages_from_cache(self) -> None:
         """Task that deletes messages from the message cache that are older than 10 minutes"""
-        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=5))
+        deleted_messages_count = await messages.delete_old_messages(timedelta(minutes=10))
         if settings.DEBUG_MODE:
             logs.logger.debug(f'Deleted {deleted_messages_count} messages from message cache.')
 
