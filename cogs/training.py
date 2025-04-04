@@ -121,6 +121,9 @@ class TrainingCog(commands.Cog):
                 '**: well done, **', #English
                 '**: bien hecho, **', #Spanish
                 '**: muito bem, **', #Portuguese
+                '**: damn, that was fast!', #English, eternal tier 7
+                '**: damn, that was fast!', #TODO: Spanish, eternal tier 7
+                '**: damn, that was fast!', #TODO: Portuguese, eternal tier 7
             ]
             if (any(search_string in message_description.lower() for search_string in search_strings)
                 and any(search_string.lower() in message_description.lower() for search_string in strings.EPIC_NPC_NAMES)
@@ -136,7 +139,11 @@ class TrainingCog(commands.Cog):
                             await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING,
                                                         user_name=user_name)
                         )
-                    if not user_name_match or user_command_message is None:
+                    else:
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_ULTRAINING)
+                        )
+                    if user_command_message is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('User not found in ultraining message.', message)
                         return

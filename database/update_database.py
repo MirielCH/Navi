@@ -520,6 +520,12 @@ def update_database() -> bool:
             sqls += [
                 "INSERT INTO settings (name, value) VALUES ('seasonal_event', 'none')",
             ]
+    if db_version < 26:
+        sqls += [
+            "ALTER TABLE guilds ADD event_rare_hunt_monster_enabled INTEGER NOT NULL DEFAULT (0)",
+            "ALTER TABLE guilds ADD event_rare_hunt_monster_message TEXT NOT NULL DEFAULT ('@here Hey! Click or type `LETS GET THAT PICKAXE` to get an artifact part!')",
+            "ALTER TABLE users ADD eternal_boosts_tier INTEGER DEFAULT (0) NOT NULL",
+        ]
         
     # Run SQLs
     sql: str

@@ -93,6 +93,7 @@ class User():
     context_helper_enabled: bool
     current_area: int
     dnd_mode_enabled: bool
+    eternal_boosts_tier: int
     farm_helper_mode: int
     guild_quest_prompt_active: bool
     halloween_helper_enabled: bool
@@ -232,6 +233,7 @@ class User():
         self.context_helper_enabled = new_settings.context_helper_enabled
         self.current_area = new_settings.current_area
         self.dnd_mode_enabled = new_settings.dnd_mode_enabled
+        self.eternal_boosts_tier = new_settings.eternal_boosts_tier
         self.farm_helper_mode = new_settings.farm_helper_mode
         self.guild_quest_prompt_active = new_settings.guild_quest_prompt_active
         self.halloween_helper_enabled = new_settings.halloween_helper_enabled
@@ -472,6 +474,7 @@ class User():
             context_helper_enabled: bool
             current_area: int
             dnd_mode_enabled: bool
+            eternal_boosts_tier: int
             farm_helper_mode: int
             guild_quest_prompt_active: bool
             halloween_helper_enabled: bool
@@ -800,6 +803,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             context_helper_enabled = bool(record['context_helper_enabled']),
             current_area = -1 if record['current_area'] is None else record['current_area'],
             dnd_mode_enabled = bool(record['dnd_mode_enabled']),
+            eternal_boosts_tier = record['eternal_boosts_tier'],
             farm_helper_mode = record['farm_helper_mode'],
             guild_quest_prompt_active = bool(record['guild_quest_prompt_active']),
             halloween_helper_enabled = bool(record['halloween_helper_enabled']),
@@ -1178,6 +1182,7 @@ async def _update_user(user: User, **kwargs) -> None:
         context_helper_enabled: bool
         current_area: int
         dnd_mode_enabled: bool
+        eternal_boosts_tier: int
         farm_helper_mode: int
         guild_quest_prompt_active: bool
         halloween_helper_enabled: bool

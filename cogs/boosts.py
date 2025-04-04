@@ -304,7 +304,8 @@ class BoostsCog(commands.Cog):
                 current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
-                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', item_emoji)
@@ -475,7 +476,8 @@ class BoostsCog(commands.Cog):
                 current_time = utils.utcnow()
                 time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
-                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 await reminders.reduce_reminder_time_percentage(user_settings, 90, strings.ROUND_CARD_AFFECTED_ACTIVITIES)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -532,7 +534,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left = timedelta(days=30)
-                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', emojis.MEGA_BOOST)

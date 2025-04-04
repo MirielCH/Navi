@@ -44,6 +44,7 @@ ARTIFACT_COIN_RING: Final[str] = '<:artifact_coin_ring:1215042000047448096>'
 ARTIFACT_GOLDEN_PAN: Final[str] = '<:artifact_golden_pan:1215042002140405800>'
 ARTIFACT_MASTER_KEY: Final[str] = '<:artifact_master_key:1215042004187349082>'
 ARTIFACT_POCKET_WATCH: Final[str] = '<:artifact_pocket_watch:1215042006649282611>'
+ARTIFACT_SHINY_PICKAXE: Final[str] = '<:artifact_shiny_pickaxe:1357665732921397392>'
 ARTIFACT_TOP_HAT: Final[str] = '<:artifact_top_hat:1215042008083734618>'
 ARTIFACT_VAMPIRE_TEETH: Final[str] = '<:artifact_vampire_teeth:1215042009291554907>'
 
@@ -129,6 +130,7 @@ TIME_TRAVEL: Final[str] = '<:timetravel:1215001390670155807>'
 
 # EPIC RPG pets
 PET_CAT: Final[str] = '<:cat:1214999732158603305>'
+PET_CATERNAL: Final[str] = '<:caternal:1357664880324247672>'
 PET_DOG: Final[str] = '<:dog:1214999733857419264>'
 PET_DRAGON: Final[str] = '<:dragon:1214999735891525672>'
 PET_GOLDEN_BUNNY: Final[str] = '<:goldenbunny:1214999737456140318>'

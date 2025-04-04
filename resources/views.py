@@ -1055,7 +1055,7 @@ class SettingsServerAutoFlex2View(discord.ui.View):
             'Lose coin in coinflip': 'auto_flex_event_coinflip_enabled',
             'Catch pet with EPIC skill in training': 'auto_flex_pets_catch_epic_enabled',
             'Catch pet with timetraveler skill in training': 'auto_flex_pets_catch_tt_enabled',
-            'Get OMEGA lootbox from snowman pet': 'auto_flex_pets_claim_omega_enabled',
+            'Get rare drops from pets': 'auto_flex_pets_claim_omega_enabled',
             'Ascension': 'auto_flex_pr_ascension_enabled',
             'Time travel milestones': 'auto_flex_time_travel_enabled',
         }
@@ -1124,6 +1124,7 @@ class SettingsServerEventPingsView(discord.ui.View):
             'Lootbox summoning': 'event_lootbox',
             'Megalodon': 'event_fish',
             'Miniboss': 'event_miniboss',
+            'Rare hunt monster': 'event_rare_hunt_monster',
         }
 
         self.add_item(components.ToggleEventPingsSelect(self, toggled_events,

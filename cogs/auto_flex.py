@@ -17,6 +17,7 @@ FLEX_TITLES = {
     'artifacts_bunny_mask': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_claus_belt': strings.FLEX_TITLES_ARTIFACTS,
     'artifacts_cowboy_boots': strings.FLEX_TITLES_ARTIFACTS,
+    'artifacts_shiny_pickaxe': strings.FLEX_TITLES_ARTIFACTS,
     'brew_electronical': strings.FLEX_TITLES_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_TITLES_CARD_DROP,
     'card_drop_partner': strings.FLEX_TITLES_CARD_DROP_PARTNER,
@@ -51,6 +52,7 @@ FLEX_TITLES = {
     'lb_void_partner': strings.FLEX_TITLES_LB_VOID_PARTNER,
     'pets_catch_epic': strings.FLEX_TITLES_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_TITLES_PETS_CATCH_TT,
+    'pets_claim_capsule': strings.FLEX_TITLES_PETS_CLAIM_CAPSULE,
     'pets_claim_omega': strings.FLEX_TITLES_PETS_CLAIM_OMEGA,
     'pr_ascension': strings.FLEX_TITLES_PR_ASCENSION,
     'time_travel_1': strings.FLEX_TITLES_TIME_TRAVEL_1,
@@ -81,6 +83,7 @@ FLEX_TITLES = {
     'time_travel_1800': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_1900': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
     'time_travel_2000': strings.FLEX_TITLES_TIME_TRAVEL_100_PLUS,
+    'time_travel_1000000': strings.FLEX_TITLES_TIME_TRAVEL_1000000,
     'work_epicberry': strings.FLEX_TITLES_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_TITLES_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
@@ -99,6 +102,7 @@ FLEX_THUMBNAILS = {
     'artifacts_bunny_mask': strings.FLEX_THUMBNAILS_ARTIFACTS_BUNNY_MASK,
     'artifacts_claus_belt': strings.FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT,
     'artifacts_cowboy_boots': strings.FLEX_THUMBNAILS_ARTIFACTS_COWBOY_BOOTS,
+    'artifacts_shiny_pickaxe': strings.FLEX_THUMBNAILS_ARTIFACTS_SHINY_PICKAXE,
     'brew_electronical': strings.FLEX_THUMBNAILS_BREW_ELECTRONICAL,
     'card_drop': strings.FLEX_THUMBNAILS_CARD_DROP,
     'card_drop_partner': strings.FLEX_THUMBNAILS_CARD_DROP_PARTNER,
@@ -133,6 +137,7 @@ FLEX_THUMBNAILS = {
     'lb_void_partner': strings.FLEX_THUMBNAILS_LB_VOID_PARTNER,
     'pets_catch_epic': strings.FLEX_THUMBNAILS_PETS_CATCH_EPIC,
     'pets_catch_tt': strings.FLEX_THUMBNAILS_PETS_CATCH_TT,
+    'pets_claim_capsule': strings.FLEX_THUMBNAILS_PETS_CLAIM_CAPSULE,
     'pets_claim_omega': strings.FLEX_THUMBNAILS_PETS_CLAIM_OMEGA,
     'pr_ascension': strings.FLEX_THUMBNAILS_PR_ASCENSION,
     'time_travel_1': strings.FLEX_THUMBNAILS_TIME_TRAVEL_1,
@@ -163,6 +168,7 @@ FLEX_THUMBNAILS = {
     'time_travel_1800': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_1900': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
     'time_travel_2000': strings.FLEX_THUMBNAILS_TIME_TRAVEL_100_PLUS,
+    'time_travel_1000000': strings.FLEX_THUMBNAILS_TIME_TRAVEL_1000000,
     'work_epicberry': strings.FLEX_THUMBNAILS_WORK_EPICBERRY,
     'work_hyperlog': strings.FLEX_THUMBNAILS_WORK_HYPERLOG,
     'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
@@ -181,6 +187,7 @@ FLEX_COLUMNS = {
     'artifacts_bunny_mask': 'artifacts',
     'artifacts_claus_belt': 'artifacts',
     'artifacts_cowboy_boots': 'artifacts',
+    'artifacts_shiny_pickaxe': 'artifacts',
     'card_drop_partner': 'card_drop',
     'epic_berry_partner': 'epic_berry',
     'lb_a18_partner': 'lb_a18',
@@ -192,6 +199,7 @@ FLEX_COLUMNS = {
     'lb_omega_partner': 'lb_omega',
     'lb_void_partner': 'lb_void',
     'lb_void_tt': 'lb_godly_tt',
+    'pets_claim_capsule': 'pets_claim_omega',
     'time_travel_1': 'time_travel',
     'time_travel_3': 'time_travel',
     'time_travel_5': 'time_travel',
@@ -220,7 +228,157 @@ FLEX_COLUMNS = {
     'time_travel_1800': 'time_travel',
     'time_travel_1900': 'time_travel',
     'time_travel_2000': 'time_travel',
+    'time_travel_1000000': 'time_travel',
 }
+
+TIME_TRAVEL_DESCRIPTIONS = {
+    'time_travel_1': (
+            f'**{{user_name}}** just reached their very **first** {emojis.TIME_TRAVEL} **time travel**!\n'
+            f'Congratulations, we are expecting great things of you!'
+        ),
+    'time_travel_3': (
+            f'**{{user_name}}** did it again (and again) and just reached {emojis.TIME_TRAVEL} **TT 3**!\n'
+            f'I think they\'re getting addicted.'
+        ),
+    'time_travel_5': (
+            f'**{{user_name}}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
+            f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
+        ),
+    'time_travel_10': (
+            f'**{{user_name}}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
+            f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
+        ),
+    'time_travel_25': (
+            f'**{{user_name}}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
+            f'Good news: Welcome to the endgame!\n'
+            f'Bad news: Hope you like dragon scale farming.'
+        ),
+    'time_travel_50': (
+            f'**{{user_name}}** reached {emojis.TIME_TRAVEL} **TT 50**!\n'
+            f'Sadly they went blind after seeing the profile background they got as a reward.'
+        ),
+    'time_travel_100': (
+            f'**{{user_name}}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
+            f'Damn, you must really like this game. I just hope you still remember your family.\n'
+            f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
+        ),
+    'time_travel_150': (
+            f'**{{user_name}}** reached {emojis.TIME_TRAVEL} **TT 150**!\n'
+            f'I\'m starting to question your life choices.\n'
+            f'You can stop playing now btw, there will be no more backgrounds.\n'
+        ),
+    'time_travel_200': (
+            f'**{{user_name}}** reached {emojis.TIME_TRAVEL} **TT 200**!\n'
+            f'What on earth made you do this 200 times? You mad?\n'
+        ),
+    'time_travel_300': f'**{{user_name}}** reached {emojis.TIME_TRAVEL} **SPARTA**!\n',
+    'time_travel_400': (
+            f'Public Service Alert! **{{user_name}}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
+            f'As to why tho... I couldn\'t say.'
+        ),
+    'time_travel_420': f'**4:20 {{user_name}}**. The usual place.',
+    'time_travel_500': (
+            f'Did you see that? It\'s **{{user_name}}** plopping through time. For the freaking **500**th time.\n'
+            f'{emojis.TIME_TRAVEL}\n'
+        ),
+    'time_travel_600': (
+            f'Pretty sury **{{user_name}}** forgot by now which time they actually belong to after '
+            f'**600** {emojis.TIME_TRAVEL} time travels.\n'
+        ),
+    'time_travel_700': (
+            f'Did you know that there is such a thing as playing a game too much? **{{user_name}}** can.\n'
+            f'They just reached **700** {emojis.TIME_TRAVEL} time travels, and it scares me.\n'
+        ),
+    'time_travel_800': (
+            f'**800** {emojis.TIME_TRAVEL} time travels. It\'s rather crazy. But I get it now - '
+            f'**{{user_name}}** is probably training for the time olympics on Galifrey.'
+        ),
+    'time_travel_900': (
+            f'Ted just called **{{user_name}}** and wanted his phone booth back. After learning it was '
+            f'used for **900** {emojis.TIME_TRAVEL} time travels, he was too scared to take it back tho.'
+        ),
+    'time_travel_999': (
+            f'**{{user_name}}** traveled in time **999** times and thus broke Epic RPG Guide. Good job.\n'
+            f'Hope you\'re proud. Damn it.'
+        ),
+    'time_travel_1100': (
+            f'**{{user_name}}** needs therapy. I mean... they time traveled **1,100** times.'
+        ),
+    'time_travel_1200': f'**{{user_name}}** time traveled **1,200** times which makes them rather smol if you ask me.',
+    'time_travel_1300': (
+            f'**{{user_name}}** is increasing their time travel count to **1,300**.\n'
+            f'Now, some people would call a doctor at this point. Maybe even **the** doctor.'
+        ),
+    'time_travel_1400': (
+            f'La laaa laaaah, dee daaaahh, running out of ideas, shoo beee dooo...\n'
+            f'What happened, you ask? Well, **{{user_name}}** reached TT **1,400**. The usual.'
+        ),
+    'time_travel_1500': (
+            f'One thousand five hundred time travels.\n'
+            f'**{{user_name}}** seems to quite mad.'
+        ),
+    'time_travel_1600': (
+            f'Ah. Time. A beautiful concept. Some even travel through it.\n'
+            f'And then there\'s **{{user_name}}**, doing it freaking **1,600** times.'
+        ),
+    'time_travel_1700': (
+            f'Did you hear that? I think some fuse blew.\n'
+            f'Ah yes. Must be **{{user_name}}**\'s time machine, it finally broke after **1,700** time travels.'
+        ),
+    'time_travel_1800': (
+            f'Let me introduce you to **{{user_name}}**, the person who time traveled **1,800** times.\n'
+            f'I\'m afraid they got quite a few screws loose.'
+        ),
+    'time_travel_1900': (
+            f'If you see this, then someone triggered it. **{{user_name}}**, to be exact.\n'
+            f'The problem is, it requires **1,900** time travels to trigger this.\n'
+            f'Make of that what you will.'
+        ),
+    'time_travel_2000': (
+            f'Once upon a time, **{{user_name}}** found a game called EPIC RPG.\n'
+            f'It was quite a nice little game, so they decided to play a bit, maybe even TT once or thrice.\n'
+            f'They happened to like it, so they kept going a bit longer.\n'
+            f'They kept going.\n'
+            f'And going.\n'
+            f'They grew older.\n'
+            f'Still going.\n'
+            f'Jesus, why don\'t they stop.\n'
+            f'Call an ambulance.\n'
+            f'Is this normal?\n'
+            f'SOMEONE HELP THEM.\n'
+            f'Oh lord.\n'
+            f'STILL GOING.\n'
+            f'Oh god. They reached **2,000** time travels.\n'
+            f'Stawp.'
+    ),
+    'time_travel_1000000': (
+            f'In pixel\'d dusk and neon dawn,\n'
+            f'Through areas past and futures gone,\n'
+            f'**{{user_name}}** rewrote the threads of fate—\n'
+            f'A **million times**, reset the slate.\n\n'
+            f'With ruby sword and golden pan,\n'
+            f'They fought beneath a fractured sun.\n'
+            f'Each timeline twisted, torn, betrayed,\n'
+            f'Yet on they marched, undismayed.\n\n'
+            f'The endgame bunch now knows their name,\n'
+            f'In every guild, it\'s carved in flame.\n'
+            f'From scrawny wolf to EPIC mob,\n'
+            f'They danced through eternity and the top.\n\n'
+            f'The King of Void, Eternal Lord,\n'
+            f'With every jump, a fate restored.\n'
+            f'They ate the cookies, drank the milk,\n'
+            f'Killed their own self — smooth as silk.\n\n'
+            f'The NPC just shakes his head,\n'
+            f'"Didn\'t I kill you twice?" he said.\n'
+            f'But bug or God, who really knows?\n'
+            f'Time bends for those who choose their prose.\n\n'
+            f'So raise your flask in fractured time,\n'
+            f'To looping tales and lore sublime.\n'
+            f'For not all heroes age or fall—\n'
+            f'Some just time jump and know it all.'
+    ),
+}
+
 
 class AutoFlexCog(commands.Cog):
     """Cog that contains the auto flex detection"""
@@ -541,6 +699,7 @@ class AutoFlexCog(commands.Cog):
             ]
             search_strings_items = [
                 'omega lootbox',
+                'time capsule',
             ]
             if (any(search_string in embed_title.lower() for search_string in search_strings)
                 and (
@@ -574,12 +733,20 @@ class AutoFlexCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.auto_flex_enabled: return
-                description = (
-                    f'**{user.name}** threatened a poor **snowman** pet with a hair dryer and forced him to bring back '
-                    f'an {emojis.LB_OMEGA} **OMEGA lootbox**.\n'
-                    f'Calvin would be proud.'
-                )
-                await self.send_auto_flex_message(message, guild_settings, user_settings, user, 'pets_claim_omega',
+                if 'time capsule' in embed_fields.lower():
+                    description = (
+                        f'**{user.name}** sent a **caternal** through time and space. It got so terribly confused it '
+                        f'came back with a {emojis.TIME_CAPSULE} **time capsule** it stole who knows where.'
+                    )
+                    event = 'pets_claim_capsule'
+                else:
+                    description = (
+                        f'**{user.name}** threatened a poor **snowman** pet with a hair dryer and forced him to bring back '
+                        f'an {emojis.LB_OMEGA} **OMEGA lootbox**.\n'
+                        f'Calvin would be proud.'
+                    )
+                    event = 'pets_claim_omega'
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)
 
             # Coinflip event
@@ -731,187 +898,69 @@ class AutoFlexCog(commands.Cog):
                 trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
                 await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
                 if time_travel_count_old < 1 and time_travel_count_new >= 1:
-                    event = 'time_travel_1'
-                    description = (
-                        f'**{user.name}** just reached their very **first** {emojis.TIME_TRAVEL} **time travel**!\n'
-                        f'Congratulations, we are expecting great things of you!'
-                    )
+                    time_travel_flex_count = 1
                 elif time_travel_count_old < 3 and time_travel_count_new >= 3:
-                    event = 'time_travel_3'
-                    description = (
-                        f'**{user.name}** did it again (and again) and just reached {emojis.TIME_TRAVEL} **TT 3**!\n'
-                        f'I think they\'re getting addicted.'
-                    )
+                    time_travel_flex_count = 3
                 elif time_travel_count_old < 5 and time_travel_count_new >= 5:
-                    event = 'time_travel_5'
-                    description = (
-                        f'**{user.name}** got addicted to this game and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
-                        f'The boss in D13 can\'t wait to see you.'
-                    )
+                    time_travel_flex_count = 5
                 elif time_travel_count_old < 10 and time_travel_count_new >= 10:
-                    event = 'time_travel_10'
-                    description = (
-                        f'**{user.name}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
-                        f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
-                    )
+                    time_travel_flex_count = 10
                 elif time_travel_count_old < 25 and time_travel_count_new >= 25:
-                    event = 'time_travel_25'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
-                        f'Good news: You are now in the endgame!\n'
-                        f'Bad news: Hope you like dragon scales.'
-                    )
+                    time_travel_flex_count = 25
                 elif time_travel_count_old < 50 and time_travel_count_new >= 50:
-                    event = 'time_travel_50'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 50**!\n'
-                        f'Sadly they went blind after seeing the profile background they got as a reward.'
-                    )
+                    time_travel_flex_count = 50
                 elif time_travel_count_old < 100 and time_travel_count_new >= 100:
-                    event = 'time_travel_100'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
-                        f'Damn, you must really like this game. Enjoy your new high quality background!\n'
-                        f'Don\'t forget your sunglasses.'
-                    )
+                    time_travel_flex_count = 100
                 elif time_travel_count_old < 150 and time_travel_count_new >= 150:
-                    event = 'time_travel_150'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 150**!\n'
-                        f'I\'m starting to question your life choices.\n'
-                        f'You can stop playing now btw, there will be no more backgrounds.\n'
-                    )
+                    time_travel_flex_count = 150
                 elif time_travel_count_old < 200 and time_travel_count_new >= 200:
-                    event = 'time_travel_200'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 200**!\n'
-                        f'What on earth made you do this 200 times? You mad?\n'
-                    )
+                    time_travel_flex_count = 200
                 elif time_travel_count_old < 300 and time_travel_count_new >= 300:
-                    event = 'time_travel_300'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **SPARTA**!\n'
-                    )
+                    time_travel_flex_count = 300
                 elif time_travel_count_old < 400 and time_travel_count_new >= 400:
-                    event = 'time_travel_400'
-                    description = (
-                        f'Public Service Alert! **{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
-                        f'As to why tho... I couldn\'t say.'
-                    )
+                    time_travel_flex_count = 400
                 elif time_travel_count_old < 420 and time_travel_count_new >= 420:
-                    event = 'time_travel_420'
-                    description = (
-                        f'**4:20 {user.name}**. The usual place.'
-                    )
+                    time_travel_flex_count = 420
                 elif time_travel_count_old < 500 and time_travel_count_new >= 500:
-                    event = 'time_travel_500'
-                    description = (
-                        f'Did you see that? It\'s **{user.name}** plopping through time. For the freaking **500**th time.\n'
-                        f'{emojis.TIME_TRAVEL}\n'
-                    )
+                    time_travel_flex_count = 500
                 elif time_travel_count_old < 600 and time_travel_count_new >= 600:
-                    event = 'time_travel_600'
-                    description = (
-                        f'Pretty sury **{user.name}** forgot by now which time they actually belong to after '
-                        f'**600** {emojis.TIME_TRAVEL} time travels.\n'
-                    )
+                    time_travel_flex_count = 600
                 elif time_travel_count_old < 700 and time_travel_count_new >= 700:
-                    event = 'time_travel_700'
-                    description = (
-                        f'Did you know that there is such a thing as playing a game too much? **{user.name}** can.\n'
-                        f'They just reached **700** {emojis.TIME_TRAVEL} time travels, and it scares me.\n'
-                    )
+                    time_travel_flex_count = 700
                 elif time_travel_count_old < 800 and time_travel_count_new >= 800:
-                    event = 'time_travel_800'
-                    description = (
-                        f'**800** {emojis.TIME_TRAVEL} time travels. It\'s rather crazy. But I get it now - '
-                        f'**{user.name}** is probably training for the time olympics on Galifrey.'
-                    )
+                    time_travel_flex_count = 800
                 elif time_travel_count_old < 900 and time_travel_count_new >= 900:
-                    event = 'time_travel_900'
-                    description = (
-                        f'Ted just called **{user.name}** and wanted his phone booth back. After learning it was '
-                        f'used for **900** {emojis.TIME_TRAVEL} time travels, he was too scared to take it back tho.'
-                    )
+                    time_travel_flex_count = 900
                 elif time_travel_count_old < 999 and time_travel_count_new >= 999:
-                    event = 'time_travel_999'
-                    description = (
-                        f'**{user.name}** traveled in time for **999** times and thus broke Epic RPG Guide. Good job.\n'
-                        f'Hope you\'re proud. Damn it.'
-                    )
+                    time_travel_flex_count = 999
                 elif time_travel_count_old < 1_100 and time_travel_count_new >= 1_100:
-                    event = 'time_travel_1100'
-                    description = (
-                        f'**{user.name}** needs therapy. I mean time traveled **1,100** times.'
-                    )
+                    time_travel_flex_count = 1_100
                 elif time_travel_count_old < 1_200 and time_travel_count_new >= 1_200:
-                    event = 'time_travel_1200'
-                    description = (
-                        f'**{user.name}** time traveled **1,200** times which makes them rather smol if you ask me.'
-                    )
+                    time_travel_flex_count = 1_200
                 elif time_travel_count_old < 1_300 and time_travel_count_new >= 1_300:
-                    event = 'time_travel_1300'
-                    description = (
-                        f'**{user.name}** is increasing their time travel count to **1,300**.\n'
-                        f'Now, some people would call a doctor at this point. Maybe even **the** doctor.'
-                    )
+                    time_travel_flex_count = 1_300
                 elif time_travel_count_old < 1_400 and time_travel_count_new >= 1_400:
-                    event = 'time_travel_1400'
-                    description = (
-                        f'La laaa laaaah, dee daaaahh, running out of ideas, shoo beee dooo...\n'
-                        f'What happened, you ask? Well, **{user.name}** reached TT **1,400**. The usual.'
-                    )
+                    time_travel_flex_count = 1_400
                 elif time_travel_count_old < 1_500 and time_travel_count_new >= 1_500:
-                    event = 'time_travel_1500'
-                    description = (
-                        f'One thousand five hundred time travels.\n'
-                        f'**{user.name}** seems to quite mad.'
-                    )
+                    time_travel_flex_count = 1_500
                 elif time_travel_count_old < 1_600 and time_travel_count_new >= 1_600:
-                    event = 'time_travel_1600'
-                    description = (
-                        f'Ah. Time. A beautiful concept. Some even travel through it.\n'
-                        f'And then there\'s **{user.name}**, doing it freaking **1,600** times.'
-                    )
+                    time_travel_flex_count = 1_600
                 elif time_travel_count_old < 1_700 and time_travel_count_new >= 1_700:
-                    event = 'time_travel_1700'
-                    description = (
-                        f'Did you hear that? I think some fuse blew.\n'
-                        f'Ah yes. Must be **{user.name}**\'s time machine, it finally broke after **1,700** time travels.'
-                    )
+                    time_travel_flex_count = 1_700
                 elif time_travel_count_old < 1_800 and time_travel_count_new >= 1_800:
-                    event = 'time_travel_1800'
-                    description = (
-                        f'Let me introduce you to **{user.name}**, the person who time traveled **1,800** times.\n'
-                        f'I\'m afraid they got quite a few screws loose.'
-                    )
+                    time_travel_flex_count = 1_800
                 elif time_travel_count_old < 1_900 and time_travel_count_new >= 1_900:
-                    event = 'time_travel_1900'
-                    description = (
-                        f'If you see this, then someone triggered it. **{user.name}**, to be exact.\n'
-                        f'The problem is, it requires **1,900** time travels to trigger this.\n'
-                        f'Make of that what you will.'
-                    )
+                    time_travel_flex_count = 1_900
                 elif time_travel_count_old < 2_000 and time_travel_count_new >= 2_000:
-                    event = 'time_travel_2000'
-                    description = (
-                        f'Once upon a time, **{user.name}** found a game called EPIC RPG.\n'
-                        f'It was quite a nice little game, so they decided to play a bit, maybe even TT once or thrice.\n'
-                        f'They happened to like it, so they kept going a bit longer.\n'
-                        f'They kept going.\n'
-                        f'And going.\n'
-                        f'They grew older.\n'
-                        f'Still going.\n'
-                        f'Jesus, why don\'t they stop.\n'
-                        f'Call an ambulance.\n'
-                        f'Is this normal?\n'
-                        f'SOMEONE HELP THEM.\n'
-                        f'Oh lord.\n'
-                        f'STILL GOING.\n'
-                        f'Oh god. They reached **2,000** time travels.\n'
-                        f'Stawp.'
-                    )
+                    time_travel_flex_count = 2_000
+                elif time_travel_count_old < 1_000_000 and time_travel_count_new >= 1_000_000:
+                    time_travel_flex_count = 1_000_000
                 else:
+                    return
+                event = f'time_travel_{time_travel_flex_count}'
+                try:
+                    description = TIME_TRAVEL_DESCRIPTIONS[event].replace('{user_name}', user.name)
+                except KeyError:
                     return
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)
@@ -1180,6 +1229,11 @@ class AutoFlexCog(commands.Cog):
                         f'Well, you do you.'
                     )
                     event = 'artifacts_cowboy_boots'
+                elif artifact_name == 'shiny pickaxe':
+                    description = (
+                        f'**{user.name}** finally has enough of this game. They crafted a {artifact_emoji} **{artifact_name}** and are now off to play ~~Roblox~~ Minecraft.'
+                    )
+                    event = 'artifacts_shiny_pickaxe'
                 else:
                     description = (
                         f'**{user.name}** found some dusty old parts and crafted a {artifact_emoji} **{artifact_name}** '
@@ -2099,188 +2153,114 @@ class AutoFlexCog(commands.Cog):
                 time_travel_count_new = user_settings.time_travel_count + 1
                 trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
                 await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
-                if time_travel_count_new == 1:
-                    event = 'time_travel_1'
-                    description = (
-                        f'**{user.name}** just reached their very **first** {emojis.TIME_TRAVEL} **time travel**!\n'
-                        f'Congratulations, we are expecting great things of you!'
-                    )
-                elif time_travel_count_new == 3:
-                    event = 'time_travel_3'
-                    description = (
-                        f'**{user.name}** did it again (and again) and just reached {emojis.TIME_TRAVEL} **TT 3**!\n'
-                        f'I think they\'re getting addicted.'
-                    )
-                elif time_travel_count_new == 5:
-                    event = 'time_travel_5'
-                    description = (
-                        f'**{user.name}** is busy moving on in the world and just reached {emojis.TIME_TRAVEL} **TT 5**!\n'
-                        f'The boss in D13 can\'t wait to see you.'
-                    )
-                elif time_travel_count_new == 10:
-                    event = 'time_travel_10'
-                    description = (
-                        f'**{user.name}** is getting serious. {emojis.TIME_TRAVEL} **TT 10** achieved!\n'
-                        f'Hope you\'re not colorblind. Also I hope you don\'t expect to survive in A15.'
-                    )
-                elif time_travel_count_new == 25:
-                    event = 'time_travel_25'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 25**!\n'
-                        f'Good news: Welcome to the endgame!\n'
-                        f'Bad news: Hope you like dragon scale farming.'
-                    )
-                elif time_travel_count_new == 50:
-                    event = 'time_travel_50'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 50**!\n'
-                        f'Sadly they went blind after seeing the profile background they got as a reward.'
-                    )
-                elif time_travel_count_new == 100:
-                    event = 'time_travel_100'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 100**!\n'
-                        f'Damn, you must really like this game. I just hope you still remember your family.\n'
-                        f'Nothing more I can teach you anyway. Wdym I never taught you anything? Ungrateful brat.'
-                    )
-                elif time_travel_count_new == 150:
-                    event = 'time_travel_150'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 150**!\n'
-                        f'I\'m starting to question your life choices.\n'
-                        f'You can stop playing now btw, there will be no more backgrounds.\n'
-                    )
-                elif time_travel_count_new == 200:
-                    event = 'time_travel_200'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **TT 200**!\n'
-                        f'What on earth made you do this 200 times? You mad?\n'
-                    )
-                elif time_travel_count_new == 300:
-                    event = 'time_travel_300'
-                    description = (
-                        f'**{user.name}** reached {emojis.TIME_TRAVEL} **SPARTA**!\n'
-                    )
-                elif time_travel_count_new == 400:
-                    event = 'time_travel_400'
-                    description = (
-                        f'Public Service Alert! **{user.name}** traveled in time **400** times {emojis.TIME_TRAVEL}!\n'
-                        f'As to why tho... I couldn\'t say.'
-                    )
-                elif time_travel_count_new == 420:
-                    event = 'time_travel_420'
-                    description = (
-                        f'**4:20 {user.name}**. The usual place.'
-                    )
-                elif time_travel_count_new == 500:
-                    event = 'time_travel_500'
-                    description = (
-                        f'Did you see that? It\'s **{user.name}** plopping through time. For the freaking **500**th time.\n'
-                        f'{emojis.TIME_TRAVEL}\n'
-                    )
-                elif time_travel_count_new == 600:
-                    event = 'time_travel_600'
-                    description = (
-                        f'Pretty sury **{user.name}** forgot by now which time they actually belong to after '
-                        f'**600** {emojis.TIME_TRAVEL} time travels.\n'
-                    )
-                elif time_travel_count_new == 700:
-                    event = 'time_travel_700'
-                    description = (
-                        f'Did you know that there is such a thing as playing a game too much? **{user.name}** can.\n'
-                        f'They just reached **700** {emojis.TIME_TRAVEL} time travels, and it scares me.\n'
-                    )
-                elif time_travel_count_new == 800:
-                    event = 'time_travel_800'
-                    description = (
-                        f'**800** {emojis.TIME_TRAVEL} time travels. It\'s rather crazy. But I get it now - '
-                        f'**{user.name}** is probably training for the time olympics on Galifrey.'
-                    )
-                elif time_travel_count_new == 900:
-                    event = 'time_travel_900'
-                    description = (
-                        f'Ted just called **{user.name}** and wanted his phone booth back. After learning it was '
-                        f'used for **900** {emojis.TIME_TRAVEL} time travels, he was too scared to take it back tho.'
-                    )
-                elif time_travel_count_new == 999:
-                    event = 'time_travel_999'
-                    description = (
-                        f'**{user.name}** traveled in time **999** times and thus broke Epic RPG Guide. Good job.\n'
-                        f'Hope you\'re proud. Damn it.'
-                    )
-                elif time_travel_count_new == 1_100:
-                    event = 'time_travel_1100'
-                    description = (
-                        f'**{user.name}** needs therapy. I mean time traveled **1,100** times.'
-                    )
-                elif time_travel_count_new == 1_200:
-                    event = 'time_travel_1200'
-                    description = (
-                        f'**{user.name}** time traveled **1,200** times which makes them rather smol if you ask me.'
-                    )
-                elif time_travel_count_new == 1_300:
-                    event = 'time_travel_1300'
-                    description = (
-                        f'**{user.name}** is increasing their time travel count to **1,300**.\n'
-                        f'Now, some people would call a doctor at this point. Maybe even **the** doctor.'
-                    )
-                elif time_travel_count_new == 1_400:
-                    event = 'time_travel_1400'
-                    description = (
-                        f'La laaa laaaah, dee daaaahh, running out of ideas, shoo beee dooo...\n'
-                        f'What happened, you ask? Well, **{user.name}** reached TT **1,400**. The usual.'
-                    )
-                elif time_travel_count_new == 1_500:
-                    event = 'time_travel_1500'
-                    description = (
-                        f'One thousand five hundred time travels.\n'
-                        f'**{user.name}** seems to quite mad.'
-                    )
-                elif time_travel_count_new == 1_600:
-                    event = 'time_travel_1600'
-                    description = (
-                        f'Ah. Time. A beautiful concept. Some even travel through it.\n'
-                        f'And then there\'s **{user.name}**, doing it freaking **1,600** times.'
-                    )
-                elif time_travel_count_new == 1_700:
-                    event = 'time_travel_1700'
-                    description = (
-                        f'Did you hear that? I think some fuse blew.\n'
-                        f'Ah yes. Must be **{user.name}**\'s time machine, it finally broke after **1,700** time travels.'
-                    )
-                elif time_travel_count_new == 1_800:
-                    event = 'time_travel_1800'
-                    description = (
-                        f'Let me introduce you to **{user.name}**, the person who time traveled **1,800** times.\n'
-                        f'I\'m afraid they got quite a few screws loose.'
-                    )
-                elif time_travel_count_new == 1_900:
-                    event = 'time_travel_1900'
-                    description = (
-                        f'If you see this, then someone triggered it. **{user.name}**, to be exact.\n'
-                        f'The problem is, it requires **1,900** time travels to trigger this.\n'
-                        f'Make of that what you will.'
-                    )
-                elif time_travel_count_new == 2_000:
-                    event = 'time_travel_2000'
-                    description = (
-                        f'Once upon a time, **{user.name}** found a game called EPIC RPG.\n'
-                        f'It was quite a nice little game, so they decided to play a bit, maybe even TT once or thrice.\n'
-                        f'They happened to like it, so they kept going a bit longer.\n'
-                        f'They kept going.\n'
-                        f'And going.\n'
-                        f'They grew older.\n'
-                        f'Still going.\n'
-                        f'Jesus, why don\'t they stop.\n'
-                        f'Call an ambulance.\n'
-                        f'Is this normal?\n'
-                        f'SOMEONE HELP THEM.\n'
-                        f'Oh lord.\n'
-                        f'STILL GOING.\n'
-                        f'Oh god. They reached **2,000** time travels.\n'
-                        f'Stawp.'
-                    )
+                event = f'time_travel_{time_travel_count_new}'
+                try:
+                    description = TIME_TRAVEL_DESCRIPTIONS[event].replace('{user_name}', user.name)
+                except KeyError:
+                    return
+                await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
+                                                  description)
+
+            # Time travels from unsealing eternity
+            search_strings = [
+                "unsealed **the eternity**", #English
+                "unsealed **the eternity**", #TODO: Spanish
+                "unsealed **the eternity**", #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                guild_settings: guilds.Guild = await guilds.get_guild(message.guild.id)
+                if not guild_settings.auto_flex_enabled: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_name_match = re.search(regex.NAME_FROM_MESSAGE_START, message_content)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_UNSEAL_ETERNITY,
+                                                    user_name=user_name)
+                        )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in auto flex eternity unseal message.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if (not user_settings.bot_enabled or not user_settings.auto_flex_enabled
+                    or user_settings.time_travel_count is None): return
+
+                time_travel_match = re.search(r'\s([\d,]+?)\s<', message_content)
+                time_travel_count_old = user_settings.time_travel_count
+                time_travel_count_new = time_travel_count_old + int(time_travel_match.group(1).replace(',',''))
+                trade_daily_total = floor(100 * (time_travel_count_new + 1) ** 1.35)
+                await user_settings.update(time_travel_count=time_travel_count_new, trade_daily_total=trade_daily_total)
+
+                if time_travel_count_old < 1 and time_travel_count_new >= 1:
+                    time_travel_flex_count = 1
+                elif time_travel_count_old < 3 and time_travel_count_new >= 3:
+                    time_travel_flex_count = 3
+                elif time_travel_count_old < 5 and time_travel_count_new >= 5:
+                    time_travel_flex_count = 5
+                elif time_travel_count_old < 10 and time_travel_count_new >= 10:
+                    time_travel_flex_count = 10
+                elif time_travel_count_old < 25 and time_travel_count_new >= 25:
+                    time_travel_flex_count = 25
+                elif time_travel_count_old < 50 and time_travel_count_new >= 50:
+                    time_travel_flex_count = 50
+                elif time_travel_count_old < 100 and time_travel_count_new >= 100:
+                    time_travel_flex_count = 100
+                elif time_travel_count_old < 150 and time_travel_count_new >= 150:
+                    time_travel_flex_count = 150
+                elif time_travel_count_old < 200 and time_travel_count_new >= 200:
+                    time_travel_flex_count = 200
+                elif time_travel_count_old < 300 and time_travel_count_new >= 300:
+                    time_travel_flex_count = 300
+                elif time_travel_count_old < 400 and time_travel_count_new >= 400:
+                    time_travel_flex_count = 400
+                elif time_travel_count_old < 420 and time_travel_count_new >= 420:
+                    time_travel_flex_count = 420
+                elif time_travel_count_old < 500 and time_travel_count_new >= 500:
+                    time_travel_flex_count = 500
+                elif time_travel_count_old < 600 and time_travel_count_new >= 600:
+                    time_travel_flex_count = 600
+                elif time_travel_count_old < 700 and time_travel_count_new >= 700:
+                    time_travel_flex_count = 700
+                elif time_travel_count_old < 800 and time_travel_count_new >= 800:
+                    time_travel_flex_count = 800
+                elif time_travel_count_old < 900 and time_travel_count_new >= 900:
+                    time_travel_flex_count = 900
+                elif time_travel_count_old < 999 and time_travel_count_new >= 999:
+                    time_travel_flex_count = 999
+                elif time_travel_count_old < 1_100 and time_travel_count_new >= 1_100:
+                    time_travel_flex_count = 1_100
+                elif time_travel_count_old < 1_200 and time_travel_count_new >= 1_200:
+                    time_travel_flex_count = 1_200
+                elif time_travel_count_old < 1_300 and time_travel_count_new >= 1_300:
+                    time_travel_flex_count = 1_300
+                elif time_travel_count_old < 1_400 and time_travel_count_new >= 1_400:
+                    time_travel_flex_count = 1_400
+                elif time_travel_count_old < 1_500 and time_travel_count_new >= 1_500:
+                    time_travel_flex_count = 1_500
+                elif time_travel_count_old < 1_600 and time_travel_count_new >= 1_600:
+                    time_travel_flex_count = 1_600
+                elif time_travel_count_old < 1_700 and time_travel_count_new >= 1_700:
+                    time_travel_flex_count = 1_700
+                elif time_travel_count_old < 1_800 and time_travel_count_new >= 1_800:
+                    time_travel_flex_count = 1_800
+                elif time_travel_count_old < 1_900 and time_travel_count_new >= 1_900:
+                    time_travel_flex_count = 1_900
+                elif time_travel_count_old < 2_000 and time_travel_count_new >= 2_000:
+                    time_travel_flex_count = 2_000
+                elif time_travel_count_old < 1_000_000 and time_travel_count_new >= 1_000_000:
+                    time_travel_flex_count = 1_000_000
                 else:
+                    return
+                event = f'time_travel_{time_travel_flex_count}'
+                try:
+                    description = TIME_TRAVEL_DESCRIPTIONS[event].replace('{user_name}', user.name)
+                except KeyError:
                     return
                 await self.send_auto_flex_message(message, guild_settings, user_settings, user, event,
                                                   description)

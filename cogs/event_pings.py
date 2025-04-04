@@ -61,6 +61,11 @@ class EventPingsCog(commands.Cog):
                 'type `fight`': 'miniboss', #Miniboss, English
                 'para ayudar y boostear': 'miniboss', #Miniboss, Spanish
                 'para ajudar e boostar': 'miniboss', #Miniboss, Portuguese
+                'golden wolf': 'rare_hunt_monster', #Rare hunt monster, mob 1
+                'ruby zombie': 'rare_hunt_monster', #Rare hunt monster, mob 2
+                'diamond unicorn': 'rare_hunt_monster', #Rare hunt monster, mob 3
+                'emerald mermaid': 'rare_hunt_monster', #Rare hunt monster, mob 4
+                'sapphire killer robot': 'rare_hunt_monster', #Rare hunt monster, mob 5
                 
             }
             search_strings_value = (
@@ -80,6 +85,7 @@ class EventPingsCog(commands.Cog):
                 'participar da convocação', #Lootbox summoning, Portuguese
                 'time to fight', #Legendary boss
                 'epicrpgsword', #Miniboss
+                'get that pickaxe', #Rare hunt monster
             )
             if (any(search_string in field_0_name.lower() for search_string in search_strings_name.keys())
                 and any(search_string in field_0_value.lower() for search_string in search_strings_value)):

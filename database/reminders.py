@@ -836,12 +836,7 @@ async def reduce_reminder_time_percentage(user_settings, percentage: float, acti
     ---------
     user_settings: user settings
     percentage: Percentage to reduce (1-100)
-    for half of their remaining amount.
     activities: List with the affected activities
-
-    Raises
-    ------
-    ValueError if time_reduction is neither time_delta nor the string 'half'
     """
     current_time = utils.utcnow()
     if 'hunt' in activities and user_settings.hunt_end_time > current_time:

@@ -37,12 +37,14 @@ class ProfileCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            embed_author = embed_field0_value = embed_footer = icon_url = ''
+            embed_author = embed_field0_value = embed_footer = icon_url = embed_field_values = ''
             if embed.author is not None:
                 embed_author = str(embed.author.name)
                 icon_url = embed.author.icon_url
             if embed.fields:
                 embed_field0_value = str(embed.fields[0].value)
+            for field in embed.fields:
+                embed_field_values = f'{embed_field_values}\n{field.value}'.strip()
             if embed.footer:
                 embed_footer = embed.footer.text
 
@@ -126,6 +128,51 @@ class ProfileCog(commands.Cog):
                 partner_name = partner_match.group(1) if partner_match else None
                 if partner_name != user_settings.partner_name:
                     kwargs['partner_name'] = partner_name
+
+                if kwargs:
+                    await user_settings.update(**kwargs)
+
+
+            # Update settings from eternal profile
+            search_strings = [
+                "— eternal", #All languages
+            ]
+            if any(search_string in embed_author.lower() for search_string in search_strings):
+                embed_users = []
+                interaction_user = await functions.get_interaction_user(message)
+                if interaction_user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_PROFILE_PROGRESS)
+                    )
+                    interaction_user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(interaction_user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled: return    
+                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                if user_id_match:
+                    user_id = int(user_id_match.group(1))
+                    try:
+                        embed_users.append(message.guild.get_member(user_id))
+                    except discord.NotFound:
+                        pass
+                else:
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Embed user not found in eternal profile message.', message)
+                        return
+                if interaction_user not in embed_users: return
+                
+                kwargs = {}
+                
+                # Update eternal boosts tier
+                gear_tier_matches = re.findall(r'\|\sT(\d+)\sL', embed_field_values)
+                kwargs['eternal_boosts_tier'] = int(min(gear_tier_matches))
 
                 if kwargs:
                     await user_settings.update(**kwargs)

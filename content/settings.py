@@ -1569,7 +1569,7 @@ async def embed_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: dis
         f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_epic_enabled)}\n'
         f'{emojis.BP} Pets: **Catch pet with timetraveler skill in `training`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_pets_catch_tt_enabled)}\n'
-        f'{emojis.BP} Pets: **Get OMEGA lootbox from snowman pet**: '
+        f'{emojis.BP} Pets: **Rare drops (OMEGA lootbox & time capsule)**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_pets_claim_omega_enabled)}\n'
         f'{emojis.BP} Progress: **Ascension**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_pr_ascension_enabled)}\n'

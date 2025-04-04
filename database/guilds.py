@@ -71,6 +71,7 @@ class Guild():
     event_log: EventPing
     event_lootbox: EventPing
     event_miniboss: EventPing
+    event_rare_hunt_monster: EventPing
     guild_id: int
     prefix: str
 
@@ -127,6 +128,7 @@ class Guild():
         self.event_log = new_settings.event_log
         self.event_lootbox = new_settings.event_lootbox
         self.event_miniboss = new_settings.event_miniboss
+        self.event_rare_hunt_monster = new_settings.event_rare_hunt_monster
 
     async def update(self, **kwargs) -> None:
         """Updates the guild record in the database. Also calls refresh().
@@ -190,6 +192,8 @@ class Guild():
             event_lootbox_message: str
             event_miniboss_enabled: bool
             event_miniboss_message: str
+            event_rare_hunt_monster_enabled: bool
+            event_rare_hunt_monster_message: str
             prefix: str
         """
         await _update_guild(self.guild_id, **kwargs)
@@ -264,6 +268,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             event_legendary_boss = EventPing(enabled=bool(record['event_legendary_boss_enabled']), message=record['event_legendary_boss_message']),
             event_lootbox = EventPing(enabled=bool(record['event_lootbox_enabled']), message=record['event_lootbox_message']),
             event_miniboss = EventPing(enabled=bool(record['event_miniboss_enabled']), message=record['event_miniboss_message']),
+            event_rare_hunt_monster = EventPing(enabled=bool(record['event_rare_hunt_monster_enabled']), message=record['event_rare_hunt_monster_message']),
             guild_id = record['guild_id'],
             prefix = record['prefix'],
         )
@@ -459,6 +464,8 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
         event_lootbox_message: str
         event_miniboss_enabled: bool
         event_miniboss_message: str
+        event_rare_hunt_monster_enabled: bool
+        event_rare_hunt_monster_message: str
         prefix: str
 
     Raises
