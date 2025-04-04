@@ -782,6 +782,26 @@ async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.Bri
     view.interaction = interaction
     await view.wait()
 
+    
+async def command_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
+                                       switch_view: Optional[discord.ui.View] = None) -> None:
+    """Reminder settings command (page 2)"""
+    user_settings = interaction = None
+    if switch_view is not None:
+        user_settings = getattr(switch_view, 'user_settings', None)
+        interaction = getattr(switch_view, 'interaction', None)
+        switch_view.stop()
+    if user_settings is None:
+        user_settings: users.User = await users.get_user(ctx.author.id)
+    view = views.SettingsReminders2View(ctx, bot, user_settings, embed_settings_reminders)
+    embed = await embed_settings_reminders_2(bot, ctx, user_settings)
+    if interaction is None:
+        interaction = await ctx.respond(embed=embed, view=view)
+    else:
+        await interaction.edit(embed=embed, view=view)
+    view.interaction = interaction
+    await view.wait()
+
 
 async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                             switch_view: Optional[discord.ui.View] = None) -> None:
@@ -805,7 +825,7 @@ async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bri
     
 async def command_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
                                               switch_view: Optional[discord.ui.View] = None) -> None:
-    """Server settings auto-flex command (page)"""
+    """Server settings auto-flex command (page 2)"""
     interaction = guild_settings = None
     if switch_view is not None:
         guild_settings = getattr(switch_view, 'guild_settings', None)
@@ -1204,6 +1224,7 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
         clan_alert_visible = await bool_to_text(clan_settings.alert_visible)
     auto_ready_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.auto_ready_enabled else f'{emojis.DISABLED}`Disabled`'
     ping_user_enabled = f'{emojis.ENABLED}`Enabled`' if user_settings.ready_ping_user else f'{emojis.DISABLED}`Disabled`'
+    eternity_visible = f'{emojis.ENABLED}`Enabled`' if user_settings.ready_eternity_visible else f'{emojis.DISABLED}`Disabled`'
     frequency = 'After all commands' if user_settings.ready_after_all_commands else 'After hunt only'
     message_style = 'Embed' if user_settings.ready_as_embed else 'Normal message'
     up_next_tyle = 'Timestamp' if user_settings.ready_up_next_as_timestamp else 'Static time'
@@ -1233,6 +1254,7 @@ async def embed_settings_ready(bot: bridge.AutoShardedBot, ctx: discord.Applicat
         f'{emojis.BP} **Guild channel reminder**: {clan_alert_visible}\n'
         f'{emojis.BP} **{strings.SLASH_COMMANDS["pets claim"]} type**: `{pets_claim_type}`\n'
         f'{emojis.BP} **Position of "other commands"**: `{other_field_position}`\n'
+        f'{emojis.BP} **Eternity time left**: {eternity_visible}\n'
     )
     trade_daily = (
         f'_Daily trades will only show up if you have a top hat!_\n'
@@ -1397,6 +1419,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Daily**: {await functions.bool_to_text(user_settings.alert_daily.enabled)}\n'
         f'{emojis.BP} **EPIC items**: {await functions.bool_to_text(user_settings.alert_epic.enabled)}\n'
         f'{emojis.BP} **EPIC shop restocks**: {await functions.bool_to_text(user_settings.alert_epic_shop.enabled)}\n'
+        f'{emojis.BP} **Eternity sealing**: {await functions.bool_to_text(user_settings.alert_eternity_sealing.enabled)}\n'
         f'{emojis.BP} **Farm**: {await functions.bool_to_text(user_settings.alert_farm.enabled)}\n'
         f'{emojis.BP} **Guild**: {await functions.bool_to_text(user_settings.alert_guild.enabled)}\n'
         f'{emojis.DETAIL} _For the guild channel reminder switch to `Guild settings`._\n'
@@ -1411,13 +1434,34 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
-        f'{emojis.DETAIL} _Don\'t like Navi\'s pet reminders? Get [Army Helper]({strings.LINK_ARMY_HELPER})!_\n'
+        f'{emojis.DETAIL} _Don\'t like Navi\'s pet reminders? Get _[Army Helper]({strings.LINK_ARMY_HELPER})_!_\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
         f'{emojis.BP} **Vote**: {await functions.bool_to_text(user_settings.alert_vote.enabled)}\n'
         f'{emojis.BP} **Weekly**: {await functions.bool_to_text(user_settings.alert_weekly.enabled)}\n'
         f'{emojis.BP} **Work**: {await functions.bool_to_text(user_settings.alert_work.enabled)}'
     )
+    embed = discord.Embed(
+        color = settings.EMBED_COLOR,
+        title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS (1/2)',
+        description = (
+            f'_Settings to toggle your reminders._\n'
+            f'_Note that disabling a reminder also deletes the reminder from my database._'
+        )
+    )
+    embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
+    embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
+    embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
+    return embed
+
+
+async def embed_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
+                                   user_settings: users.User) -> discord.Embed:
+    """Reminder settings embed"""
+    ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
+    reminder_channel = '`Last channel the reminder was updated in`'
+    if user_settings.reminder_channel_id is not None:
+        reminder_channel = f'<#{user_settings.reminder_channel_id}>'
     event_reminders = (
         f'{emojis.BP} **Big arena**: {await functions.bool_to_text(user_settings.alert_big_arena.enabled)}\n'
         f'{emojis.BP} **Horse race**: {await functions.bool_to_text(user_settings.alert_horse_race.enabled)}\n'
@@ -1444,15 +1488,12 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
-        title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS',
+        title = f'{ctx_author_name.upper()}\'S REMINDER SETTINGS (2/2)',
         description = (
             f'_Settings to toggle your reminders._\n'
             f'_Note that disabling a reminder also deletes the reminder from my database._'
         )
     )
-    embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
-    embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
-    embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
     embed.add_field(name='EVENT REMINDERS', value=event_reminders, inline=False)
     embed.add_field(name='SEASONAL REMINDERS', value=seasonal_reminders, inline=False)
     return embed

@@ -350,6 +350,8 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = '`chimney unstuck lol`'
         elif activity == 'maintenance':
             command = '`maintenance`'
+        elif activity == 'eternity-sealing':
+            command = '`eternity sealing`'
         elif activity == 'hunt-partner':
             command = await functions.get_slash_command(user_settings, 'hunt', False)
             command = f'{command} `({user_settings.partner_name})`'
@@ -615,6 +617,26 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                 f'**DAILY TRADES**\n'
                 f'{field_trade_daily.strip()}'
             )
+    if user_settings.ready_eternity_visible:
+        for reminder in user_reminders:
+            if reminder.activity == 'eternity-sealing':
+                current_time = utils.utcnow()
+                if user_settings.ready_up_next_as_timestamp:
+                    seal_time = utils.format_dt(reminder.end_time, 'R')
+                else:
+                    time_left = reminder.end_time - current_time
+                    timestring = await functions.parse_timedelta_to_timestring(time_left)
+                    seal_time = f'in **{timestring}**'
+                field_eternity = (
+                    f'{emojis.DETAIL} Eternity will seal itself {seal_time}.'
+                )
+                embed.add_field(name='ETERNITY UNSEALED', value=field_eternity.strip(), inline=False)
+                answer = (
+                    f'{answer}\n'
+                    f'**ETERNITY UNSEALED**\n'
+                    f'{field_eternity.strip()}'
+                )
+                break
     if user_settings.ready_up_next_visible:
         try:
             active_reminders = await reminders.get_active_user_reminders(user.id)

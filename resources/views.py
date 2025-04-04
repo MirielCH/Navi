@@ -20,7 +20,8 @@ COMMANDS_SETTINGS = {
     'Partner': settings_cmd.command_settings_partner,
     'Portals': settings_cmd.command_settings_portals,
     'Ready list': settings_cmd.command_settings_ready,
-    'Reminders': settings_cmd.command_settings_reminders,
+    'Reminders (1/2)': settings_cmd.command_settings_reminders,
+    'Reminders (2/2)': settings_cmd.command_settings_reminders_2,
     'Reminder messages': settings_cmd.command_settings_messages,
     'User': settings_cmd.command_settings_user,
 }
@@ -592,7 +593,7 @@ class SettingsRemindersView(discord.ui.View):
         self.user = ctx.author
         self.user_settings = user_settings
         self.embed_function = embed_function
-        toggled_settings_commands = {
+        toggled_settings_commands_1 = {
             'Adventure': 'alert_adventure',
             'Arena': 'alert_arena',
             'Boost items': 'alert_boosts',
@@ -602,9 +603,12 @@ class SettingsRemindersView(discord.ui.View):
             'Dungeon / Miniboss': 'alert_dungeon_miniboss',
             'EPIC items': 'alert_epic',
             'EPIC shop restocks': 'alert_epic_shop',
+            'Eternity sealing': 'alert_eternity_sealing',
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
+        }
+        toggled_settings_commands_2 = {
             'Hunt': 'alert_hunt',
             'Hunt partner': 'alert_hunt_partner',
             'Lootbox': 'alert_lootbox',
@@ -617,6 +621,53 @@ class SettingsRemindersView(discord.ui.View):
             'Weekly': 'alert_weekly',
             'Work': 'alert_work',
         }
+
+        self.add_item(components.ManageReminderBehaviourSelect(self))
+        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands_1, 'Toggle reminders (I)',
+                                                          'toggle_command_reminders_1'))
+        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands_2, 'Toggle reminders (II)',
+                                                          'toggle_command_reminders_2'))
+        self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
+
+    async def interaction_check(self, interaction: discord.Interaction) -> bool:
+        if interaction.user != self.user:
+            await interaction.response.send_message(random.choice(strings.MSG_INTERACTION_ERRORS), ephemeral=True)
+            return False
+        return True
+
+    async def on_timeout(self) -> None:
+        await self.interaction.edit(view=None)
+        self.stop()
+
+        
+class SettingsReminders2View(discord.ui.View):
+    """View with a all components to manage reminder settings (page 2).
+    Also needs the interaction of the response with the view, so do view.interaction = await ctx.respond('foo').
+
+    Arguments
+    ---------
+    ctx: Context.
+    bot: Bot.
+    user_settings: User object with the settings of the user.
+    embed_function: Function that returns the settings embed. The view expects the following arguments:
+    - bot: Bot
+    - user_settings: User object with the settings of the user
+
+    Returns
+    -------
+    None
+
+    """
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
+                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+        super().__init__(timeout=settings.INTERACTION_TIMEOUT)
+        self.ctx = ctx
+        self.bot = bot
+        self.value = None
+        self.interaction = interaction
+        self.user = ctx.author
+        self.user_settings = user_settings
+        self.embed_function = embed_function
         toggled_settings_events = {
             'Big arena': 'alert_big_arena',
             'Horse race': 'alert_horse_race',
@@ -636,9 +687,6 @@ class SettingsRemindersView(discord.ui.View):
             'Megarace': 'alert_megarace',
             'Minirace': 'alert_minirace',
         }
-        self.add_item(components.ManageReminderBehaviourSelect(self))
-        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands, 'Toggle reminders',
-                                                          'toggle_command_reminders'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))
         if toggled_settings_seasonal:

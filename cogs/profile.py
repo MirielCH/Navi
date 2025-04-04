@@ -4,10 +4,11 @@ from math import floor
 import re
 
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from cache import messages
-from database import errors, guilds, users
+from database import errors, reminders, users
 from resources import exceptions, functions, regex, settings
 
 
@@ -176,6 +177,26 @@ class ProfileCog(commands.Cog):
 
                 if kwargs:
                     await user_settings.update(**kwargs)
+
+                timestring_match = re.search(r'for\s(.+?)$', embed_footer)
+                if timestring_match:
+                    time_left = await functions.parse_timestring_to_timedelta(timestring_match.group(1).lower())
+                    bot_answer_time = message.edited_at if message.edited_at else message.created_at
+                    current_time = utils.utcnow()
+                    time_elapsed = current_time - bot_answer_time
+                    time_left -= time_elapsed
+                    reminder_message = user_settings.alert_eternity_sealing.message
+                    reminder: reminders.Reminder = (
+                        await reminders.insert_user_reminder(interaction_user.id, 'eternity-sealing', time_left,
+                                                             message.channel.id, reminder_message)
+                    )
+                    await functions.add_reminder_reaction(message, reminder, user_settings)
+                else:
+                    try:
+                        reminder = await reminders.get_user_reminder(user_settings.user_id, 'eternity-sealing')
+                        await reminder.delete()
+                    except exceptions.NoDataFoundError:
+                        pass
                     
 
 # Initialization

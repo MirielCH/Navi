@@ -53,6 +53,7 @@ class User():
     alert_epic: UserAlert
     alert_epic_shop: UserAlert
     alert_eternal_present: UserAlert
+    alert_eternity_sealing: UserAlert
     alert_farm: UserAlert
     alert_guild: UserAlert
     alert_horse_breed: UserAlert
@@ -136,6 +137,7 @@ class User():
     ready_channel_dungeon: int
     ready_channel_horse: int
     ready_embed_color: str
+    ready_eternity_visible: bool
     ready_pets_claim_active: bool
     ready_pets_claim_after_every_pet: bool
     ready_other_on_top: bool
@@ -193,6 +195,7 @@ class User():
         self.alert_epic = new_settings.alert_epic
         self.alert_epic_shop = new_settings.alert_epic_shop
         self.alert_eternal_present = new_settings.alert_eternal_present
+        self.alert_eternity_sealing = new_settings.alert_eternity_sealing
         self.alert_farm = new_settings.alert_farm
         self.alert_guild = new_settings.alert_guild
         self.alert_horse_breed = new_settings.alert_horse_breed
@@ -276,6 +279,7 @@ class User():
         self.ready_channel_dungeon = new_settings.ready_channel_dungeon
         self.ready_channel_horse = new_settings.ready_channel_horse
         self.ready_embed_color = new_settings.ready_embed_color
+        self.ready_eternity_visible = new_settings.ready_eternity_visible
         self.ready_pets_claim_active = new_settings.ready_pets_claim_active
         self.ready_pets_claim_after_every_pet = new_settings.ready_pets_claim_after_every_pet
         self.ready_other_on_top = new_settings.ready_other_on_top
@@ -386,6 +390,8 @@ class User():
             alert_eternal_present_enabled: bool
             alert_eternal_present_message: str
             alert_eternal_present_visible: bool
+            alert_eternity_sealing_enabled: bool
+            alert_eternity_sealing_message: str
             alert_farm_enabled: bool
             alert_farm_message: str
             alert_farm_multiplier: float
@@ -524,6 +530,7 @@ class User():
             ready_channel_dungeon: int
             ready_channel_horse: int
             ready_embed_color: str
+            ready_eternity_visible: bool
             ready_pets_claim_active: bool
             ready_pets_claim_after_every_pet: bool
             ready_other_on_top: bool
@@ -700,6 +707,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                               message=record['alert_eternal_present_message'],
                                               multiplier=1.0,
                                               visible=bool(record['alert_eternal_present_visible'])),
+            alert_eternity_sealing = UserAlert(enabled=bool(record['alert_eternity_sealing_enabled']),
+                                               message=record['alert_eternity_sealing_message'],
+                                               multiplier=1.0,
+                                               visible=False),
             alert_farm = UserAlert(enabled=bool(record['alert_farm_enabled']),
                                    message=record['alert_farm_message'],
                                    multiplier=float(record['alert_farm_multiplier']),
@@ -851,6 +862,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             ready_channel_dungeon = record['ready_channel_dungeon'],
             ready_channel_horse = record['ready_channel_horse'],
             ready_embed_color = record['ready_embed_color'],
+            ready_eternity_visible = bool(record['ready_eternity_visible']),
             ready_other_on_top = bool(record['ready_other_on_top']),
             ready_pets_claim_active = bool(record['ready_pets_claim_active']),
             ready_pets_claim_after_every_pet = bool(record['ready_pets_claim_after_every_pet']),
@@ -1094,6 +1106,8 @@ async def _update_user(user: User, **kwargs) -> None:
         alert_eternal_present_enabled: bool
         alert_eternal_present_message: str
         alert_eternal_present_visible: bool
+        alert_eternity_sealing_enabled: bool
+        alert_eternity_sealing_message: str
         alert_farm_enabled: bool
         alert_farm_message: str
         alert_farm_multiplier: float
@@ -1232,6 +1246,7 @@ async def _update_user(user: User, **kwargs) -> None:
         ready_channel_dungeon: int
         ready_channel_horse: int
         ready_embed_color: str
+        ready_eternity_visible: bool
         ready_pets_claim_active: bool
         ready_pets_claim_after_every_pet: bool
         ready_other_on_top: bool

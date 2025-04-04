@@ -97,6 +97,7 @@ EXTENSIONS: list[str] = [
         'cogs.dungeon_miniboss',
         'cogs.epic_items',
         'cogs.epic_shop',
+        'cogs.eternity',
         'cogs.event_pings',
         'cogs.events',
         'cogs.farm',

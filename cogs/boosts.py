@@ -243,9 +243,9 @@ class BoostsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
-                timestring_match = re.search(r'for \*\*(.+?)\*\*:', message_content.lower())
                 time_left_hours = 1
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -342,7 +342,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left_hours = 1
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -381,7 +382,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left_hours = 2.5
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message
@@ -420,7 +422,8 @@ class BoostsCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
                 time_left_hours = 4
-                if user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
                 time_left = timedelta(hours=time_left_hours)
                 reminder_message = (
                         user_settings.alert_boosts.message

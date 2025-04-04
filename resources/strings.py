@@ -133,6 +133,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'epic': '{name} Hey! Your EPIC item cooldown is ready!',
     'epic-shop': '{name} Hey! The {epic_shop_emoji} **{epic_shop_item}** is back on sale in the {command}!',
     'eternal-presents': '{name} Hey! It''s time to {command} your ETERNAL presents! Make sure you open all of them in **one** command!',
+    'eternity-sealing': '{name} Hey! The eternity just sealed itself!',
     'farm': DEFAULT_MESSAGE,
     'guild': DEFAULT_MESSAGE,
     'horse': DEFAULT_MESSAGE,
@@ -327,6 +328,7 @@ ACTIVITIES: Final[tuple[str, ...]] = (
     'dungeon-miniboss',
     'epic',
     'epic-shop',
+    'eternity-sealing',
     'eternal-presents',
     'farm',
     'guild',
@@ -544,6 +546,7 @@ ACTIVITIES_ALIASES: Final[dict[str, str]] = {
     'hunt-together': 'hunt-partner',
     'partner-hunt': 'hunt-partner',
     'huntpartner': 'hunt-partner',
+    'eternity': 'eternity-sealing',
 }
 
 ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
@@ -571,6 +574,7 @@ ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
     'epic': 'alert_epic',
     'epic-shop': 'alert_epic_shop',
     'eternal-presents': 'alert_eternal_present',
+    'eternity-sealing': 'alert_eternity_sealing',
     'farm': 'alert_farm',
     'fish-potion': 'alert_boosts',
     'guild': 'alert_guild',

@@ -365,6 +365,7 @@ class ManageReadySettingsSelect(discord.ui.Select):
         message_style = 'normal message' if view.user_settings.ready_as_embed else 'embed'
         user_ping_emoji = emojis.ENABLED if view.user_settings.ready_ping_user else emojis.DISABLED
         trade_daily_emoji = emojis.ENABLED if view.user_settings.ready_trade_daily_visible else emojis.DISABLED
+        eternity_emoji = emojis.ENABLED if view.user_settings.ready_eternity_visible else emojis.DISABLED
         trade_daily_done_emoji = emojis.ENABLED if view.user_settings.ready_trade_daily_completed_visible else emojis.DISABLED
         up_next_reminder_emoji = emojis.ENABLED if view.user_settings.ready_up_next_visible else emojis.DISABLED
         up_next_style = 'static time' if view.user_settings.ready_up_next_as_timestamp else 'timestamp'
@@ -397,6 +398,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
                                                 value='toggle_pets_claim'))
         options.append(discord.SelectOption(label=f'Show "other commands" {other_position}',
                                             value='toggle_other_position', emoji=None))
+        options.append(discord.SelectOption(label=f'Eternity time left',
+                                            value='toggle_eternity_visible', emoji=eternity_emoji))
         options.append(discord.SelectOption(label='Daily trades',
                                             value='toggle_trade_daily', emoji=trade_daily_emoji))
         options.append(discord.SelectOption(label='Daily trades when done',
@@ -452,6 +455,8 @@ class ManageReadySettingsSelect(discord.ui.Select):
             )
         elif select_value == 'toggle_other_position':
             await self.view.user_settings.update(ready_other_on_top=not self.view.user_settings.ready_other_on_top)
+        elif select_value == 'toggle_eternity_visible':
+            await self.view.user_settings.update(ready_eternity_visible=not self.view.user_settings.ready_eternity_visible)
         elif select_value == 'toggle_pets_claim':
             await self.view.user_settings.update(
                 ready_pets_claim_after_every_pet=not self.view.user_settings.ready_pets_claim_after_every_pet
