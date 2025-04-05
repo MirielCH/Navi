@@ -145,7 +145,7 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match 
     return match
 
 
-# --- Time calculations ---
+# --- Get members ---
 async def get_guild_member_by_name(guild: discord.Guild | None, user_name: str) -> List[discord.Member]:
     """Returns all guild members found by the given name"""
     members: list[discord.Member] = []
@@ -160,6 +160,7 @@ async def get_guild_member_by_name(guild: discord.Guild | None, user_name: str) 
     return members
 
 
+# --- Time calculations ---
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
     """Returns the time left for a reminder based on a cooldown."""
     slash_command: bool = True if message.interaction is not None else False

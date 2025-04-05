@@ -138,7 +138,8 @@ class ProfileCog(commands.Cog):
             search_strings = [
                 "— eternal", #All languages
             ]
-            if any(search_string in embed_author.lower() for search_string in search_strings):
+            if (any(search_string in embed_author.lower() for search_string in search_strings)
+                and not 'enchant' in embed_author.lower()):
                 embed_users = []
                 interaction_user = await functions.get_interaction_user(message)
                 if interaction_user is None:
