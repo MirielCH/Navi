@@ -84,7 +84,7 @@ class HuntCog(commands.Cog):
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if user_name_match is None:
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Embed user not found in hunt cooldown message.', message)
@@ -163,7 +163,7 @@ class HuntCog(commands.Cog):
                 event_players = embed.fields[0].value.split('\n')[0]
                 players_found = re.findall(r'\s(.+?)(?:,|$)', event_players)
                 for user_name in players_found:
-                    users_found = await functions.get_guild_member_by_name(message.guild, user_name)
+                    users_found = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if users_found:
                         try:
                             user_settings = await users.get_user(users_found[0].id)

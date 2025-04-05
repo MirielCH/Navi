@@ -106,7 +106,7 @@ class HelperPetsCog(commands.Cog):
                                     return
                                 user = user_command_message.author
                             else:
-                                guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                                guild_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                                 if len(guild_users) > 1: return
                                 if not guild_users:
                                     await functions.add_warning_reaction(message)

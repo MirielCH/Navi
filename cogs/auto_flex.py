@@ -990,7 +990,7 @@ class AutoFlexCog(commands.Cog):
                 item_name = match.group(4)
                 event = item_events.get(item_name.lower().replace('**',''), None)
                 if event is None: return
-                guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                guild_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                 if len(guild_users) > 1:
                     await functions.add_warning_reaction(message)
                     await message.channel.send(
@@ -1376,7 +1376,7 @@ class AutoFlexCog(commands.Cog):
                 event = item_events.get(item_name.lower().replace('**',''), None)
                 if event is None: return
                 if user is None:
-                    guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    guild_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if len(guild_users) > 1:
                         await functions.add_warning_reaction(message)
                         await message.reply(

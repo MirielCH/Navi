@@ -234,7 +234,7 @@ class ChristmasCog(commands.Cog):
                     user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                     if user_name_match:
                         user_name = user_name_match.group(1)
-                        embed_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if not user_name_match or not embed_users:
                         await functions.add_warning_reaction(message)
                         return

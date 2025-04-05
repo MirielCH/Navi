@@ -43,7 +43,7 @@ class HorseFestivalCog(commands.Cog):
                         user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
                         if user_name_match:
                             user_name = user_name_match.group(1)
-                            user = await functions.get_guild_member_by_name(message_after.guild, user_name)
+                            user = await functions.get_member_by_name(self.bot, message_after.guild, user_name)
                         else:
                             await functions.add_warning_reaction(message_after)
                             await errors.log_error('User not found in minirace embed.', message_after)
@@ -389,7 +389,7 @@ class HorseFestivalCog(commands.Cog):
                         await errors.log_error('User not found in megarace boost done message.', message)
                         return
                     user_name = user_name_match.group(1)
-                    guild_users = await functions.get_guild_member_by_name(message.guild, user_name)
+                    guild_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
                     if not guild_users: return
                     if len(guild_users) > 1:
                         await functions.add_warning_reaction(message)
