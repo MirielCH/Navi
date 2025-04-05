@@ -40,12 +40,35 @@ class TrackingCog(commands.Cog):
                 break
         if ctx.message.mentions:
             user = ctx.message.mentions[0]
+        args = ' '.join(args)
+        if not user:
+            user_id_match = re.match(r'(\b[\d]{16,20}\b)', args)
+            if user_id_match:
+                user = self.bot.get_user(int(user_id_match.group(1)))
+                if not user:
+                    await ctx.reply(f'No user found with id `{user_id_match.group(1)}`.')
+                    return
+        if user:
             if user.bot:
                 await ctx.reply('Imagine trying to check the reminders of a bot.')
                 return
-        args = ''.join(args)
-        timestring = re.sub(r'<@!?[0-9]+>', '', args.lower())
-        if timestring == '': timestring = None
+        weeks_match = re.search(r'(\d+\s*w)', args.lower())
+        days_match = re.search(r'(\d+\s*d)', args.lower())
+        hours_match = re.search(r'(\d+\s*h)', args.lower())
+        minutes_match = re.search(r'(\d+\s*m)', args.lower())
+        seconds_match = re.search(r'(\d+\s*s)', args.lower())
+        timestring = ''
+        if weeks_match:
+            timestring = weeks_match.group(1)
+        if days_match:
+            timestring = f'{timestring}{days_match.group(1)}'
+        if hours_match:
+            timestring = f'{timestring}{hours_match.group(1)}'
+        if minutes_match:
+            timestring = f'{timestring}{minutes_match.group(1)}'
+        if seconds_match:
+            timestring = f'{timestring}{seconds_match.group(1)}'
+        if not timestring: timestring = None
         await tracking_cmd.command_stats(self.bot, ctx, timestring, user)
 
     # Events

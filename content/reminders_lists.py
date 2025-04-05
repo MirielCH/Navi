@@ -628,7 +628,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                     timestring = await functions.parse_timedelta_to_timestring(time_left)
                     seal_time = f'in **{timestring}**'
                 field_eternity = (
-                    f'{emojis.DETAIL} Eternity will seal itself {seal_time}.'
+                    f'{emojis.DETAIL} Eternity will seal {seal_time}.'
                 )
                 embed.add_field(name='ETERNITY UNSEALED', value=field_eternity.strip(), inline=False)
                 answer = (

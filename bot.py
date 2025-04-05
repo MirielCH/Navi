@@ -92,6 +92,7 @@ EXTENSIONS: list[str] = [
         'cogs.clan',
         'cogs.current_area',
         'cogs.daily',
+        'cogs.data',
         'cogs.dev',
         'cogs.duel',
         'cogs.dungeon_miniboss',
