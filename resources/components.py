@@ -757,7 +757,10 @@ class RemoveAltSelect(discord.ui.Select):
         options = []
         for alt_id in view.user_settings.alts:
             alt = view.bot.get_user(alt_id)
-            label = str(alt_id) if alt is None else alt.global_name
+            if alt is None:
+                label = str(alt_id)
+            else:
+                alt.global_name if alt.global_name is not None else alt.name
             options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emojis.REMOVE))
         super().__init__(placeholder='Remove alts', min_values=1, max_values=1,
                          options=options, row=row,
