@@ -1151,18 +1151,22 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
     if user_settings.multiplier_management_enabled:
         if (new_area == 20 and user_settings.current_area != 20
             or new_area != 20 and user_settings.current_area == 18):
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+        
+            activities = strings.ACTIVITIES_COLUMNS
+        
+            kwargs[f"{activities['adventure']}_multiplier"] = 1
+            kwargs[f"{activities['card-hand']}_multiplier"] = 1
+            kwargs[f"{activities['daily']}_multiplier"] = 1
+            kwargs[f"{activities['duel']}_multiplier"] = 1
+            kwargs[f"{activities['epic']}_multiplier"] = 1
+            kwargs[f"{activities['farm']}_multiplier"] = 1
+            kwargs[f"{activities['hunt']}_multiplier"] = 1
+            kwargs[f"{activities['lootbox']}_multiplier"] = 1
+            kwargs[f"{activities['quest']}_multiplier"] = 1
+            kwargs[f"{activities['training']}_multiplier"] = 1
+            kwargs[f"{activities['weekly']}_multiplier"] = 1
+            kwargs[f"{activities['work']}_multiplier"] = 1
+
     await user_settings.update(**kwargs)
 
 
