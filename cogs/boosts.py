@@ -116,7 +116,7 @@ class BoostsCog(commands.Cog):
                     if active_item_activity == 'dragon-breath-potion': potion_dragon_breath_active = True
                     if active_item_activity == 'round-card': round_card_active = True
                     if active_item_activity == 'flask-potion': potion_flask_active = True
-                    if active_item_activity in ('mega-boost', 'potion-potion'): auto_healing_active = True
+                    if active_item_activity in ('mega-boost', 'potion-potion', 'egg-blessing'): auto_healing_active = True
                     if not user_settings.alert_boosts.enabled: continue
                     active_item_emoji = emojis.BOOSTS_EMOJIS.get(active_item_activity, '')
                     time_string = active_item_match.group(2)
@@ -295,7 +295,7 @@ class BoostsCog(commands.Cog):
                     await user_settings.update(potion_dragon_breath_active=True)
                 if item_activity == 'round-card':
                     await user_settings.update(round_card_active=True)
-                if item_activity == 'potion-potion':
+                if item_activity in ('potion-potion', 'egg-blessing', 'mega-boost'):
                     await user_settings.update(auto_healing_active=True)
                 if not user_settings.alert_boosts.enabled: return
                 item_emoji = emojis.BOOSTS_EMOJIS.get(item_activity, '')
@@ -435,6 +435,146 @@ class BoostsCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'christmas-boost', time_left,
                                                          message.channel.id, reminder_message)
                 )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # Easter boost
+            search_strings = [
+                '`easter boost` successfully bought', #English
+                '`easter boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_EGG_BUY_EASTER_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the easter boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 1
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.EGG_EASTER)
+                        .replace('{boost_item}', 'easter boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'easter-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # EasteRNG boosts
+            search_strings = [
+                'got the **easterng boost', #English
+                'got the **easterng boost', #TODO: Spanish
+                'got the **easterng boost', #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_EGG_USE_SQUARE_EGG)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the easterng boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_minutes = 30
+                if user_settings.eternal_boosts_tier >= 4: time_left_minutes *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_minutes *= 2
+                time_left = timedelta(minutes=time_left_minutes)
+                search_patterns = [
+                    r'the \*\*(.+?)\*\*!', #English
+                    r'the \*\*(.+?)\*\*!', #TODO: Spanish
+                    r'the \*\*(.+?)\*\*!', #TODO: Portuguese
+                ]
+                boost_name_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                boost_name = boost_name_match.group(1)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.EGG_SQUARE)
+                        .replace('{boost_item}', boost_name)
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, boost_name.replace(' ', '-'), time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
+            # Egg blessing boost
+            search_strings = [
+                'has the egg blessing boost for', #English
+                'has the egg blessing boost for', #TODO: Spanish
+                'has the egg blessing boost for', #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    search_patterns = [
+                       r"blessed \*\*(.+?)\*\*!", #English
+                       r"blessed \*\*(.+?)\*\*!", #TODO: Spanish
+                       r"blessed \*\*(.+?)\*\*!", #TODO: Portuguese
+                    ]
+                    user_name_match = await functions.get_match_from_patterns(search_patterns, message_content.lower())
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_EGG_GOD,
+                                                    user_name=user_name_match.group(1))
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the egg blessing boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_days = 30
+                if user_settings.eternal_boosts_tier >= 4: time_left_days *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_days *= 2
+                time_left = timedelta(days=time_left_days)
+                boost_name_match = re.search(r'\s\*\*(.+?)\*\*!', message_content.lower())
+                boost_name = boost_name_match.group(1)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.BUNNY_GOD)
+                        .replace('{boost_item}', 'egg-blessing')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'egg-blessing', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                if not user_settings.auto_healing_active:
+                    await user_settings.update(auto_healing_active=True)
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
