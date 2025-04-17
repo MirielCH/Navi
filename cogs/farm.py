@@ -170,7 +170,7 @@ class FarmCog(commands.Cog):
                     if crop_match is None:
                         search_patterns = [
                             r'give you ([0-9,]+) <.+> (.+?), ', #English, TOP
-                            r'give you ([0-9,]+) <.+> (.+?), ', #TODO: Spanish, TOP
+                            r'regalarte ([0-9,]+) <.+> (.+?), ', #Spanish, TOP
                             r'give you ([0-9,]+) <.+> (.+?), ', #TODO: Portuguese, TOP
                         ]
                         crop_match = await functions.get_match_from_patterns(search_patterns, message_content)

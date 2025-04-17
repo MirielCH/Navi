@@ -413,7 +413,7 @@ class HuntCog(commands.Cog):
                     )
                     reminder_created = True
                 if (user_settings.alert_hunt_partner.enabled and time_left_partner_hunt >= timedelta(0) and together
-                    and not user_settings.hunt_reminders_combined):
+                    and not user_settings.hunt_reminders_combined and partner is not None):
                     reminder_message = (user_settings.alert_hunt_partner.message.replace('{command}', hunt_command)
                                         .replace('{partner}', user_settings.partner_name))
                     reminder: reminders.Reminder = (
