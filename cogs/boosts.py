@@ -502,10 +502,23 @@ class BoostsCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
-                time_left_minutes = 30
-                if user_settings.eternal_boosts_tier >= 4: time_left_minutes *= 3
-                elif user_settings.user_pocket_watch_multiplier < 1: time_left_minutes *= 2
-                time_left = timedelta(minutes=time_left_minutes)
+                boost_tier_match = re.search(r'boost (.+?)\*\*', message_content.lower())
+                boost_tier = boost_tier_match.group(1)
+                match boost_tier:
+                    case 'i':
+                        time_left_hours = 4
+                    case 'ii':
+                        time_left_hours = 2
+                    case 'iii':
+                        time_left_hours = 3
+                    case _:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a boost tier for the easterng boost message.',
+                                               message)
+                        return
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
                 search_patterns = [
                     r'the \*\*(.+?)\*\*!', #English
                     r'the \*\*(.+?)\*\*!', #TODO: Spanish
