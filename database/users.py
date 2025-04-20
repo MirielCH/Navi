@@ -774,7 +774,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             alert_pets = UserAlert(enabled=bool(record['alert_pets_enabled']),
                                    message=record['alert_pets_message'],
                                    multiplier=1.0,
-                                   visible=record['alert_pets_visible']),
+                                   visible=bool(record['alert_pets_visible'])),
             alert_quest = UserAlert(enabled=bool(record['alert_quest_enabled']),
                                     message=record['alert_quest_message'],
                                     multiplier=float(record['alert_quest_multiplier']),

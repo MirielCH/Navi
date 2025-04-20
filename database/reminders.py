@@ -3,6 +3,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
+import re
 import sqlite3
 from typing import List, Optional, Tuple, TYPE_CHECKING, Union
 
@@ -814,16 +815,30 @@ async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, s
                 raise ValueError('Argument "time_reduction" is neither a timedelta nor the string \'half\'.')
         else:
             reduced_time = time_reduction
+        reminder_message = reminder.message
         new_end_time = reminder.end_time - reduced_time
         time_left = new_end_time - current_time
+        if reminder.activity == 'hunt':
+            last_hunt_mode = user_settings.last_hunt_mode.replace('together', '').strip()
+            if not user_settings.hunt_reminders_combined:
+                try:
+                    hunt_partner_reminder = await get_user_reminder(user_settings.user_id, 'hunt-partner')
+                    if time_left.total_seconds() <= 0 and hunt_partner_reminder.end_time <= current_time:
+                        last_hunt_mode = f'{last_hunt_mode} together'
+                    elif hunt_partner_reminder.end_time <= new_end_time:
+                        last_hunt_mode = f'{last_hunt_mode} together'
+                except exceptions.NoDataFoundError:
+                    last_hunt_mode = f'{last_hunt_mode} together'
+                reminder_message = user_settings.alert_hunt.message.replace('{command}', last_hunt_mode)
+            await user_settings.update(last_hunt_mode=last_hunt_mode)
         if time_left.total_seconds() <= 0:
             scheduled_for_deletion[reminder.task_name] = reminder
             await reminder.delete()
         elif 1 <= time_left.total_seconds() <= 15:
-            await reminder.update(end_time=new_end_time, triggered=True)
+            await reminder.update(end_time=new_end_time, triggered=True, message=reminder_message)
             scheduled_for_tasks[reminder.task_name] = reminder
         else:
-            await reminder.update(end_time=new_end_time)
+            await reminder.update(end_time=new_end_time, message=reminder_message)
 
 
 async def reduce_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:

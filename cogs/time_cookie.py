@@ -1,5 +1,6 @@
 # time_cookie.py
 
+import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -42,7 +43,7 @@ class TimeCookieCog(commands.Cog):
         if message.embeds: return
 
         # Time cookie
-        search_strings: tuple[str] = [
+        search_strings: list[str] = [
             'has traveled to the future!', #English
             'ha viajado al futuro!', #Spanish
             'viajou para o futuro!', #Portuguese
@@ -52,11 +53,11 @@ class TimeCookieCog(commands.Cog):
             user_command_message: discord.Message | None = None
             user: discord.User | discord.Member | None = await functions.get_interaction_user(message)
             if user is None:
-                search_patterns: tuple[str] = (
+                search_patterns: list[str] = [
                     r'^\*\*(.+?)\*\* eats', #English
                     r'^\*\*(.+?)\*\* come', #Spanish, Portuguese
-                )
-                user_name_match: re.Match[str] = await functions.get_match_from_patterns(search_patterns, message.content)
+                ]
+                user_name_match: re.Match[str] | None = await functions.get_match_from_patterns(search_patterns, message.content)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     user_command_message = (
@@ -73,16 +74,17 @@ class TimeCookieCog(commands.Cog):
             except exceptions.FirstTimeUserError:
                 return
             if not user_settings.bot_enabled: return
-            search_patterns: tuple[str] = (
+            search_patterns: list[str] = [
                 r'! (\d+?) minut[eo]s', #English, Spanish, Portuguese
-            )
-            time_match: re.Match[str] = await functions.get_match_from_patterns(search_patterns, message.content)
+            ]
+            time_match: re.Match[str] | None = await functions.get_match_from_patterns(search_patterns, message.content)
             if not time_match:
                 await functions.add_warning_reaction(message)
                 await errors.log_error('Time not found in time cookie message.', message)
                 return
             minutes: int = int(time_match.group(1))
             await reminders.reduce_reminder_time(user_settings, timedelta(minutes=minutes), strings.TIME_COOKIE_AFFECTED_ACTIVITIES)
+            asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'time-cookie'))
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
