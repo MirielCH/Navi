@@ -40,7 +40,7 @@ class HorseCog(commands.Cog):
             message_author = message_title = icon_url = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
-                icon_url = embed.author.icon_url
+                icon_url = str((embed.author.icon_url))
             if embed.title is not None: message_title = str(embed.title)
 
             # Horse cooldown
@@ -101,8 +101,71 @@ class HorseCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
+            # Horse breeding
+            search_strings_author = [
+               " — horse breeding", # All languages
+            ]
+            search_strings_title = [
+                f'breeding request accepted!', # English
+                f'petición de horse breeding aceptada!', # Spanish
+                f'pedido de horse breeding aceito!', # Portuguese
+            ]
+            if (any(search_string in message_author.lower() for search_string in search_strings_author) and
+                any(search_string in message_title.lower() for search_string in search_strings_title)):
+                user_id = user_name = user_command_message = None
+                breeding_users = []
+                user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else True
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_HORSE_BREEDING,
+                                                        user_name=user_name)
+                        )
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Embed user not found in horse breeding message.', message)
+                        return
+                    if user is None:
+                        user = user_command_message.author
+                breeding_users.append(user)
+                if not slash_command:
+                    for mentioned_user in user_command_message.mentions:
+                        if mentioned_user == message.author: continue
+                        breeding_users.append(mentioned_user)
+                if slash_command:
+                    breeding_partner_line = embed.description.split('\n')[1]
+                    breeding_partner_name_match = re.search(r'^\*\*(.+?)\*\* ', breeding_partner_line)
+                    breeding_partner_name = breeding_partner_name_match.group(1)
+                    guild_members = await functions.get_member_by_name(self.bot, message.guild, breeding_partner_name)
+                    breeding_users.append(guild_members[0])
+                for breeding_user in breeding_users:
+                    try:
+                        user_settings: users.User = await users.get_user(breeding_user.id)
+                    except exceptions.FirstTimeUserError:
+                        continue
+                    if not user_settings.bot_enabled or not user_settings.alert_horse_breed.enabled: continue
+                    user_command = await functions.get_slash_command(user_settings, 'horse breeding')
+                    time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'horse')
+                    if time_left < timedelta(0): continue
+                    reminder_message = user_settings.alert_horse_breed.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                       await reminders.insert_user_reminder(breeding_user.id, 'horse', time_left,
+                                                            message.channel.id, reminder_message)
+                    )           
+                    if not message.reactions:
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
         if not message.embeds:
             message_content = message.content
+            
             # Omega horse token
             search_strings = [
                 'horse cooldown got reset', #English

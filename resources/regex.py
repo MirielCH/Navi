@@ -70,6 +70,7 @@ COMMAND_HF_LIGHTSPEED: re.Pattern = re.compile(rf"\b(?:hf\b|horsefestival\b)\s+l
 COMMAND_HF_MEGARACE: re.Pattern = re.compile(rf"\b(?:hf\b|horsefestival\b)\s+megarace\b")
 COMMAND_HF_MINIRACE: re.Pattern = re.compile(rf"\b(?:hf\b|horsefestival\b)\s+minirace\b")
 COMMAND_HORSE: re.Pattern = re.compile(rf"(?:\bhorse\b\s+(?:\bbreed\b|\bbreeding\b|\brace\b)|(?:\bhorsefestival\b|\bhf\b)\s+\blightspeed\b)")
+COMMAND_HORSE_BREEDING: re.Pattern = re.compile(rf"\bhorse\b\s+\bbreed(?:ing)?\b")
 COMMAND_HORSE_RACE: re.Pattern = re.compile(rf"\bhorse\b\s+\brace\b")
 COMMAND_HUNT: re.Pattern = re.compile(rf'\bhunt\b')
 COMMAND_HUNT_ADVENTURE: re.Pattern = re.compile(rf"(?:\bhunt\b|\badv\b|\badventure\b)")

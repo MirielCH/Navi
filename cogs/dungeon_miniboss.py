@@ -125,7 +125,7 @@ class DungeonMinibossCog(commands.Cog):
                 solo_dungeon = False
                 dungeon_users = []
                 user = await functions.get_interaction_user(message)
-                slash_command = True if user is not None else True
+                slash_command = True if user is not None else False
                 search_strings_solo_dungeons = [
                     'eternality', # Eternal dungeon, all languages
                     'unlocked the next area', # Dungeons 11-15, English
@@ -189,9 +189,10 @@ class DungeonMinibossCog(commands.Cog):
                        await reminders.insert_user_reminder(dungeon_user.id, 'dungeon-miniboss', time_left,
                                                             message.channel.id, reminder_message)
                     )
+                    if not message.reactions:
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
                     if solo_dungeon:                
                         asyncio.ensure_future(functions.call_ready_command(self.bot, message, dungeon_user, user_settings, 'dungeon-miniboss'))
-                        await functions.add_reminder_reaction(message, reminder, user_settings)
 
 
         if not message.embeds:
