@@ -16,7 +16,7 @@ from resources import functions, logs, settings
 _MESSAGE_CACHE = {}
 
 async def find_message(channel_id: int, regex: Union[str, re.Pattern] = None,
-                      user: Optional[discord.User] = None, user_name: Optional[str] = None) -> discord.Message:
+                      user: Optional[discord.User | discord.Member] = None, user_name: Optional[str] = None) -> discord.Message:
     """Looks through the last 50 messages in the channel history. If a message that matches regex is found, it returns
     the message. If user and/or user_name are defined, only messages from that user are returned.
 
@@ -62,14 +62,14 @@ async def find_message(channel_id: int, regex: Union[str, re.Pattern] = None,
 
 async def store_message(message: discord.Message) -> discord.Message:
     """Adds a message to the message cache.
-    Also keeps the maximum amount of messages stored per channel at 50."""
+    Also keeps the maximum amount of messages stored per channel at 100."""
     channel_message_list = _MESSAGE_CACHE.get(message.channel.id, None)
     if channel_message_list is None:
         channel_message_list = [message,]
     else:
         channel_message_list.insert(0, message)
-    if len(channel_message_list) > 50:
-        channel_message_list = channel_message_list[:50]
+    if len(channel_message_list) > 100:
+        channel_message_list = channel_message_list[:100]
     _MESSAGE_CACHE[message.channel.id] = channel_message_list
 
 

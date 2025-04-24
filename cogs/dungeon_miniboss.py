@@ -42,7 +42,7 @@ class DungeonMinibossCog(commands.Cog):
             message_author = message_title = icon_url = message_footer = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
-                icon_url = embed.author.icon_url
+                icon_url = str(embed.author.icon_url)
             if embed.title is not None: message_title = str(embed.title)
             if embed.footer is not None: message_footer = embed.footer.text
 
@@ -101,46 +101,98 @@ class DungeonMinibossCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            # Eternal dungeon
-            search_strings = [
-               " — dungeon", #All languages
+            # Dungeons
+            search_strings_author = [
+               " — dungeon", # All languages
             ]
-            if any(search_string in message_author.lower() for search_string in search_strings) and 'eternality' in message_footer.lower():
+            search_strings_footer = [
+                'eternality', # Eternal dungeon, all languages
+                'unlocked commands:', # Dungeons 1-9, 11-14, English
+                'comandos desbloqueados:', # Dungeons 1-9, 11-14, Spanish & Portuguese
+                'unlocked the next area', # Dungeons 11-15, English
+                'unlocked the next area', # TODO: Dungeons 11-15, Spanish
+                'unlocked the next area', # TODO: Dungeons 11-15, Portuguese
+                'both have unlocked area 11', # Dungeon 10, English
+                'both have unlocked area 11', # TODO: Dungeon 10, Spanish
+                'both have unlocked area 11', # TODO: Dungeon 10, Portuguese
+                'players are still in the same area', # Dungeons 16-20, English
+                'players are still in the same area', # TODO: Dungeons 16-20, Spanish
+                'players are still in the same area', # TODO: Dungeons 16-20, Portuguese
+            ]
+            if (any(search_string in message_author.lower() for search_string in search_strings_author) and
+                any(search_string in message_footer.lower() for search_string in search_strings_footer)):
                 user_id = user_name = user_command_message = None
+                solo_dungeon = False
+                dungeon_users = []
                 user = await functions.get_interaction_user(message)
+                slash_command = True if user is not None else True
+                search_strings_solo_dungeons = [
+                    'eternality', # Eternal dungeon, all languages
+                    'unlocked the next area', # Dungeons 11-15, English
+                    'unlocked the next area', # TODO: Dungeons 11-15, Spanish
+                    'unlocked the next area', # TODO: Dungeons 11-15, Portuguese
+                ]
+                if any(search_string in message_footer.lower() for search_string in search_strings_solo_dungeons):
+                    solo_dungeon = True
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
                     if user_id_match:
                         user_id = int(user_id_match.group(1))
                         user = message.guild.get_member(user_id)
+                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                    if user_name_match:
+                        user_name = user_name_match.group(1)
+                        user_command_message = (
+                            await messages.find_message(message.channel.id, regex.COMMAND_DUNGEON,
+                                                        user_name=user_name)
+                        )
+                    else:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Embed user not found in dungeon message.', message)
+                        return
                     if user is None:
-                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
-                        if user_name_match:
-                            user_name = user_name_match.group(1)
-                            user_command_message = (
-                                await messages.find_message(message.channel.id, regex.COMMAND_DAILY,
-                                                            user_name=user_name)
-                            )
-                        if not user_name_match or user_command_message is None:
-                            await functions.add_warning_reaction(message)
-                            await errors.log_error('User not found in eternal dungeon message.', message)
-                            return
                         user = user_command_message.author
-                try:
-                    user_settings: users.User = await users.get_user(user.id)
-                except exceptions.FirstTimeUserError:
-                    return
-                if not user_settings.bot_enabled or not user_settings.alert_daily.enabled: return
-                user_command = await functions.get_slash_command(user_settings, 'dungeon')
-                time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'dungeon-miniboss')
-                if time_left < timedelta(0): return
-                reminder_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
-                reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(user.id, 'dungeon-miniboss', time_left,
-                                                         message.channel.id, reminder_message)
-                )
-                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'dungeon-miniboss'))
-                await functions.add_reminder_reaction(message, reminder, user_settings)
+                if solo_dungeon:
+                    dungeon_users.append(user)
+                else:
+                    if slash_command:
+                        dungeon_start_message = (
+                            await messages.find_message(message.channel.id, r'^dungeon `',
+                                                        user=message.author)
+                        )
+                        if not dungeon_start_message:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('Dungeon start message not found for slash dungeon.', message)
+                            return
+                        player_list = dungeon_start_message.content.split('\n')[0].split('|')[-1].strip()
+                        player_names = re.findall(r'(.+?)(?:,|$)', player_list)
+                        for player_name in player_names:
+                            guild_members = await functions.get_member_by_name(self.bot, message.guild, player_name.strip())
+                            if guild_members:
+                                dungeon_users.append(guild_members[0])
+                    if not slash_command:
+                        dungeon_users.append(user)
+                        for mentioned_user in user_command_message.mentions:
+                            if mentioned_user == message.author: continue
+                            dungeon_users.append(mentioned_user)
+                for dungeon_user in dungeon_users:
+                    try:
+                        user_settings: users.User = await users.get_user(dungeon_user.id)
+                    except exceptions.FirstTimeUserError:
+                        continue
+                    if not user_settings.bot_enabled or not user_settings.alert_dungeon_miniboss.enabled: continue
+                    user_command = await functions.get_slash_command(user_settings, 'dungeon')
+                    time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'dungeon-miniboss')
+                    if time_left < timedelta(0): continue
+                    reminder_message = user_settings.alert_dungeon_miniboss.message.replace('{command}', user_command)
+                    reminder: reminders.Reminder = (
+                       await reminders.insert_user_reminder(dungeon_user.id, 'dungeon-miniboss', time_left,
+                                                            message.channel.id, reminder_message)
+                    )
+                    if solo_dungeon:                
+                        asyncio.ensure_future(functions.call_ready_command(self.bot, message, dungeon_user, user_settings, 'dungeon-miniboss'))
+                        await functions.add_reminder_reaction(message, reminder, user_settings)
+
 
         if not message.embeds:
             message_content = message.content
