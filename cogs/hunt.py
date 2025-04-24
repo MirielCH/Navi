@@ -242,7 +242,7 @@ class HuntCog(commands.Cog):
                         user_name = user_name_match.group(1)
                         partner_name = user_name_match.group(2)
                     else:
-                        if event_mob:
+                        if event_mob and not slash_command:
                             user_command_message = (
                                 await messages.find_message(message.channel.id, regex.COMMAND_HUNT)
                             )

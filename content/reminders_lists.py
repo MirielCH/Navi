@@ -594,7 +594,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         if user_settings.trade_daily_total == 0:
             trade_daily_total = 0
             trade_daily_total_str = '?'
-            trade_daily_left = ''
+            trade_daily_left = 0
         else:
             trade_daily_total = user_settings.trade_daily_total
             trade_daily_total_str = f'{trade_daily_total:,}'
@@ -672,9 +672,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                     f'**UP NEXT**\n'
                     f'{field_up_next.strip()}'
                 )
-    if auto_ready:
-        embed.set_footer(text=f"See '/ready' if you want to disable this message.")
-
+                
     if all_settings['seasonal_event'] in strings.SEASONAL_EVENTS:
         embed.set_footer(text=f'{all_settings["seasonal_event"].replace("_"," ").capitalize()} event mode active.')
 

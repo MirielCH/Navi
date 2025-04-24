@@ -253,7 +253,7 @@ class QuestCog(commands.Cog):
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            # Quest in void areas
+            # Quest in void areas and TOP
             search_strings = [
                 'i don\'t think i can give you any quest here', #English
                 'misión aquí', #Spanish
@@ -294,6 +294,7 @@ class QuestCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'quest', time_left,
                                                          message.channel.id, reminder_message)
                 )
+                asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'quest'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
             # Epic Quest

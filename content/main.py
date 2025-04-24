@@ -68,11 +68,14 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
     embed = discord.Embed
     img_navi, embed = await embed_about(bot, ctx, api_latency)
     view: LinksView = LinksView()
-    channel_permissions = ctx.channel.permissions_for(ctx.guild.me) # TODO: Typing
-    if not channel_permissions.attach_files:
-        await interaction.edit(content=None, embed=embed, view=view)
+    if ctx.guild is not None:
+        channel_permissions = ctx.channel.permissions_for(ctx.guild.me) # TODO: Typing
+        if not channel_permissions.attach_files:
+            await interaction.edit(content=None, embed=embed, view=view)
+        else:
+            await interaction.edit(content=None, embed=embed, view=view, file=img_navi)
     else:
-        await interaction.edit(content=None, embed=embed, view=view, file=img_navi)
+        await interaction.edit(content=None, embed=embed, view=view)
 
 
 # --- Embeds ---
