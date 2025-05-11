@@ -3,7 +3,7 @@
 
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import sqlite3
 from typing import NamedTuple, Optional
 
@@ -205,7 +205,7 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
         log_entry = LogEntry(
             command = record['command'],
             command_count = record['command_count'],
-            date_time = datetime.fromisoformat(record['date_time']).replace(tzinfo=timezone.utc),
+            date_time = record['date_time'],
             entry_type = record['type'],
             guild_id = record['guild_id'],
             user_id = record['user_id'],
@@ -247,7 +247,7 @@ async def _dict_to_leaderboard_user(record: dict) -> LogEntry:
             last_4w = record['last_4w'],
             last_12m = record['last_12m'],
             report_type = 'global' if record['guild_id'] is None else 'guild',
-            updated = datetime.fromisoformat(record['updated']).replace(tzinfo=timezone.utc),
+            updated = record['updated'],
             user_id = record['user_id'],
         )
 

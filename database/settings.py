@@ -11,7 +11,7 @@ from resources import exceptions, settings, strings
 
 
 # Read Data
-async def get_settings() -> dict:
+async def get_settings() -> dict[str, str]:
     """Returns all setting from table "settings".
 
     Returns:

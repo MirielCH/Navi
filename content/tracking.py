@@ -88,7 +88,7 @@ async def embed_stats_overview(ctx: commands.Context, user: discord.User | disco
     field_last_7d: str = await design_field(timedelta(days=7), user)
     field_last_4w: str = await design_field(timedelta(days=28), user)
     field_last_1y: str = await design_field(timedelta(days=365), user)
-    field_last_tt: str = await design_field(utils.utcnow()-user_settings.last_tt, user)
+    field_last_tt: str = await design_field(utils.utcnow()-user_settings.last_tt.replace(tzinfo=timezone.utc), user)
     try:
         timestamp: float = user_settings.last_tt.timestamp()
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently

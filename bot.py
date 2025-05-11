@@ -189,8 +189,7 @@ if __name__ == '__main__':
         sys.exit()
 
     # Write startup time to database
-    startup_time: str = datetime.isoformat(utils.utcnow(), sep=' ')
-    functions.await_coroutine(settings_db.update_setting('startup_time', startup_time))
+    functions.await_coroutine(settings_db.update_setting('startup_time', utils.utcnow()))
 
     # Load cogs
     for extension in EXTENSIONS:

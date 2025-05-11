@@ -198,7 +198,7 @@ class TrackingCog(commands.Cog):
                     if not user_settings.bot_enabled: return
                     tt_time = message.created_at
                     updated_settings = {
-                        'last_tt': tt_time.isoformat(sep=' '),
+                        'last_tt': tt_time,
                         'inventory_bread': 0,
                         'inventory_carrot': 0,
                         'inventory_potato': 0,

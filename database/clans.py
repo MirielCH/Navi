@@ -3,7 +3,7 @@
 
 
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import datetime
 import sqlite3
 from typing import NamedTuple, Optional, Union
 
@@ -182,7 +182,7 @@ async def _dict_to_clan_raid(record: dict) -> ClanRaid:
         clan_raid = ClanRaid(
             clan_name = record['clan_name'],
             energy = record['energy'],
-            raid_time = datetime.fromisoformat(record['raid_time']).replace(tzinfo=timezone.utc),
+            raid_time = record['raid_time'],
             user_id = record['user_id']
         )
     except Exception as error:

@@ -1,7 +1,7 @@
 # reminders_lists.py
 """Contains reminder list commands"""
 
-from datetime import datetime, timedelta, timezone
+from datetime import timedelta
 from typing import Optional, Union
 
 import discord

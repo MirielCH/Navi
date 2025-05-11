@@ -2,9 +2,9 @@
 """Provides access to the tables "reminders_users" and "reminders_clans" in the database"""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 import sqlite3
-from typing import Optional, Union
+from typing import Any, Optional, Union
 
 from discord import utils
 from discord.ext import tasks
@@ -152,7 +152,7 @@ async def _dict_to_reminder(record: dict) -> Reminder:
             channel_id = record['channel_id'],
             clan_name = record.get('clan_name', None),
             custom_id = record.get('custom_id', None),
-            end_time = datetime.fromisoformat(record['end_time'], ).replace(tzinfo=timezone.utc),
+            end_time = record['end_time'],
             message = record['message'],
             reminder_type = reminder_type,
             task_name = task_name,
@@ -275,10 +275,8 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
     function_name = 'get_active_user_reminders'
     sql = f'SELECT * FROM {table} WHERE end_time>?'
     if end_time is None:
-        end_time_str = utils.utcnow().isoformat(sep=' ')
-    else:
-        end_time_str = end_time.isoformat(sep=' ')
-    queries = [end_time_str,]
+        end_time = utils.utcnow()
+    queries: list[Any] = [end_time,]
     if user_id is not None:
         sql = f'{sql} AND user_id=?'
         queries.append(user_id)
@@ -330,8 +328,8 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> tuple[Re
         sql = f'SELECT * FROM {table} WHERE clan_name=? AND end_time>? ORDER BY end_time'
     try:
         cur = settings.NAVI_DB.cursor()
-        current_time_str = utils.utcnow().isoformat(sep=' ')
-        cur.execute(sql, (current_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, current_time_str))
+        current_time = utils.utcnow()
+        cur.execute(sql, (current_time,)) if clan_name is None else cur.execute(sql, (clan_name, current_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -375,13 +373,11 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
         cur = settings.NAVI_DB.cursor()
         current_time = utils.utcnow()
         end_time = current_time + timedelta(seconds=15)
-        current_time_str = current_time.isoformat(sep=' ')
-        end_time_str = end_time.isoformat(sep=' ')
         triggered = False
         if user_id is None:
-            cur.execute(sql, (triggered, current_time_str, end_time_str))
+            cur.execute(sql, (triggered, current_time, end_time))
         else:
-            cur.execute(sql, (user_id, triggered, current_time_str, end_time_str))
+            cur.execute(sql, (user_id, triggered, current_time, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -426,13 +422,11 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> tuple[Remin
         cur = settings.NAVI_DB.cursor()
         current_time = utils.utcnow()
         end_time  = current_time + timedelta(seconds=15)
-        current_time_str = current_time.isoformat(sep=' ')
-        end_time_str = end_time.isoformat(sep=' ')
         triggered = False
         if clan_name is None:
-            cur.execute(sql, (triggered, current_time_str, end_time_str))
+            cur.execute(sql, (triggered, current_time, end_time))
         else:
-            cur.execute(sql, (clan_name, triggered, current_time_str, end_time_str))
+            cur.execute(sql, (clan_name, triggered, current_time, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -476,8 +470,7 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
     try:
         cur = settings.NAVI_DB.cursor()
         end_time = utils.utcnow() - timedelta(seconds=20)
-        end_time_str = end_time.isoformat(sep=' ')
-        cur.execute(sql, (end_time_str,)) if user_id is None else cur.execute(sql, (user_id, end_time_str))
+        cur.execute(sql, (end_time,)) if user_id is None else cur.execute(sql, (user_id, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -521,8 +514,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> tuple[Remin
     try:
         cur = settings.NAVI_DB.cursor()
         end_time = utils.utcnow() - timedelta(seconds=20)
-        end_time_str = end_time.isoformat(sep=' ')
-        cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time_str))
+        cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(

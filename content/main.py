@@ -1,7 +1,7 @@
 # main.py
 """Contains error handling and the help and about commands"""
 
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from humanfriendly import format_timespan
 import os
 import psutil
@@ -69,7 +69,7 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
     img_navi, embed = await embed_about(bot, ctx, api_latency)
     view: LinksView = LinksView()
     if ctx.guild is not None:
-        channel_permissions = ctx.channel.permissions_for(ctx.guild.me) # TODO: Typing
+        channel_permissions = ctx.channel.permissions_for(ctx.guild.me)
         if not channel_permissions.attach_files:
             await interaction.edit(content=None, embed=embed, view=view)
         else:
@@ -226,11 +226,11 @@ async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext | dis
     return embed
 
 
-async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_latency: timedelta) -> tuple[discord.File, discord.Embed]:
+async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext, api_latency: timedelta) -> tuple[discord.File, discord.Embed]:
     """Bot info embed"""
     user_count: int = await users.get_user_count()
     all_settings: dict[str, str] = await settings_db.get_settings()
-    uptime: timedelta = utils.utcnow() - datetime.fromisoformat(all_settings['startup_time']).replace(tzinfo=timezone.utc)
+    uptime: timedelta = utils.utcnow() - datetime.fromisoformat(all_settings['startup_time'])
     uptime: timedelta = timedelta(seconds=round(uptime.total_seconds()))
 
     general: str = (
@@ -252,7 +252,7 @@ async def embed_about(bot: bridge.AutoShardedBot, ctx: bridge.Context, api_laten
         )
     app_process: psutil.Process = psutil.Process(os.getpid())
     navi_memory: float = app_process.memory_info().vms / (1024 ** 2)
-    system_memory: psutil = psutil.virtual_memory()
+    system_memory = psutil.virtual_memory()
     system_memory_total = round(system_memory[0] / (1024 ** 2)) # TODO: Typing
     system_memory_available: int = round(system_memory[1] / (1024 ** 2))
     system_memory_used: int = system_memory_total - system_memory_available

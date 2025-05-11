@@ -109,7 +109,7 @@ class SetLastTTModal(Modal):
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send(msg_error, ephemeral=True)
             return
-        await self.view.user_settings.update(last_tt=tt_time.isoformat(sep=' '))
+        await self.view.user_settings.update(last_tt=tt_time)
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 

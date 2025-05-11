@@ -1,7 +1,7 @@
 # functions.py
 
 from argparse import ArgumentError
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from math import ceil, floor
 import re
 from typing import Any, Coroutine
@@ -14,7 +14,7 @@ from discord.utils import MISSING
 
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
-from resources import emojis, exceptions, settings, strings
+from resources import emojis, exceptions, logs, settings, strings
 
 # --- Get discord data ---
 async def get_interaction(message: discord.Message) -> discord.MessageInteraction | None:
@@ -24,7 +24,21 @@ async def get_interaction(message: discord.Message) -> discord.MessageInteractio
             message = message.reference.cached_message
         elif message.reference.message_id is not None:
             message = await message.channel.fetch_message(message.reference.message_id)
-    return message.interaction
+
+    """message.interaction is deprecated and will be removed by Discord.
+    However, the replacement message.interaction_metadata does not include the command name.
+    Which is why I'm still using the deprecated message.interaction for now.
+    This will stop working once Discord removes the deprecated attribute.
+
+    TODO:
+    - Remove the warning suppression once Discord removes the deprecated attribute.
+    - Remove usage of interaction.name in the code. This will result in degraded functionality.
+    """
+    logs.logging.captureWarnings(True)
+    interaction: discord.MessageInteraction | None = message.interaction
+    logs.logging.captureWarnings(False)
+    
+    return interaction
 
 
 async def get_interaction_user(message: discord.Message) -> discord.User | None:
@@ -173,7 +187,7 @@ async def get_member_by_name(bot: discord.AutoShardedBot, guild: discord.Guild |
 # --- Time calculations ---
 async def calculate_time_left_from_cooldown(message: discord.Message, user_settings: users.User, activity: str) -> timedelta:
     """Returns the time left for a reminder based on a cooldown."""
-    slash_command: bool = True if message.interaction is not None else False
+    slash_command: bool = True if message.interaction_metadata is not None else False
     cooldown: cooldowns.Cooldown = await cooldowns.get_cooldown(activity)
     bot_answer_time: datetime = message.edited_at if message.edited_at else message.created_at
     time_elapsed: timedelta = utils.utcnow() - bot_answer_time
@@ -830,44 +844,53 @@ async def get_training_answer_text(message: discord.Message) -> str:
     return answer
 
 
-async def get_void_training_answer_buttons(message: discord.Message, user_settings: users.User) -> str:
+async def get_void_training_answer_buttons(message: discord.Message, user_settings: users.User) -> tuple[str, dict[int, dict[str | None, tuple[str | None, discord.PartialEmoji | None, bool]]]]: 
     """Returns the answer to a void training question."""
-    all_settings = await settings_db.get_settings()
-    answer = ''
-    current_time = utils.utcnow()
-    a16_seal_time = all_settings.get('a16_seal_time', None)
-    a17_seal_time = all_settings.get('a17_seal_time', None)
-    a18_seal_time = all_settings.get('a18_seal_time', None)
-    a19_seal_time = all_settings.get('a19_seal_time', None)
-    a20_seal_time = all_settings.get('a20_seal_time', None)
-    seal_times = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
-    seal_times_areas_days = {}
-    seal_times_days = []
-    for area_no, seal_time in enumerate(seal_times, 16):
-        if seal_time is not None:
-            seal_time = datetime.fromisoformat(seal_time, ).replace(tzinfo=timezone.utc)
-            time_left = seal_time - current_time
+    all_settings: dict[str, str] = await settings_db.get_settings()
+    answer: str = ''
+    current_time: datetime = utils.utcnow()
+    a16_seal_time: str | None = all_settings.get('a16_seal_time', None)
+    a17_seal_time: str | None = all_settings.get('a17_seal_time', None)
+    a18_seal_time: str | None = all_settings.get('a18_seal_time', None)
+    a19_seal_time: str | None = all_settings.get('a19_seal_time', None)
+    a20_seal_time: str | None = all_settings.get('a20_seal_time', None)
+    seal_times: list[str | None] = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
+    seal_times_areas_days: dict[int, str] = {}
+    seal_times_days: list[str] = []
+    area_no: int
+    seal_time_str: str | None
+    for area_no, seal_time_str in enumerate(seal_times, 16):
+        if seal_time_str is not None:
+            seal_time: datetime = datetime.fromisoformat(seal_time_str)
+            time_left: timedelta = seal_time - current_time
             if seal_time > current_time:
                 seal_times_areas_days[area_no] = str(time_left.days)
                 seal_times_days.append(str(time_left.days))
-    matches = []
+    matches: list[str] = []
+    row: int  
+    action_row: discord.Component  
     for row, action_row in enumerate(message.components, start=1):
-        for button in action_row.children:
-            if button.label in seal_times_days:
-                matches.append(button.label)
-    buttons = {}
+        if isinstance(action_row, discord.ActionRow):
+            for button in action_row.children:
+                if isinstance(button, discord.Button):
+                    if button.label in seal_times_days:
+                        matches.append(button.label)
+    buttons: dict[int, dict[str | None, tuple[str | None, discord.PartialEmoji | None, bool]]] = {}
     if len(matches) == 1:
         for row, action_row in enumerate(message.components, start=1):
             buttons[row] = {}
-            for button in action_row.children:
-                if button.label == matches[0]:
-                    buttons[row][button.custom_id] = (button.label, button.emoji, True)
-                else:
-                    buttons[row][button.custom_id] = (button.label, button.emoji, False)
+            if isinstance(action_row, discord.ActionRow):
+                for button in action_row.children:
+                    if isinstance(button, discord.Button):
+                        if button.label == matches[0]:
+                            buttons[row][button.custom_id] = (button.label, button.emoji, True)
+                        else:
+                            buttons[row][button.custom_id] = (button.label, button.emoji, False)
+    days: str
     for area_no, days in seal_times_areas_days.items():
         answer = f'{answer}\n{emojis.BP}Area **{area_no}** will close in **{days}** days.'.strip()
-    if answer == '':
-        command_void_areas = await get_slash_command(user_settings, 'void areas')
+    if not answer:
+        command_void_areas: str = await get_slash_command(user_settings, 'void areas')
         answer = (
             f'No idea, lol.\n'
             f'Please use {command_void_areas} before your next training.'
@@ -881,19 +904,18 @@ async def get_void_training_answer_text(message: discord.Message, user_settings:
     all_settings: dict[str, str] = await settings_db.get_settings()
     answer: str = ''
     current_time: datetime = utils.utcnow()
-    a16_seal_time: str = all_settings.get('a16_seal_time', None)
-    a17_seal_time: str = all_settings.get('a17_seal_time', None)
-    a18_seal_time: str = all_settings.get('a18_seal_time', None)
-    a19_seal_time: str = all_settings.get('a19_seal_time', None)
-    a20_seal_time: str = all_settings.get('a20_seal_time', None)
+    a16_seal_time: datetime = all_settings.get('a16_seal_time', None)
+    a17_seal_time: datetime = all_settings.get('a17_seal_time', None)
+    a18_seal_time: datetime = all_settings.get('a18_seal_time', None)
+    a19_seal_time: datetime = all_settings.get('a19_seal_time', None)
+    a20_seal_time: datetime = all_settings.get('a20_seal_time', None)
     seal_times: list[str] = [a16_seal_time, a17_seal_time, a18_seal_time, a19_seal_time, a20_seal_time]
     seal_times_areas_days: dict[int, int] = {}
     seal_times_days: list[str] = []
     area_no: int
-    seal_time: str
-    for area_no, seal_time_str in enumerate(seal_times, 16):
-        if seal_time_str is not None:
-            seal_time = datetime.fromisoformat(seal_time_str, ).replace(tzinfo=timezone.utc)
+    seal_time: datetime
+    for area_no, seal_time in enumerate(seal_times, 16):
+        if seal_time is not None:
             time_left = seal_time - current_time
             if seal_time > current_time:
                 seal_times_areas_days[area_no] = str(time_left.days)
