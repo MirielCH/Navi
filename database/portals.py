@@ -36,16 +36,16 @@ class Portal():
         self.user_id = new_portal.user_id
         self.channel_id = new_portal.channel_id
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the portal in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             channel_id: int
             user_id: int
         """
-        await _update_portal(self, **kwargs)
+        await _update_portal(self, **updated_settings)
         await self.refresh()
 
 
@@ -186,38 +186,38 @@ async def _delete_portal(portal: Portal) -> None:
         raise
 
 
-async def _update_portal(portal: Portal, **kwargs) -> None:
+async def _update_portal(portal: Portal, **updated_settings) -> None:
     """Updates portal record. Use Portal.update() to trigger this function.
 
     Arguments
     ---------
     portal: Portal
-    kwargs (column=value):
+    updated_settings (column=value):
         channel_id: int
         user_id: int
 
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'users_portals'
     function_name = '_update_portal'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    kwargs['user_id_old'] = portal.user_id
-    kwargs['channel_id_old'] = portal.channel_id
+    updated_settings['user_id_old'] = portal.user_id
+    updated_settings['channel_id_old'] = portal.channel_id
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = f'{sql} WHERE user_id = :user_id_old AND channel_id = :channel_id_old'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

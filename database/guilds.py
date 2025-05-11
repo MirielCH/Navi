@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 import itertools
 import sqlite3
-from typing import List, NamedTuple, Tuple, Union
+from typing import List, NamedTuple, Union
 
 import discord
 from discord.ext import bridge, commands
@@ -130,12 +130,12 @@ class Guild():
         self.event_miniboss = new_settings.event_miniboss
         self.event_rare_hunt_monster = new_settings.event_rare_hunt_monster
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the guild record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             auto_flex_brew_electronical_enabled: bool
             auto_flex_channel_id: int
             auto_flex_enabled: bool
@@ -196,7 +196,7 @@ class Guild():
             event_rare_hunt_monster_message: str
             prefix: str
         """
-        await _update_guild(self.guild_id, **kwargs)
+        await _update_guild(self.guild_id, **updated_settings)
         await self.refresh()
 
 
@@ -317,7 +317,7 @@ async def get_prefix(ctx_or_message: Union[bridge.BridgeContext, discord.Message
 
     return prefix
 
-async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> Tuple:
+async def get_all_prefixes(bot: bridge.AutoShardedBot, message: discord.Message) -> list[str]:
     """Gets all prefixes. If no prefix is found, a record for the guild is created with the
     default prefix.
 
@@ -332,7 +332,8 @@ async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext
     table = 'guilds'
     function_name = 'get_all_prefixes'
     sql = f'SELECT prefix FROM {table} WHERE guild_id=?'
-    guild_id = ctx.guild.id
+    if message.guild is None: return commands.when_mentioned_or()(bot, message)
+    guild_id = message.guild.id
     try:
         cur = settings.NAVI_DB.cursor()
         cur.execute(sql, (guild_id,))
@@ -352,11 +353,10 @@ async def get_all_prefixes(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql),
-            ctx
+            message
         )
         raise
-
-    return commands.when_mentioned_or(*prefixes)(bot, ctx)
+    return commands.when_mentioned_or(*prefixes)(bot, message)
 
 
 async def get_guild(guild_id: int) -> Guild:
@@ -403,12 +403,12 @@ async def get_guild(guild_id: int) -> Guild:
 
 
 # Write Data
-async def _update_guild(guild_id: int, **kwargs) -> None:
+async def _update_guild(guild_id: int, **updated_settings) -> None:
     """Updates guild record. Use Guild.update() to trigger this function.
 
     Arguments
     ---------
-    kwargs (column=value):
+    updated_settings (column=value):
         auto_flex_brew_electronical_enabled: bool
         auto_flex_channel_id: int
         auto_flex_enabled: bool
@@ -471,12 +471,12 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'guilds'
     function_name = '_update_guild'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -484,12 +484,12 @@ async def _update_guild(guild_id: int, **kwargs) -> None:
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['guild_id'] = guild_id
+        updated_settings['guild_id'] = guild_id
         sql = f'{sql} WHERE guild_id = :guild_id'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

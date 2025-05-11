@@ -27,12 +27,13 @@ class SleepyPotionCog(commands.Cog):
         embed_data_after: dict[str, str] = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
-        row: discord.ActionRow
+        row: discord.Component
         for row in message_after.components:
-            component: discord.Button | discord.SelectMenu
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -41,21 +42,21 @@ class SleepyPotionCog(commands.Cog):
         if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
         if message.embeds: return
         # Sleepy Potion
-        search_strings: tuple[str] = (
+        search_strings: list[str] = [
             'has slept for a day', #English
             'ha dormido durante un día', #Spanish
             'dormiu por um dia', #Portuguese
-        )
+        ]
         if any(search_string in message.content.lower() for search_string in search_strings):
             user_name: str | None = None
             user_command_message: discord.Message | None = None
             user: discord.User | discord.Member | None = await functions.get_interaction_user(message)
             if user is None:
-                search_patterns: tuple[str] = (
+                search_patterns: list[str] = [
                     r'^\*\*(.+?)\*\* drinks', #English
                     r'^\*\*(.+?)\*\* bebe', #Spanish, Portuguese
-                )
-                user_name_match: re.Match[str] = await functions.get_match_from_patterns(search_patterns, message.content)
+                ]
+                user_name_match: re.Match[str] | None = await functions.get_match_from_patterns(search_patterns, message.content)
                 if user_name_match:
                     user_name = user_name_match.group(1)
                     user_command_message = (

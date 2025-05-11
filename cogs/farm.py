@@ -27,10 +27,13 @@ class FarmCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -153,13 +156,13 @@ class FarmCog(commands.Cog):
                 current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
                     await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
-                kwargs = {}
+                updated_settings = {}
                 seed_used_type_match = re.search(r':\d+>(.+?)seed', message_content.lower())
                 seed_used_type = seed_used_type_match.group(1).strip()
                 if seed_used_type != '':
                     seed_used_count = getattr(user_settings.inventory, f'seed_{seed_used_type}') - 1
                     if seed_used_count < 0: seed_used_count = 0
-                    kwargs[f'inventory_seed_{seed_used_type}'] = seed_used_count
+                    updated_settings[f'inventory_seed_{seed_used_type}'] = seed_used_count
                 search_strings_excluded = [
                     'no crop has grown', #English
                     'no crop has grown', #TODO: Spanish
@@ -177,7 +180,7 @@ class FarmCog(commands.Cog):
                     crop_type = crop_match.group(2)
                     crop_count = getattr(user_settings.inventory, crop_type.lower())
                     crop_count += int(crop_match.group(1).replace(',',''))
-                    kwargs[f'inventory_{crop_type}'] = crop_count
+                    updated_settings[f'inventory_{crop_type}'] = crop_count
                     search_patterns = [
                         r'also got (\d+?) \*\*(?:.+?) (.+?) ', #English
                         r'también consiguió (\d+?) \*\*(?:.+?) (.+?) ', #Spanish
@@ -187,14 +190,14 @@ class FarmCog(commands.Cog):
                     if seed_returned_match:
                         seed_returned_count = int(seed_returned_match.group(1))
                         seed_returned_type = seed_returned_match.group(2).lower()
-                        if f'inventory_seed_{seed_returned_type}' in kwargs:
-                            kwargs[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
+                        if f'inventory_seed_{seed_returned_type}' in updated_settings:
+                            updated_settings[f'inventory_seed_{seed_returned_type}'] += seed_returned_count
                         else:
                             seed_returned_count = (
                                 getattr(user_settings.inventory, f'seed_{seed_returned_type}') + seed_returned_count
                             )
-                            kwargs[f'inventory_seed_{seed_returned_type}'] = seed_returned_count
-                if kwargs: await user_settings.update(**kwargs)
+                            updated_settings[f'inventory_seed_{seed_returned_type}'] = seed_returned_count
+                if updated_settings: await user_settings.update(**updated_settings)
                 if not user_settings.alert_farm.enabled: return
                 search_strings = [
                     '{} in the ground', #English

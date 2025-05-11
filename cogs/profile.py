@@ -25,10 +25,13 @@ class ProfileCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -86,7 +89,7 @@ class ProfileCog(commands.Cog):
                         return
                 if interaction_user not in embed_users: return
                 
-                kwargs = {}
+                updated_settings = {}
                 # Update time travel count
                 time_travel_count = -1
                 if len(embed_field0_value.split('\n')) < 4:
@@ -105,10 +108,10 @@ class ProfileCog(commands.Cog):
                         time_travel_count = int(tt_match.group(1))
                 if time_travel_count > -1:
                     if time_travel_count != user_settings.time_travel_count:
-                        kwargs['time_travel_count'] = time_travel_count
+                        updated_settings['time_travel_count'] = time_travel_count
                     trade_daily_total = floor(100 * (time_travel_count + 1) ** 1.35)
                     if trade_daily_total != user_settings.trade_daily_total:
-                        kwargs['trade_daily_total'] = trade_daily_total
+                        updated_settings['trade_daily_total'] = trade_daily_total
 
                 # Update current area
                 area_match = re.search(r'rea\*\*: (.+?) \(', embed_field0_value.lower())
@@ -122,16 +125,16 @@ class ProfileCog(commands.Cog):
                     else:
                         new_area = int(new_area)
                     if user_settings.current_area != new_area:
-                        kwargs['current_area'] = new_area
+                        updated_settings['current_area'] = new_area
 
                 # Remove partner name if not married
                 partner_match = re.search(r'married to (.+?)$', embed_footer.lower())
                 partner_name = partner_match.group(1) if partner_match else None
                 if partner_name != user_settings.partner_name:
-                    kwargs['partner_name'] = partner_name
+                    updated_settings['partner_name'] = partner_name
 
-                if kwargs:
-                    await user_settings.update(**kwargs)
+                if updated_settings:
+                    await user_settings.update(**updated_settings)
 
 
             # Update settings from eternal profile
@@ -170,14 +173,14 @@ class ProfileCog(commands.Cog):
                         return
                 if interaction_user not in embed_users: return
                 
-                kwargs = {}
+                updated_settings = {}
                 
                 # Update eternal boosts tier
                 gear_tier_matches = re.findall(r'\|\sT(\d+)\sL', embed_field_values)
-                kwargs['eternal_boosts_tier'] = int(min(gear_tier_matches))
+                updated_settings['eternal_boosts_tier'] = int(min(gear_tier_matches))
 
-                if kwargs:
-                    await user_settings.update(**kwargs)
+                if updated_settings:
+                    await user_settings.update(**updated_settings)
 
                 timestring_match = re.search(r'for\s(.+?)$', embed_footer)
                 if timestring_match:

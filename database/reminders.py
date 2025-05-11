@@ -76,12 +76,12 @@ class Reminder():
         self.triggered = new_settings.triggered
         self.user_id = new_settings.user_id
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the clan record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             activity: str
             channel_id: int
             clan_name: str
@@ -92,7 +92,7 @@ class Reminder():
             triggered: bool
             user_id: int
         """
-        await _update_reminder(self, **kwargs)
+        await _update_reminder(self, **updated_settings)
         await self.refresh()
 
 
@@ -577,13 +577,13 @@ async def _delete_reminder(reminder: Reminder) -> None:
         raise
 
 
-async def _update_reminder(reminder: Reminder, **kwargs) -> None:
+async def _update_reminder(reminder: Reminder, **updated_settings) -> None:
     """Updates reminder record. Use Reminder.update() to trigger this function.
 
     Arguments
     ---------
     reminder: Reminder
-    kwargs (column=value):
+    updated_settings (column=value):
         activity: str
         channel_id: int
         clan_name: str
@@ -597,38 +597,38 @@ async def _update_reminder(reminder: Reminder, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table = 'reminders_users' if reminder.reminder_type == 'user' else 'reminders_clans'
     function_name = '_update_reminder'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    end_time = kwargs['end_time'] if 'end_time' in kwargs else reminder.end_time
+    end_time = updated_settings['end_time'] if 'end_time' in updated_settings else reminder.end_time
     time_left = end_time - utils.utcnow()
     triggered = False if time_left.total_seconds() > 15 else True
-    if 'triggered' not in kwargs: kwargs['triggered'] = triggered
+    if 'triggered' not in updated_settings: updated_settings['triggered'] = triggered
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['activity_old'] = reminder.activity
+        updated_settings['activity_old'] = reminder.activity
         sql = f'{sql} WHERE activity = :activity_old'
         if reminder.reminder_type == 'user':
-            kwargs['user_id_old'] = reminder.user_id
+            updated_settings['user_id_old'] = reminder.user_id
             sql = f'{sql} AND user_id = :user_id_old'
         else:
-            kwargs['clan_name_old'] = reminder.clan_name
+            updated_settings['clan_name_old'] = reminder.clan_name
             sql = f'{sql} AND clan_name = :clan_name_old'
         if reminder.activity == 'custom':
-            kwargs['custom_id_old'] = reminder.custom_id
+            updated_settings['custom_id_old'] = reminder.custom_id
             sql = f'{sql} AND custom_id = :custom_id_old'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

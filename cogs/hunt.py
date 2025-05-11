@@ -4,6 +4,7 @@ import asyncio
 from datetime import timedelta
 from math import ceil, floor
 import re
+from typing import Union
 
 import discord
 from discord import utils
@@ -28,10 +29,13 @@ class HuntCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -49,7 +53,7 @@ class HuntCog(commands.Cog):
             if embed.description is not None: message_description = str(embed.description)
 
             # Hunt cooldown
-            search_strings = [
+            search_strings: list[str] = [
                 'you have already looked around', #English
                 'ya has mirado a tu alrededor', #Spanish
                 'você já olhou ao seu redor', #Portuguese

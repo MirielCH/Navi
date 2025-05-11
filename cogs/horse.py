@@ -25,10 +25,13 @@ class HorseCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -144,7 +147,8 @@ class HorseCog(commands.Cog):
                     breeding_partner_name_match = re.search(r'^\*\*(.+?)\*\* ', breeding_partner_line)
                     breeding_partner_name = breeding_partner_name_match.group(1)
                     guild_members = await functions.get_member_by_name(self.bot, message.guild, breeding_partner_name)
-                    breeding_users.append(guild_members[0])
+                    if guild_members:
+                        breeding_users.append(guild_members[0])
                 for breeding_user in breeding_users:
                     try:
                         user_settings: users.User = await users.get_user(breeding_user.id)

@@ -1092,11 +1092,11 @@ async def reply_or_respond(ctx: discord.ApplicationContext | commands.Context, a
         return await ctx.respond(answer, ephemeral=ephemeral)
 
 
-async def parse_embed(message: discord.Message) -> dict[str, str]:
+async def parse_embed(message: discord.Message) -> dict[str, dict[str, str] | str]:
     """Parses all data from an embed into a dictionary.
     All keys are guaranteed to exist and have an empty string as value if not set in the embed.
     """
-    embed_data: dict[str, dict[str, str]] = {
+    embed_data: dict[str, dict[str, str] | str] = {
         'author': {'icon_url': '', 'name': ''},
         'description': '',
         'field0': {'name': '', 'value': ''},
@@ -1112,24 +1112,24 @@ async def parse_embed(message: discord.Message) -> dict[str, str]:
         embed: discord.Embed = message.embeds[0]
         if embed.author:
             if embed.author.icon_url:
-                embed_data['author']['icon_url'] = embed.author.icon_url
+                embed_data['author']['icon_url'] = embed.author.icon_url # pyright: ignore
             if embed.author.name:
-                embed_data['author']['name'] = embed.author.name
+                embed_data['author']['name'] = embed.author.name # pyright: ignore
         if embed.description:
             embed_data['description'] = embed.description
         if embed.fields:
             index: int
             for index in range(0,6):
                 try:
-                    embed_data[f'field{index}']['name'] = embed.fields[index].name
-                    embed_data[f'field{index}']['value'] = embed.fields[index].value
+                    embed_data[f'field{index}']['name'] = embed.fields[index].name # pyright: ignore
+                    embed_data[f'field{index}']['value'] = embed.fields[index].value # pyright: ignore
                 except IndexError:
                     break
         if embed.footer:
             if embed.footer.icon_url:
-                embed_data['footer']['icon_url'] = embed.footer.icon_url
+                embed_data['footer']['icon_url'] = embed.footer.icon_url # pyright: ignore
             if embed.footer.text:
-                embed_data['footer']['text'] = embed.footer.text
+                embed_data['footer']['text'] = embed.footer.text # pyright: ignore
         if embed.title:
             embed_data['title'] = embed.title
     return embed_data
@@ -1144,26 +1144,26 @@ async def update_area(user_settings: users.User, new_area: int) -> None:
         user_settings (users.User)
         new_area (int)
     """
-    kwargs: dict[str, Any] = {
+    updated_settings: dict[str, Any] = {
         'current_area': new_area,
     }
     # Reset multipliers when entering area 20
     if user_settings.multiplier_management_enabled:
         if (new_area == 20 and user_settings.current_area != 20
             or new_area != 20 and user_settings.current_area == 18):
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
-            kwargs[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
-    await user_settings.update(**kwargs)
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['adventure']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['card-hand']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['daily']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['duel']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['epic']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['farm']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['hunt']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['lootbox']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['quest']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['training']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['weekly']}_multiplier'] = 1
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS['work']}_multiplier'] = 1
+    await user_settings.update(**updated_settings)
 
 
 async def get_ready_command_activities(seasonal_event: str) -> list[str]:

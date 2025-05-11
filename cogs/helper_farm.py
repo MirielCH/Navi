@@ -24,10 +24,13 @@ class HelperFarmCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -133,7 +136,7 @@ class HelperFarmCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                kwargs = {}
+                updated_settings = {}
                 if message_description != '':
                     seed_match = re.search(r'^\+([0-9,]+) (?:.+?) \*\*(.+?)seed', message_description.lower(), re.MULTILINE)
                     if not seed_match: return
@@ -142,7 +145,7 @@ class HelperFarmCog(commands.Cog):
                     seed_type = seed_type.strip()
                     if seed_type == '': return
                     seed_count = getattr(user_settings.inventory, f'seed_{seed_type}') + seed_count
-                    kwargs[f'inventory_seed_{seed_type}'] = seed_count
+                    updated_settings[f'inventory_seed_{seed_type}'] = seed_count
                 else:
                     seeds_found = {
                         'bread': 0,
@@ -159,8 +162,8 @@ class HelperFarmCog(commands.Cog):
                     for seed_type, seed_amount in seeds_found.items():
                         if seed_amount > 0:
                             seed_count = getattr(user_settings.inventory, f'seed_{seed_type}') + seed_amount
-                            kwargs[f'inventory_seed_{seed_type}'] = seed_count
-                if kwargs: await user_settings.update(**kwargs)
+                            updated_settings[f'inventory_seed_{seed_type}'] = seed_count
+                if updated_settings: await user_settings.update(**updated_settings)
 
 
         if not message.embeds:
@@ -193,12 +196,12 @@ class HelperFarmCog(commands.Cog):
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled: return
-                kwargs = {}
+                updated_settings = {}
                 seed_type = data_match.group(3)
                 seed_count = getattr(user_settings.inventory, f'seed_{seed_type}')
                 seed_count += int(data_match.group(2))
-                kwargs[f'inventory_seed_{seed_type}'] = seed_count
-                await user_settings.update(**kwargs)
+                updated_settings[f'inventory_seed_{seed_type}'] = seed_count
+                await user_settings.update(**updated_settings)
 
 
 # Initialization

@@ -24,12 +24,13 @@ class PatreonCog(commands.Cog):
         embed_data_after: dict[str, str] = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
-        row: discord.ActionRow
+        row: discord.Component
         for row in message_after.components:
-            component: discord.Button | discord.SelectMenu
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -42,11 +43,11 @@ class PatreonCog(commands.Cog):
             embed_description = str(embed.description) if embed.description else ''
 
             # Patreon
-            search_strings: tuple[str] = (
+            search_strings: list[str] = [
                "if you want to support", #English
                "si quieres apoyar", #Spanish
                "se você quiser apoiar", #Portuguese
-            )
+            ]
             if any(search_string in embed_description.lower() for search_string in search_strings):
                 user_command_message: discord.Message | None = None
                 user: discord.User | discord.Member = await functions.get_interaction_user(message)

@@ -325,13 +325,13 @@ class User():
         await alts_db.delete_alt(self.user_id, alt_id)
         await self.refresh()
         
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the user record in the database. Also calls refresh().
         If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             alert_advent_enabled: bool
             alert_advent_message: str
             alert_advent_visible: bool
@@ -556,7 +556,7 @@ class User():
             user_donor_tier: int
             user_pocket_watch_multiplier: float
         """
-        await _update_user(self, **kwargs)
+        await _update_user(self, **updated_settings)
         await self.refresh()
 
     async def update_multiplier(self, activity: str, time_left: timedelta) -> None:
@@ -614,9 +614,9 @@ class User():
 
         # Update multiplier
         if current_multiplier != new_multiplier:
-            kwargs: dict[str, float] = {} 
-            kwargs[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
-            await self.update(**kwargs)
+            updated_settings: dict[str, float] = {} 
+            updated_settings[f'{strings.ACTIVITIES_COLUMNS[activity]}_multiplier'] = new_multiplier
+            await self.update(**updated_settings)
 
 
 # Miscellaneous functions
@@ -1040,14 +1040,14 @@ async def get_user_count() -> int:
 
 
 # Write Data
-async def _update_user(user: User, **kwargs) -> None:
+async def _update_user(user: User, **updated_settings) -> None:
     """Updates user record. Use User.update() to trigger this function.
     If user_donor_tier is updated and a partner is set, the partner's partner_donor_tier is updated as well.
 
     Arguments
     ---------
     user_id: int
-    kwargs (column=value):
+    updated_settings (column=value):
         alert_advent_enabled: bool
         alert_advent_message: str
         alert_advent_visible: bool
@@ -1275,12 +1275,12 @@ async def _update_user(user: User, **kwargs) -> None:
     Raises
     ------
     sqlite3.Error if something happened within the database.
-    NoArgumentsError if no kwargs are passed (need to pass at least one)
+    NoArgumentsError if no updated_settings are passed (need to pass at least one)
     Also logs all errors to the database.
     """
     table: str = 'users'
     function_name: str = '_update_user'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
@@ -1288,15 +1288,15 @@ async def _update_user(user: User, **kwargs) -> None:
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         sql: str = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['user_id'] = user.user_id
+        updated_settings['user_id'] = user.user_id
         sql = f'{sql} WHERE user_id = :user_id'
-        cur.execute(sql, kwargs)
-        if 'user_donor_tier' in kwargs and user.partner_id is not None:
+        cur.execute(sql, updated_settings)
+        if 'user_donor_tier' in updated_settings and user.partner_id is not None:
             partner: User = await get_user(user.partner_id)
-            await partner.update(partner_donor_tier=kwargs['user_donor_tier'])
+            await partner.update(partner_donor_tier=updated_settings['user_donor_tier'])
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

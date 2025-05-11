@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 import random
-from typing import List, Optional, Union
+from typing import Callable, List, Optional, Union
 
 import discord
 from discord.ext import bridge, commands
@@ -12,7 +12,7 @@ from content import settings as settings_cmd
 from database import clans, cooldowns, guilds, portals, reminders, users
 from resources import components, functions, settings, strings
 
-COMMANDS_SETTINGS = {
+COMMANDS_SETTINGS: dict[str, Callable] = {
     'Alts': settings_cmd.command_settings_alts,
     'Guild channel': settings_cmd.command_settings_clan,
     'Helpers': settings_cmd.command_settings_helpers,
@@ -26,7 +26,7 @@ COMMANDS_SETTINGS = {
     'User': settings_cmd.command_settings_user,
 }
 
-COMMANDS_SERVER_SETTINGS = {
+COMMANDS_SERVER_SETTINGS: dict[str, Callable] = {
     'Main': settings_cmd.command_server_settings_main,
     'Auto flex (1/2)': settings_cmd.command_server_settings_auto_flex,
     'Auto flex (2/2)': settings_cmd.command_server_settings_auto_flex_2,
@@ -47,7 +47,7 @@ class ReadyView(discord.ui.View):
     None if nothing happened yet.
     """
     def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
-                 user_settings: users.User, user_mentioned: bool, embed_function: callable,
+                 user_settings: users.User, user_mentioned: bool, embed_function: Callable,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
@@ -192,7 +192,7 @@ class SettingsAltsView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -237,7 +237,7 @@ class SettingsClanView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, clan_settings: clans.Clan,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -279,7 +279,7 @@ class SettingsHelpersView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -335,7 +335,7 @@ class SettingsPortalsView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 user_portals: List[portals.Portal], embed_function: callable,
+                 user_portals: List[portals.Portal], embed_function: Callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -381,7 +381,7 @@ class SettingsReadyView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 clan_settings: clans.Clan, embed_function: callable,
+                 clan_settings: clans.Clan, embed_function: Callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -435,7 +435,7 @@ class SettingsReadyRemindersView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 clan_settings: clans.Clan, embed_function: callable,
+                 clan_settings: clans.Clan, embed_function: Callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -537,7 +537,7 @@ class SettingsMultipliersView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -584,7 +584,7 @@ class SettingsRemindersView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -659,7 +659,7 @@ class SettingsReminders2View(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -724,7 +724,7 @@ class SettingsUserView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -770,7 +770,7 @@ class SettingsMessagesView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 embed_function: callable, activity: Optional[str] = 'all',
+                 embed_function: Callable, activity: Optional[str] = 'all',
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -828,7 +828,7 @@ class SettingsPartnerView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 partner_settings: users.User, embed_function: callable,
+                 partner_settings: users.User, embed_function: Callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -901,7 +901,7 @@ class RemindersListView(discord.ui.View):
     """
     def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
                  user_settings: users.User, user_mentioned: bool, custom_reminders: List[reminders.Reminder],
-                 embed_function: callable, show_timestamps: Optional[bool] = False,
+                 embed_function: Callable, show_timestamps: Optional[bool] = False,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
@@ -949,7 +949,7 @@ class StatsView(discord.ui.View):
     None if nothing happened yet.
     """
     def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext],
-                 user_settings: users.User, user_mentioned: bool, time_left: timedelta, embed_function: callable,
+                 user_settings: users.User, user_mentioned: bool, time_left: timedelta, embed_function: Callable,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.value = None
@@ -1009,7 +1009,7 @@ class SettingsServerAutoFlexView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -1086,7 +1086,7 @@ class SettingsServerAutoFlex2View(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -1155,7 +1155,7 @@ class SettingsServerEventPingsView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -1212,7 +1212,7 @@ class SettingsServerMainView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, guild_settings: guilds.Guild,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
         self.bot = bot
@@ -1254,7 +1254,7 @@ class DevEventReductionsView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, all_cooldowns: List[cooldowns.Cooldown],
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.bot = bot
         self.ctx = ctx
@@ -1297,7 +1297,7 @@ class DevSeasonalEventView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, active_event: str,
-                 embed_function: callable, interaction: Optional[discord.Interaction] = None):
+                 embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         seasonal_events = ['none',] + strings.SEASONAL_EVENTS
         self.ctx = ctx

@@ -81,10 +81,13 @@ class TrackingCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -194,7 +197,7 @@ class TrackingCog(commands.Cog):
                         return
                     if not user_settings.bot_enabled: return
                     tt_time = message.created_at
-                    kwargs = {
+                    updated_settings = {
                         'last_tt': tt_time.isoformat(sep=' '),
                         'inventory_bread': 0,
                         'inventory_carrot': 0,
@@ -204,7 +207,7 @@ class TrackingCog(commands.Cog):
                         'inventory_seed_carrot': 0,
                         'inventory_ruby': 0,
                     }
-                    await user_settings.update(**kwargs)
+                    await user_settings.update(**updated_settings)
                     try:
                         reminder: reminders.Reminder = await reminders.get_user_reminder(user.id, 'lottery')
                         await reminder.delete()

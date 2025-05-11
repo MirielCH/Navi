@@ -25,10 +25,13 @@ class BoostsCog(commands.Cog):
         embed_data_after = await functions.parse_embed(message_after)
         if (message_before.content == message_after.content and embed_data_before == embed_data_after
             and message_before.components == message_after.components): return
+        row: discord.Component
         for row in message_after.components:
-            for component in row.children:
-                if component.disabled:
-                    return
+            if isinstance(row, discord.ActionRow):
+                for component in row.children:
+                    if isinstance(component, (discord.Button, discord.SelectMenu)):
+                        if component.disabled:
+                            return
         await self.on_message(message_after)
 
     @commands.Cog.listener()
@@ -132,17 +135,17 @@ class BoostsCog(commands.Cog):
                         await reminders.insert_user_reminder(interaction_user.id, active_item_activity, time_left,
                                                              message.channel.id, reminder_message)
                     )
-                kwargs = {}
+                updated_settings = {}
                 if user_settings.auto_healing_active != auto_healing_active:
-                    kwargs['auto_healing_active'] = auto_healing_active
+                    updated_settings['auto_healing_active'] = auto_healing_active
                 if user_settings.round_card_active != round_card_active:
-                    kwargs['round_card_active'] = round_card_active
+                    updated_settings['round_card_active'] = round_card_active
                 if user_settings.potion_flask_active != potion_flask_active:
-                    kwargs['potion_flask_active'] = potion_flask_active
+                    updated_settings['potion_flask_active'] = potion_flask_active
                 if user_settings.potion_dragon_breath_active != potion_dragon_breath_active:
-                    kwargs['potion_dragon_breath_active'] = potion_dragon_breath_active
-                if kwargs:
-                    await user_settings.update(**kwargs)
+                    updated_settings['potion_dragon_breath_active'] = potion_dragon_breath_active
+                if updated_settings:
+                    await user_settings.update(**updated_settings)
                 if not user_settings.alert_boosts.enabled: return
                 for activity in all_boosts:
                     try:

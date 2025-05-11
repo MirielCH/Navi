@@ -156,13 +156,13 @@ class SetMultiplierModal(Modal):
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('The multiplier needs to be between 0.01 and 5.00', ephemeral=True)
             return
-        kwargs = {}
+        updated_settings = {}
         if self.activity == 'all':
             for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
-                kwargs[f'alert_{activity.replace("-","_")}_multiplier'] = new_multiplier
+                updated_settings[f'alert_{activity.replace("-","_")}_multiplier'] = new_multiplier
         else:
-            kwargs[f'alert_{self.activity.replace("-","_")}_multiplier'] = new_multiplier
-        await self.view.user_settings.update(**kwargs)
+            updated_settings[f'alert_{self.activity.replace("-","_")}_multiplier'] = new_multiplier
+        await self.view.user_settings.update(**updated_settings)
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
@@ -278,8 +278,8 @@ class AddCommandChannelModal(Modal):
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('That is not an ID.', ephemeral=True)
             return
-        kwargs = {f'ready_channel_{self.activity}': channel_id}
-        await self.view.user_settings.update(**kwargs)
+        updated_settings = {f'ready_channel_{self.activity}': channel_id}
+        await self.view.user_settings.update(**updated_settings)
 
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
                                                self.view.clan_settings)

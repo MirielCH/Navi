@@ -107,7 +107,7 @@ async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     return embed
 
 
-async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> discord.Embed:
+async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext | discord.Message) -> discord.Embed:
     """Main menu embed"""
     prefix = await guilds.get_prefix(ctx)
     title_link = 'https://youtu.be/SB4sDPTZPYM'

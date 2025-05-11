@@ -4,6 +4,7 @@ from datetime import datetime
 import sqlite3
 import sys
 import traceback
+from types import TracebackType
 
 import discord
 from discord import utils
@@ -21,16 +22,16 @@ intents.members = True  # to be able to look up user info
 intents.message_content = True # for command detection
 
 allowed_mentions: discord.AllowedMentions = discord.AllowedMentions(everyone=False, roles=False, replied_user=False)
-member_cache_flags = discord.MemberCacheFlags(joined=True, voice=False, interaction=False)
+member_cache_flags: discord.MemberCacheFlags = discord.MemberCacheFlags(joined=True, voice=False, interaction=False)
 bot_activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name='your commands')
 
 if settings.DEBUG_MODE:
-    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
+    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None, # pyright: ignore
                                                        case_insensitive=True, intents=intents, owner_id=settings.OWNER_ID,
                                                        allowed_mentions=allowed_mentions, debug_guilds=settings.DEV_GUILDS,
                                                        activity=bot_activity, member_cache_flags=member_cache_flags)
 else:
-    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None,
+    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None, # pyright: ignore
                                                        case_insensitive=True, intents=intents, allowed_mentions=allowed_mentions,
                                                        owner_id=settings.OWNER_ID, activity=bot_activity,
                                                        member_cache_flags=member_cache_flags)
@@ -43,12 +44,16 @@ async def on_error(event: str, *args, **kwargs) -> None:
     """
     message: discord.Message
     embed: discord.Embed
+    error: tuple[type[BaseException] | None, BaseException | None, TracebackType | None]
+    error = sys.exc_info()
+    if isinstance(error[1], discord.errors.Forbidden): return
+
     if event == 'on_message':
+        message: discord.Message
         message, = args
-        if message.channel.type.name == 'private': return
+        if message.channel.type is not None:
+            if message.channel.type.name == 'private': return
         embed = discord.Embed(title='An error occured')
-        error: sys._OptExcInfo = sys.exc_info()
-        if isinstance(error[1], discord.errors.Forbidden): return
         traceback_str: str = "".join(traceback.format_tb(error[2]))
         traceback_message: str = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Event', value=f'`{event}`', inline=False)
@@ -61,17 +66,18 @@ async def on_error(event: str, *args, **kwargs) -> None:
         except:
             return
         embed = discord.Embed(title='An error occured')
-        error: sys._OptExcInfo = sys.exc_info()
-        if isinstance(error[1], discord.errors.Forbidden): return
         traceback_str: str = "".join(traceback.format_tb(error[2]))
         traceback_message: str = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
         await errors.log_error(f'- Event: {event}\n- Error: {error[1]}\n- Traceback:\n{traceback_str}', message)
         if settings.DEBUG_MODE: await message.channel.send(embed=embed)
         if event == 'on_reaction_add':
+            reaction: discord.Reaction
+            user: discord.User | discord.Member
             reaction, user = args
             return
         elif event == 'on_command_error':
+            ctx: bridge.BridgeContext
             ctx, error = args
             raise
         else:
@@ -183,7 +189,7 @@ if __name__ == '__main__':
         sys.exit()
 
     # Write startup time to database
-    startup_time: datetime = datetime.isoformat(utils.utcnow(), sep=' ')
+    startup_time: str = datetime.isoformat(utils.utcnow(), sep=' ')
     functions.await_coroutine(settings_db.update_setting('startup_time', startup_time))
 
     # Load cogs

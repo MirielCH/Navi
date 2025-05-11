@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import sqlite3
-from typing import List, NamedTuple, Optional, Tuple, Union
+from typing import NamedTuple, Optional, Union
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -21,7 +21,7 @@ class Clan():
     channel_id: int
     clan_name: str
     leader_id: int
-    member_ids: Tuple[int]
+    member_ids: tuple[int, ...]
     quest_user_id: int
     stealth_current: int
     stealth_threshold: int
@@ -63,19 +63,19 @@ class Clan():
         self.stealth_threshold = new_settings.stealth_threshold
         self.upgrade_quests_enabled = new_settings.upgrade_quests_enabled
 
-    async def update(self, **kwargs) -> None:
+    async def update(self, **updated_settings) -> None:
         """Updates the clan record in the database. Also calls refresh().
 
         Arguments
         ---------
-        kwargs (column=value):
+        updated_settings (column=value):
             alert_enabled: bool
             alert_message: str
             alert_visible: bool
             channel_id: int
             clan_name: str
             leader_id: int
-            member_ids: Union[Tuple[int],List[int]] (up to 10)
+            member_ids: Union[tuple[int, ...],list[int]] (up to 10)
             quest_user_id: int
             stealth_current: int
             stealth_threshold: int
@@ -87,7 +87,7 @@ class Clan():
         NoArgumentsError if no kwargs are passed (need to pass at least one)
         Also logs all errors to the database.
         """
-        await _update_clan(self.clan_name, **kwargs)
+        await _update_clan(self.clan_name, **updated_settings)
         await self.refresh()
 
 
@@ -100,8 +100,8 @@ class ClanRaid(NamedTuple):
 
 class ClanLeaderboard(NamedTuple):
     """Object that provides all data necessary for the clan leaderboard."""
-    best_raids: Tuple[ClanRaid]
-    worst_raids: Tuple[ClanRaid]
+    best_raids: tuple[ClanRaid, ...]
+    worst_raids: tuple[ClanRaid, ...]
 
 class ClanWeeklyReport(NamedTuple):
     """Object that provides all data necessary for a weekly report."""
@@ -137,7 +137,7 @@ async def _dict_to_clan(record: dict) -> Clan:
             clan_name = record['clan_name'],
             leader_id = record['leader_id'],
             member_ids = (
-                record['member1_id'],
+                 record['member1_id'],
                  record['member2_id'],
                  record['member3_id'],
                  record['member4_id'],
@@ -264,12 +264,12 @@ async def get_clan_by_clan_name(clan_name: str) -> Clan:
     return clan
 
 
-async def get_all_clans() -> Tuple[Clan]:
+async def get_all_clans() -> tuple[Clan, ...]:
     """Gets the clan settings for all clans.
 
     Returns
     -------
-    Tuple[Clan]
+    tuple[Clan, ...]
 
     Raises
     ------
@@ -473,20 +473,20 @@ async def _delete_clan(clan_name: str) -> None:
     await delete_clan_leaderboard()
 
 
-async def _update_clan(current_clan_name: str, **kwargs) -> None:
+async def _update_clan(current_clan_name: str, **updated_settings) -> None:
     """Updates clan record. Use Clan.update() to trigger this function.
 
     Arguments
     ---------
     clan_name: str
-    kwargs (column=value):
+    updated_settings (column=value):
         alert_enabled: bool
         alert_message: str
         alert_visible: bool
         channel_id: int
         clan_name: str
         leader_id: int
-        member_ids: Union[Tuple[int],List[int]] (up to 10)
+        member_ids: Union[tuple[int, ...],list[int]] (up to 10)
         stealth_current: int
         stealth_threshold: int
 
@@ -501,28 +501,28 @@ async def _update_clan(current_clan_name: str, **kwargs) -> None:
     """
     table = 'clans'
     function_name = '_update_clan'
-    if not kwargs:
+    if not updated_settings:
         await errors.log_error(
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
     member_ids = [None] * 10
-    member_ids_kwarg = kwargs.get('member_ids', None)
-    if member_ids_kwarg is not None:
-        for index, member_id_kwarg in enumerate(member_ids_kwarg):
-            member_ids[index] = member_id_kwarg
+    member_ids_setting = updated_settings.get('member_ids', None)
+    if member_ids_setting is not None:
+        for index, member_id_setting in enumerate(member_ids_setting):
+            member_ids[index] = member_id_setting
         for index, member_id in enumerate(member_ids):
-            kwargs[f'member{index+1}_id'] = member_id
-        kwargs.pop('member_ids', None)
+            updated_settings[f'member{index+1}_id'] = member_id
+        updated_settings.pop('member_ids', None)
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
-        for kwarg in kwargs:
-            sql = f'{sql} {kwarg} = :{kwarg},'
+        for updated_setting in updated_settings:
+            sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        kwargs['clan_name_old'] = current_clan_name
+        updated_settings['clan_name_old'] = current_clan_name
         sql = f'{sql} WHERE clan_name = :clan_name_old'
-        cur.execute(sql, kwargs)
+        cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -551,14 +551,14 @@ async def delete_clan_leaderboard(clan_name: Optional[str] = None) -> None:
         raise
 
 
-async def insert_clan(clan_name: str, leader_id: int, member_ids: Union[Tuple[int],List[int]]) -> Clan:
+async def insert_clan(clan_name: str, leader_id: int, member_ids: Union[tuple[int, ...],list[int]]) -> Clan:
     """Inserts a record in the table "clans".
 
     Arguments
     ---------
     clan_name: str
     leader_id: int
-    member_ids: Union[Tuple[int],List[int]] (up to 10)
+    member_ids: Union[tuple[int, ...],list[int]] (up to 10)
 
     Note: If member_ids is passed and there are less than 10 members, the remaining columns will be filled with NULL.
     If member_ids is not passed, no members will be changed.
