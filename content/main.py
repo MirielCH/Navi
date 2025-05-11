@@ -7,7 +7,7 @@ import os
 import psutil
 import random
 import sys
-from typing import List, Union
+from typing import Union
 
 import discord
 from discord import utils
@@ -80,7 +80,7 @@ async def command_about(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -
 
 # --- Embeds ---
 async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                 all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+                                 all_cooldowns: list[cooldowns.Cooldown]) -> discord.Embed:
     """Event reductions embed"""
     reductions_slash = reductions_text = ''
     for cooldown in all_cooldowns:

@@ -5,7 +5,6 @@
 from dataclasses import dataclass
 from math import ceil
 import sqlite3
-from typing import Tuple
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -122,12 +121,12 @@ async def get_cooldown(activity: str) -> Cooldown:
     return cooldown
 
 
-async def get_all_cooldowns() -> Tuple[Cooldown]:
+async def get_all_cooldowns() -> tuple[Cooldown, ...]:
     """Gets the cooldown settings for all activities.
 
     Returns
     -------
-    Tuple[Cooldown]
+    Tuple[Cooldown, ...]
 
     Raises
     ------

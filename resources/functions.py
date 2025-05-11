@@ -4,7 +4,7 @@ from argparse import ArgumentError
 from datetime import datetime, timedelta, timezone
 from math import ceil, floor
 import re
-from typing import Any, Coroutine,List
+from typing import Any, Coroutine
 
 import discord
 from discord import utils
@@ -134,7 +134,7 @@ async def add_warning_reaction(message: discord.Message) -> None:
 
 
 # --- Regex ---
-async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match | None:
+async def get_match_from_patterns(patterns: list[str], string: str) -> re.Match | None:
     """Searches a string for a regex patterns out of a list of patterns and returns the first match.
     Returns None if no match is found.
     """
@@ -146,7 +146,7 @@ async def get_match_from_patterns(patterns: List[str], string: str) -> re.Match 
 
 
 # --- Get members ---
-async def get_member_by_name(bot: discord.AutoShardedBot, guild: discord.Guild | None, user_name: str) -> List[discord.Member]:
+async def get_member_by_name(bot: discord.AutoShardedBot, guild: discord.Guild | None, user_name: str) -> list[discord.Member]:
     """Returns all guild members with the given name
     If no guild member with the name is found, this function searches in all members the bot can see.
     """

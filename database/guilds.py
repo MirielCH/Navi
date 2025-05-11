@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 import itertools
 import sqlite3
-from typing import List, NamedTuple, Union
+from typing import NamedTuple, Union
 
 import discord
 from discord.ext import bridge, commands
@@ -281,7 +281,7 @@ async def _dict_to_guild(record: dict) -> Guild:
     return guild
 
 
-async def _get_mixed_case_prefixes(prefix: str) -> List[str]:
+async def _get_mixed_case_prefixes(prefix: str) -> list[str]:
     """Turns a string into a list of all mixed case variations of said string
 
     Returns

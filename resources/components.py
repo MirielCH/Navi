@@ -3,7 +3,7 @@
 
 import asyncio
 import re
-from typing import Callable, Dict, List, Literal, Optional
+from typing import Callable, Dict, Literal, Optional
 
 import discord
 
@@ -1198,7 +1198,7 @@ class AddPartnerSelect(discord.ui.Select):
 
 class ReminderMessageSelect(discord.ui.Select):
     """Select to select reminder messages by activity"""
-    def __init__(self, view: discord.ui.View, activities: List[str], placeholder: str, custom_id: str,
+    def __init__(self, view: discord.ui.View, activities: list[str], placeholder: str, custom_id: str,
                  row: Optional[int] = None):
         options = []
         options.append(discord.SelectOption(label='All', value='all', emoji=None))
@@ -1384,7 +1384,7 @@ class ToggleTimestampsButton(discord.ui.Button):
 
 class DeleteCustomReminderSelect(discord.ui.Select):
     """Select to delete custom reminders"""
-    def __init__(self, view: discord.ui.View, custom_reminders: List[reminders.Reminder], row: Optional[int] = 2):
+    def __init__(self, view: discord.ui.View, custom_reminders: list[reminders.Reminder], row: Optional[int] = 2):
         self.custom_reminders = custom_reminders
 
         options = []
@@ -1653,7 +1653,7 @@ class ManageManualMultipliersSelect(discord.ui.Select):
 
 class ManageEventReductionsSelect(discord.ui.Select):
     """Select to manage cooldowns"""
-    def __init__(self, view: discord.ui.View, all_cooldowns: List[cooldowns.Cooldown],
+    def __init__(self, view: discord.ui.View, all_cooldowns: list[cooldowns.Cooldown],
                  cd_type: Literal['slash', 'text'], row: Optional[int] = None):
         self.all_cooldowns = all_cooldowns
         self.cd_type = cd_type

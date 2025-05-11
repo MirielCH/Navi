@@ -3,7 +3,7 @@
 
 from datetime import timedelta
 import random
-from typing import Callable, List, Optional, Union
+from typing import Callable, Optional, Union
 
 import discord
 from discord.ext import bridge, commands
@@ -89,7 +89,7 @@ class ReadyView(discord.ui.View):
 class ConfirmCancelView(discord.ui.View):
     """View with confirm and cancel button.
 
-    Args: ctx, styles: Optional[List[discord.ButtonStyle]], labels: Optional[list[str]]
+    Args: ctx, styles: Optional[list[discord.ButtonStyle]], labels: Optional[list[str]]
 
     Also needs the message with the view, so do view.message = await ctx.interaction.original_message().
     Without this message, buttons will not be disabled when the interaction times out.
@@ -97,8 +97,8 @@ class ConfirmCancelView(discord.ui.View):
     Returns 'confirm', 'cancel' or None (if timeout/error)
     """
     def __init__(self, ctx: bridge.BridgeContext,
-                 styles: Optional[List[discord.ButtonStyle]] = [discord.ButtonStyle.grey, discord.ButtonStyle.grey],
-                 labels: Optional[List[str]] = ['Yes','No'],
+                 styles: Optional[list[discord.ButtonStyle]] = [discord.ButtonStyle.grey, discord.ButtonStyle.grey],
+                 labels: Optional[list[str]] = ['Yes','No'],
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -335,7 +335,7 @@ class SettingsPortalsView(discord.ui.View):
 
     """
     def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, user_settings: users.User,
-                 user_portals: List[portals.Portal], embed_function: Callable,
+                 user_portals: list[portals.Portal], embed_function: Callable,
                  interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.ctx = ctx
@@ -900,7 +900,7 @@ class RemindersListView(discord.ui.View):
     None
     """
     def __init__(self, bot: bridge.AutoShardedBot, ctx: Union[commands.Context, discord.ApplicationContext], user: discord.User,
-                 user_settings: users.User, user_mentioned: bool, custom_reminders: List[reminders.Reminder],
+                 user_settings: users.User, user_mentioned: bool, custom_reminders: list[reminders.Reminder],
                  embed_function: Callable, show_timestamps: Optional[bool] = False,
                  interaction_message: Optional[Union[discord.Message, discord.Interaction]] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
@@ -1253,7 +1253,7 @@ class DevEventReductionsView(discord.ui.View):
     None
 
     """
-    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, all_cooldowns: List[cooldowns.Cooldown],
+    def __init__(self, ctx: bridge.BridgeContext, bot: bridge.AutoShardedBot, all_cooldowns: list[cooldowns.Cooldown],
                  embed_function: Callable, interaction: Optional[discord.Interaction] = None):
         super().__init__(timeout=settings.INTERACTION_TIMEOUT)
         self.bot = bot

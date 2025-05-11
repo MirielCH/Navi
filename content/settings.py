@@ -3,7 +3,7 @@
 
 import asyncio
 import re
-from typing import Any, List, Optional
+from typing import Any, Optional
 
 import discord
 from discord.ext import bridge, commands
@@ -142,7 +142,7 @@ if not settings.LITE_MODE: SETTINGS_USER_COLUMNS['reactions'] = 'reactions'
 
 # --- Commands ---
 async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                 action: str, settings: List[str]) -> None:
+                                 action: str, settings: list[str]) -> None:
     """Enables/disables specific settings"""
     user_settings: users.User = await users.get_user(ctx.author.id)
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
@@ -259,7 +259,7 @@ async def command_enable_disable(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
     await ctx.respond(answer.strip())
 
 
-async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: List[str]) -> None:
+async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context, args: list[str]) -> None:
     user_settings: users.User = await users.get_user(ctx.author.id)
     async def get_current_multipliers() -> str:
         current_multipliers: str = '**Managed**'
@@ -1034,7 +1034,7 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
 
 
 async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext, user_settings: users.User,
-                                 user_portals: List[portals.Portal]) -> discord.Embed:
+                                 user_portals: list[portals.Portal]) -> discord.Embed:
     """Portals settings embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     message_style = 'Embed' if user_settings.portals_as_embed else 'Normal message'
@@ -1057,7 +1057,7 @@ async def embed_settings_portals(bot: bridge.AutoShardedBot, ctx: discord.Applic
 
 
 async def embed_settings_messages(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
-                                  user_settings: users.User, activity: str) -> List[discord.Embed]:
+                                  user_settings: users.User, activity: str) -> list[discord.Embed]:
     """Reminder message specific activity embed"""
     ctx_author_name = ctx.author.global_name if ctx.author.global_name is not None else ctx.author.name
     embed_no = 1

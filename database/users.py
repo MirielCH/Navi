@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 from math import ceil
 import sqlite3
-from typing import Any, NamedTuple, Tuple
+from typing import Any, NamedTuple
 
 from discord import utils
 
@@ -75,7 +75,7 @@ class User():
     alert_vote: UserAlert
     alert_weekly: UserAlert
     alert_work: UserAlert
-    alts: Tuple[int]
+    alts: tuple[int, ...]
     ascended: bool
     area_20_cooldowns_enabled: bool
     auto_flex_enabled: bool

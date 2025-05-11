@@ -6,7 +6,6 @@ from datetime import datetime, timedelta
 from humanfriendly import format_timespan
 import re
 import sqlite3
-from typing import List
 
 import discord
 from discord import utils
@@ -26,7 +25,7 @@ class TasksCog(commands.Cog):
         self.bot = bot
 
     # Task management
-    async def background_task(self, reminders_list: List[reminders.Reminder]) -> None:
+    async def background_task(self, reminders_list: list[reminders.Reminder]) -> None:
         """Background task for scheduling reminders"""
         first_reminder = reminders_list[0]
         current_time = utils.utcnow()
@@ -206,7 +205,7 @@ class TasksCog(commands.Cog):
         except Exception as error:
             await errors.log_error(error)
 
-    async def create_task(self, reminders_list: List[reminders.Reminder]) -> None:
+    async def create_task(self, reminders_list: list[reminders.Reminder]) -> None:
         """Creates a new background task"""
         await self.delete_task(reminders_list[0].task_name)
         task = self.bot.loop.create_task(self.background_task(reminders_list))

@@ -5,7 +5,7 @@
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
 import sqlite3
-from typing import NamedTuple, Optional, Tuple
+from typing import NamedTuple, Optional
 
 from discord import utils
 from discord.ext import tasks
@@ -150,7 +150,7 @@ class LogLeaderboardUser():
 @tasks.loop(minutes=5.0)
 async def log_to_leaderboard():
     """Task that converts the tracking log entries into leaderboard entries"""
-    async def count_commands(log_entries: Tuple[LogEntry]) -> dict:
+    async def count_commands(log_entries: tuple[LogEntry, ...]) -> dict:
         """Returns dict with total command count for each guild for a tuple of log entries
 
         Returns
@@ -298,7 +298,7 @@ async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: da
 
 
 async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
-                          guild_id: Optional[int] = None) -> Tuple[LogEntry]:
+                          guild_id: Optional[int] = None) -> tuple[LogEntry, ...]:
     """Gets all log entries for one command for a certain amount of time from a user id.
     If the guild_id is specified, the log entries are limited to that guild.
 
@@ -311,7 +311,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogEntry, ...]
 
     Raises
     ------
@@ -351,7 +351,7 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     return tuple(log_entries)
 
 
-async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
+async def get_all_log_entries(user_id: int) -> tuple[LogEntry, ...]:
     """Gets ALL log entries for a user.
 
     Arguments
@@ -360,7 +360,7 @@ async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogEntry, ...]
 
     Raises
     ------
@@ -394,7 +394,7 @@ async def get_all_log_entries(user_id: int) -> Tuple[LogEntry]:
     return tuple(log_entries)
 
 
-async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
+async def get_old_log_entries(days: int) -> tuple[LogEntry, ...]:
     """Gets all single log entries older than a certain amount of days.
 
     Arguments
@@ -405,7 +405,7 @@ async def get_old_log_entries(days: int) -> Tuple[LogEntry]:
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogEntry, ...]
 
     Raises
     ------
@@ -513,7 +513,7 @@ async def get_log_leaderboard_user(user_id: int, guild_id: int, command: str) ->
 
     Returns
     -------
-    Tuple[LogEntry]
+    LogLeaderboardUser
 
     Raises
     ------
@@ -544,7 +544,7 @@ async def get_log_leaderboard_user(user_id: int, guild_id: int, command: str) ->
     return log_leaderboard_user
 
 
-async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> Tuple[LogLeaderboardUser]:
+async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> tuple[LogLeaderboardUser, ...]:
     """Gets a certain record from table "tracking_leaderboard".
 
     Arguments
@@ -554,7 +554,7 @@ async def get_log_leaderboard(command: str, guild_id: Optional[int] = None) -> T
 
     Returns
     -------
-    Tuple[LogEntry]
+    Tuple[LogLeaderboardUser, ...]
 
     Raises
     ------

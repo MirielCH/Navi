@@ -3,9 +3,8 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-import re
 import sqlite3
-from typing import List, Optional, Tuple, TYPE_CHECKING, Union
+from typing import Optional, Union
 
 from discord import utils
 from discord.ext import tasks
@@ -252,7 +251,7 @@ async def get_clan_reminder(clan_name: str) -> Reminder:
 
 
 async def get_active_user_reminders(user_id: Optional[int] = None, activity: Optional[str] = None,
-                                    end_time: Optional[datetime] = None) -> Tuple[Reminder]:
+                                    end_time: Optional[datetime] = None) -> tuple[Reminder, ...]:
     """Gets all active reminders for all users or - if the argument user_id is set - for one user.
 
     Arguments
@@ -263,7 +262,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -309,12 +308,12 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
     return tuple(reminders)
 
 
-async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_active_clan_reminders(clan_name: Optional[str] = None) -> tuple[Reminder, ...]:
     """Gets all active reminders for all clans or - if the argument clan_name is set - for one clan.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -352,14 +351,13 @@ async def get_active_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Re
     return tuple(reminders)
 
 
-async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_due_user_reminders(user_id: Optional[int] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all users or - if the argument user_id is set - for one user that are due within
     the next 15 seconds.
 
     Returns
     -------
-    Tuple[Reminder]
-
+    Tuple[Reminder, ...]
     Raises
     ------
     sqlite3.Error if something happened within the database.
@@ -403,13 +401,13 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     return tuple(reminders)
 
 
-async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_due_clan_reminders(clan_name: Optional[str] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all clans or - if the argument clan_name is set - for one clan that are due within
     the next 15 seconds.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -454,13 +452,13 @@ async def get_due_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Remin
     return tuple(reminders)
 
 
-async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminder]:
+async def get_old_user_reminders(user_id: Optional[int] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all users or - if the argument user_id is set - for one user that are have an end time
     more than 20 seconds in the past.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -499,13 +497,13 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> Tuple[Reminde
     return tuple(reminders)
 
 
-async def get_old_clan_reminders(clan_name: Optional[str] = None) -> Tuple[Reminder]:
+async def get_old_clan_reminders(clan_name: Optional[str] = None) -> tuple[Reminder, ...]:
     """Gets all reminders for all clans or - if the argument clan_name is set - for one clan that are have an end time
     more than 20 seconds in the past.
 
     Returns
     -------
-    Tuple[Reminder]
+    Tuple[Reminder, ...]
 
     Raises
     ------
@@ -774,7 +772,7 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
     return reminder
 
 
-async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, str], activities: List[str]) -> None:
+async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, str], activities: list[str]) -> None:
     """Reduces the end time of all user reminders affected by sleepy potions of one user by a certain amount.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -841,7 +839,7 @@ async def reduce_reminder_time(user_settings, time_reduction: Union[timedelta, s
             await reminder.update(end_time=new_end_time, message=reminder_message)
 
 
-async def reduce_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:
+async def reduce_reminder_time_percentage(user_settings, percentage: float, activities: list[str]) -> None:
     """Reduces the end time of user reminders by a certain percentage of the cooldown.
     If the new end time is within the next 15 seconds, the reminder is immediately scheduled.
     If the new end time is in the past, the reminder is deleted.
@@ -896,7 +894,7 @@ async def reduce_reminder_time_percentage(user_settings, percentage: float, acti
             await reminder.update(end_time=new_end_time)
 
 
-async def increase_reminder_time_percentage(user_settings, percentage: float, activities: List[str]) -> None:
+async def increase_reminder_time_percentage(user_settings, percentage: float, activities: list[str]) -> None:
     """Increases the end time of user reminders by a certain percentage of the cooldown.
     Doesn't affect reminders already scheduled.
     Note that the percentage is calculated based on the full cooldown.

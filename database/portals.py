@@ -3,7 +3,6 @@
 
 from dataclasses import dataclass
 import sqlite3
-from typing import Tuple
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -122,7 +121,7 @@ async def get_portal(user_id: int, channel_id: int) -> Portal:
     return portal
 
 
-async def get_portals(user_id: int) -> Tuple[Portal]:
+async def get_portals(user_id: int) -> tuple[Portal, ...]:
     """Gets all portals for a user.
 
     Arguments
@@ -131,7 +130,7 @@ async def get_portals(user_id: int) -> Tuple[Portal]:
 
     Returns
     -------
-    Tuple[Portal]
+    Tuple[Portal, ...]
 
     Raises
     ------

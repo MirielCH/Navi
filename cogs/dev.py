@@ -9,7 +9,7 @@ import re
 import shutil
 import sqlite3
 import sys
-from typing import List, TextIO, TYPE_CHECKING
+from typing import TextIO, TYPE_CHECKING
 
 import discord
 from discord import utils
@@ -610,7 +610,7 @@ def setup(bot: bridge.AutoShardedBot):
 
 
 # --- Embeds ---
-async def embed_dev_event_reductions(all_cooldowns: List[cooldowns.Cooldown]) -> discord.Embed:
+async def embed_dev_event_reductions(all_cooldowns: list[cooldowns.Cooldown]) -> discord.Embed:
     """Event reductions embed"""
     reductions_slash = reductions_text = ''
     for cooldown in all_cooldowns:
