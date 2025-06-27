@@ -451,18 +451,22 @@ class PetsCog(commands.Cog):
                                                                      time_left, message.channel.id, reminder_message)
                             )
                         if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
-                search_patterns = [
-                    r'claim\*\*: (\d+?)/\d+\n', #English
-                    r'reclamar\*\*: (\d+?)/\d+\n', #Spanish
-                    r'coletar\*\*: (\d+?)/\d+\n', #Portuguese
-                ]
-                pet_claim_amount_match = await functions.get_match_from_patterns(search_patterns, message_field_1_value)
-                if not pet_claim_amount_match:
-                    await functions.add_warning_reaction(message)
-                    await errors.log_error('Amount of claimable pets in pet summary not found.', message)
-                    return
-                if pet_claim_amount_match.group(1) == '0' and user_settings.ready_pets_claim_active:
-                    await user_settings.update(ready_pets_claim_active=False)
+                if user_settings.ready_pets_claim_active and not user_settings.ready_pets_claim_after_every_pet:
+                    search_patterns = [
+                        r'claim\*\*: (\d+?)/(\d+?)\n', #English
+                        r'reclamar\*\*: (\d+?)/(\d+?)\n', #Spanish
+                        r'coletar\*\*: (\d+?)/(\d+?)\n', #Portuguese
+                    ]
+                    pet_claim_amount_match = await functions.get_match_from_patterns(search_patterns, message_field_1_value)
+                    if not pet_claim_amount_match:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Amount of claimable pets in pet summary not found.', message)
+                        return
+                    pets_ready_to_claim = int(pet_claim_amount_match.group(1))
+                    pets_total = int(pet_claim_amount_match.group(2))
+
+                    if pets_ready_to_claim < pets_total:
+                        await user_settings.update(ready_pets_claim_active=False)
 
 # Initialization
 def setup(bot: bridge.AutoShardedBot):

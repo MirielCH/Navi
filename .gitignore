@@ -135,3 +135,4 @@ database/navi_db*.db
 
 # Visual Studio Code
 .vscode/
+.VSCodeCounter/
