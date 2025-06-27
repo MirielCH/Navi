@@ -5,7 +5,7 @@ import discord
 from discord import utils
 from discord.ext import bridge
 
-from database import reminders, users
+from database import clans, reminders, users
 from resources import emojis, exceptions, settings, strings
 
 
@@ -39,11 +39,24 @@ async def embed_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
     user_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[user_donor_tier]
     user_donor_tier = f'{user_donor_tier_emoji} `{user_donor_tier}`'.lstrip('None ')
 
+    clan_name: str
+    try:
+        clan: clans.Clan = await clans.get_clan_by_user_id(user_settings.user_id)
+        clan_name = clan.clan_name
+    except exceptions.NoDataFoundError:
+        clan_name = 'None'
+
+    last_tt_time: str
+    if user_settings.last_tt.year == 1970:
+        last_tt_time = '`Never`'
+    else:
+        last_tt_time = utils.format_dt(user_settings.last_tt)
+
     game_data = (
         f'{emojis.BP} **Donor tier**: {user_donor_tier}\n'
-        f'{emojis.BP} **Guild name**: `{user_settings.clan_name}`\n'
+        f'{emojis.BP} **Guild name**: `{clan_name}`\n'
         f'{emojis.BP} **TT count**: `{user_settings.time_travel_count:,}`\n'
-        f'{emojis.BP} **Last TT time**: {utils.format_dt(user_settings.last_tt)}\n'
+        f'{emojis.BP} **Last TT time**: {last_tt_time}\n'
         f'{emojis.BP} **Current area**: `{user_settings.current_area}`\n'
         f'{emojis.BP} **Ascension**: '
         f'{f'{emojis.ENABLED}`Ascended`' if user_settings.ascended else f'{emojis.DISABLED}`Not ascended`'}\n'

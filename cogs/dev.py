@@ -144,7 +144,7 @@ class DevCog(commands.Cog):
             for attribute_name, emoji_string in missing_emojis.items():
                 description = f'{description}\n- {emoji_string} `{attribute_name}`'
         if len(description) >= 4096:
-            description = f'{description[:4050]}\n- ... too many errors, what are you even doing?'
+            description = f'{description[:4000]}\n- ... too many errors, what are you even doing?'
         embed = discord.Embed(
             title = 'Emoji check',
             description = description,

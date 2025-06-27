@@ -9,7 +9,7 @@ from discord.ext import bridge, commands
 
 from content import main
 from database import errors, guilds
-from resources import exceptions, functions, logs, settings
+from resources import exceptions, functions, logs, settings, strings
 
 if TYPE_CHECKING:
     from discord.ext.commands import Command
@@ -189,6 +189,11 @@ class MainCog(commands.Cog):
             await ctx.respond(
                 await ctx.respond('As you might have guessed, you are not allowed to use this command.',
                 ephemeral=True)
+            )
+        elif isinstance(error, exceptions.NoClanLeaderFoundError):
+            await ctx.reply(
+                f'**{ctx_author_name}**, there is no leader registered for this guild.\n'
+                f'Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update your guild.',
             )
         elif isinstance(error, discord.errors.Forbidden):
             return

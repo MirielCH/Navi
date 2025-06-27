@@ -17,7 +17,7 @@ ENV_VARIABLE_MISSING: Final[str] = (
 )
 
 PYTHON_VERSION: Final[float] = 3.12
-NAVI_DB_VERSION: Final[int] = 27
+NAVI_DB_VERSION: Final[int] = 28
 
 # Files and directories
 BOT_DIR: Final[str] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

@@ -7,6 +7,11 @@ class NoArgumentsError(ValueError):
     pass
 
 
+class MissingArgumentsError(ValueError):
+    """Custom exception for when an expected argument is missing in a function"""
+    pass
+
+
 class NoDataFoundError(Exception):
     """Custom exception for when no data is returned from the database"""
     pass
@@ -24,4 +29,9 @@ class FirstTimeUserError(Exception):
 
 class InvalidTimestringError(ValueError):
     """Custom exception for when a timestring is not valid."""
+    pass
+
+
+class NoClanLeaderFoundError(Exception):
+    """Custom exception for when a clan has no leader in the database."""
     pass

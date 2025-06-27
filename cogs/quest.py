@@ -123,15 +123,18 @@ class QuestCog(commands.Cog):
                     'faça uma guild raid', #Portuguese
                 ]
                 if any(search_string in field_value.lower() for search_string in search_strings_guild_raid): 
+                    clan: clans.Clan | None
                     try:
-                        clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                        clan = await clans.get_clan_by_user_id(user_settings.user_id)
                     except exceptions.NoDataFoundError:
                         clan = None
-                    try:
-                        clan_reminder = await reminders.get_clan_reminder(user_settings.clan_name)
-                    except exceptions.NoDataFoundError:
-                        clan_reminder = None
-                    if clan is not None:
+                    if clan:
+                        clan_reminder: reminders.Reminder | None
+                        try:
+                            clan_reminder = await reminders.get_clan_reminder(clan.clan_name)
+                        except exceptions.NoDataFoundError:
+                            clan_reminder = None
+
                         if clan.alert_enabled:
                             if user_settings.dnd_mode_enabled:
                                 user_name = f'**{user_global_name}**,'
@@ -154,7 +157,7 @@ class QuestCog(commands.Cog):
                                 )
                                 return
                             command_raid = await functions.get_slash_command(user_settings, 'guild raid')
-                            if clan_reminder is not None:
+                            if clan_reminder:
                                 current_time = utils.utcnow()
                                 time_left = clan_reminder.end_time - current_time
                                 timestring = await functions.parse_timedelta_to_timestring(time_left)
@@ -394,7 +397,7 @@ class QuestCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 try:
-                    clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                    clan: clans.Clan = await clans.get_clan_by_user_id(user_settings.user_id)
                 except exceptions.NoDataFoundError:
                     return
                 if not clan.alert_enabled: return
@@ -438,11 +441,12 @@ class QuestCog(commands.Cog):
                 except exceptions.NoDataFoundError:
                     clan_reminder = None
                 current_time = utils.utcnow()
-                for member_id in clan.member_ids:
-                    if member_id == user.id: continue
+                clan_member: clans.ClanMember
+                for clan_member in clan.members:
+                    if clan_member.user_id == user.id: continue
                     try:
                         user_clan_reminder: reminders.Reminder = (
-                            await reminders.get_user_reminder(member_id, 'guild')
+                            await reminders.get_user_reminder(clan_member.user_id, 'guild')
                         )
                     except exceptions.NoDataFoundError:
                         continue
@@ -528,11 +532,12 @@ class QuestCog(commands.Cog):
                                     )
                                 except exceptions.NoDataFoundError:
                                     clan_reminder = None
-                            for member_id in clan.member_ids:
-                                if member_id == user.id: continue
+                            clan_member: clans.ClanMember
+                            for clan_member in clan.members:
+                                if clan_member.user_id == user.id: continue
                                 try:
                                     user_clan_reminder: reminders.Reminder = (
-                                        await reminders.get_user_reminder(member_id, 'guild')
+                                        await reminders.get_user_reminder(clan_member.user_id, 'guild')
                                     )
                                 except exceptions.NoDataFoundError:
                                     continue
@@ -563,11 +568,12 @@ class QuestCog(commands.Cog):
                     return
                 if clan.quest_user_id == user.id:
                     await clan.update(quest_user_id=None)
-                    for member_id in clan.member_ids:
-                        if member_id == user.id: continue
+                    clan_member: clans.ClanMember
+                    for clan_member in clan.members:
+                        if clan_member.user_id == user.id: continue
                         try:
                             user_clan_reminder: reminders.Reminder = (
-                                await reminders.get_user_reminder(member_id, 'guild')
+                                await reminders.get_user_reminder(clan_member.user_id, 'guild')
                             )
                         except exceptions.NoDataFoundError:
                             continue

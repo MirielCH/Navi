@@ -164,7 +164,7 @@ class TasksCog(commands.Cog):
             if first_reminder.reminder_type == 'clan':
                 channel = await functions.get_discord_channel(self.bot, first_reminder.channel_id)
                 if channel is None: return
-                clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
+                clan: clans.Clan = await clans.get_clan_by_clan_name(first_reminder.clan_name)
                 if clan.quest_user_id is not None:
                     quest_user_id = clan.quest_user_id
                     await clan.update(quest_user_id=None)
@@ -188,9 +188,9 @@ class TasksCog(commands.Cog):
                     except asyncio.CancelledError:
                         return
                 message_mentions = ''
-                for member_id in clan.member_ids:
-                    if member_id is not None:
-                        message_mentions = f'{message_mentions}<@{member_id}> '
+                clan_member: clans.ClanMember
+                for clan_member in clan.members:
+                    message_mentions = f'{message_mentions}<@{clan_member.user_id}> '
                 time_left = get_time_left()
                 try:
                     await asyncio.sleep(time_left.total_seconds())
@@ -300,6 +300,10 @@ class TasksCog(commands.Cog):
             self.disable_event_reduction.start()
         except RuntimeError:
             pass
+        try:
+            self.delete_empty_clans.start()
+        except RuntimeError:
+            pass
 
     # Tasks
     @tasks.loop(seconds=0.5)
@@ -356,6 +360,17 @@ class TasksCog(commands.Cog):
                     f'Reminder: {reminder}\nError: {error}'
             )
 
+    @tasks.loop(hours=24)
+    async def delete_empty_clans(self) -> None:
+        """Task that deletes clans that have no members registered anymore."""
+        try:
+            all_clans: tuple[clans.Clan, ...] = await clans.get_all_clans()
+        except exceptions.NoDataFoundError:
+            return
+        clan: clans.Clan
+        for clan in all_clans:
+            if not clan.members: await clan.delete()
+            
     @tasks.loop(seconds=60)
     async def reset_clans(self) -> None:
         """Task that creates the weekly reports and resets the clans"""

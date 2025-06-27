@@ -85,7 +85,6 @@ class User():
     auto_ready_enabled: bool
     bot_enabled: bool
     chocolate_box_unlocked: bool
-    clan_name: str
     christmas_area_enabled: bool
     cmd_cd_visible: bool
     cmd_inventory_visible: bool
@@ -227,7 +226,6 @@ class User():
         self.auto_ready_enabled = new_settings.auto_ready_enabled
         self.bot_enabled = new_settings.bot_enabled
         self.chocolate_box_unlocked = new_settings.chocolate_box_unlocked
-        self.clan_name = new_settings.clan_name
         self.christmas_area_enabled = new_settings.christmas_area_enabled
         self.cmd_cd_visible = new_settings.cmd_cd_visible
         self.cmd_inventory_visible = new_settings.cmd_inventory_visible
@@ -471,7 +469,6 @@ class User():
             auto_ready_enabled: bool
             bot_enabled: bool
             chocolate_box_unlocked: bool
-            clan_name: str
             cmd_cd_visible: bool
             cmd_inventory_visible: bool
             cmd_cmd_ready_visible: bool
@@ -805,7 +802,6 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             auto_flex_tip_read = bool(record['auto_flex_tip_read']),
             bot_enabled = bool(record['bot_enabled']),
             chocolate_box_unlocked = bool(record['chocolate_box_unlocked']),
-            clan_name = record['clan_name'],
             christmas_area_enabled = bool(record['christmas_area_enabled']),
             cmd_cd_visible = record['cmd_cd_visible'],
             cmd_inventory_visible = record['cmd_inventory_visible'],
@@ -962,44 +958,6 @@ async def get_all_users() -> tuple[User,...]:
         raise
     if not records:
         raise exceptions.FirstTimeUserError(f'No user data found in database (how likely is that).')
-    users: list[User] = []
-    for record in records:
-        record: dict[str, Any] = dict(record)
-        record['alts'] = await alts_db.get_alts(record['user_id'])
-        user: User = await _dict_to_user(record)
-        users.append(user)
-
-    return tuple(users)
-
-
-async def get_users_by_clan_name(clan_name: str) -> tuple[User,...]:
-    """Gets all user settings of all users that have a certain clan_name set.
-
-    Returns
-    -------
-    Tuple with User objects
-
-    Raises
-    ------
-    sqlite3.Error if something happened within the database.
-    exceptions.NoDataFoundError if no guild was found.
-    LookupError if something goes wrong reading the dict.
-    Also logs all errors to the database.
-    """
-    table: str = 'users'
-    function_name: str = 'get_users_by_clan_name'
-    sql: str = f'SELECT * FROM {table} WHERE clan_name=?'
-    try:
-        cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (clan_name,))
-        records: list[Any] = cur.fetchall()
-    except sqlite3.Error as error:
-        await errors.log_error(
-            strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
-        )
-        raise
-    if not records:
-        raise exceptions.FirstTimeUserError(f'No users found for clan {clan_name} ')
     users: list[User] = []
     for record in records:
         record: dict[str, Any] = dict(record)
@@ -1187,7 +1145,6 @@ async def _update_user(user: User, **updated_settings) -> None:
         auto_ready_enabled: bool
         bot_enabled: bool
         chocolate_box_unlocked: bool
-        clan_name: str
         cmd_cd_visible: bool
         cmd_inventory_visible: bool
         cmd_cmd_ready_visible: bool

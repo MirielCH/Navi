@@ -282,12 +282,16 @@ class ManageClanSettingsSelect(discord.ui.Select):
                          custom_id='manage_clan_settings')
 
     async def callback(self, interaction: discord.Interaction):
+        clan_leader_ids: list[int] = []
+        for clan_member in self.view.clan_settings.members:
+            if clan_member.member_type == 'leader':
+                clan_leader_ids.append(clan_member.user_id)
         user_global_name = interaction.user.global_name if interaction.user.global_name is not None else interaction.user.name
-        if interaction.user.id != self.view.clan_settings.leader_id:
+        if interaction.user.id not in clan_leader_ids:
             await interaction.response.send_message(
-                f'**{user_global_name}**, you are not registered as the guild owner. Only the guild owner can '
+                f'**{user_global_name}**, you are not registered as a guild leader. Only guild leaders can '
                 f'change these settings.\n'
-                f'If you _are_ the guild owner, run {strings.SLASH_COMMANDS["guild list"]} to update '
+                f'If you _are_ a guild leader, run {strings.SLASH_COMMANDS["guild list"]} to update '
                 f'your guild in my database.\n',
                 ephemeral=True
             )

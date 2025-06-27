@@ -941,9 +941,17 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
     else:
         quest_user = '`None`'
 
+    clan_leaders: str = ''
+    clan_member: clans.ClanMember
+    for clan_member in clan_settings.members:
+        if clan_member.member_type == 'leader':
+            clan_leaders = f'{clan_leaders}, <@{clan_member.user_id}>'
+    if not clan_leaders:
+        clan_leaders = f'{emojis.WARNING} No guild leader found! Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guid list` to update the member list.'
+
     overview = (
         f'{emojis.BP} **Name**: `{clan_settings.clan_name}`\n'
-        f'{emojis.BP} **Owner**: <@{clan_settings.leader_id}>\n'
+        f'{emojis.BP} **Leader(s)**: {clan_leaders.strip(', ')}\n'
     )
     reminder = (
         f'{emojis.BP} **Guild channel**: {clan_channel}\n'
@@ -957,12 +965,12 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
         f'{emojis.BP} **Member currently on quest**: {quest_user}\n'
         f'{emojis.DETAIL} _The member on a guild quest will get pinged 5 minutes early._'
     )
-    members = ''
-    member_count = 0
-    for member_id in clan_settings.member_ids:
-        if member_id is not None:
-            members = f'{members}\n{emojis.BP} <@{member_id}>'
-            member_count += 1
+    members: str = ''
+    member_count: int = 0
+    clan_member: clans.ClanMember
+    for clan_member in clan_settings.members:
+        members = f'{members}\n{emojis.BP} <@{clan_member.user_id}>'
+        member_count += 1
     members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update guild members._'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
@@ -977,7 +985,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
     embed.add_field(name='OVERVIEW', value=overview, inline=False)
     embed.add_field(name='REMINDER', value=reminder, inline=False)
     embed.add_field(name='GUILD QUESTS', value=quests, inline=False)
-    embed.add_field(name=f'MEMBERS ({member_count}/10)', value=members, inline=False)
+    embed.add_field(name=f'MEMBERS ({member_count}/20)', value=members, inline=False)
     return embed
 
 

@@ -532,7 +532,74 @@ def update_database() -> bool:
             "ALTER TABLE users ADD alert_eternity_sealing_message TEXT NOT NULL DEFAULT ('{name} Hey! The eternity just sealed itself!')",
             "ALTER TABLE users ADD ready_eternity_visible INTEGER DEFAULT (1) NOT NULL",
         ]
-        
+
+    if db_version < 28:
+
+        # Create new clan members table
+        cur.execute(
+            "CREATE TABLE IF NOT EXISTS clan_members (user_id INTEGER NOT NULL, clan_name TEXT NOT NULL, member_type TEXT NOT NULL)",
+        )
+        cur.execute(
+            "CREATE UNIQUE INDEX IF NOT EXISTS user_id_unique ON clan_members (user_id)",
+        )
+
+        # Migrate old clan member columns to new table
+        cur.execute("SELECT * FROM clans")
+        records: list[Any] = cur.fetchall()
+        record: Any
+        old_columns_found: bool = False
+        for record in records:
+            record_dict: dict[str, Any] = dict(record)
+            if 'member1_id' not in record_dict: break
+            old_columns_found = True
+            member_ids: list[int] = [
+                record_dict['leader_id'],
+                record_dict['member1_id'],
+                record_dict['member2_id'],
+                record_dict['member3_id'],
+                record_dict['member4_id'],
+                record_dict['member5_id'],
+                record_dict['member6_id'],
+                record_dict['member7_id'],
+                record_dict['member8_id'],
+                record_dict['member9_id'],
+                record_dict['member10_id'],
+            ]
+            member_ids_unique: list[int] = []
+            member_id: int
+            for member_id in member_ids:
+                if member_id not in member_ids_unique and member_id is not None:
+                    member_ids_unique.append(member_id)
+            index: int
+            for index, member_id in enumerate(member_ids_unique):
+                member_type: str = 'leader' if index == 0 else 'member'
+                cur.execute(f"SELECT * FROM clan_members WHERE user_id = ?", (member_id,))
+                record_member: Any = cur.fetchone()
+                if record_member:
+                    cur.execute(f"UPDATE clan_members SET clan_name = ?, member_type = ? WHERE user_id = ?",
+                                (record_dict['clan_name'], member_type, member_id))
+                else:
+                    cur.execute(f"INSERT INTO clan_members (clan_name, user_id, member_type) VALUES (?, ?, ?)",
+                                (record_dict['clan_name'], member_id, member_type))
+            cur.execute('UPDATE clans SET leader_id = NULL WHERE clan_name = ?', (record_dict['clan_name'],))
+
+        if old_columns_found:
+            cur.execute('ALTER TABLE clans DROP COLUMN member1_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member2_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member3_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member4_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member5_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member6_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member7_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member8_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member9_id')
+            cur.execute('ALTER TABLE clans DROP COLUMN member10_id')
+
+        # Remove column clan_name in users
+        sqls += [
+            "ALTER TABLE users DROP COLUMN clan_name",
+        ]
+    
     # Run SQLs
     sql: str
     for sql in sqls:
