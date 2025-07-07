@@ -235,36 +235,38 @@ class SettingsCog(commands.Cog):
                     await errors.log_error(f'Clan name not found in guild list message: {message_clan_name}', message_after)
                     return
                 search_patterns = [
-                    r'Owner: (.+?)$', #English
-                    r'Líder: (.+?)$', #Spanish, Portuguese
+                    r'owner: (.+?)$', #English
+                    r'líder: (.+?)$', #Spanish, Portuguese
                 ]
-                clan_leader_match = await functions.get_match_from_patterns(search_patterns, message_clan_leader)
-                if clan_leader_match:
-                    clan_leader = clan_leader_match.group(1)
-                else:
-                    await functions.add_warning_reaction(message_after)
-                    await errors.log_error('Clan owner not found in guild list message: {message_clan_leader}', message_after)
-                    return
+                clan_leaders = []
+                for line in message_clan_leader.split('\n'):
+                    clan_leader_match = await functions.get_match_from_patterns(search_patterns, line)
+                    if clan_leader_match:
+                        clan_leader = clan_leader_match.group(1)
+                    else:
+                        await functions.add_warning_reaction(message_after)
+                        await errors.log_error(f'Clan owner not found in guild list footer line: {line}', message_after)
+                        return
+                    if clan_leader.isnumeric():
+                        clan_leaders.append(int(clan_leader))
+                    else:
+                        user_name_match = re.search(r'^(.+?)(?:#(\d+?))?$', clan_leader)
+                        if not user_name_match:
+                            await functions.add_warning_reaction(message_after)
+                            await errors.log_error(f'Couldn\'t find user ID or name for guild list leader "{clan_leader}".',
+                                                    message_after)
+                            return
+                        username = user_name_match.group(1)
+                        discriminator = user_name_match.group(2)
+                        if discriminator is not None:
+                            clan_leader = discord.utils.get(message_before.guild.members,
+                                                            name=username, discriminator=discriminator)
+                        else:
+                            clan_leader = discord.utils.get(message_before.guild.members,
+                                                            name=username)
+                        clan_leaders.append(clan_leader.id)
                 clan_members = message_clan_members.split('\n')
                 clan_member_ids = []
-                if clan_leader.isnumeric():
-                    clan_leader_id = int(clan_leader)
-                else:
-                    user_name_match = re.search(r'^(.+?)(?:#(\d+?))?$', clan_leader)
-                    if not user_name_match:
-                        await functions.add_warning_reaction(message_after)
-                        await errors.log_error(f'Couldn\'t find user ID or name for guild list leader "{clan_leader}".',
-                                                message_after)
-                        return
-                    username = user_name_match.group(1)
-                    discriminator = user_name_match.group(2)
-                    if discriminator is not None:
-                        clan_leader = discord.utils.get(message_before.guild.members,
-                                                        name=username, discriminator=discriminator)
-                    else:
-                        clan_leader = discord.utils.get(message_before.guild.members,
-                                                        name=username)
-                    clan_leader_id = clan_leader.id
                 for member in clan_members:
                     user_id_match = re.search(r'^ID: \*\*(\d+?)\*\*$', member)
                     if user_id_match:
@@ -287,7 +289,7 @@ class SettingsCog(commands.Cog):
                         member_id = member.id
                     clan_member_ids.append(member_id)
                 try:
-                    clan: clans.Clan = await clans.get_clan_by_user_id(clan_leader_id)
+                    clan: clans.Clan = await clans.get_clan_by_user_id(clan_leaders[0])
                     if clan.clan_name != clan_name:
                         try:
                             reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
@@ -299,9 +301,9 @@ class SettingsCog(commands.Cog):
                     pass
                 try:
                     clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
-                    await clan.update(leader_ids=[clan_leader_id,], member_ids=clan_member_ids)
+                    await clan.update(leader_ids=clan_leaders, member_ids=clan_member_ids)
                 except exceptions.NoDataFoundError:
-                    clan: clans.Clan = await clans.insert_clan(clan_name, [clan_leader_id,], clan_member_ids)
+                    clan: clans.Clan = await clans.insert_clan(clan_name, clan_leaders, clan_member_ids)
                 if not clan.record_exists:
                     if settings.DEBUG_MODE: await message_after.channel.send(strings.MSG_ERROR)
                     return

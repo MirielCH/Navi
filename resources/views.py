@@ -482,10 +482,12 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Cel multiply': 'alert_cel_multiply',
             'Cel sacrifice': 'alert_cel_sacrifice',
             'Chimney': 'alert_chimney',
+            'Color tournament': 'alert_color_tournament',
             'ETERNAL presents': 'alert_eternal_present',
             'Love share': 'alert_love_share',
             'Megarace': 'alert_megarace',
             'Minirace': 'alert_minirace',
+            'Surf': 'alert_surf',
         }
         self.add_item(components.ToggleReadySettingsSelect(self, toggled_settings_commands, 'Toggle command reminders',
                                                            'toggle_command_reminders'))
@@ -682,10 +684,12 @@ class SettingsReminders2View(discord.ui.View):
             'Cel multiply': 'alert_cel_multiply',
             'Cel sacrifice': 'alert_cel_sacrifice',
             'Chimney': 'alert_chimney',
+            'Color tournament': 'alert_color_tournament',
             'ETERNAL presents': 'alert_eternal_present',
             'Love share': 'alert_love_share',
             'Megarace': 'alert_megarace',
             'Minirace': 'alert_minirace',
+            'Surf': 'alert_surf',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_events, 'Toggle event reminders',
                                                           'toggle_event_reminders'))

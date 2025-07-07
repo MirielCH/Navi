@@ -644,6 +644,7 @@ async def embed_dev_seasonal_event(bot: bridge.AutoShardedBot) -> discord.Embed:
         f'{emojis.BP} Christmas: `xmas advent-calendar`, `xmas chimney`, `open eternal present`\n'
         f'{emojis.BP} Halloween: `hal boo`\n'
         f'{emojis.BP} Horse Festival: `hf megarace`, `hf minirace`\n'
+        f'{emojis.BP} Summer: `color tournament`, `surf`\n'
         f'{emojis.BP} Valentine: `love share`'
     )
 

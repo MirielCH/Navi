@@ -499,6 +499,12 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
                     f'{field_ready_commands}\n'
                     f'{emojis.DETAIL} _Use {command_pets_list} to update reminders._'
                 )
+            elif 'color tournament' in command:
+                command_craft_drink = await functions.get_slash_command(user_settings, 'smr craft drink')
+                field_ready_commands = (
+                    f'{field_ready_commands}\n'
+                    f'{emojis.DETAIL} _Use {command_craft_drink} to join._'
+                )
             elif 'arena' in command and user_settings.ready_channel_arena is not None:
                 field_ready_commands = (
                     f'{field_ready_commands}\n'

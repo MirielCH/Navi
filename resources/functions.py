@@ -1226,6 +1226,8 @@ async def get_ready_command_activities(seasonal_event: str) -> list[str]:
             activities_commands += ['boo',]
         case 'horse_festival':
             activities_commands += ['megarace', 'minirace']
+        case 'summer':
+            activities_commands += ['color-tournament', 'surf']
         case 'valentine':
             activities_commands += ['love-share',]
 

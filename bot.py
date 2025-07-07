@@ -1,6 +1,5 @@
 # bot.py
 
-from datetime import datetime
 import sqlite3
 import sys
 import traceback
@@ -139,6 +138,7 @@ EXTENSIONS: list[str] = [
         'cogs.settings_guild',
         'cogs.slashboard',
         'cogs.sleepy_potion',
+        'cogs.summer',
         'cogs.tasks',
         'cogs.time_cookie',
         'cogs.tracking',
@@ -158,9 +158,9 @@ if __name__ == '__main__':
 
     # Check if python version is new enough
     python_version: float = float(f'{sys.version_info.major}.{sys.version_info.minor}')
-    if python_version < settings.PYTHON_VERSION:
+    if python_version != settings.PYTHON_VERSION:
         error_message: str = (
-            f'Navi requires Python {settings.PYTHON_VERSION} or higher to run.\n'
+            f'Navi requires Python {settings.PYTHON_VERSION} to run.\n'
             f'Your current version is {sys.version_info.major}.{sys.version_info.minor}.{sys.version_info.micro}.'
         )
         print(error_message)

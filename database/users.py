@@ -47,6 +47,7 @@ class User():
     alert_cel_multiply: UserAlert
     alert_cel_sacrifice: UserAlert
     alert_chimney: UserAlert
+    alert_color_tournament: UserAlert
     alert_daily: UserAlert
     alert_duel: UserAlert
     alert_dungeon_miniboss: UserAlert
@@ -71,6 +72,7 @@ class User():
     alert_pet_tournament: UserAlert
     alert_pets: UserAlert
     alert_quest: UserAlert
+    alert_surf: UserAlert
     alert_training: UserAlert
     alert_vote: UserAlert
     alert_weekly: UserAlert
@@ -188,6 +190,7 @@ class User():
         self.alert_cel_sacrifice = new_settings.alert_cel_sacrifice
         self.alert_chimney = new_settings.alert_chimney
         self.alert_big_arena = new_settings.alert_big_arena
+        self.alert_color_tournament = new_settings.alert_color_tournament
         self.alert_daily = new_settings.alert_daily
         self.alert_duel = new_settings.alert_duel
         self.alert_dungeon_miniboss = new_settings.alert_dungeon_miniboss
@@ -212,6 +215,7 @@ class User():
         self.alert_pet_tournament = new_settings.alert_pet_tournament
         self.alert_pets = new_settings.alert_pets
         self.alert_quest = new_settings.alert_quest
+        self.alert_surf = new_settings.alert_surf
         self.alert_training = new_settings.alert_training
         self.alert_vote = new_settings.alert_vote
         self.alert_weekly = new_settings.alert_weekly
@@ -367,6 +371,10 @@ class User():
             alert_chimney_message: str
             alert_chimney_multiplier: float
             alert_chimney_visible: bool
+            alert_color_tournament_enabled: bool
+            alert_color_tournament_message: str
+            alert_color_tournament_multiplier: float
+            alert_color_tournament_visible: bool
             alert_daily_enabled: bool
             alert_daily_message: str
             alert_daily_multiplier: float
@@ -445,6 +453,10 @@ class User():
             alert_quest_message: str
             alert_quest_multiplier: float
             alert_quest_visible: bool
+            alert_surf_enabled: bool
+            alert_surf_message: str
+            alert_surf_multiplier: float
+            alert_surf_visible: bool
             alert_training_enabled: bool
             alert_training_message: str
             alert_training_multiplier: float
@@ -664,6 +676,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                       message=record['alert_chimney_message'],
                                       multiplier=record['alert_chimney_multiplier'],
                                       visible=bool(record['alert_chimney_visible'])),
+            alert_color_tournament = UserAlert(enabled=bool(record['alert_color_tournament_enabled']),
+                                      message=record['alert_color_tournament_message'],
+                                      multiplier=record['alert_color_tournament_multiplier'],
+                                      visible=bool(record['alert_color_tournament_visible'])),
             alert_big_arena = UserAlert(enabled=bool(record['alert_big_arena_enabled']),
                                         message=record['alert_big_arena_message'],
                                         multiplier=1.0,
@@ -776,6 +792,10 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
                                     message=record['alert_quest_message'],
                                     multiplier=float(record['alert_quest_multiplier']),
                                     visible=bool(record['alert_quest_visible'])),
+            alert_surf = UserAlert(enabled=bool(record['alert_surf_enabled']),
+                                    message=record['alert_surf_message'],
+                                    multiplier=float(record['alert_surf_multiplier']),
+                                    visible=bool(record['alert_surf_visible'])),
             alert_training = UserAlert(enabled=bool(record['alert_training_enabled']),
                                        message=record['alert_training_message'],
                                        multiplier=float(record['alert_training_multiplier']),
@@ -1043,6 +1063,10 @@ async def _update_user(user: User, **updated_settings) -> None:
         alert_chimney_message: str
         alert_chimney_multiplier: float
         alert_chimney_visible: bool
+        alert_color_tournament_enabled: bool
+        alert_color_tournament_message: str
+        alert_color_tournament_multiplier: float
+        alert_color_tournament_visible: bool
         alert_daily_enabled: bool
         alert_daily_message: str
         alert_daily_multiplier: float
@@ -1121,6 +1145,10 @@ async def _update_user(user: User, **updated_settings) -> None:
         alert_quest_message: str
         alert_quest_multiplier: float
         alert_quest_visible: bool
+        alert_surf_enabled: bool
+        alert_surf_message: str
+        alert_surf_multiplier: float
+        alert_surf_visible: bool
         alert_training_enabled: bool
         alert_training_message: str
         alert_training_multiplier: float

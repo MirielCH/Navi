@@ -599,6 +599,21 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE users DROP COLUMN clan_name",
         ]
+        
+    if db_version < 29:
+        sqls += [
+            "ALTER TABLE users ADD alert_color_tournament_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_color_tournament_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_color_tournament_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_color_tournament_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_surf_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_surf_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_surf_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_surf_visible INTEGER NOT NULL DEFAULT (1)",
+            "INSERT INTO cooldowns (activity, cooldown, donor_affected) VALUES ('surf', 14400, 0)",
+        ]
     
     # Run SQLs
     sql: str

@@ -222,7 +222,7 @@ class PetsCog(commands.Cog):
             if any(search_string in message_description.lower() for search_string in search_strings):
                 pet_names_emojis = {
                     'cat': emojis.PET_CAT,
-                    'voidog': emojis.PET_VOIDOG,
+                    'voidog': emojis.PET_VOIDOG, # Needs to be before "dog"!
                     'dog': emojis.PET_DOG,
                     'dragon': emojis.PET_DRAGON,
                     'golden bunny': emojis.PET_GOLDEN_BUNNY,
@@ -232,8 +232,9 @@ class PetsCog(commands.Cog):
                     'snowball': emojis.PET_SNOWBALL,
                     'pony': emojis.PET_PONY,
                     'panda': emojis.PET_PANDA,
-                    'snowman': emojis.PET_SNOWMAN,
                     'penguin': emojis.PET_PENGUIN,
+                    'snowman': emojis.PET_SNOWMAN,
+                    'turtle': emojis.PET_TURTLE,
                     'worker': emojis.PET_WORKER,
                 }
                 user_id = user_name = user_command_message = None

@@ -332,6 +332,9 @@ async def get_clan_by_clan_name(clan_name: str) -> Clan:
         )
         raise
 
+    if not record_clan:
+        raise exceptions.NoDataFoundError(f'No clan found in database for clan name "{clan_name}".')
+
     clan_members: tuple[ClanMember, ...] = await get_clan_members_by_clan_name(clan_name)
     clan: Clan = await _dict_to_clan(dict(record_clan), clan_members)
     

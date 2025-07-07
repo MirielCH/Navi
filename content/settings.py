@@ -793,7 +793,7 @@ async def command_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: bridge.B
         switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
-    view = views.SettingsReminders2View(ctx, bot, user_settings, embed_settings_reminders)
+    view = views.SettingsReminders2View(ctx, bot, user_settings, embed_settings_reminders_2)
     embed = await embed_settings_reminders_2(bot, ctx, user_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
@@ -1368,11 +1368,13 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         f'{emojis.BP} **Cel sacrifice**: '
         f'{await bool_to_text(user_settings.alert_cel_sacrifice.visible)}\n'
         f'{emojis.BP} **Chimney**: {await bool_to_text(user_settings.alert_chimney.visible)}\n'
+        f'{emojis.BP} **Color tournament**: {await bool_to_text(user_settings.alert_color_tournament.visible)}\n'
         f'{emojis.BP} **ETERNAL presents**: '
         f'{await bool_to_text(user_settings.alert_eternal_present.visible)}\n'
         f'{emojis.BP} **Love share**: {await bool_to_text(user_settings.alert_love_share.visible)}\n'
         f'{emojis.BP} **Megarace**: {await bool_to_text(user_settings.alert_megarace.visible)}\n'
         f'{emojis.BP} **Minirace**: {await bool_to_text(user_settings.alert_minirace.visible)}\n'
+        f'{emojis.BP} **Surf**: {await bool_to_text(user_settings.alert_surf.visible)}\n'
     )
     command_channels = (
         f'_Command channels are shown below the corresponding ready command._\n'
@@ -1488,11 +1490,13 @@ async def embed_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: discord.Ap
         f'{emojis.BP} **Cel sacrifice**: '
         f'{await functions.bool_to_text(user_settings.alert_cel_sacrifice.enabled)}\n'
         f'{emojis.BP} **Chimney**: {await functions.bool_to_text(user_settings.alert_chimney.enabled)}\n'
+        f'{emojis.BP} **Color tournament**: {await functions.bool_to_text(user_settings.alert_color_tournament.enabled)}\n'
         f'{emojis.BP} **ETERNAL presents**: '
         f'{await functions.bool_to_text(user_settings.alert_eternal_present.enabled)}\n'
         f'{emojis.BP} **Love share**: {await functions.bool_to_text(user_settings.alert_love_share.enabled)}\n'
         f'{emojis.BP} **Megarace**: {await functions.bool_to_text(user_settings.alert_megarace.enabled)}\n'
         f'{emojis.BP} **Minirace**: {await functions.bool_to_text(user_settings.alert_minirace.enabled)}\n'
+        f'{emojis.BP} **Surf**: {await functions.bool_to_text(user_settings.alert_surf.enabled)}\n'
     )
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
