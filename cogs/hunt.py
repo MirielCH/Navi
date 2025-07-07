@@ -463,8 +463,8 @@ class HuntCog(commands.Cog):
                             try:
                                 search_patterns = [
                                     fr"\+(.+?) (.+?) {re.escape(lb_name)}", #All languages
-                                    fr"\*\* got (.+?) (.+?) {re.escape(lb_name)}", #English
-                                    fr"\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
+                                    fr"got (.+?) (.+?) {re.escape(lb_name)}", #English
+                                    fr"cons(?:e|i)gui(?:ó|u) (.+?) (.+?) {re.escape(lb_name)}", #Spanish, Portuguese
                                 ]
                                 lb_match = await functions.get_match_from_patterns(search_patterns, lb_search_content)
                                 if not lb_match: continue
