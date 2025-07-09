@@ -192,6 +192,7 @@ class HuntCog(commands.Cog):
                     any(f'> {monster.lower()}' in message_content.lower() for monster in strings.MONSTERS_HUNT)
                     or any(monster.lower() in message_content.lower() for monster in strings.MONSTERS_HUNT_TOP)
                     or 'pink wolf' in message_content.lower() or 'party slime' in message_content.lower()
+                    or 'summer slime' in message_content.lower()
                 )
             ):
                 user_name = partner_name = last_hunt_mode = user_command_message = partner = None
@@ -227,6 +228,7 @@ class HuntCog(commands.Cog):
                     'bunny slime',
                     'pink wolf',
                     'party slime',
+                    'summer slime',
                 ]
                 if any(search_string in message_content.lower() for search_string in search_strings_event_mobs):
                     search_strings_together = [

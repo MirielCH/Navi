@@ -214,6 +214,7 @@ ARTIFACTS_EMOJIS: Final[dict[str, str]] = {
     'master key': emojis.ARTIFACT_MASTER_KEY,
     'pocket watch': emojis.ARTIFACT_POCKET_WATCH,
     'shiny pickaxe': emojis.ARTIFACT_SHINY_PICKAXE,
+    'sunglasses': emojis.ARTIFACT_SUNGLASSES,
     'top hat': emojis.ARTIFACT_TOP_HAT,
     'vampire teeth': emojis.ARTIFACT_VAMPIRE_TEETH,
 }
@@ -1024,6 +1025,7 @@ MONSTERS_HUNT_MISC: Final[tuple[str, ...]] = (
     '**Horslime**',
     '**Pink Wolf**',
     '**Party Slime**',
+    '**Summer Slime**',
 )
 
 MONSTERS_HUNT: Final[tuple[str, ...]] = (

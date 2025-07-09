@@ -45,6 +45,7 @@ ARTIFACT_GOLDEN_PAN: Final[str] = '<:artifact_golden_pan:1215042002140405800>'
 ARTIFACT_MASTER_KEY: Final[str] = '<:artifact_master_key:1215042004187349082>'
 ARTIFACT_POCKET_WATCH: Final[str] = '<:artifact_pocket_watch:1215042006649282611>'
 ARTIFACT_SHINY_PICKAXE: Final[str] = '<:artifact_shiny_pickaxe:1357665732921397392>'
+ARTIFACT_SUNGLASSES: Final[str] = '<:artifact_sunglasses:1392434368798003251>'
 ARTIFACT_TOP_HAT: Final[str] = '<:artifact_top_hat:1215042008083734618>'
 ARTIFACT_VAMPIRE_TEETH: Final[str] = '<:artifact_vampire_teeth:1215042009291554907>'
 

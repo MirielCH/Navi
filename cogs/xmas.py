@@ -414,6 +414,7 @@ class ChristmasCog(commands.Cog):
                    'christmas slime',
                    'bunny slime', 
                    'horslime', 
+                   'summer slime', 
                 ]
                 if any(mob in message_content.lower() for mob in event_mobs): return
                 user_id = user_name = partner_name = None
