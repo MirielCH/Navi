@@ -266,6 +266,7 @@ BOOSTS_EMOJIS: dict[str, str] = {
     'pink-drink': DRINK_PINK,
     'potion-potion': POTION_POTION,
     'smol-potion': POTION_SMOL,
+    'refreshing-life-potion': LIFE_POTION,
     'round-card': CARD_ROUND,
     'summer-boost': COCONUT,
     'time-potion': POTION_TIME,

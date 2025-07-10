@@ -15,9 +15,9 @@ If you don't want to run Navi yourself, you can invite [Navi Lite](https://canar
 • Install python 3.12.  
 • Install all third party libraries mentioned in `requirements.txt` (`python3.12 -m pip install -r requirements.txt`).  
 • Create a Discord application with a bot user, activate the required intents (see below) and generate a bot token.  
-• Rename `default.env` to `.env` and set the variables mentioned in the file.  
 • Rename `database/default_db.db` to `database/navi_db.db`.  
-• Upload all emojis in `images/emojis` to private servers. **DO NOT CHANGE THEIR NAMES**.  
+• Upload all emojis in `images/emojis` to private Discord servers. **DO NOT CHANGE THEIR NAMES**.  
+• Rename `default.env` to `.env` and set all variables as explained in the file.  
 • Run the bot by running `bot.py` (`python3.12 bot.py`).  
 • Invite Navi to all your emoji servers and all other servers you want to use it. Note the required permissions below.  
 • Run the command `/dev emoji-update` to update the emojis in the code to your uploaded ones.  

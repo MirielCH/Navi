@@ -523,7 +523,7 @@ class QuestCog(commands.Cog):
                 if user_settings.guild_quest_prompt_active:
                     if not quest_declined:
                         try:
-                            clan: clans.Clan = await clans.get_clan_by_clan_name(user_settings.clan_name)
+                            clan: clans.Clan = await clans.get_clan_by_user_id(user_settings.user_id)
                             await clan.update(quest_user_id=user.id)
                             if clan.alert_enabled:
                                 try:

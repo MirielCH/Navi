@@ -292,11 +292,14 @@ class SettingsCog(commands.Cog):
                     clan: clans.Clan = await clans.get_clan_by_user_id(clan_leaders[0])
                     if clan.clan_name != clan_name:
                         try:
-                            reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
-                            await reminder.update(clan_name=clan_name)
+                            existing_clan: clans.Clan = await clans.get_clan_by_clan_name(clan_name)
                         except exceptions.NoDataFoundError:
-                            pass
-                        await clan.update(clan_name=clan_name)
+                            try:
+                                reminder: reminders.Reminder = await reminders.get_clan_reminder(clan.clan_name)
+                                await reminder.update(clan_name=clan_name)
+                            except exceptions.NoDataFoundError:
+                                pass
+                            await clan.update(clan_name=clan_name)
                 except exceptions.NoDataFoundError:
                     pass
                 try:

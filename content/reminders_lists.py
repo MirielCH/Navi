@@ -1,7 +1,7 @@
 # reminders_lists.py
 """Contains reminder list commands"""
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 from typing import Optional, Union
 
 import discord
@@ -489,6 +489,7 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
             command = await get_command_from_activity(activity)
             ready_commands.append(command)
         for command in sorted(ready_commands):
+            if 'color tournament' in command and datetime.today().weekday() < 5: continue
             field_ready_commands = (
                 f'{field_ready_commands}\n'
                 f'{emojis.BP} {command}'
