@@ -1172,7 +1172,7 @@ SLASH_COMMANDS: Final[dict[str, str]] = {
     'slots': '</slots:958555798273925180>',
     'smr surf': '`rpg smr surf`',
     'smr color tournament': '`rpg smr color tournament`',
-    'smr craft drink': '`rpg smr craft <drink>`',
+    'smr drink': '`rpg smr drink`',
     'tractor': '</tractor:959164278890463272>',
     'trade list': '</trade list:959915739840647188>',
     'trade items': '</trade items:959915739840647188>',
