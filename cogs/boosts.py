@@ -481,6 +481,99 @@ class BoostsCog(commands.Cog):
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
                 
+            # Summer boost
+            search_strings = [
+                '`summer boost` successfully bought', #English
+                '`summer boost` comprado(s)', #Spanish & Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings):
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_BUY_SUMMER_BOOST)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the summer boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 4
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', emojis.COCONUT)
+                        .replace('{boost_item}', 'summer boost')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, 'summer-boost', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+
+            # Summer drink boost
+            search_strings = [
+                'received a `boost`', #English
+                'received a `boost`', #TODO: Spanish
+                'received a `boost`', #TODO: Portuguese
+            ]
+            if any(search_string in message_content.lower() for search_string in search_strings) and 'drink' in message_content.lower():
+                user = await functions.get_interaction_user(message)
+                user_command_message = None
+                if user is None:
+                    user_command_message = (
+                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_USE_DRINK)
+                    )
+                    if user_command_message is None:
+                        await functions.add_warning_reaction(message)
+                        await errors.log_error('Couldn\'t find a command for the summer drink boost message.',
+                                               message)
+                        return
+                    user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.alert_boosts.enabled: return
+                time_left_hours = 2
+                if user_settings.eternal_boosts_tier >= 4: time_left_hours *= 3
+                elif user_settings.user_pocket_watch_multiplier < 1: time_left_hours *= 2
+                time_left = timedelta(hours=time_left_hours)
+                if 'blue' in message_content.lower():
+                    drink_color = 'blue'
+                    drink_emoji = emojis.DRINK_BLUE
+                elif 'green' in message_content.lower():
+                    drink_color = 'green'
+                    drink_emoji = emojis.DRINK_GREEN
+                elif 'pink' in message_content.lower():
+                    drink_color = 'pink'
+                    drink_emoji = emojis.DRINK_PINK
+                else:
+                    drink_color = 'yellow'
+                    drink_emoji = emojis.DRINK_YELLOW
+                reminder_message = (
+                        user_settings.alert_boosts.message
+                        .replace('{boost_emoji}', drink_emoji)
+                        .replace('{boost_item}', f'{drink_color} drink')
+                        .replace('  ', ' ')
+                    )
+                reminder: reminders.Reminder = (
+                    await reminders.insert_user_reminder(user.id, f'{drink_color}-drink', time_left,
+                                                         message.channel.id, reminder_message)
+                )
+                await functions.add_reminder_reaction(message, reminder, user_settings)
+
+                
             # EasteRNG boosts
             search_strings = [
                 'got the **easterng boost', #English

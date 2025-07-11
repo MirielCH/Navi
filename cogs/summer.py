@@ -189,11 +189,11 @@ class SummerCog(commands.Cog):
                 asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'surf'))
                 await functions.add_reminder_reaction(message, reminder, user_settings)
 
-            # Joining color tournament from crafting drinks
+            # Joining color tournament from using drinks
             search_strings = [
-                'drink` successfully crafted!', #English
-                'drink` successfully crafted!', #TODO: Spanish
-                'drink` successfully crafted!', #TODO: Portuguese
+                'team perk** until the end of this week!', #English
+                'team perk** until the end of this week!', #TODO: Spanish
+                'team perk** until the end of this week!', #TODO: Portuguese
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and datetime.today().weekday() < 5):
@@ -201,7 +201,7 @@ class SummerCog(commands.Cog):
                 user = await functions.get_interaction_user(message)
                 if user is None:
                     user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_CRAFT_DRINK)
+                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_USE_DRINK)
                     )
                     if user_command_message is None:
                         await functions.add_warning_reaction(message)
