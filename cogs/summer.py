@@ -139,8 +139,87 @@ class SummerCog(commands.Cog):
                     await reminders.insert_user_reminder(user.id, 'color-tournament', time_left,
                                                          message.channel.id, reminder_message)
                 )
-                await functions.add_reminder_reaction(message, reminder, user_settings)            
+                await functions.add_reminder_reaction(message, reminder, user_settings)      
 
+            # Surf helper
+            search_strings = [
+                "try not to slip off the surfboard", #English
+                "try not to slip off the surfboard", #TODO: Spanish
+                "try not to slip off the surfboard", #TODO: Portuguese
+            ]
+            if any(search_string in message_description.lower() for search_string in search_strings):
+                user_command_message = None
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    if user is None:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_SMR_SURF,
+                                                            user_name=user_name)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in surf message for surf helper.', message)
+                            return
+                        user = user_command_message.author
+                try:
+                    user_settings: users.User = await users.get_user(user.id)
+                except exceptions.FirstTimeUserError:
+                    return
+                if not user_settings.bot_enabled or not user_settings.surf_helper_enabled: return
+
+                embed_field_names: str = ''
+                for field in embed.fields:
+                    embed_field_names = f'{embed_field_names} {field.name.lower()}'
+
+                answer: str = ''
+                if 'completely normal wave' in embed_field_names:
+                    answer = (
+                        f'**A**: **Low risk** to slip off, rewards 80 guild rings\n'
+                        f'**B**: **Very low risk** to slip off, rewards 1 wishing token\n'
+                    )
+                elif 'inverted wave' in embed_field_names:
+                    answer = (
+                        f'**A**: **Very low risk** to slip off, rewards 20 coconuts\n'
+                        f'**B**: **High risk** to slip off, rewards 3 EPIC lootboxes\n'
+                    )
+                elif 'insanely small wave' in embed_field_names:
+                    answer = (
+                        f'**A**: **Very low risk** to slip off, rewards 30 arena cookies\n'
+                        f'**B**: **Very high risk** to slip off, rewards 1 OMEGA horse token\n'
+                    )
+                elif 'big wave' in embed_field_names:
+                    answer = (
+                        f'**A**: **Low risk** to slip off, rewards 1 EDGY lootbox\n'
+                        f'**B**: **High risk** to slip off, rewards 10 TIME cookies\n'
+                    )
+                elif 'invisible wave' in embed_field_names:
+                    answer = (
+                        f'**A**: **Low risk** to slip off, rewards 35 chopped coconuts\n'
+                        f'**B**: **Very high risk** to slip off, rewards 4 flasks\n'
+                    )
+                elif 'angry wave' in embed_field_names:
+                    answer = (
+                        f'**A**: **High risk** to slip off, rewards 2 flasks\n'
+                        f'**B**: **Very high risk** to slip off, rewards 20 TIME cookies\n'
+                    )
+                else:
+                    return
+                if not user_settings.dnd_mode_enabled:
+                    if user_settings.ping_after_message:
+                        await message.channel.send(f'{answer}\n{user.mention}')
+                    else:
+                        await message.channel.send(f'{user.mention}\n{answer}')
+                else:
+                    await message.channel.send(answer)
+
+                
         if not message.embeds:
             message_content = message.content
 

@@ -1016,11 +1016,14 @@ async def embed_settings_helpers(bot: bridge.AutoShardedBot, ctx: discord.Applic
     )
     seasonal_helpers = (
         f'{emojis.BP} **Megarace Helper**: {await functions.bool_to_text(user_settings.megarace_helper_enabled)}\n'
-        f'{emojis.DETAIL} _Provides the optimal answers for the horse festival megarace._\n'
+        f'{emojis.DETAIL} _Provides the optimal answers for `rpg hf megarace`._\n'
         f'{emojis.DETAIL} _Pings you when a megarace boost appears._\n'
         f'{emojis.BP} **Pumpkin bat helper**: '
         f'{await functions.bool_to_text(user_settings.halloween_helper_enabled)}\n'
         f'{emojis.DETAIL} _Provides the answers for the halloween boss._\n'
+        f'{emojis.BP} **Surf helper**: '
+        f'{await functions.bool_to_text(user_settings.surf_helper_enabled)}\n'
+        f'{emojis.DETAIL} _Provides details about the choices in `rpg smr surf`._\n'
     )
     helper_settings = (
         f'{emojis.BP} **Pet catch helper style**: `{pet_helper_mode}`\n'

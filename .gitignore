@@ -127,6 +127,9 @@ venv.bak/
 .dmypy.json
 dmypy.json
 
+# Markdown Lint
+.markdownlint.json
+
 # Pyre type checker
 .pyre/
 

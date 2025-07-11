@@ -614,6 +614,11 @@ def update_database() -> bool:
             "ALTER TABLE users ADD alert_surf_visible INTEGER NOT NULL DEFAULT (1)",
             "INSERT INTO cooldowns (activity, cooldown, donor_affected) VALUES ('surf', 14400, 0)",
         ]
+        
+    if db_version < 30:
+        sqls += [
+            "ALTER TABLE users ADD surf_helper_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
     
     # Run SQLs
     sql: str

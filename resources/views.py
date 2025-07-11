@@ -297,6 +297,7 @@ class SettingsHelpersView(discord.ui.View):
             'Training helper': 'training_helper_enabled',
             'Megarace helper': 'megarace_helper_enabled',
             'Pumpkin bat helper': 'halloween_helper_enabled',
+            'Surf helper': 'surf_helper_enabled',
         }
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings, 'Toggle helpers'))
         self.add_item(components.SetFarmHelperModeSelect(self))

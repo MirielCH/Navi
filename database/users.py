@@ -153,6 +153,7 @@ class User():
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
     slash_mentions_enabled: bool
+    surf_helper_enabled: bool
     time_potion_warning_enabled: bool
     time_travel_count: int
     top_hat_unlocked: bool
@@ -296,6 +297,7 @@ class User():
         self.ruby_counter_button_mode = new_settings.ruby_counter_button_mode
         self.ruby_counter_enabled = new_settings.ruby_counter_enabled
         self.slash_mentions_enabled = new_settings.slash_mentions_enabled
+        self.surf_helper_enabled = new_settings.surf_helper_enabled
         self.time_potion_warning_enabled = new_settings.time_potion_warning_enabled
         self.time_travel_count = new_settings.time_travel_count
         self.top_hat_unlocked = new_settings.top_hat_unlocked
@@ -554,6 +556,7 @@ class User():
             ruby_counter_button_mode: bool
             ruby_counter_enabled: bool
             slash_mentions_enabled: bool
+            surf_helper_enabled: bool
             time_potion_warning_enabled: bool
             time_travel_count: int
             top_hat_unlocked: bool
@@ -893,6 +896,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
+            surf_helper_enabled = bool(record['surf_helper_enabled']),
             time_potion_warning_enabled = bool(record['time_potion_warning_enabled']),
             time_travel_count = record['time_travel_count'],
             top_hat_unlocked = bool(record['top_hat_unlocked']),
@@ -1246,6 +1250,7 @@ async def _update_user(user: User, **updated_settings) -> None:
         ruby_counter_button_mode: bool
         ruby_counter_enabled: bool
         slash_mentions_enabled: bool
+        surf_helper_enabled: bool
         time_potion_warning_enabled: bool
         time_travel_count: int
         top_hat_unlocked: bool
