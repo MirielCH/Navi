@@ -1,5 +1,6 @@
 # sleepy_potion.py
 
+import asyncio
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
@@ -74,6 +75,7 @@ class SleepyPotionCog(commands.Cog):
                 return
             if not user_settings.bot_enabled: return
             await reminders.reduce_reminder_time(user_settings, timedelta(days=1), strings.SLEEPY_POTION_AFFECTED_ACTIVITIES)
+            asyncio.ensure_future(functions.call_ready_command(self.bot, message, user, user_settings, 'sleepy-potion'))
             if user_settings.reactions_enabled: await message.add_reaction(emojis.NAVI)
 
 
