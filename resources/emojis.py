@@ -63,6 +63,7 @@ CARD_VOID: Final[str] = '<:card_void:1215041727488851998>'
 # EPIC RPG event items
 BUNNY_GOD: Final[str] = '<:bunny_god:1362117196939264101>'
 COCONUT: Final[str] = '<:coconut:1391747238560010354>'
+COCONUT_CHOPPED: Final[str] = '<:coconut_chopped:1393002577439752213>'
 COIN_CELEBRATION: Final[str] = '<:coin_celebration:1215003927674757131>'
 DRINK_BLUE: Final[str] = '<:drink_blue:1391747240367882300>'
 DRINK_GREEN: Final[str] = '<:drink_green:1391747241294958603>'
@@ -237,6 +238,7 @@ BOOSTS_EMOJIS: dict[str, str] = {
     'banana-potion': POTION_BANANA,
     'blue-drink': DRINK_BLUE,
     'christmas-boost': PRESENT,
+    'chopped-coconut-boost': COCONUT_CHOPPED,
     'cookie-potion': POTION_COOKIE,
     'dev-boost': DEV_BUFF,
     'dev-buff': DEV_BUFF,

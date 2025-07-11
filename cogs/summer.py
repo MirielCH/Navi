@@ -58,32 +58,27 @@ class SummerCog(commands.Cog):
             ]
             if any(search_string in message_title.lower() for search_string in search_strings):
                 user_id = user_name = user_command_message = None
-                embed_users = []
-                interaction_user = await functions.get_interaction_user(message)
-                if interaction_user is None:
-                    user_command_message = (
-                        await messages.find_message(message.channel.id, regex.COMMAND_SMR_SURF)
-                    )
-                    if user_command_message is None:
-                        await functions.add_warning_reaction(message)
-                        return
-                    interaction_user = user_command_message.author
-                user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
-                if user_id_match:
-                    user_id = int(user_id_match.group(1))
-                    embed_users.append(message.guild.get_member(user_id))
-                if not embed_users:
-                    user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, embed_author)
-                    if user_name_match:
-                        user_name = user_name_match.group(1)
-                        embed_users = await functions.get_member_by_name(self.bot, message.guild, user_name)
-                    if not user_name_match or not embed_users:
-                        await functions.add_warning_reaction(message)
-                        await errors.log_error('Couldn\'t find embed user for the surf cooldown message.', message)
-                        return
-                if interaction_user not in embed_users: return
+                user = await functions.get_interaction_user(message)
+                if user is None:
+                    user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
+                    if user_id_match:
+                        user_id = int(user_id_match.group(1))
+                        user = message.guild.get_member(user_id)
+                    if user is None:
+                        user_name_match = re.search(regex.USERNAME_FROM_EMBED_AUTHOR, message_author)
+                        if user_name_match:
+                            user_name = user_name_match.group(1)
+                            user_command_message = (
+                                await messages.find_message(message.channel.id, regex.COMMAND_SMR_SURF,
+                                                            user_name=user_name)
+                            )
+                        if not user_name_match or user_command_message is None:
+                            await functions.add_warning_reaction(message)
+                            await errors.log_error('User not found in surf cooldown message.', message)
+                            return
+                        user = user_command_message.author
                 try:
-                    user_settings: users.User = await users.get_user(interaction_user.id)
+                    user_settings: users.User = await users.get_user(user.id)
                 except exceptions.FirstTimeUserError:
                     return
                 if not user_settings.bot_enabled or not user_settings.alert_surf.enabled: return
@@ -100,7 +95,7 @@ class SummerCog(commands.Cog):
                 if time_left < timedelta(0): return
                 reminder_message = user_settings.alert_surf.message.replace('{command}', user_command)
                 reminder: reminders.Reminder = (
-                    await reminders.insert_user_reminder(interaction_user.id, 'surf', time_left,
+                    await reminders.insert_user_reminder(user.id, 'surf', time_left,
                                                          message.channel.id, reminder_message)
                 )
                 await functions.add_reminder_reaction(message, reminder, user_settings)

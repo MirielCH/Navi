@@ -374,6 +374,7 @@ ACTIVITIES_EVENTS: Final[tuple[str, ...]] = (
 ACTIVITIES_BOOSTS: Final[tuple[str, ...]] = (
     'banana-potion',
     'blue-drink',
+    'chopped-coconut-boost',
     'christmas-boost',
     'celebration-boost',
     'cookie-potion',
@@ -421,6 +422,7 @@ ACTIVITIES_BOOSTS: Final[tuple[str, ...]] = (
 BOOSTS_ALIASES: Final[dict[str, str]] = {
     'christmas': 'christmas-boost',
     'celebration': 'celebration-boost',
+    'chopped-coconut': 'chopped-coconut-boost',
     'halloween': 'halloween-boost',
     'horse-festival': 'horse-festival-boost',
     'summer': 'summer-boost',
