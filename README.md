@@ -25,11 +25,12 @@ If you don't want to run Navi yourself, you can invite [Navi Lite](https://canar
 
 ## How to update Navi
 
-• Replace all other `.py` files with the new ones.  
+• Shut down Navi.
+• Replace all `.py` files with the new ones.  
 • Upload new emojis (if any) in `images/emojis` to your emoji servers. **DO NOT CHANGE THEIR NAMES**.  
+• Start navi.
 • Run the command `/dev emoji-update` to update the emojis in the code to your uploaded ones.  
 • Run the command `/dev emoji-check` to make sure all emojis are present.  
-• Restart the bot.  
 
 ## Required intents
 
