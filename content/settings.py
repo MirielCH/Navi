@@ -1416,7 +1416,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Read cooldowns in area 20**: {await functions.bool_to_text(user_settings.area_20_cooldowns_enabled)}\n'
         f'{emojis.BP} **Combine hunt reminders**: {await functions.bool_to_text(user_settings.hunt_reminders_combined)}\n'
         f'{emojis.DETAIL} _If enabled, Navi will never send or show the `hunt partner` reminder._\n'
-        f'{emojis.DETAIL} _Instead the `hunt` reminder will be long enough for both players to be ready._\n'
+        f'{emojis.DETAIL} _Instead the `hunt` reminder will only be sent when both players are ready._\n'
         f'{emojis.BP} **Reminder channel**: {reminder_channel}\n'
         f'{emojis.DETAIL} _If a channel is set, all reminders are sent to that channel._\n'
         f'{emojis.BP} **Christmas area mode**: {await functions.bool_to_text(user_settings.christmas_area_enabled)}\n'

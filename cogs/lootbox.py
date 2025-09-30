@@ -125,6 +125,7 @@ class BuyCog(commands.Cog):
                 'spooky orbs', #Halloween shop
                 'golden eggs', #Easter shop
                 'easter', #Easter shop
+                'palm log', #Summer shop
             ]
             if (any(search_string in message_content.lower() for search_string in search_strings)
                 and all(search_string not in message_content.lower() for search_string in search_strings_excluded)):
