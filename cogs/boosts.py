@@ -156,10 +156,11 @@ class BoostsCog(commands.Cog):
                 if user_settings.reactions_enabled and user_settings.alert_boosts.enabled:
                     await message.add_reaction(emojis.NAVI)
 
-            # Tell user whether time potion is active on super time travel
+            # Tell user whether time potion is active on time travel
             search_strings_author = [
                 "— super time travel", #All languages
                 "— time jump", #All languages
+                "— time travel", #All languages
             ]
             search_strings_description = [
                 "are you sure", #English
