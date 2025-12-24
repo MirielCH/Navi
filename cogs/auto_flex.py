@@ -576,7 +576,7 @@ class AutoFlexCog(commands.Cog):
                         return
                     amount = match.group(1)
                     description = (
-                        f'**{user.name}** decided to not contribue their {emojis.LB_VOID} VOID lootbox and open it.\n'
+                        f'**{user.name}** decided to not contribute their {emojis.LB_VOID} VOID lootbox and open it.\n'
                         f'They should be ashamed.\n'
                         f'Okay, they probably are not, because they got **{amount}** {emojis.TIME_CAPSULE} **time capsule** as a reward for their deceit.'
                     )
