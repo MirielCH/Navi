@@ -1150,6 +1150,7 @@ async def embed_settings_multipliers(bot: bridge.AutoShardedBot, ctx: discord.Ap
         f'{emojis.BP} **`{f'Farm':<12}`** `{round(user_settings.alert_farm.multiplier, 3):>5}`\n'
         f'{emojis.BP} **`{f'Hunt':<12}`** `{round(user_settings.alert_hunt.multiplier, 3):>5}`\n'
         f'{emojis.BP} **`{f'Lootbox':<12}`** `{round(user_settings.alert_lootbox.multiplier, 3):>5}`\n'
+        f'{emojis.BP} **`{f'Produce':<12}`** `{round(user_settings.alert_produce.multiplier, 3):>5}`\n'
         f'{emojis.BP} **`{f'Quest':<12}`** `{round(user_settings.alert_quest.multiplier, 3):>5}`\n'
         f'{emojis.BP} **`{f'Training':<12}`** `{round(user_settings.alert_training.multiplier, 3):>5}`\n'
         f'{emojis.BP} **`{f'Weekly':<12}`** `{round(user_settings.alert_weekly.multiplier, 3):>5}`\n'
@@ -1347,6 +1348,7 @@ async def embed_settings_ready_reminders(bot: bridge.AutoShardedBot, ctx: discor
         f'{emojis.BP} **Hunt**: {await bool_to_text(user_settings.alert_hunt.visible)}\n'
         f'{emojis.BP} **Hunt partner**: {await bool_to_text(user_settings.alert_hunt_partner.visible)}\n'
         f'{emojis.BP} **Lootbox**: {await bool_to_text(user_settings.alert_lootbox.visible)}\n'
+        f'{emojis.BP} **Produce**: {await bool_to_text(user_settings.alert_produce.visible)}\n'
         f'{emojis.BP} **Pets**: {await bool_to_text(user_settings.alert_pets.visible)}\n'
         f'{emojis.BP} **Quest**: {await bool_to_text(user_settings.alert_quest.visible)}\n'
         f'{emojis.BP} **Training**: {await bool_to_text(user_settings.alert_training.visible)}\n'
@@ -1433,12 +1435,12 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **EPIC items**: {await functions.bool_to_text(user_settings.alert_epic.enabled)}\n'
         f'{emojis.BP} **EPIC shop restocks**: {await functions.bool_to_text(user_settings.alert_epic_shop.enabled)}\n'
         f'{emojis.BP} **Eternity sealing**: {await functions.bool_to_text(user_settings.alert_eternity_sealing.enabled)}\n'
+    )
+    command_reminders2 = (
         f'{emojis.BP} **Farm**: {await functions.bool_to_text(user_settings.alert_farm.enabled)}\n'
         f'{emojis.BP} **Guild**: {await functions.bool_to_text(user_settings.alert_guild.enabled)}\n'
         f'{emojis.DETAIL} _For the guild channel reminder switch to `Guild settings`._\n'
         f'{emojis.BP} **Horse**: {await functions.bool_to_text(user_settings.alert_horse_breed.enabled)}\n'
-    )
-    command_reminders2 = (
         f'{emojis.BP} **Hunt**: {await functions.bool_to_text(user_settings.alert_hunt.enabled)}\n'
         f'{emojis.BP} **Hunt partner**: {await functions.bool_to_text(user_settings.alert_hunt_partner.enabled)}\n'
         f'{emojis.BP} **Lootbox**: {await functions.bool_to_text(user_settings.alert_lootbox.enabled)}\n'
@@ -1446,8 +1448,11 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
         f'{emojis.BP} **Partner alert**: {await functions.bool_to_text(user_settings.alert_partner.enabled)}\n'
         f'{emojis.DETAIL} _Lootbox alerts are sent to this channel._\n'
         f'{emojis.DETAIL} _Requires a partner alert channel set in `Partner settings`._\n'
+    )
+    command_reminders3 = (
         f'{emojis.BP} **Pets**: {await functions.bool_to_text(user_settings.alert_pets.enabled)}\n'
         f'{emojis.DETAIL} _Don\'t like Navi\'s pet reminders? Get _[Army Helper]({strings.LINK_ARMY_HELPER})_!_\n'
+        f'{emojis.BP} **Produce**: {await functions.bool_to_text(user_settings.alert_produce.enabled)}\n'
         f'{emojis.BP} **Quest**: {await functions.bool_to_text(user_settings.alert_quest.enabled)}\n'
         f'{emojis.BP} **Training**: {await functions.bool_to_text(user_settings.alert_training.enabled)}\n'
         f'{emojis.BP} **Vote**: {await functions.bool_to_text(user_settings.alert_vote.enabled)}\n'
@@ -1465,6 +1470,7 @@ async def embed_settings_reminders(bot: bridge.AutoShardedBot, ctx: discord.Appl
     embed.add_field(name='REMINDER BEHAVIOUR', value=behaviour, inline=False)
     embed.add_field(name='REMINDERS (I)', value=command_reminders, inline=False)
     embed.add_field(name='REMINDERS (II)', value=command_reminders2, inline=False)
+    embed.add_field(name='REMINDERS (III)', value=command_reminders3, inline=False)
     return embed
 
 
@@ -1560,6 +1566,10 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_epicberry_enabled)}\n'
         f'{emojis.BP} Drop: **ETERNAL lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_eternal_enabled)}\n'
+        f'{emojis.BP} Drop: **GALAXY lootbox from `hunt`/`adventure`**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_lb_galaxy_enabled)}\n'
+    )
+    auto_flex_alerts_2 = (
         f'{emojis.BP} Drop: **GODLY lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_enabled)}\n'
         f'{emojis.BP} Drop: **HYPER logs from work commands**: '
@@ -1567,8 +1577,6 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
         f'{emojis.BP} Drop: **OMEGA lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_omega_enabled)}\n'
         f'{emojis.DETAIL} _Hardmode drops only count if `3`+._\n'
-    )
-    auto_flex_alerts_2 = (
         f'{emojis.BP} Drop: **Lost lootboxes in area 18**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_a18_enabled)}\n'
         f'{emojis.BP} Drop: **Party popper from lootbox**: '
@@ -1579,6 +1587,8 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_godly_tt_enabled)}\n'
         f'{emojis.BP} Drop: **ULTIMATE logs from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultimatelog_enabled)}\n'
+    )
+    auto_flex_alerts_3 = (
         f'{emojis.BP} Drop: **ULTRA log from EDGY lootbox**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_edgy_ultra_enabled)}\n'
         f'{emojis.BP} Drop: **ULTRA log from OMEGA lootbox**: '
@@ -1587,6 +1597,8 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_ultralog_enabled)}\n'
         f'{emojis.BP} Drop: **VOID lootbox from `hunt`/`adventure`**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_lb_void_enabled)}\n'
+        f'{emojis.BP} Drop: **Walking normie fish from work commands**: '
+        f'{await functions.bool_to_text(guild_settings.auto_flex_work_walkingnormiefish_enabled)}\n'
         f'{emojis.BP} Drop: **Watermelons from work commands**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_work_watermelon_enabled)}\n'
         f'{emojis.BP} Event: **Get ULTRA-EDGY in enchant event**: '
@@ -1604,13 +1616,14 @@ async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: disco
     embed.add_field(name='SETTINGS', value=main_settings, inline=False)
     embed.add_field(name='AUTO FLEXES (I)', value=auto_flex_alerts_1, inline=False)
     embed.add_field(name='AUTO FLEXES (II)', value=auto_flex_alerts_2, inline=False)
+    embed.add_field(name='AUTO FLEXES (III)', value=auto_flex_alerts_3, inline=False)
     return embed
 
 
 async def embed_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                      guild_settings: guilds.Guild) -> discord.Embed:
     """Server settings auto-flex 2 embed"""
-    auto_flex_alerts_3 = (
+    auto_flex_alerts_4 = (
         f'{emojis.BP} Event: **Kill mysterious man in heal event**: '
         f'{await functions.bool_to_text(guild_settings.auto_flex_event_heal_enabled)}\n'
         f'{emojis.BP} Event: **Evolve OMEGA lootbox in lootbox event**: '
@@ -1653,7 +1666,7 @@ async def embed_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: dis
             f'_Note that due to their rarity, some auto flexes may only be picked up in **English**._\n'
         )
     )
-    embed.add_field(name='AUTO FLEXES (III)', value=auto_flex_alerts_3, inline=False)
+    embed.add_field(name='AUTO FLEXES (IV)', value=auto_flex_alerts_4, inline=False)
     embed.add_field(name='AUTO FLEXES (SEASONAL)', value=auto_flex_alerts_seasonal, inline=False)
     return embed
 

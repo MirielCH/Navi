@@ -42,7 +42,7 @@ class DungeonMinibossCog(commands.Cog):
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]
-            message_author = message_title = icon_url = message_footer = ''
+            message_author = message_title = icon_url = message_footer = embed_field0_name = embed_field0_value = ''
             if embed.author is not None:
                 message_author = str(embed.author.name)
                 icon_url = str(embed.author.icon_url)

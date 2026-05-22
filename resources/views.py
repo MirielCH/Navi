@@ -463,6 +463,7 @@ class SettingsReadyRemindersView(discord.ui.View):
             'Lootbox': 'alert_lootbox',
             'Quest': 'alert_quest',
             'Pets claim': 'alert_pets',
+            'Produce': 'alert_produce',
             'Training': 'alert_training',
             'Vote': 'alert_vote',
             'Weekly': 'alert_weekly',
@@ -607,17 +608,20 @@ class SettingsRemindersView(discord.ui.View):
             'EPIC items': 'alert_epic',
             'EPIC shop restocks': 'alert_epic_shop',
             'Eternity sealing': 'alert_eternity_sealing',
+        }
+        toggled_settings_commands_2 = {
             'Farm': 'alert_farm',
             'Guild': 'alert_guild',
             'Horse': 'alert_horse_breed',
-        }
-        toggled_settings_commands_2 = {
             'Hunt': 'alert_hunt',
             'Hunt partner': 'alert_hunt_partner',
             'Lootbox': 'alert_lootbox',
             'Maintenance': 'alert_maintenance',
             'Partner alert': 'alert_partner',
+        }
+        toggled_settings_commands_3 = {
             'Pets': 'alert_pets',
+            'Produce': 'alert_produce',
             'Quest': 'alert_quest',
             'Training': 'alert_training',
             'Vote': 'alert_vote',
@@ -630,6 +634,8 @@ class SettingsRemindersView(discord.ui.View):
                                                           'toggle_command_reminders_1'))
         self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands_2, 'Toggle reminders (II)',
                                                           'toggle_command_reminders_2'))
+        self.add_item(components.ToggleUserSettingsSelect(self, toggled_settings_commands_3, 'Toggle reminders (III)',
+                                                          'toggle_command_reminders_3'))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:
@@ -1032,20 +1038,24 @@ class SettingsServerAutoFlexView(discord.ui.View):
             'EPIC berries from hunt or adventure': 'auto_flex_epic_berry_enabled',
             'EPIC berries from work commands': 'auto_flex_work_epicberry_enabled',
             'ETERNAL lootbox from hunt / adventure': 'auto_flex_lb_eternal_enabled',
+            'GALAXY lootbox from hunt / adventure': 'auto_flex_lb_galaxy_enabled',
+        }
+        toggled_auto_flex_alerts_2 = {
             'GODLY lootbox from hunt / adventure': 'auto_flex_lb_godly_enabled',
             'HYPER logs from work commands': 'auto_flex_work_hyperlog_enabled',
             'OMEGA lootbox from hunt / adventure': 'auto_flex_lb_omega_enabled',
-        }
-        toggled_auto_flex_alerts_2 = {
             'Lost lootboxes in area 18': 'auto_flex_lb_a18_enabled',
             'Party popper from any lootbox': 'auto_flex_lb_party_popper_enabled',
             'SUPER fish from work commands': 'auto_flex_work_superfish_enabled',
             'TIME capsule from GODLY/VOID lootbox': 'auto_flex_lb_godly_tt_enabled',
             'ULTIMATE logs from work commands': 'auto_flex_work_ultimatelog_enabled',
+        }
+        toggled_auto_flex_alerts_3 = {
             'ULTRA log from EDGY lootbox': 'auto_flex_lb_edgy_ultra_enabled',
             'ULTRA log from OMEGA lootbox': 'auto_flex_lb_omega_ultra_enabled',
             'ULTRA logs from work commands': 'auto_flex_work_ultralog_enabled',
             'VOID lootbox from hunt / adventure': 'auto_flex_lb_void_enabled',
+            'Walking normie fish from work commands': 'auto_flex_work_walkingnormiefish_enabled',
             'Watermelons from work commands': 'auto_flex_work_watermelon_enabled',
             'Get ULTRA-EDGY in enchant event': 'auto_flex_event_enchant_enabled',
             'Get 20 levels in farm event': 'auto_flex_event_farm_enabled',
@@ -1058,6 +1068,9 @@ class SettingsServerAutoFlexView(discord.ui.View):
         self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_2,
                                                             'Toggle auto flex alerts (II)',
                                                             'toggle_auto_flex_alerts_2'))
+        self.add_item(components.ToggleServerSettingsSelect(self, toggled_auto_flex_alerts_3,
+                                                             'Toggle auto flex alerts (III)',
+                                                            'toggle_auto_flex_alerts_3'))
         self.add_item(components.SwitchSettingsSelect(self, COMMANDS_SERVER_SETTINGS))
 
     async def interaction_check(self, interaction: discord.Interaction) -> bool:

@@ -179,6 +179,7 @@ class WorkCog(commands.Cog):
                 'bunny mask', #All languages, artifacts
                 'cowboy boots', #All languages, artifacts
                 '`boost`', #All languages, boost from party popper
+                'lootbox', #All languages, Lootboxes
             ]
             search_strings = [
                 '** got ', #English

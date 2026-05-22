@@ -151,6 +151,7 @@ DEFAULT_MESSAGES: Final[dict[str, str]] = {
     'partner': '{name} Hey! **{partner}** found {loot} for you!',
     'pets': '{name} Hey! Your pet `{id}` is back! {emoji}',
     'pet-tournament': DEFAULT_MESSAGE_EVENT,
+    'produce': DEFAULT_MESSAGE,
     'quest': DEFAULT_MESSAGE,
     'surf': DEFAULT_MESSAGE,
     'training': DEFAULT_MESSAGE,
@@ -229,6 +230,7 @@ POCKET_WATCH_AFFECTED_ACTIVITIES: Final[tuple[str,...]] = (
     'farm',
     'horse',
     'hunt',
+    'produce',
     'quest',
     'training',
     'work',
@@ -351,6 +353,7 @@ ACTIVITIES: Final[tuple[str, ...]] = (
     'partner',
     'pets',
     'pet-tournament',
+    'produce',
     'quest',
     'surf',
     'training',
@@ -472,6 +475,7 @@ ACTIVITIES_SLASH_COMMANDS: Final[dict[str, str]] = {
     'monster-potion': 'alchemy',
     'pet-tournament': 'pets tournament',
     'potion-potion': 'alchemy',
+    'produce': 'produce',
     'quest': 'quest',
     'surf': 'smr surf',
     'time-potion': 'alchemy',
@@ -579,6 +583,8 @@ ACTIVITIES_ALIASES: Final[dict[str, str]] = {
     'smrcolortournament': 'color-tournament',
     'smrtournament': 'color-tournament',
     'smr-tournament': 'color-tournament',
+    'prod': 'produce',
+    'pr': 'produce',
 }
 
 ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
@@ -637,6 +643,7 @@ ACTIVITIES_COLUMNS: Final[dict[str, str]] = {
     'pet-tournament': 'alert_pet_tournament',
     'pets': 'alert_pets',
     'potion-potion': 'alert_boosts',
+    'produce': 'alert_produce',
     'quest': 'alert_quest',
     'surf': 'alert_surf',
     'round-card': 'alert_boosts',
@@ -665,6 +672,7 @@ ACTIVITIES_WITH_COOLDOWN: Final[tuple[str, ...]] = (
     'hunt',
     'lootbox',
     'dungeon-miniboss',
+    'produce',
     'quest',
     'quest-decline',
     'surf',
@@ -687,6 +695,7 @@ ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER: Final[tuple[str, ...]] = (
     'hunt',
     'hunt-partner',
     'lootbox',
+    'produce',
     'quest',
     'training',
     'weekly',
@@ -725,6 +734,7 @@ LOOTBOXES: Final[dict[str, str]] = {
     'GODLY lootbox': emojis.LB_GODLY,
     'VOID lootbox': emojis.LB_VOID,
     'ETERNAL lootbox': emojis.LB_ETERNAL,
+    'GALAXY lootbox': emojis.LB_GALAXY,
 }
 
 
@@ -1175,6 +1185,7 @@ SLASH_COMMANDS: Final[dict[str, str]] = {
     'pets tournament': '</pets tournament:961046238613090385>',
     'pickaxe': '</pickaxe:959164540589842492>',
     'pickup': '</pickup:959164277321768990>',
+    'produce': '`rpg produce`',
     'professions stats': '</professions stats:959942193747992586>',
     'profile': '</profile:958554803422781460>',
     'quest': '</quest start:960740627790848041>',
@@ -1397,6 +1408,14 @@ FLEX_TITLES_WORK_SUPERFISH: Final[tuple[str, ...]] = (
     'Better than an old boot, I guess',
 )
 
+FLEX_TITLES_WORK_WALKINGNORMIEFISH: Final[tuple[str, ...]] = (
+    'Uhm...',
+    'Perfectly normie',
+    'Jesus would be proud',
+    'Do you believe that you can win this fight tonight?',
+    'Kinda weird, but it\'s lume, so.',
+)
+
 FLEX_TITLES_WORK_WATERMELON: Final[tuple[str, ...]] = (
     'One in a melon',
     'Rare doesn\'t mean useful, lol',
@@ -1461,6 +1480,21 @@ FLEX_TITLES_LB_OMEGA_PARTNER: Final[tuple[str, ...]] = (
     '"I am so happy for you, dear partner"',
     'WHAT ABOUT ME THO?',
     'Not jealous at all',
+)
+
+FLEX_TITLES_LB_GALAXY: Final[tuple[str, ...]] = (
+    'Elon, clean up your space debris, please',
+    'Galactic junk',
+    'I think you lost something, Han',
+    'Space trash or treasure? Who knows',
+    'The galactic authority thanks you for cleaning up space',
+)
+
+FLEX_TITLES_LB_GALAXY_PARTNER: Final[tuple[str, ...]] = (
+    '"Thank you for the space junk, honey"',
+    'Galactic theft',
+    '"THIEVES! Oh wait, no, never mind, they can have THAT.',
+    'Love is in the... vacuum',
 )
 
 FLEX_TITLES_LB_GODLY: Final[tuple[str, ...]] = (
@@ -1759,11 +1793,11 @@ FLEX_THUMBNAILS_ARTIFACTS: Final[tuple[str, ...]] = (
 )
 
 FLEX_THUMBNAILS_ARTIFACTS_BUNNY_MASK: Final[tuple[str, ...]] = (
-    'https://media1.tenor.com/m/1zya5psiGUQAAAAd/he-is-risen-praise-him.gif',
-    'https://media1.tenor.com/m/62qzG52IPegAAAAC/bunny-floss-dancing.gif',
-    'https://media1.tenor.com/m/itoD_tHWovAAAAAC/easter-happyeaster.gif',
-    'https://media1.tenor.com/m/RCSTVkvYo04AAAAd/happy-easter-my-little-bunnies-aunt-susan.gif',
-    'https://media1.tenor.com/m/eYZDjHIOdKsAAAAd/happy-easter-easter.gif',
+    'https://c.tenor.com/1zya5psiGUQAAAAd/tenor.gif',
+    'https://c.tenor.com/62qzG52IPegAAAAC/tenor.gif',
+    'https://c.tenor.com/itoD_tHWovAAAAAC/tenor.gif',
+    'https://c.tenor.com/RCSTVkvYo04AAAAd/tenor.gif',
+    'https://c.tenor.com/eYZDjHIOdKsAAAAd/tenor.gif',
 )
 
 FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT: Final[tuple[str, ...]] = (
@@ -1775,11 +1809,11 @@ FLEX_THUMBNAILS_ARTIFACTS_CLAUS_BELT: Final[tuple[str, ...]] = (
 )
 
 FLEX_THUMBNAILS_ARTIFACTS_COWBOY_BOOTS: Final[tuple[str, ...]] = (
-    'https://media1.tenor.com/m/fJV5-t-jC6EAAAAd/new-boot.gif',
-    'https://media1.tenor.com/m/NmB6i7DZFHUAAAAC/querida-piso21.gif',
-    'https://media1.tenor.com/m/lBEJu36EtYsAAAAd/cowboy-boots-western-boots.gif',
-    'https://media1.tenor.com/m/aADNFJFpOzcAAAAC/boots-shoes.gif',
-    'https://media1.tenor.com/m/S83c-j-wvpoAAAAC/cowboy-boots-cowboy.gif',
+    'https://c.tenor.com/fJV5-t-jC6EAAAAd/tenor.gif',
+    'https://c.tenor.com/NmB6i7DZFHUAAAAC/tenor.gif',
+    'https://c.tenor.com/lBEJu36EtYsAAAAd/tenor.gif',
+    'https://c.tenor.com/aADNFJFpOzcAAAAC/tenor.gif',
+    'https://c.tenor.com/S83c-j-wvpoAAAAC/tenor.gif',
 )
 
 FLEX_THUMBNAILS_ARTIFACTS_SHINY_PICKAXE: Final[tuple[str, ...]] = (
@@ -1806,11 +1840,11 @@ FLEX_THUMBNAILS_CARD_DROP: Final[tuple[str, ...]] = (
 )
 
 FLEX_THUMBNAILS_CARD_GOLDEN: Final[tuple[str, ...]] = (
-    'https://media1.tenor.com/m/eoXNSS9OlVIAAAAd/crypto-gemology-salt-bae.gif',
-    'https://media1.tenor.com/m/38IipBkBL6sAAAAC/fff-gold.gif',
-    'https://media1.tenor.com/m/nFrhSMnzrU4AAAAC/rougo-ni-sonaete-isekai-de8manmai-no-kinka-o-tamemasu-cute.gif',
-    'https://media1.tenor.com/m/Ft_i04ZwRuEAAAAd/monkey-give-gold.gif',
-    'https://media1.tenor.com/m/MH08oeqr_P8AAAAC/ohm-money.gif',
+    'https://c.tenor.com/eoXNSS9OlVIAAAAd/tenor.gif',
+    'https://c.tenor.com/38IipBkBL6sAAAAC/tenor.gif',
+    'https://c.tenor.com/nFrhSMnzrU4AAAAC/tenor.gif',
+    'https://c.tenor.com/Ft_i04ZwRuEAAAAd/tenor.gif',
+    'https://c.tenor.com/MH08oeqr_P8AAAAC/tenor.gif',
 )
 
 FLEX_THUMBNAILS_CARD_DROP_PARTNER: Final[tuple[str, ...]] = (
@@ -1875,6 +1909,13 @@ FLEX_THUMBNAILS_WORK_SUPERFISH: Final[tuple[str, ...]] = (
     'https://media.tenor.com/HLYz9zk-fGQAAAAC/rumia-fish-gif.gif',
 )
 
+FLEX_THUMBNAILS_WORK_WALKINGNORMIEFISH: Final[tuple[str, ...]] = (
+    'https://c.tenor.com/Wau8wpK5s1UAAAAC/tenor.gif',
+    'https://c.tenor.com/Q4FWLCCu4xIAAAAC/tenor.gif',
+    'https://media.tenor.com/qmzJwZptSckAAAAi/the-amazing-world-of-gumball-darwin.gif',
+    'https://media.tenor.com/dQ6DVFvSFC8AAAAi/sneak-out-fish.gif',
+)
+
 FLEX_THUMBNAILS_WORK_WATERMELON: Final[tuple[str, ...]] = (
     'https://media.tenor.com/mAxfGDKXrZUAAAAC/bunnies-cute.gif',
     'https://media.tenor.com/1qy7WBALXg8AAAAC/water.gif',
@@ -1934,6 +1975,19 @@ FLEX_THUMBNAILS_LB_OMEGA_PARTNER: Final[tuple[str, ...]] = (
     'https://media.tenor.com/_lu2Jz1q1s0AAAAC/sunday-delivery.gif',
 )
 
+FLEX_THUMBNAILS_LB_GALAXY: Final[tuple[str, ...]] = (
+    'https://c.tenor.com/RUGpf8PRPw4AAAAd/tenor.gif',
+    'https://c.tenor.com/OoxAV6daposAAAAC/tenor.gif',
+    'https://c.tenor.com/Xtd3-7UMlQIAAAAC/tenor.gif',
+    'https://media.tenor.com/CXLTa4lLTogAAAAi/ufo-ufos.gif',
+    'https://c.tenor.com/DxMVdx1DVNAAAAAC/tenor.gif',
+)
+
+FLEX_THUMBNAILS_LB_GALAXY_PARTNER: Final[tuple[str, ...]] = (
+    'https://c.tenor.com/LkgWbk-2HNsAAAAC/tenor.gif',
+    'https://c.tenor.com/zLUpFhSPO4QAAAAd/tenor.gif',
+)
+
 FLEX_THUMBNAILS_LB_GODLY: Final[tuple[str, ...]] = (
     'https://c.tenor.com/zBe7Ew1lzPYAAAAi/tkthao219-bubududu.gif',
     'https://media.tenor.com/f8-9UL5OveIAAAAi/box-cute.gif',
@@ -1958,16 +2012,15 @@ FLEX_THUMBNAILS_LB_VOID_PARTNER: Final[tuple[str, ...]] = (
 )
 
 FLEX_THUMBNAILS_LB_ETERNAL: Final[tuple[str, ...]] = (
-    'https://media1.tenor.com/m/WF9ahkVEZZUAAAAC/eevee-eevee-wow.gif',
-    'https://media1.tenor.com/m/B0CyGcl_eIEAAAAC/shiny-moana.gif',
-    'https://media1.tenor.com/m/CZUsUDsW07cAAAAC/firefly-thinking.gif',
-    'https://media1.tenor.com/m/ETzkr7t7pfwAAAAC/tally-craven-motherland-fort-salem.gif',
-    'https://media1.tenor.com/m/WAmX-u888l0AAAAd/lets-open-it-up-unlock.gif',
+    'https://c.tenor.com/WF9ahkVEZZUAAAAC/tenor.gif',
+    'https://c.tenor.com/B0CyGcl_eIEAAAAC/tenor.gif',
+    'https://c.tenor.com/CZUsUDsW07cAAAAC/tenor.gif',
+    'https://c.tenor.com/ETzkr7t7pfwAAAAC/tenor.gif',
+    'https://c.tenor.com/WAmX-u888l0AAAAd/tenor.gif',
 )
 
 FLEX_THUMBNAILS_LB_ETERNAL_PARTNER: Final[tuple[str, ...]] = (
-    'https://media1.tenor.com/m/zblEiac5pUkAAAAd/hugh-jackman-shocked.gif',
-    'https://media1.tenor.com/m/Mkbsp1hUhMMAAAAC/shocked-surprised.gif',
+    'https://c.tenor.com/zblEiac5pUkAAAAd/tenor.gif',
 )
 
 FLEX_THUMBNAILS_EDGY_ULTRA: Final[tuple[str, ...]] = (

@@ -42,6 +42,7 @@ class Guild():
     auto_flex_lb_a18_enabled: bool
     auto_flex_lb_edgy_ultra_enabled: bool
     auto_flex_lb_eternal_enabled: bool
+    auto_flex_lb_galaxy_enabled: bool
     auto_flex_lb_godly_enabled: bool
     auto_flex_lb_godly_tt_enabled: bool
     auto_flex_lb_omega_enabled: bool
@@ -58,6 +59,7 @@ class Guild():
     auto_flex_work_ultimatelog_enabled: bool
     auto_flex_work_ultralog_enabled: bool
     auto_flex_work_superfish_enabled: bool
+    auto_flex_work_walkingnormiefish_enabled: bool
     auto_flex_work_watermelon_enabled: bool
     auto_flex_xmas_chimney_enabled: bool
     auto_flex_xmas_eternal_enabled: bool
@@ -99,6 +101,7 @@ class Guild():
         self.auto_flex_lb_a18_enabled = new_settings.auto_flex_lb_a18_enabled
         self.auto_flex_lb_edgy_ultra_enabled = new_settings.auto_flex_lb_edgy_ultra_enabled
         self.auto_flex_lb_eternal_enabled = new_settings.auto_flex_lb_eternal_enabled
+        self.auto_flex_lb_galaxy_enabled = new_settings.auto_flex_lb_galaxy_enabled
         self.auto_flex_lb_godly_enabled = new_settings.auto_flex_lb_godly_enabled
         self.auto_flex_lb_godly_tt_enabled = new_settings.auto_flex_lb_godly_tt_enabled
         self.auto_flex_lb_omega_enabled = new_settings.auto_flex_lb_omega_enabled
@@ -115,6 +118,7 @@ class Guild():
         self.auto_flex_work_ultimatelog_enabled = new_settings.auto_flex_work_ultimatelog_enabled
         self.auto_flex_work_ultralog_enabled = new_settings.auto_flex_work_ultralog_enabled
         self.auto_flex_work_superfish_enabled = new_settings.auto_flex_work_superfish_enabled
+        self.auto_flex_work_walkingnormiefish_enabled = new_settings.auto_flex_work_walkingnormiefish_enabled
         self.auto_flex_work_watermelon_enabled = new_settings.auto_flex_work_watermelon_enabled
         self.auto_flex_xmas_chimney_enabled = new_settings.auto_flex_xmas_chimney_enabled
         self.auto_flex_xmas_eternal_enabled = new_settings.auto_flex_xmas_eternal_enabled
@@ -156,6 +160,7 @@ class Guild():
             auto_flex_lb_a18_enabled: bool
             auto_flex_lb_edgy_ultra_enabled: bool
             auto_flex_lb_eternal_enabled: bool
+            auto_flex_lb_galaxy_enabled: bool
             auto_flex_lb_godly_enabled: bool
             auto_flex_lb_godly_tt_enabled: bool
             auto_flex_lb_omega_enabled: bool
@@ -172,6 +177,7 @@ class Guild():
             auto_flex_work_ultimatelog_enabled: bool
             auto_flex_work_ultralog_enabled: bool
             auto_flex_work_superfish_enabled: bool
+            auto_flex_work_walkingnormiefish_enabled: bool
             auto_flex_work_watermelon_enabled: bool
             auto_flex_xmas_chimney_enabled: bool
             auto_flex_xmas_eternal_enabled: bool
@@ -239,6 +245,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_lb_a18_enabled = bool(record['auto_flex_lb_a18_enabled']),
             auto_flex_lb_edgy_ultra_enabled = bool(record['auto_flex_lb_edgy_ultra_enabled']),
             auto_flex_lb_eternal_enabled = bool(record['auto_flex_lb_eternal_enabled']),
+            auto_flex_lb_galaxy_enabled = bool(record['auto_flex_lb_galaxy_enabled']),
             auto_flex_lb_godly_enabled = bool(record['auto_flex_lb_godly_enabled']),
             auto_flex_lb_godly_tt_enabled = bool(record['auto_flex_lb_godly_tt_enabled']),
             auto_flex_lb_omega_enabled = bool(record['auto_flex_lb_omega_enabled']),
@@ -255,6 +262,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             auto_flex_work_ultimatelog_enabled = bool(record['auto_flex_work_ultimatelog_enabled']),
             auto_flex_work_ultralog_enabled = bool(record['auto_flex_work_ultralog_enabled']),
             auto_flex_work_superfish_enabled = bool(record['auto_flex_work_superfish_enabled']),
+            auto_flex_work_walkingnormiefish_enabled = bool(record['auto_flex_work_walkingnormiefish_enabled']),
             auto_flex_work_watermelon_enabled = bool(record['auto_flex_work_watermelon_enabled']),
             auto_flex_xmas_chimney_enabled = bool(record['auto_flex_xmas_chimney_enabled']),
             auto_flex_xmas_eternal_enabled = bool(record['auto_flex_xmas_eternal_enabled']),
@@ -428,6 +436,7 @@ async def _update_guild(guild_id: int, **updated_settings) -> None:
         auto_flex_hal_boo_enabled: bool
         auto_flex_lb_a18_enabled: bool
         auto_flex_lb_edgy_ultra_enabled: bool
+        auto_flex_lb_galaxy_enabled: bool
         auto_flex_lb_godly_enabled: bool
         auto_flex_lb_godly_tt_enabled: bool
         auto_flex_lb_omega_enabled: bool
@@ -450,6 +459,7 @@ async def _update_guild(guild_id: int, **updated_settings) -> None:
         auto_flex_xmas_godly_enabled: bool
         auto_flex_xmas_snowball_enabled: bool
         auto_flex_xmas_void_enabled: bool
+        auto_flex_work_walkingnormiefish_enabled: bool
         event_arena_enabled: bool
         event_arena_message: str
         event_coin_enabled: bool

@@ -619,6 +619,19 @@ def update_database() -> bool:
         sqls += [
             "ALTER TABLE users ADD surf_helper_enabled INTEGER NOT NULL DEFAULT (1)",
         ]
+        
+    if db_version < 31:
+        sqls += [
+            "ALTER TABLE users ADD alert_produce_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_produce_message TEXT NOT NULL DEFAULT "
+            "('{name} Hey! It''s time for {command}!')",
+            "ALTER TABLE users ADD alert_produce_multiplier REAL NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_produce_visible INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD alert_produce_unlocked INTEGER NOT NULL DEFAULT (0)",
+            "INSERT INTO cooldowns (activity, cooldown, donor_affected) VALUES ('produce', 1800, 1)",
+            "ALTER TABLE guilds ADD auto_flex_lb_galaxy_enabled INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE guilds ADD auto_flex_work_walkingnormiefish_enabled INTEGER NOT NULL DEFAULT (1)",
+        ]
     
     # Run SQLs
     sql: str

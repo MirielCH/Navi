@@ -88,6 +88,7 @@ COMMAND_PETS_ADVENTURE_START: re.Pattern = re.compile(rf"\bpets?\s+(?:\badv\b|\b
 COMMAND_PETS_ADVENTURE_CANCEL: re.Pattern = re.compile(rf"\bpets?\s+(?:\badv\b|\badventure\b)\s+\bcancel\b")
 COMMAND_PETS_FUSION: re.Pattern = re.compile(rf"\bpets?\b\s+\bfusion\b")
 COMMAND_PETS_TOURNAMENT: re.Pattern = re.compile(rf"\bpets?\b\s+\btournament\s+\b[a-z]+\b")
+COMMAND_PRODUCE: re.Pattern = re.compile(rf"\bproduce\b")
 COMMAND_PROFILE_MENU: re.Pattern = re.compile(
     rf'(?:\bprofile\b|\bp\b|\bprofessions?\b|\bpr\b|\bhorse\b|\bcooldowns?\b|\bcd\b|\bready\b|\brd\b|\bbank\b|\binventory\b|\binv\b|\bi\b)'
 )

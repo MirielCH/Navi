@@ -432,6 +432,8 @@ async def embed_ready(bot: bridge.AutoShardedBot, user: discord.User, auto_ready
         ready_command_activities.remove('guild')
     if 'eternal-presents' in ready_command_activities and user_settings.inventory.present_eternal < 1:
         ready_command_activities.remove('eternal-presents')
+    if 'produce' in ready_command_activities and not user_settings.alert_produce_unlocked:
+        ready_command_activities.remove('produce')
     if 'advent-calendar' in ready_command_activities and (current_time.month != 12 or current_time.day > 25):
         ready_command_activities.remove('advent-calendar')
     for activity in ready_command_activities.copy():

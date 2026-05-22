@@ -1210,6 +1210,7 @@ async def get_ready_command_activities(seasonal_event: str) -> list[str]:
         'hunt',
         'hunt-partner',
         'lootbox',
+        'produce',
         'quest',
         'training',
         'vote',

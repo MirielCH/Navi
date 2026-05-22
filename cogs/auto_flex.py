@@ -38,6 +38,8 @@ FLEX_TITLES = {
     'lb_edgy_ultra': strings.FLEX_TITLES_EDGY_ULTRA,
     'lb_eternal': strings.FLEX_TITLES_LB_ETERNAL,
     'lb_eternal_partner': strings.FLEX_TITLES_LB_ETERNAL_PARTNER,
+    'lb_galaxy': strings.FLEX_TITLES_LB_GALAXY,
+    'lb_galaxy_partner': strings.FLEX_TITLES_LB_GALAXY_PARTNER,
     'lb_godly': strings.FLEX_TITLES_LB_GODLY,
     'lb_godly_partner': strings.FLEX_TITLES_LB_GODLY_PARTNER,
     'lb_godly_tt': strings.FLEX_TITLES_GODLY_VOID_TT,
@@ -89,6 +91,7 @@ FLEX_TITLES = {
     'work_ultimatelog': strings.FLEX_TITLES_WORK_ULTIMATELOG,
     'work_ultralog': strings.FLEX_TITLES_WORK_ULTRALOG,
     'work_superfish': strings.FLEX_TITLES_WORK_SUPERFISH,
+    'work_walkingnormiefish': strings.FLEX_TITLES_WORK_WALKINGNORMIEFISH,
     'work_watermelon': strings.FLEX_TITLES_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_TITLES_XMAS_CHIMNEY,
     'xmas_eternal': strings.FLEX_TITLES_XMAS_ETERNAL,
@@ -123,6 +126,8 @@ FLEX_THUMBNAILS = {
     'lb_edgy_ultra': strings.FLEX_THUMBNAILS_EDGY_ULTRA,
     'lb_eternal': strings.FLEX_THUMBNAILS_LB_ETERNAL,
     'lb_eternal_partner': strings.FLEX_THUMBNAILS_LB_ETERNAL_PARTNER,
+    'lb_galaxy': strings.FLEX_THUMBNAILS_LB_GALAXY,
+    'lb_galaxy_partner': strings.FLEX_THUMBNAILS_LB_GALAXY_PARTNER,
     'lb_godly': strings.FLEX_THUMBNAILS_LB_GODLY,
     'lb_godly_partner': strings.FLEX_THUMBNAILS_LB_GODLY_PARTNER,
     'lb_godly_tt': strings.FLEX_THUMBNAILS_GODLY_VOID_TT,
@@ -174,6 +179,7 @@ FLEX_THUMBNAILS = {
     'work_ultimatelog': strings.FLEX_THUMBNAILS_WORK_ULTIMATELOG,
     'work_ultralog': strings.FLEX_THUMBNAILS_WORK_ULTRALOG,
     'work_superfish': strings.FLEX_THUMBNAILS_WORK_SUPERFISH,
+    'work_walkingnormiefish': strings.FLEX_THUMBNAILS_WORK_WALKINGNORMIEFISH,
     'work_watermelon': strings.FLEX_THUMBNAILS_WORK_WATERMELON,
     'xmas_chimney': strings.FLEX_THUMBNAILS_XMAS_CHIMNEY,
     'xmas_eternal': strings.FLEX_THUMBNAILS_XMAS_ETERNAL,
@@ -1253,6 +1259,7 @@ class AutoFlexCog(commands.Cog):
                 'oooooofff!!', #English, super fish
                 'wwwooooooaaa!!!1', #English, hyper logs
                 '**epic berry**', #English, epic berries
+                '**walking normie fish**', #English, walking normie fish
             ]
             search_strings_excluded = [
                 'contribu', #All languages, void contributions
@@ -1272,6 +1279,7 @@ class AutoFlexCog(commands.Cog):
                         r' \*\*(.+?)\*\* got (.+?) (.+?) __\*\*(ultimate log)\*\*__', #English ULTIMATE log
                         r'\*\*(.+?)\*\* also got (.+?) (.+?) \*\*(epic berry)\*\*', #English EPIC berry
                         r'\*\*(.+?)\*\* got (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #English SUPER fish, watermelon
+                        r'\*\*(.+?)\*\* also got (.+?) (.+?) __\*\*(walking normie fish)\*\*__', #English walking normie fish
                         r'\?\? \*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTRA log
                         r'!!1 (.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese HYPER log
                         r'\*\*(.+?)\*\* cons(?:e|i)gui(?:ó|u) (.+?) (.+?) (?:__)?\*\*(.+?)(?:\n|__|$)', #Spanish/Portuguese ULTIMATE log, SUPER fish, watermelon
@@ -1282,6 +1290,7 @@ class AutoFlexCog(commands.Cog):
                         'super fish': 'work_superfish',
                         'ultimate log': 'work_ultimatelog',
                         'ultra log': 'work_ultralog',
+                        'walking normie fish': 'work_walkingnormiefish',
                         'watermelon': 'work_watermelon',
                     }
                     match = await functions.get_match_from_patterns(search_patterns, message_content)
@@ -1345,6 +1354,12 @@ class AutoFlexCog(commands.Cog):
                             f'It will consist of bananas, apples and '
                             f'**{item_amount:,}** {emojis.EPIC_BERRY} **EPIC berries** they just randomly found '
                             f'while gathering the rest.\n'
+                        )
+                    elif event == 'work_walkingnormiefish':
+                        description = (
+                            f'**{user_name}** is going on a stroll with their friend Gudrunde, the {emojis.FISH_WALKING} **walking normie fish**.\n'
+                            f'Gudrunde is a very nice, perfectly normie fish, wise beyond her years, and her life inside the nuclear power plant cooling system didn\'t '
+                            f'affect her at all.'
                         )
                     await self.send_auto_flex_message(message, guild_settings, user_settings, user, event, description)
 
@@ -1594,11 +1609,13 @@ class AutoFlexCog(commands.Cog):
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                     'ETERNAL lootbox': emojis.LB_ETERNAL,
+                    'GALAXY lootbox': emojis.LB_GALAXY,
                 }
                 lootboxes_user_lost = {
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                     'ETERNAL lootbox': emojis.LB_ETERNAL,
+                    'GALAXY lootbox': emojis.LB_GALAXY,
                 }
                 if message.guild.id != 713541415099170836:
                     lootboxes_user_lost['OMEGA lootbox'] = emojis.LB_OMEGA
@@ -1607,11 +1624,13 @@ class AutoFlexCog(commands.Cog):
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                     'ETERNAL lootbox': emojis.LB_ETERNAL,
+                    'GALAXY lootbox': emojis.LB_GALAXY,
                 }
                 lootboxes_partner_lost = {
                     'GODLY lootbox': emojis.LB_GODLY,
                     'VOID lootbox': emojis.LB_VOID,
                     'ETERNAL lootbox': emojis.LB_ETERNAL,
+                    'GALAXY lootbox': emojis.LB_GALAXY,
                 }
                 if message.guild.id != 713541415099170836:
                     lootboxes_partner_lost['OMEGA lootbox'] = emojis.LB_OMEGA
@@ -1769,12 +1788,14 @@ class AutoFlexCog(commands.Cog):
                         'GODLY lootbox': 'lb_godly',
                         'VOID lootbox': 'lb_void',
                         'ETERNAL lootbox': 'lb_eternal',
+                        'GALAXY lootbox': 'lb_galaxy',
                     }
                     events_partner = {
                         'OMEGA lootbox': 'lb_omega_partner',
                         'GODLY lootbox': 'lb_godly_partner',
                         'VOID lootbox': 'lb_void_partner',
                         'ETERNAL lootbox': 'lb_eternal_partner',
+                        'GALAXY lootbox': 'lb_galaxy_partner',
                     }
                     description = event = ''
                     if lootbox_user_found:
@@ -1809,6 +1830,12 @@ class AutoFlexCog(commands.Cog):
                                 )
                             else:
                                 event = ''
+                        elif event == 'lb_galaxy':
+                            description = (
+                                f'**{user_name}** found **{amount}** {lootboxes_user[name]} **{name}**!\n'
+                                f'I\'m not sure why there even are lootboxes out there, but I do know the contents will be disappointing.\n'
+                                f'Still, we can always pretend to be happy for you, congrats!'
+                            )
                         else:
                             description = (
                                 f'**{user_name}** just found **{amount}** {lootboxes_user[name]} **{name}**!\n'
@@ -1851,6 +1878,11 @@ class AutoFlexCog(commands.Cog):
                                     f'Of course it is **{partner_name}**, who else would be brave and lucky enough to steal '
                                     f'**{amount}** {lootboxes_partner[name]} **{name}** from their partner?\n'
                                     f'**{user_name}** might need emotional support after this.'
+                                )
+                            elif event == 'lb_galaxy_partner':
+                                description = (
+                                    f'**{partner_name}** stole **{amount}** {lootboxes_partner[name]} **{name}** from their partner!\n'
+                                    f'**{user_name}** would probably be more upset if the lootbox contained more useful stuff.'
                                 )
                             elif int(amount) >= lb_omega_partner_amount:
                                 description = (

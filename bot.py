@@ -130,6 +130,7 @@ EXTENSIONS: list[str] = [
         'cogs.pets_tournament',
         'cogs.pets',
         'cogs.portals',
+        'cogs.produce',
         'cogs.profile',
         'cogs.quest',
         'cogs.reminders_custom',
