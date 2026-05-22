@@ -7,7 +7,7 @@ from discord.ext import bridge, commands
 
 from cache import messages
 from database import errors, users
-from resources import exceptions, functions, regex, settings
+from resources import emojis, exceptions, functions, regex, settings
 
 
 class HelperFarmCog(commands.Cog):
@@ -81,7 +81,7 @@ class HelperFarmCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         return
                 if interaction_user not in embed_users: return
-                if not user_settings.bot_enabled or not user_settings.ruby_counter_enabled: return
+                if not user_settings.bot_enabled: return
                 field_values = ''
                 for field in embed.fields:
                     field_values = f'{field_values}\n{field.value}'
@@ -102,6 +102,8 @@ class HelperFarmCog(commands.Cog):
                                            inventory_potato=potato_count, inventory_seed_bread=seed_bread_count,
                                            inventory_seed_carrot=seed_carrot_count,
                                            inventory_seed_potato=seed_potato_count)
+                if not user_settings.ruby_counter_enabled and user_settings.reactions_enabled:
+                    await message.add_reaction(emojis.NAVI)
 
             # Pets claim
             search_strings = [

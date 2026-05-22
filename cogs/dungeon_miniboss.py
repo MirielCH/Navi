@@ -48,6 +48,9 @@ class DungeonMinibossCog(commands.Cog):
                 icon_url = str(embed.author.icon_url)
             if embed.title is not None: message_title = str(embed.title)
             if embed.footer is not None: message_footer = embed.footer.text
+            if embed.fields:
+                embed_field0_name = embed.fields[0].name
+                embed_field0_value = embed.fields[0].value
 
             # Dungeon / Miniboss cooldown
             search_strings = [
@@ -122,20 +125,39 @@ class DungeonMinibossCog(commands.Cog):
                 'players are still in the same area', # TODO: Dungeons 16-20, Spanish
                 'players are still in the same area', # TODO: Dungeons 16-20, Portuguese
             ]
-            if (any(search_string in message_author.lower() for search_string in search_strings_author) and
-                any(search_string in message_footer.lower() for search_string in search_strings_footer)):
+            search_strings_field0_name = [
+                'rip', # Eternal dungeon fail, English
+            ]
+            search_strings_field0_value = [
+                'eternal dragon', # Eternal dungeon fail, all languages
+            ]
+
+            if (
+                (any(search_string in message_author.lower() for search_string in search_strings_author) and
+                any(search_string in message_footer.lower() for search_string in search_strings_footer))
+                or
+                (any(search_string in embed_field0_name.lower() for search_string in search_strings_field0_name) and
+                any(search_string in embed_field0_value.lower() for search_string in search_strings_field0_value))
+                ):
                 user_id = user_name = user_command_message = None
                 solo_dungeon = False
                 dungeon_users = []
                 user = await functions.get_interaction_user(message)
                 slash_command = True if user is not None else False
-                search_strings_solo_dungeons = [
+                search_strings_solo_dungeons_footer = [
                     'eternality', # Eternal dungeon, all languages
                     'unlocked the next area', # Dungeons 11-15, English
                     'unlocked the next area', # TODO: Dungeons 11-15, Spanish
                     'unlocked the next area', # TODO: Dungeons 11-15, Portuguese
                 ]
-                if any(search_string in message_footer.lower() for search_string in search_strings_solo_dungeons):
+                search_strings_solo_dungeons_field0_value = [
+                    'eternal dragon', # Eternal dungeon fail, all languages
+                ]
+                if (
+                    any(search_string in message_footer.lower() for search_string in search_strings_solo_dungeons_footer)
+                    or
+                    any(search_string in embed_field0_value.lower() for search_string in search_strings_solo_dungeons_field0_value)
+                    ):
                     solo_dungeon = True
                 if user is None:
                     user_id_match = re.search(regex.USER_ID_FROM_ICON_URL, icon_url)
