@@ -1287,6 +1287,7 @@ RPG_COMMANDS: Final[dict[str, str]] = {
     'pets tournament': 'rpg pets tournament',
     'pickaxe': 'rpg pickaxe',
     'pickup': 'rpg pickup',
+    'produce': 'rpg produce',
     'professions stats': 'rpg professions',
     'profile': 'rpg profile',
     'quest': 'rpg quest',

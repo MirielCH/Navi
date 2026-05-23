@@ -105,7 +105,7 @@ class ProfileCog(commands.Cog):
                         await functions.add_warning_reaction(message)
                         await errors.log_error('Time travel count not found in profile or progress message.', message)
                     else:
-                        time_travel_count = int(tt_match.group(1))
+                        time_travel_count = int(re.sub(r'\D', '', tt_match.group(1)))        
                 if time_travel_count > -1:
                     if time_travel_count != user_settings.time_travel_count:
                         updated_settings['time_travel_count'] = time_travel_count

@@ -912,7 +912,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             slash_mentions_enabled = bool(record['slash_mentions_enabled']),
             surf_helper_enabled = bool(record['surf_helper_enabled']),
             time_potion_warning_enabled = bool(record['time_potion_warning_enabled']),
-            time_travel_count = record['time_travel_count'],
+            time_travel_count = 0 if record['time_travel_count'] is None else record['time_travel_count'],
             top_hat_unlocked = bool(record['top_hat_unlocked']),
             tracking_enabled = bool(record['tracking_enabled']),
             trade_daily_done = record['trade_daily_done'],

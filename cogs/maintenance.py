@@ -48,6 +48,7 @@ class MaintenanceCog(commands.Cog):
                 'the bot is under maintenance!', #TODO: Portuguese
             )
             if any(search_string in message.content.lower() for search_string in search_strings):
+                if not message.mentions: return
                 user: discord.User | discord.Member = message.mentions[0]
                 try:
                     user_settings: users.User = await users.get_user(user.id)
