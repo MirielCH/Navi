@@ -117,3 +117,4 @@ Ignore other dev commands, they are my own test commands and might even mess up 
 ## Support server
 
 • If you find bugs, have issues running Navi or something else, feel free to join the [support server](https://discord.gg/Kz2Vz2K4gy).  
+test
