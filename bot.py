@@ -52,7 +52,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
         message, = args
         if message.channel.type is not None:
             if message.channel.type.name == 'private': return
-        embed = discord.Embed(title='An error occured')
+        embed = discord.Embed(title='An error occurred')
         traceback_str: str = "".join(traceback.format_tb(error[2]))
         traceback_message: str = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Event', value=f'`{event}`', inline=False)
@@ -64,7 +64,7 @@ async def on_error(event: str, *args, **kwargs) -> None:
             message, = args
         except:
             return
-        embed = discord.Embed(title='An error occured')
+        embed = discord.Embed(title='An error occurred')
         traceback_str: str = "".join(traceback.format_tb(error[2]))
         traceback_message: str = f'{error[1]}\n{traceback_str}'
         embed.add_field(name='Error', value=f'```py\n{traceback_message[:1015]}```', inline=False)
