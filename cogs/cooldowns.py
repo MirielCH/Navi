@@ -289,6 +289,15 @@ class CooldownsCog(commands.Cog):
                     cooldowns.append(['farm', farm_timestring.lower(), farm_message])
                 else:
                     ready_commands.append('farm')
+            if user_settings.alert_produce.enabled:
+                produce_match = re.search(r"produce`\*\* \(\*\*(.+?)\*\*", message_fields.lower())
+                if produce_match:
+                    produce_timestring = produce_match.group(1)
+                    user_command = await functions.get_slash_command(user_settings, 'produce')
+                    produce_message = user_settings.alert_produce.message.replace('{command}', user_command)
+                    cooldowns.append(['produce', produce_timestring.lower(), produce_message])
+                else:
+                    ready_commands.append('produce')
             if user_settings.alert_work.enabled:
                 search_patterns = [
                     r'mine`\*\* \(\*\*(.+?)\*\*',

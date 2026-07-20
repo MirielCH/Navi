@@ -77,7 +77,7 @@ class MainCog(commands.Cog):
         command_name = await functions.get_navi_slash_command(self.bot, command_name)
         async def send_error() -> None:
             """Sends error message as embed"""
-            embed: discord.Embed = discord.Embed(title='An error occured')
+            embed: discord.Embed = discord.Embed(title='An error occurred')
             embed.add_field(name='Command', value=f'{command_name}', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.respond(embed=embed, ephemeral=True)
@@ -136,7 +136,7 @@ class MainCog(commands.Cog):
         """
         async def send_error() -> None:
             """Sends error message as embed"""
-            embed: discord.Embed = discord.Embed(title='An error occured')
+            embed: discord.Embed = discord.Embed(title='An error occurred')
             embed.add_field(name='Command', value=f'`{ctx.command.qualified_name}`', inline=False)
             embed.add_field(name='Error', value=f'```py\n{error}\n```', inline=False)
             await ctx.reply(embed=embed)
