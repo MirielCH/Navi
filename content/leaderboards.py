@@ -16,7 +16,7 @@ async def command_leaderboard_clan(ctx: bridge.BridgeContext) -> None:
     except exceptions.NoDataFoundError:
         await ctx.respond(
             f'Your guild is not registered with Navi. If you are in a guild, use '
-            f'{strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to add it.'
+            f'{strings.SLASH_COMMANDS["guild list"]} to add it.'
         )
         return
     embed = await embed_leaderboard_clan(clan_settings)

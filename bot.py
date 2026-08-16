@@ -9,7 +9,7 @@ import discord
 from discord import utils
 from discord.ext import bridge
 
-from database import errors, guilds, update_database
+from database import errors, update_database
 from database import settings as settings_db
 from resources import functions, logs, settings
 
@@ -25,12 +25,12 @@ member_cache_flags: discord.MemberCacheFlags = discord.MemberCacheFlags(joined=T
 bot_activity: discord.Activity = discord.Activity(type=discord.ActivityType.watching, name='your commands')
 
 if settings.DEBUG_MODE:
-    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None, # pyright: ignore
+    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(help_command=None, # pyright: ignore
                                                        case_insensitive=True, intents=intents, owner_id=settings.OWNER_ID,
                                                        allowed_mentions=allowed_mentions, debug_guilds=settings.DEV_GUILDS,
                                                        activity=bot_activity, member_cache_flags=member_cache_flags)
 else:
-    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(command_prefix=guilds.get_all_prefixes, help_command=None, # pyright: ignore
+    bot: bridge.AutoShardedBot = bridge.AutoShardedBot(help_command=None, # pyright: ignore
                                                        case_insensitive=True, intents=intents, allowed_mentions=allowed_mentions,
                                                        owner_id=settings.OWNER_ID, activity=bot_activity,
                                                        member_cache_flags=member_cache_flags)
@@ -136,7 +136,6 @@ EXTENSIONS: list[str] = [
         'cogs.reminders_custom',
         'cogs.reminders_lists',
         'cogs.settings',
-        'cogs.settings_guild',
         'cogs.slashboard',
         'cogs.sleepy_potion',
         'cogs.summer',

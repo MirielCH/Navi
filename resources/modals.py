@@ -13,7 +13,7 @@ from resources import emojis, exceptions, functions, strings
 
 
 class SetEmbedColorModal(Modal):
-    def __init__(self, view: discord.ui.View) -> None:
+    def __init__(self, view: discord.ui.DesignerView) -> None:
         super().__init__(title='Change ready list embed color')
         self.view = view
         self.add_item(
@@ -36,7 +36,7 @@ class SetEmbedColorModal(Modal):
 
 
 class SetStealthThresholdModal(Modal):
-    def __init__(self, view: discord.ui.View) -> None:
+    def __init__(self, view: discord.ui.DesignerView) -> None:
         super().__init__(title='Change guild stealth threshold')
         self.view = view
         self.add_item(
@@ -73,7 +73,7 @@ class SetStealthThresholdModal(Modal):
 
 
 class SetLastTTModal(Modal):
-    def __init__(self, view: discord.ui.View) -> None:
+    def __init__(self, view: discord.ui.DesignerView) -> None:
         super().__init__(title='Change last time travel')
         self.view = view
         self.add_item(
@@ -114,26 +114,8 @@ class SetLastTTModal(Modal):
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
-class SetPrefixModal(Modal):
-    def __init__(self, view: discord.ui.View) -> None:
-        super().__init__(title='Change prefix')
-        self.view = view
-        self.add_item(
-            InputText(
-                label='New prefix:',
-                placeholder="Enter prefix ...",
-            )
-        )
-
-    async def callback(self, interaction: discord.Interaction):
-        new_prefix = self.children[0].value.strip('"')
-        await self.view.guild_settings.update(prefix=new_prefix)
-        embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.guild_settings)
-        await interaction.response.edit_message(embed=embed, view=self.view)
-
-
 class SetMultiplierModal(Modal):
-    def __init__(self, view: discord.ui.View, activity: str) -> None:
+    def __init__(self, view: discord.ui.DesignerView, activity: str) -> None:
         super().__init__(title='Change command multiplier')
         self.view = view
         self.activity = activity
@@ -168,7 +150,7 @@ class SetMultiplierModal(Modal):
 
 
 class SetEventReductionModal(Modal):
-    def __init__(self, view: discord.ui.View, activity: str, cd_type: Literal['slash', 'text']) -> None:
+    def __init__(self, view: discord.ui.DesignerView, activity: str, cd_type: Literal['slash', 'text']) -> None:
         titles = {
             'slash': 'Change slash event reduction',
             'text': 'Change text event reduction',
@@ -222,7 +204,7 @@ class SetEventReductionModal(Modal):
 
 
 class AddPortalModal(Modal):
-    def __init__(self, view: discord.ui.View, component: discord.ui.Select) -> None:
+    def __init__(self, view: discord.ui.DesignerView, component: discord.ui.Select) -> None:
         super().__init__(title='Add portal')
         self.view = view
         self.component = component
@@ -248,18 +230,26 @@ class AddPortalModal(Modal):
                 return
         new_portal = await portals.insert_portal(self.view.user_settings.user_id, channel_id)
         self.view.user_portals.append(new_portal)
-        for child in self.view.children.copy():
-            if isinstance(child, self.component):
-                self.view.remove_item(child)
-                self.view.add_item(self.component(self.view))
-                break
+        for action_row in self.view.children:
+            for child in action_row.children.copy():
+                if isinstance(child, self.component):
+                    options = []
+                    if len(self.view.user_portals) < 20:
+                        options.append(discord.SelectOption(label=f'Add portal', emoji=emojis.ADD,
+                                                            value='add_portal'))
+                    for index, portal in enumerate(self.view.user_portals):
+                        options.append(discord.SelectOption(label=f'Remove portal {index + 1} ({portal.channel_id})',
+                                                            emoji=emojis.REMOVE,
+                                                            value=f'remove_{portal.channel_id}'))
+                    child.options = options
+                    break
         embed = await self.view.embed_function(self.view.bot, self.view.ctx, self.view.user_settings,
                                                self.view.user_portals)
         await interaction.response.edit_message(embed=embed, view=self.view)
 
 
 class AddCommandChannelModal(Modal):
-    def __init__(self, view: discord.ui.View, activity: str) -> None:
+    def __init__(self, view: discord.ui.DesignerView, activity: str) -> None:
         super().__init__(title=f'Add {activity} channel')
         self.view = view
         self.activity = activity
@@ -287,7 +277,7 @@ class AddCommandChannelModal(Modal):
 
 
 class SetPartnerPocketWatchReductionModal(Modal):
-    def __init__(self, view: discord.ui.View) -> None:
+    def __init__(self, view: discord.ui.DesignerView) -> None:
         super().__init__(title='Change your partner\'s pocket watch reduction')
         self.view = view
         self.add_item(

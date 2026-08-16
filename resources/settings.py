@@ -178,9 +178,6 @@ DONOR_COOLDOWNS: Final[tuple[float, float, float, float]] = (1.0, 0.9, 0.8, 0.65
 EPIC_RPG_ID: Final[int] = 555955826880413696
 TESTY_ID: Final[int] = 1050765002950332456 # Miriel's test bot to test triggers
 
-
-DEFAULT_PREFIX: Final[str] = 'navi '
-
 INTERACTION_TIMEOUT: Final[int] = 300
 
 class ClanReset(NamedTuple):

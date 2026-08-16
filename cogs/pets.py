@@ -73,8 +73,7 @@ class PetsCog(commands.Cog):
                 if not user_settings.pet_tip_read:
                     command_pets_list = await functions.get_slash_command(user_settings, 'pets list')
                     pet_message = (
-                        f"**{user_global_name}**, please use {command_pets_list} "
-                        f'or `rpg pets` to create pet reminders.'
+                        f'**{user_global_name}**, please use {command_pets_list} to create pet reminders.'
                     )
                     pet_message = (
                         f'{pet_message}\n\n'

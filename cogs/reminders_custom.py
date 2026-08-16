@@ -26,12 +26,12 @@ class RemindersCustomCog(commands.Cog):
     @commands.command(aliases=('rm','remind'))
     @commands.bot_has_permissions(send_messages=True)
     async def reminder(self, ctx: commands.Context, *args: str) -> None:
-        """Adds a custom reminder (prefix version)"""
-        prefix = ctx.prefix
+        """Adds a custom reminder (mention version)"""
+        prefix = f'<@{self.bot.user.id}>'
         syntax_add = (
-            f'The syntax is `{prefix}rm [time] [text]`\n'
+            f'The syntax is {prefix} `rm [time] [text]`\n'
             f'Supported time codes: `w`, `d`, `h`, `m`, `s`\n\n'
-            f'Example: `{prefix}rm 1h30m Coffee time!`'
+            f'Example: {prefix} `rm 1h30m Coffee time!`'
         )
         if not args:
             await ctx.reply(

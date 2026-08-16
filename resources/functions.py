@@ -1093,7 +1093,7 @@ async def edit_interaction(interaction: discord.Interaction | discord.WebhookMes
     content: str | Any = kwargs.get('content', MISSING)
     embed: discord.Embed | Any = kwargs.get('embed', MISSING)
     embeds: list[discord.Embed] | Any = kwargs.get('embeds', MISSING)
-    view: discord.ui.View | Any = kwargs.get('view', MISSING)
+    view: discord.ui.DesignerView | Any = kwargs.get('view', MISSING)
     file: discord.File | Any = kwargs.get('file', MISSING)
     if isinstance(interaction, discord.WebhookMessage):
         await interaction.edit(content=content, embed=embed, embeds=embeds, view=view)

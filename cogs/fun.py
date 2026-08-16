@@ -39,7 +39,6 @@ class FunCog(commands.Cog):
     @commands.bot_has_permissions(send_messages=True, embed_links=True, read_message_history=True)
     async def hey(self, ctx: commands.Context) -> None:
         """Hey! Listen!"""
-        if ctx.prefix.lower() == 'rpg ': return
         await ctx.reply('https://media.tenor.com/LPVxFddvSc0AAAAC/hey-hello.gif')
 
     @commands.command(aliases=('ban','mute','warn'))
@@ -53,7 +52,7 @@ class FunCog(commands.Cog):
     async def blacklist(self, ctx: commands.Context) -> None:
         """Blacklist"""
         if not len(ctx.message.mentions) == 1:
-            await ctx.reply(f'The syntax of this very important command is `{ctx.prefix}blacklist [@User]`.')
+            await ctx.reply(f'The syntax of this very important command is <@{self.bot.user.id}> `blacklist [@User]`.')
             return
         await ctx.reply(
             f'**{ctx.message.mentions[0].name}** was banned from EPIC RPG for having too much luck.\n'
@@ -66,7 +65,7 @@ class FunCog(commands.Cog):
     async def unblacklist(self, ctx: commands.Context) -> None:
         """Unblacklist"""
         if not ctx.message.mentions:
-            await ctx.reply(f'The syntax of this very important command is `{ctx.prefix}unblacklist [@User]`.')
+            await ctx.reply(f'The syntax of this very important command is <@{self.bot.user.id}> `unblacklist [@User]`.')
             return
         await ctx.reply('I said no appeal.')
 

@@ -50,8 +50,7 @@ If you don't want to run Navi yourself, you can invite [Navi Lite](https://canar
 
 ## Commands
 
-Navi uses both slash and text commands. Use `/help` for an overview.  
-Default prefix for text commands is `navi ` and is changeable in `/settings server`.  
+Navi uses slash and mention commands. Use `/help` or '@Navi help` for an overview.  
 
 ## Dev commands
 
@@ -63,32 +62,32 @@ These commands provide bot admin level functionality and are restricted as follo
 
 The following commands are available:  
 
-### `/dev cache`, `navi dev cache`  
+### `/dev cache`  
 
 Shows the size of the local message cache. All user messages containing a mention of epic rpg or starting with "rpg " are cached for 1 minute to speed up command detection.  
 
-### `/dev consolidate`, `navi dev consolidate`  
+### `/dev consolidate`  
 
 Manually triggers the tracking consolidation. This runs daily at 00:00 UTC, so you probably won't need this.  
 
-### `/dev emoji-check`, `navi dev emoji-check`  
+### `/dev emoji-check`  
 
 Checks if alle emojis Navi needs are uploaded and present.  
 
-### `/dev event-reductions`, `navi dev er`  
+### `/dev event-reductions`  
 
 Manages global event reductions. If there is a global reduction (e.g. 25% on New Year event), you can set this here.  
 Always check what is actually affected before changing this, it's never all commands even when lume says otherwise. `guild`, `daily` and `weekly` are almost never included for example.  
 
-### `/dev leave-server`, `navi dev leave-server`  
+### `/dev leave-server`  
 
 Makes Navi leave the discord server with the provided ID. You can see server IDs in `/dev server-list`. You don't have to be in a server yourself for this to work.  
 
-### `/dev post-message`, `navi dev pm <message id> <channel id> <embed title>`  
+### `/dev post-message`  
 
 Allows you to send a custom message via Navi to a channel. I use this to post Navi updates.  
 
-### `/dev reload`, `navi dev reload <modules>`  
+### `/dev reload`  
 
 Allows reloading of cogs and modules on the fly.  
 Note that you should always restart the bot when there is a breaking change, no matter what.  
@@ -100,15 +99,15 @@ It's not possible to reload the following files:
 
 To reload files in subfolders, use `folder.file` (e.g. `resources.settings`). Cogs don't need that, the filename is enough (e.g. `adventure`).  
 
-### `/dev server-list`, `navi dev server-list`  
+### `/dev server-list`  
 
 Lists all servers Navi is in by name.  
 
-### `/dev shutdown`, `navi dev shutdown`  
+### `/dev shutdown`  
 
 Shuts down the bot. Note that if the bot is registered as a systemctl or systemd service, it will of course automatically restart.  
 
-### `/dev support`, `navi dev support`  
+### `/dev support`  
 
 Shows a link to the dev support server (see below).  
 

@@ -47,20 +47,21 @@ class DevCog(commands.Cog):
         if ctx.author.id not in settings.DEV_IDS:
             if ctx.is_app: await ctx.respond(MSG_NOT_DEV, ephemeral=True)
             return
+        prefix = f'<@{self.bot.user.id}>'
         await ctx.respond(
             f'**Dev commands**\n'
-            f'{emojis.BP} `{ctx.prefix}dev cache`\n'
-            f'{emojis.BP} `{ctx.prefix}dev consolidate`\n'
-            f'{emojis.BP} `{ctx.prefix}dev emoji-check`\n'
-            f'{emojis.BP} `{ctx.prefix}dev event-reductions`, `er`\n'
-            f'{emojis.BP} `{ctx.prefix}dev leave-server <server id>`\n'
-            f'{emojis.BP} `{ctx.prefix}dev post-message`, `pm` `<message id> <channel id> <embed title>`\n'
-            f'{emojis.BP} `{ctx.prefix}dev reload <modules>`\n'
-            f'{emojis.BP} `{ctx.prefix}dev seasonal-event`, `se`\n'
-            f'{emojis.BP} `{ctx.prefix}dev server-list`\n'
-            f'{emojis.BP} `{ctx.prefix}dev support`\n'
-            f'{emojis.BP} `{ctx.prefix}dev shutdown`\n'
-            f'{emojis.BP} `{ctx.prefix}dev user-settings <user id>`\n'
+            f'{emojis.BP} {prefix} `dev cache`\n'
+            f'{emojis.BP} {prefix} `dev consolidate`\n'
+            f'{emojis.BP} {prefix} `dev emoji-check`\n'
+            f'{emojis.BP} {prefix} `dev event-reductions`, `er`\n'
+            f'{emojis.BP} {prefix} `dev leave-server <server id>`\n'
+            f'{emojis.BP} {prefix} `dev post-message`, `pm` `<message id> <channel id> <embed title>`\n'
+            f'{emojis.BP} {prefix} `dev reload <modules>`\n'
+            f'{emojis.BP} {prefix} `dev seasonal-event`, `se`\n'
+            f'{emojis.BP} {prefix} `dev server-list`\n'
+            f'{emojis.BP} {prefix} `dev support`\n'
+            f'{emojis.BP} {prefix} `dev shutdown`\n'
+            f'{emojis.BP} {prefix} `dev user-settings <user id>`\n'
         )
 
     @dev_group.command(name='reload', description='Reloads cogs or modules', guild_ids=settings.DEV_GUILDS)

@@ -33,7 +33,7 @@ class RemindersListsCog(commands.Cog):
     @commands.command(name='list', aliases=('cd','cooldown','cooldowns'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_list(self, ctx: commands.Context, *args: str) -> None:
-        """Lists all active reminders (prefix version)"""
+        """Lists all active reminders (mention version)"""
         for mentioned_user in ctx.message.mentions.copy():
             if mentioned_user == self.bot.user:
                 ctx.message.mentions.remove(mentioned_user)
@@ -60,7 +60,7 @@ class RemindersListsCog(commands.Cog):
     @commands.command(name='ready', aliases=('rd',))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_ready(self, ctx: commands.Context, *args: str) -> None:
-        """Lists all commands off cooldown (prefix version)"""
+        """Lists all commands off cooldown (mention version)"""
         for mentioned_user in ctx.message.mentions.copy():
             if mentioned_user == self.bot.user:
                 ctx.message.mentions.remove(mentioned_user)

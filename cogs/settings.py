@@ -134,19 +134,8 @@ class SettingsCog(commands.Cog):
     @bridge.bridge_group(name='server-settings', aliases=('serversettings','server','ss','admin'), invoke_without_command=True)
     async def server_settings_group(self, ctx: bridge.BridgeContext):
         """Server Settings command group"""
-        command = self.bot.get_command(name='server-settings main')
+        command = self.bot.get_command(name='server-settings auto-flex')
         if command is not None: await command.callback(command.cog, ctx)
-        
-    @server_settings_group.command(name='main', aliases=('s','srv'), description='Manage server settings')
-    @commands.bot_has_permissions(send_messages=True, embed_links=True)
-    async def server_settings_main(self, ctx: bridge.BridgeContext):
-        """Server settings main command"""
-        if (not ctx.author.guild_permissions.manage_guild
-            and not (ctx.guild.id == 713541415099170836 and ctx.author.id == 619879176316649482)):
-            raise commands.MissingPermissions(['manage_guild',])
-            # This is to give me (Miriel) server settings access in RPG ARMY. This does NOT give me backdoor access
-            # in any other server.
-        await settings_cmd.command_server_settings_main(self.bot, ctx)
         
     @server_settings_group.command(name='auto-flex', aliases=('flex','auto_flex','autoflex','a',), description='Manage auto-flex server settings')
     @commands.bot_has_permissions(send_messages=True, embed_links=True)

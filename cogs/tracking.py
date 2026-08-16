@@ -32,7 +32,7 @@ class TrackingCog(commands.Cog):
     @commands.command(name='stats', aliases=('stat','st','statistic', 'statistics'))
     @commands.bot_has_permissions(send_messages=True, embed_links=True)
     async def prefix_stats(self, ctx: commands.Context, *args: str) -> None:
-        """Lists all stats (prefix version)"""
+        """Lists all stats (mention version)"""
         user = None
         for mentioned_user in ctx.message.mentions.copy():
             if mentioned_user == self.bot.user:

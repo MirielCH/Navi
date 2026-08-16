@@ -114,7 +114,7 @@ class MainCog(commands.Cog):
             ctx_author_name: str = ctx.author.global_name if ctx.author.global_name else ctx.author.name
             await ctx.respond(
                 f'Hey! **{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
+                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or <@{self.bot.user.id}>`on` to activate me first.',
                 ephemeral=True
             )
         elif isinstance(error, commands.NotOwner):
@@ -176,7 +176,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.FirstTimeUserError):
             await ctx.reply(
                 f'**{ctx_author_name}**, looks like I don\'t know you yet.\n'
-                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or `{ctx.prefix}on` to activate me first.',
+                f'Use {await functions.get_navi_slash_command(self.bot, "on")} or <@{self.bot.user.id}> `on` to activate me first.',
             )
         elif isinstance(error, (commands.UnexpectedQuoteError, commands.InvalidEndOfQuotedStringError,
                                 commands.ExpectedClosingQuoteError)):
@@ -193,7 +193,7 @@ class MainCog(commands.Cog):
         elif isinstance(error, exceptions.NoClanLeaderFoundError):
             await ctx.reply(
                 f'**{ctx_author_name}**, there is no leader registered for this guild.\n'
-                f'Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update your guild.',
+                f'Use {strings.SLASH_COMMANDS["guild list"]} to update your guild.',
             )
         elif isinstance(error, discord.errors.Forbidden):
             return
@@ -228,7 +228,7 @@ class MainCog(commands.Cog):
             welcome_message: str = (
                 f'Hey! **{guild.name}**! I\'m here to remind you to do your EPIC RPG commands!\n\n'
                 f'Note that reminders are off by default. If you want to get reminded, please use '
-                f'{await functions.get_navi_slash_command(self.bot, "on")} or `{guild_settings.prefix}on` to activate me.'
+                f'{await functions.get_navi_slash_command(self.bot, "on")} or <@{self.bot.user.id}> `on` to activate me.'
             )
             await guild.system_channel.send(welcome_message)
         except:

@@ -28,7 +28,7 @@ async def embed_portals(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
         footer_command = f'/settings portals'
         description_command = await functions.get_navi_slash_command(bot, "settings portals")
     else:
-        footer_command = f'{ctx.prefix}set pt'
+        footer_command = f'<@{bot.user.id}> set pt'
         description_command = f'`{footer_command}`'
     try:
         user_portals = await portals.get_portals(ctx.author.id)

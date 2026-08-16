@@ -281,9 +281,9 @@ async def command_multipliers(bot: bridge.AutoShardedBot, ctx: commands.Context,
     syntax: str = ''
     if not user_settings.multiplier_management_enabled or user_settings.current_area == 20:
         syntax = (
-            f'Syntax: `{ctx.prefix}multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
-            f'Example 1: `{ctx.prefix}multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
-            f'Example 2: `{ctx.prefix}multi all 1 hunt 0.9`'
+            f'Syntax: <@{bot.user.id}> `multi <activities> <multiplier> [... <activities> <multiplier>]`.\n'
+            f'Example 1: <@{bot.user.id}> `multi card-hand 0.7 hunt lootbox 0.5 adventure 1.14`\n'
+            f'Example 2: <@{bot.user.id}> `multi all 1 hunt 0.9`'
         )
     if not args:
         current_multipliers: str = await get_current_multipliers()
@@ -373,7 +373,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
     except exceptions.FirstTimeUserError:
         user = await users.insert_user(ctx.author.id)
         first_time_user = True
-    prefix = await guilds.get_prefix(ctx)
+    prefix = f'<@{bot.user.id}>'
     if not user.bot_enabled:
         await user.update(bot_enabled=True)
     if not user.bot_enabled:
@@ -384,19 +384,19 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         await ctx.respond(answer)
     else:
         field_tldr_setup = (
-            f'- Use {strings.SLASH_COMMANDS["donate"]} or `rpg donate` to update your donor tier\n'
-            f'- Use {strings.SLASH_COMMANDS["artifacts"]} or `rpg artifacts` to update your artifacts\n'
-            f'- Use {strings.SLASH_COMMANDS["cd"]} or `rpg cd` to update your current reminders\n'
+            f'- Use {strings.SLASH_COMMANDS["donate"]} to update your donor tier\n'
+            f'- Use {strings.SLASH_COMMANDS["artifacts"]} to update your artifacts\n'
+            f'- Use {strings.SLASH_COMMANDS["cd"]} to update your current reminders\n'
         )
         field_settings = (
             f'You may want to have a look at my settings.\n'
-            f'Use {await functions.get_navi_slash_command(bot, "settings user")} or `{prefix}s` to get started.'
+            f'Use {await functions.get_navi_slash_command(bot, "settings user")} or {prefix} `s` to get started.'
         )
         field_tracking = (
             f'I track the amount of some EPIC RPG commands you use. Check '
-            f'{await functions.get_navi_slash_command(bot, "stats")} or `{prefix}st` to see what commands are tracked.\n'
+            f'{await functions.get_navi_slash_command(bot, "stats")} or {prefix} `st` to see what commands are tracked.\n'
             f'**__No personal data is processed or stored in any way!__**\n'
-            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")}, `{prefix}st` '
+            f'You can opt-out of command tracking in {await functions.get_navi_slash_command(bot, "stats")}, {prefix} `st` '
             f'or in your user settings.\n\n'
         )
         field_auto_flex = (
@@ -406,7 +406,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
         )
         field_privacy = (
             f'To read more about what data is processed and why, feel free to check the privacy policy found in '
-            f'{await functions.get_navi_slash_command(bot, "help")} or `{prefix}help`.'
+            f'{await functions.get_navi_slash_command(bot, "help")} or {prefix} `help`.'
         )
         img_navi = discord.File(settings.IMG_NAVI, filename='navi.png')
         image_url = 'attachment://navi.png'
@@ -414,7 +414,7 @@ async def command_on(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext) -> N
             title = f'Hey! {ctx_author_name}! Hello!'.upper(),
             description = (
                 f'I am here to help you with your EPIC RPG commands!\n'
-                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} or `{prefix}help` '
+                f'Have a look at {await functions.get_navi_slash_command(bot, "help")} or {prefix} `help` '
                 f'for a list of my own commands.'
             ),
             color =  settings.EMBED_COLOR,
@@ -577,7 +577,7 @@ async def command_purge_data(bot: bridge.AutoShardedBot, ctx: bridge.BridgeConte
         
 
 async def command_settings_alts(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                switch_view: Optional[discord.ui.View] = None) -> None:
+                                switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Alt settings command"""
     interaction = user_settings = None
     if switch_view is not None:
@@ -597,7 +597,7 @@ async def command_settings_alts(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCo
 
     
 async def command_settings_clan(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                switch_view: Optional[discord.ui.View] = None) -> None:
+                                switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Clan settings command"""
     user_settings: users.User = await users.get_user(ctx.author.id)
     clan_settings = interaction = None
@@ -626,7 +626,7 @@ async def command_settings_clan(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCo
 
 
 async def command_settings_helpers(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                   switch_view: Optional[discord.ui.View] = None) -> None:
+                                   switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Helper settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -646,7 +646,7 @@ async def command_settings_helpers(bot: bridge.AutoShardedBot, ctx: bridge.Bridg
 
 
 async def command_settings_portals(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                   switch_view: Optional[discord.ui.View] = None) -> None:
+                                   switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Portals settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -670,7 +670,7 @@ async def command_settings_portals(bot: bridge.AutoShardedBot, ctx: bridge.Bridg
 
 
 async def command_settings_messages(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                    switch_view: Optional[discord.ui.View] = None) -> None:
+                                    switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Reminder message settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -690,7 +690,7 @@ async def command_settings_messages(bot: bridge.AutoShardedBot, ctx: bridge.Brid
 
 
 async def command_settings_multipliers(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                       switch_view: Optional[discord.ui.View] = None) -> None:
+                                       switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Reminder multiplier settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -699,7 +699,6 @@ async def command_settings_multipliers(bot: bridge.AutoShardedBot, ctx: bridge.B
         switch_view.stop()
     if user_settings is None:
         user_settings: users.User = await users.get_user(ctx.author.id)
-        
     view = views.SettingsMultipliersView(ctx, bot, user_settings, embed_settings_multipliers)
     embed = await embed_settings_multipliers(bot, ctx, user_settings)
     if interaction is None:
@@ -711,7 +710,7 @@ async def command_settings_multipliers(bot: bridge.AutoShardedBot, ctx: bridge.B
     
 
 async def command_settings_partner(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                   switch_view: Optional[discord.ui.View] = None) -> None:
+                                   switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Partner settings command"""
     user_settings = interaction = partner_settings = None
     if switch_view is not None:
@@ -738,7 +737,7 @@ async def command_settings_partner(bot: bridge.AutoShardedBot, ctx: bridge.Bridg
 
 
 async def command_settings_ready(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                 switch_view: Optional[discord.ui.View] = None) -> None:
+                                 switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """ready settings command"""
     user_settings = clan_settings = interaction = None
     if switch_view is not None:
@@ -764,7 +763,7 @@ async def command_settings_ready(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
 
 
 async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                     switch_view: Optional[discord.ui.View] = None) -> None:
+                                     switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Reminder settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -784,7 +783,7 @@ async def command_settings_reminders(bot: bridge.AutoShardedBot, ctx: bridge.Bri
 
     
 async def command_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                       switch_view: Optional[discord.ui.View] = None) -> None:
+                                       switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Reminder settings command (page 2)"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -804,7 +803,7 @@ async def command_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: bridge.B
 
 
 async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                            switch_view: Optional[discord.ui.View] = None) -> None:
+                                            switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Server settings auto-flex command"""
     interaction = guild_settings = None
     if switch_view is not None:
@@ -824,7 +823,7 @@ async def command_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: bri
 
     
 async def command_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                              switch_view: Optional[discord.ui.View] = None) -> None:
+                                              switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Server settings auto-flex command (page 2)"""
     interaction = guild_settings = None
     if switch_view is not None:
@@ -832,7 +831,7 @@ async def command_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: b
         interaction = getattr(switch_view, 'interaction', None)
     if guild_settings is None:
         guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
-    view = views.SettingsServerAutoFlex2View(ctx, bot, guild_settings, embed_server_settings_auto_flex)
+    view = views.SettingsServerAutoFlex2View(ctx, bot, guild_settings, embed_server_settings_auto_flex_2)
     embed = await embed_server_settings_auto_flex_2(bot, ctx, guild_settings)
     if interaction is None:
         interaction = await ctx.respond(embed=embed, view=view)
@@ -842,27 +841,8 @@ async def command_server_settings_auto_flex_2(bot: bridge.AutoShardedBot, ctx: b
     await view.wait()
 
     
-async def command_server_settings_main(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                       switch_view: Optional[discord.ui.View] = None) -> None:
-    """Server settings main command"""
-    interaction = guild_settings = None
-    if switch_view is not None:
-        guild_settings = getattr(switch_view, 'guild_settings', None)
-        interaction = getattr(switch_view, 'interaction', None)
-    if guild_settings is None:
-        guild_settings: guilds.Guild = await guilds.get_guild(ctx.guild.id)
-    view = views.SettingsServerMainView(ctx, bot, guild_settings, embed_server_settings_main)
-    embed = await embed_server_settings_main(bot, ctx, guild_settings)
-    if interaction is None:
-        interaction = await ctx.respond(embed=embed, view=view)
-    else:
-        await interaction.edit(embed=embed, view=view)
-    view.interaction = interaction
-    await view.wait()
-
-    
 async def command_server_settings_event_pings(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                              switch_view: Optional[discord.ui.View] = None) -> None:
+                                              switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """Server settings event ping command"""
     interaction = guild_settings = None
     if switch_view is not None:
@@ -881,7 +861,7 @@ async def command_server_settings_event_pings(bot: bridge.AutoShardedBot, ctx: b
 
 
 async def command_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext,
-                                switch_view: Optional[discord.ui.View] = None) -> None:
+                                switch_view: Optional[discord.ui.DesignerView] = None) -> None:
     """User settings command"""
     user_settings = interaction = None
     if switch_view is not None:
@@ -947,7 +927,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
         if clan_member.member_type == 'leader':
             clan_leaders = f'{clan_leaders}, <@{clan_member.user_id}>'
     if not clan_leaders:
-        clan_leaders = f'{emojis.WARNING} No guild leader found! Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guid list` to update the member list.'
+        clan_leaders = f'{emojis.WARNING} No guild leader found! Use {strings.SLASH_COMMANDS["guild list"]} to update the member list.'
 
     overview = (
         f'{emojis.BP} **Name**: `{clan_settings.clan_name}`\n'
@@ -971,7 +951,7 @@ async def embed_settings_clan(bot: bridge.AutoShardedBot, ctx: discord.Applicati
     for clan_member in clan_settings.members:
         members = f'{members}\n{emojis.BP} <@{clan_member.user_id}>'
         member_count += 1
-    members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} or `rpg guild list` to update guild members._'
+    members = f'{members.strip()}\n\n➜ _Use {strings.SLASH_COMMANDS["guild list"]} to update guild members._'
     embed = discord.Embed(
         color = settings.EMBED_COLOR,
         title = f'{clan_settings.clan_name} GUILD SETTINGS',
@@ -1520,24 +1500,6 @@ async def embed_settings_reminders_2(bot: bridge.AutoShardedBot, ctx: discord.Ap
     return embed
 
 
-async def embed_server_settings_main(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
-                                     guild_settings: guilds.Guild) -> discord.Embed:
-    """Server settings main embed"""
-    server_settings = (
-        f'{emojis.BP} **Prefix**: `{guild_settings.prefix}`\n'
-        f'{emojis.DETAIL} _If you want to have a space after the prefix, you need to input it as `"prefix "`._'
-    )
-    embed = discord.Embed(
-        color = settings.EMBED_COLOR,
-        title = f'{ctx.guild.name.upper()} SERVER SETTINGS: MAIN',
-        description = (
-            f'_Serverwide settings._'
-        )
-    )
-    embed.add_field(name='SETTINGS', value=server_settings, inline=False)
-    return embed
-
-
 async def embed_server_settings_auto_flex(bot: bridge.AutoShardedBot, ctx: discord.ApplicationContext,
                                      guild_settings: guilds.Guild) -> discord.Embed:
     """Server settings auto-flex embed"""
@@ -1701,7 +1663,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
         tt_timestamp = int(user_settings.last_tt.timestamp())
     except OSError as error: # Windows throws an error if datetime is set to 0 apparently
         tt_timestamp = 0
-    prefix = await guilds.get_prefix(ctx)
+    prefix = f'<@{bot.user.id}>'
     ascension = 'Ascended' if user_settings.ascended else 'Not ascended'
     user_donor_tier = strings.DONOR_TIERS[user_settings.user_donor_tier]
     user_donor_tier_emoji = strings.DONOR_TIERS_EMOJIS[user_donor_tier]
@@ -1716,7 +1678,7 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     field_bot = (
         f'{emojis.BP} **Bot**: {await functions.bool_to_text(user_settings.bot_enabled)}\n'
         f'{emojis.DETAIL} _You can toggle this with {await functions.get_navi_slash_command(bot, "on")}'
-        f' and {await functions.get_navi_slash_command(bot, "off")} or `{prefix} on` and `off`_\n'
+        f' and {await functions.get_navi_slash_command(bot, "off")} or {prefix} `on` and `off`_\n'
         f'{emojis.BP} **Reactions**: {await functions.bool_to_text(user_settings.reactions_enabled)}'
     )
     if settings.LITE_MODE:
@@ -1734,11 +1696,11 @@ async def embed_settings_user(bot: bridge.AutoShardedBot, ctx: bridge.BridgeCont
     epic_rpg_user = (
         f'{emojis.BP} **Donor tier**: {user_donor_tier}\n'
         f'{emojis.BP} **Pocket watch reduction**: `{user_pocket_watch_reduction:g}` %\n'
-        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} or `rpg artifacts` to update this setting._\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
         f'{emojis.BP} **Has chocolate box artifact**: `{chocolate_box_unlocked}`\n'
-        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} or `rpg artifacts` to update this setting._\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["artifacts"]} to update this setting._\n'
         f'{emojis.BP} **Ascension**: `{ascension}`\n'
-        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} or `rpg pr` to update this setting._\n'
+        f'{emojis.DETAIL} _Use {strings.SLASH_COMMANDS["professions stats"]} to update this setting._\n'
     )
     epic_rpg_partner = (
         f'{emojis.BP} **Donor tier**: {partner_donor_tier}\n'

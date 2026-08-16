@@ -3,7 +3,7 @@
 
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 import sqlite3
 from typing import NamedTuple, Optional
 
@@ -205,7 +205,7 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
         log_entry = LogEntry(
             command = record['command'],
             command_count = record['command_count'],
-            date_time = record['date_time'],
+            date_time = record['date_time'].replace(tzinfo=timezone.utc),
             entry_type = record['type'],
             guild_id = record['guild_id'],
             user_id = record['user_id'],
