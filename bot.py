@@ -35,7 +35,6 @@ else:
                                                        owner_id=settings.OWNER_ID, activity=bot_activity,
                                                        member_cache_flags=member_cache_flags)
 
-
 @bot.event
 async def on_error(event: str, *args, **kwargs) -> None:
     """Runs when an error outside a command appears.

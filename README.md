@@ -50,7 +50,7 @@ If you don't want to run Navi yourself, you can invite [Navi Lite](https://canar
 
 ## Commands
 
-Navi uses slash and mention commands. Use `/help` or '@Navi help` for an overview.  
+Navi uses slash and mention commands. Use `/help` for an overview.  
 
 ## Dev commands
 
