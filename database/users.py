@@ -925,7 +925,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
+            f"{error}\n{strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)}"
         )
         raise LookupError(error)
 

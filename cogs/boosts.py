@@ -308,7 +308,7 @@ class BoostsCog(commands.Cog):
                 time_elapsed = current_time - bot_answer_time
                 time_left -= time_elapsed
                 if user_settings.eternal_boosts_tier >= 4: time_left *= 3
-                elif user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
+                if user_settings.user_pocket_watch_multiplier < 1: time_left *= 2
                 reminder_message = (
                         user_settings.alert_boosts.message
                         .replace('{boost_emoji}', item_emoji)

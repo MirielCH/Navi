@@ -3,12 +3,7 @@
 
 
 from dataclasses import dataclass
-import itertools
 import sqlite3
-from typing import NamedTuple, Union
-
-import discord
-from discord.ext import bridge, commands
 
 from database import errors
 from resources import exceptions, settings, strings
@@ -313,7 +308,7 @@ async def get_guild(guild_id: int) -> Guild:
         )
         raise
     if not record:
-        sql = f'INSERT INTO {table} (guild_id,) VALUES (?,)'
+        sql = f'INSERT INTO {table} (guild_id) VALUES (?)'
         try:
             cur.execute(sql, (guild_id,))
             sql = sql_select

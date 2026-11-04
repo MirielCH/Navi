@@ -1,11 +1,15 @@
 # event_pings.py
 
+from datetime import timedelta
+
 import discord
+from discord import utils
 from discord.ext import bridge, commands
 
 from database import guilds
-from resources import functions, settings
+from resources import functions, settings, logs
 
+seen_messages = {}  
 
 class EventPingsCog(commands.Cog):
     """Cog that contains the event ping detection commands"""
@@ -34,6 +38,18 @@ class EventPingsCog(commands.Cog):
     async def on_message(self, message: discord.Message) -> None:
         """Runs when a message is sent in a channel."""
         if message.author.id not in [settings.EPIC_RPG_ID, settings.TESTY_ID]: return
+
+        # Duplicate message handling
+        embed_data = await functions.parse_embed(message)
+        if (message.id, message.content, str(embed_data), str(message.components)) in seen_messages:
+            return
+        expired_message_keys = [seen_key for seen_key, seen_time in seen_messages.items() if utils.utcnow() - seen_time > timedelta(minutes=1)]
+        for seen_key in expired_message_keys:
+            del seen_messages[seen_key]
+        if len(seen_messages) > 10_000:
+            seen_messages.clear()
+            logs.logger.info('Cleared message cache to prevent memory issues. This should not happen often.')
+        seen_messages[(message.id, message.content, str(embed_data), str(message.components))] = utils.utcnow()
 
         if message.embeds:
             embed: discord.Embed = message.embeds[0]

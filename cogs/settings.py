@@ -42,7 +42,7 @@ class SettingsCog(commands.Cog):
         if len(settings) > 1024:
             await ctx.respond('Are you trying to write a novel here? 🤔')
             return
-        await settings_cmd.command_enable_disable(self.bot, ctx, 'enable', settings.split())
+        await settings_cmd.command_enable_disable(self.bot, ctx, 'enable', settings.lower().split())
         
     @bridge.bridge_command(name='disable', aliases=('d',))
     @commands.bot_has_permissions(send_messages=True)
@@ -56,7 +56,7 @@ class SettingsCog(commands.Cog):
         if len(settings) > 1024:
             await ctx.respond('Are you trying to write a novel here? 🤔')
             return
-        await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.split())
+        await settings_cmd.command_enable_disable(self.bot, ctx, 'disable', settings.lower().split())
 
     @bridge.bridge_command()
     async def purge(self, ctx: bridge.BridgeContext) -> None:

@@ -108,88 +108,87 @@ async def embed_event_reductions(bot: bridge.AutoShardedBot, ctx: bridge.BridgeC
 
 async def embed_help(bot: bridge.AutoShardedBot, ctx: bridge.BridgeContext | discord.Message) -> discord.Embed:
     """Main menu embed"""
-    prefix = f'<@{bot.user.id}>'
     title_link = 'https://youtu.be/SB4sDPTZPYM'
     reminder_settings = (
         f'{emojis.BP} **[Check active reminders]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "list")} | {prefix} `cd`\n'
+        f'{await functions.get_navi_slash_command(bot, "list")} | `@Navi cd`\n'
         f'{emojis.BP} **[Add custom reminder]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "custom-reminder")} | {prefix} `rm`\n'
+        f'{await functions.get_navi_slash_command(bot, "custom-reminder")} | `@Navi rm`\n'
         f'{emojis.BP} **[Manage reminders]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings reminders")} | {prefix} `srm`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings reminders")} | `@Navi srm`\n'
         f'{emojis.BP} **[Manage reminder messages]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings messages")} | {prefix} `sm`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings messages")} | `@Navi sm`\n'
     )
     ready_settings = (
         f'{emojis.BP} **[Check ready commands]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "ready")} | {prefix} `rd`\n'
+        f'{await functions.get_navi_slash_command(bot, "ready")} | `@Navi rd`\n'
         f'{emojis.BP} **[Manage ready list]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings ready")} | {prefix} `srd`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings ready")} | `@Navi srd`\n'
     )
     stats = (
         f'{emojis.BP} **[Check stats]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "stats")} | {prefix} `st`\n'
+        f'{await functions.get_navi_slash_command(bot, "stats")} | `@Navi st`\n'
         f'{emojis.BP} **[Manage tracking settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings user")} | {prefix} `s`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings user")} | `@Navi s`\n'
     )
     user_settings = (
         f'{emojis.BP} **[Enable Navi]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "on")} | {prefix} `on`\n'
+        f'{await functions.get_navi_slash_command(bot, "on")} | `@Navi on`\n'
         f'{emojis.BP} **[Disable Navi]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "off")} | {prefix} `off`\n'
+        f'{await functions.get_navi_slash_command(bot, "off")} | `@Navi off`\n'
         f'{emojis.BP} **[Manage user settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings user")} | {prefix} `s`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings user")} | `@Navi s`\n'
     )
     helper_settings = (
         f'{emojis.BP} **[Manage helper settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings helpers")} | {prefix} `sh`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings helpers")} | `@Navi sh`\n'
     )
     partner_settings = (
         f'{emojis.BP} **[Manage alts]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings alts")} | {prefix} `sa`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings alts")} | `@Navi sa`\n'
         f'{emojis.BP} **[Manage partner]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings partner")} | {prefix} `sp`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings partner")} | `@Navi sp`\n'
     )
     guild_settings = (
         f'{emojis.BP} **[Check weekly leaderboard]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "guild leaderboard")} | {prefix} `glb`\n'
+        f'{await functions.get_navi_slash_command(bot, "guild leaderboard")} | `@Navi glb`\n'
         f'{emojis.BP} **[Manage guild settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings guild")} | {prefix} `sg`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings guild")} | `@Navi sg`\n'
         f'{emojis.BP} **[Add or update your guild]({title_link})**: '
         f'{strings.SLASH_COMMANDS["guild list"]}\n'
     )
     multiplier_settings = (
         f'{emojis.BP} **[Check event reductions]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "event-reductions")} | {prefix} `er`\n'
+        f'{await functions.get_navi_slash_command(bot, "event-reductions")} | `@Navi er`\n'
         f'{emojis.BP} **[Manage multipliers]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings multipliers")} | {prefix} `multi`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings multipliers")} | `@Navi multi`\n'
     )
     portal_settings = (
         f'{emojis.BP} **[Check your portals]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "portals")} | {prefix} `pt`\n'
+        f'{await functions.get_navi_slash_command(bot, "portals")} | `@Navi pt`\n'
         f'{emojis.BP} **[Manage your portals]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "settings portals")} | {prefix} `spt`\n'
+        f'{await functions.get_navi_slash_command(bot, "settings portals")} | `@Navi spt`\n'
     )
     misc_settings = (
         f'{emojis.BP} **[Speed enable settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "enable")} | {prefix} `e`\n'
+        f'{await functions.get_navi_slash_command(bot, "enable")} | `@Navi e`\n'
         f'{emojis.BP} **[Speed disable settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "disable")} | {prefix} `d`\n'
+        f'{await functions.get_navi_slash_command(bot, "disable")} | `@Navi d`\n'
         f'{emojis.BP} **[Purge your data]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "purge")} | {prefix} `purge`\n'
+        f'{await functions.get_navi_slash_command(bot, "purge")} | `@Navi purge`\n'
         f'{emojis.BP} **[Slash command overview]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "slashboard")} | {prefix} `sb`\n'
+        f'{await functions.get_navi_slash_command(bot, "slashboard")} | `@Navi sb`\n'
         f'{emojis.BP} **[Calculator]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "calculator")} | {prefix} `calc`\n'
+        f'{await functions.get_navi_slash_command(bot, "calculator")} | `@Navi calc`\n'
         f'{emojis.BP} **[About Navi]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "about")} | {prefix} `about`\n'
+        f'{await functions.get_navi_slash_command(bot, "about")} | `@Navi about`\n'
     )
     server_settings = (
         f'_Requires `Manage server` permission._\n'
         f'{emojis.BP} **[Manage auto-flex settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "server-settings auto-flex")} | {prefix} `ssa`\n'
+        f'{await functions.get_navi_slash_command(bot, "server-settings auto-flex")} | `@Navi ssa`\n'
         f'{emojis.BP} **[Manage event-ping settings]({title_link})**: '
-        f'{await functions.get_navi_slash_command(bot, "server-settings event-pings")} | {prefix} `sse`\n'
+        f'{await functions.get_navi_slash_command(bot, "server-settings event-pings")} | `@Navi sse`\n'
     )
     supported_languages = (
         f'{emojis.BP} :flag_us: English\n'

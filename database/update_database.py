@@ -286,7 +286,7 @@ def update_database() -> bool:
 
     if db_version < 5:
         sqls += [
-            "ALTER TABLE users ADD ready_after_all_commands INTEGER NOT NULL DEFAULT (1)",
+            "ALTER TABLE users ADD ready_after_all_commands INTEGER NOT NULL DEFAULT (0)",
             "ALTER TABLE users ADD alert_boosts_enabled INTEGER NOT NULL DEFAULT (1)",
             "ALTER TABLE users ADD alert_boosts_message TEXT NOT NULL DEFAULT "
             "('{name} Hey! Your {boost_emoji} **{boost_item}** just ran out!')",
