@@ -832,6 +832,14 @@ def update_database() -> bool:
                                                             new_sql, flags=re.IGNORECASE)
             if number_of_replacements != 1: 
                 raise Exception("Column jump_url not found in table 'errors', check db_create_errors_sql")
+            new_sql, number_of_replacements = re.subn(r'\bmessage_content\b.+?\b,', '',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column message_content not found in table 'errors', check db_create_errors_sql")
+            new_sql, number_of_replacements = re.subn(r'\buser_settings\b.+?\b,', '',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_settings not found in table 'errors', check db_create_errors_sql")
             cur.execute(new_sql)
             insert_columns = "date_time, error, jump_url_token"
             select_columns = "date_time, error, uid_token(jump_url)"

@@ -698,6 +698,9 @@ async def _update_clan(current_clan_name: str, **updated_settings) -> None:
     if 'channel_id' in updated_settings:
         updated_settings['channel_id_token'] = functions.encrypt(updated_settings['channel_id'])
         del updated_settings['channel_id']
+    if 'quest_user_id' in updated_settings:
+        updated_settings['quest_user_id_token'] = functions.encrypt(updated_settings['quest_user_id'])
+        del updated_settings['quest_user_id']
 
     member_ids: list[int] = updated_settings.pop('member_ids', [])
     leader_ids: list[int] = updated_settings.pop('leader_ids', [])
@@ -895,7 +898,7 @@ async def insert_clan_raid(clan_name: str, user_id: int, energy: int, raid_time:
     """
     function_name: str = 'insert_clan_raid'
     table: str = 'clans_raids'
-    sql: str = f'INSERT INTO {table} (clan_name, user_id_hash, user_id_token, energy, raid_time) VALUES (?, ?, ?, ?)'
+    sql: str = f'INSERT INTO {table} (clan_name, user_id_hash, user_id_token, energy, raid_time) VALUES (?, ?, ?, ?, ?)'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql, (clan_name, functions.create_hash(user_id), functions.encrypt(user_id), energy, raid_time))

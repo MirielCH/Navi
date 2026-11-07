@@ -180,6 +180,7 @@ class WorkCog(commands.Cog):
                 'cowboy boots', #All languages, artifacts
                 '`boost`', #All languages, boost from party popper
                 'lootbox', #All languages, Lootboxes
+                'halloween', #All languages, Halloween
             ]
             search_strings = [
                 '** got ', #English
