@@ -606,7 +606,7 @@ class SwitchReadyAltSelect(discord.ui.Select):
             else:
                 alt_name = label
             emoji = emojis.BP if alt_id == view.active_alt_id else None
-            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+            options.append(discord.SelectOption(label=alt_name, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
                          options=options,
                          custom_id='switch_alt')
@@ -634,7 +634,7 @@ class SwitchReadyAltSelect(discord.ui.Select):
                         else:
                             alt_name = label
                         emoji = emojis.BP if alt_id == self.view.active_alt_id else None
-                        options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+                        options.append(discord.SelectOption(label=alt_name, value=str(alt_id), emoji=emoji))
                         child.options = options
         if interaction.response.is_done():
             await interaction.message.edit(content=content, embed=embed, view=self.view)
@@ -656,7 +656,7 @@ class SwitchStatsAltSelect(discord.ui.Select):
             else:
                 alt_name = label
             emoji = emojis.BP if alt_id == view.active_alt_id else None
-            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+            options.append(discord.SelectOption(label=alt_name, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
                          options=options, custom_id='switch_alt')
 
@@ -679,7 +679,7 @@ class SwitchStatsAltSelect(discord.ui.Select):
                         else:
                             alt_name = label
                         emoji = emojis.BP if alt_id == self.view.active_alt_id else None
-                        options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+                        options.append(discord.SelectOption(label=alt_name, value=str(alt_id), emoji=emoji))
                     child.options = options
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)
@@ -701,7 +701,7 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
             else:
                 alt_name = label
             emoji = emojis.BP if alt_id == view.active_alt_id else None
-            options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+            options.append(discord.SelectOption(label=alt_name, value=str(alt_id), emoji=emoji))
         super().__init__(placeholder='➜ Switch alt', min_values=1, max_values=1,
                          options=options, custom_id='switch_alt')
 
@@ -729,7 +729,7 @@ class SwitchRemindersListAltSelect(discord.ui.Select):
                         else:
                             alt_name = label
                         emoji = emojis.BP if alt_id == self.view.active_alt_id else None
-                        options.append(discord.SelectOption(label=label, value=str(alt_id), emoji=emoji))
+                        options.append(discord.SelectOption(label=alt_name, value=str(alt_id), emoji=emoji))
                     child.options = options
         if interaction.response.is_done():
             await interaction.message.edit(embed=embed, view=self.view)

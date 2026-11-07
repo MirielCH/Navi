@@ -8,10 +8,11 @@ if __name__ == '__main__':
 
 
 import os
+import re
 import sqlite3
 from typing import Any
 
-from resources import logs, settings
+from resources import functions, logs, settings
 
 
 def get_user_version() -> int:
@@ -633,8 +634,344 @@ def update_database() -> bool:
             "ALTER TABLE guilds ADD auto_flex_work_walkingnormiefish_enabled INTEGER NOT NULL DEFAULT (1)",
         ]
     
-    # Run SQLs
+    # Run SQLs to make sure db is at version 31 at this point before the big one
     sql: str
+    for sql in sqls:
+        try:
+            cur.execute(sql)
+        except sqlite3.Error as error:
+            error_msg: str = error.args[0].lower()
+            if 'duplicate column name' in error_msg:
+                continue
+            elif 'no such column' in error_msg:
+                continue
+            elif 'cooldowns.activity' in error_msg:
+                continue
+            else:
+                raise
+    sqls = []
+
+    if db_version <32:
+        """Encrypt and/or hash all API data"""
+        try:
+            settings.NAVI_DB.create_function("uid_hash", 1, lambda value: functions.create_hash(value))
+            settings.NAVI_DB.create_function("uid_token", 1, lambda value: functions.encrypt(value))
+            
+            db_create_users_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").fetchone()[0]
+            db_create_alts_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='alts'").fetchone()[0]
+            db_create_clan_members_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='clan_members'").fetchone()[0]
+            db_create_clans_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='clans'").fetchone()[0]
+            db_create_clans_raids_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='clans_raids'").fetchone()[0]
+            db_create_errors_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='errors'").fetchone()[0]
+            db_create_guilds_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='guilds'").fetchone()[0]
+            db_create_reminders_clans_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='reminders_clans'").fetchone()[0]
+            db_create_reminders_users_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='reminders_users'").fetchone()[0]
+            db_create_tracking_log_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='tracking_log'").fetchone()[0]
+            db_create_users_portals_sql = cur.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='users_portals'").fetchone()[0]
+            
+            db_extras_users = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='users' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_alts = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='alts' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_clan_members = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='clan_members' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_clans = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='clans' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_clans_raids = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='clans_raids' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_errors = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='errors' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_guilds = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='guilds' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_reminders_clans = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='reminders_clans' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_reminders_users = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='reminders_users' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_tracking_log = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='tracking_log' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            db_extras_users_portals = [record[0] for record in cur.execute("SELECT sql FROM sqlite_master WHERE tbl_name='users_portals' AND type IN ('index','trigger') AND sql IS NOT NULL")]
+            
+            db_columns_users = [record[1] for record in cur.execute("PRAGMA table_info(users)")]
+            db_columns_guilds = [record[1] for record in cur.execute("PRAGMA table_info(guilds)")]
+
+            cur.execute("PRAGMA foreign_keys=OFF")
+            cur.execute("BEGIN")
+            
+            # Migrate table "users"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE users_new', db_create_users_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser_id\b.+?\b,', 'user_id_hash TEXT UNIQUE PRIMARY KEY NOT NULL, user_id_token BLOB NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1:
+                raise Exception("Column user_id not found in table 'users', check db_create_users_sql")
+            new_sql, number_of_replacements = re.subn(r'\bpartner_id\b.+?\b,', 'partner_id_hash TEXT, partner_id_token BLOB,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1:
+                raise Exception("Column partner_id not found in table 'users', check db_create_users_sql")
+            new_sql, number_of_replacements = re.subn(r'\bpartner_channel_id\b.+?\b,', 'partner_channel_id_token BLOB,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1:
+                raise Exception("Column partner_channel_id not found in table 'users', check db_create_users_sql")
+            new_sql, number_of_replacements = re.subn(r'\bpartner_name\b.+?\b,', 'partner_name_token BLOB,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1:
+                raise Exception("Column partner_name not found in table 'users', check db_create_users_sql")
+            new_sql, number_of_replacements = re.subn(r'\breminder_channel_id\b.+?\b,', 'reminder_channel_id_token BLOB,',
+                                                    new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1:
+                raise Exception("Column reminder_channel_id not found in table 'users', check db_create_users_sql")
+            cur.execute(new_sql)
+            insert_columns = (
+                ", ".join(column for column in db_columns_users)
+                .replace('user_id,', 'user_id_hash, user_id_token,')
+                .replace('partner_id,', 'partner_id_hash, partner_id_token,')
+                .replace('partner_channel_id,', 'partner_channel_id_token,')
+                .replace('partner_name,', 'partner_name_token,')
+                .replace('reminder_channel_id,', 'reminder_channel_id_token,')
+            )
+            select_columns = (
+                ", ".join(column for column in db_columns_users)
+                .replace('user_id,', 'uid_hash(user_id), uid_token(user_id),')
+                .replace('partner_id,', 'uid_hash(partner_id), uid_token(partner_id),')
+                .replace('partner_channel_id,', 'uid_token(partner_channel_id),')
+                .replace('partner_name,', 'uid_token(partner_name),')
+                .replace('reminder_channel_id,', 'uid_token(reminder_channel_id),')
+            )
+            cur.execute(f"INSERT INTO users_new ({insert_columns}) SELECT {select_columns} FROM users")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM users_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old users, but only migrated {record_count_new} users.")
+            cur.execute("DROP TABLE users")
+            cur.execute("ALTER TABLE users_new RENAME TO users")
+            for sql in db_extras_users:
+                cur.execute(sql.replace('user_id', 'user_id_hash'))
+
+            # Migrate table "alts"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE alts_new', db_create_alts_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser1_id\b.+?\b,', 'user1_id_hash TEXT NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user1_id not found in table 'alts', check db_create_alts_sql")
+            new_sql, number_of_replacements = re.subn(r'\buser2_id\b\s+\bINTEGER\b\s+\bNOT\b\s+\bNULL\b', 'user2_id_hash TEXT NOT NULL',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user2_id not found in table 'alts', check db_create_alts_sql")
+            cur.execute(new_sql)
+            insert_columns = "user1_id_hash, user2_id_hash, sort_index"
+            select_columns = "uid_hash(user1_id), uid_hash(user2_id), sort_index"
+            cur.execute(f"INSERT INTO alts_new ({insert_columns}) SELECT {select_columns} FROM alts")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM alts").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM alts_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old alts, but only migrated {record_count_new} alts.")
+            cur.execute("DROP TABLE alts")
+            cur.execute("ALTER TABLE alts_new RENAME TO alts")
+            for sql in db_extras_alts:
+                cur.execute(sql.replace('user1_id', 'user1_id_hash').replace('user2_id', 'user2_id_hash'))
+                
+            # Migrate table "clan_members"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE clan_members_new', db_create_clan_members_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser_id\b.+?\b,', 'user_id_hash TEXT NOT NULL, user_id_token BLOB NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_id not found in table 'clan_members', check db_create_clan_members_sql")
+            cur.execute(new_sql)
+            insert_columns = "user_id_hash, user_id_token, clan_name, member_type"
+            select_columns = "uid_hash(user_id), uid_token(user_id), clan_name, member_type"
+            cur.execute(f"INSERT INTO clan_members_new ({insert_columns}) SELECT {select_columns} FROM clan_members")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM clan_members").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM clan_members_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old clan_members, but only migrated {record_count_new} clan_members.")
+            cur.execute("DROP TABLE clan_members")
+            cur.execute("ALTER TABLE clan_members_new RENAME TO clan_members")
+            for sql in db_extras_clan_members:
+                cur.execute(sql.replace('user_id', 'user_id_hash'))
+                
+            # Migrate table "clans"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE clans_new', db_create_clans_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\bleader_id\b.+?\b,', '',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column leader_id not found in table 'clans', check db_create_clans_sql")
+            new_sql, number_of_replacements = re.subn(r'\bchannel_id\b.+?\b,', 'channel_id_token BLOB,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column channel_id not found in table 'clans', check db_create_clans_sql")
+            new_sql, number_of_replacements = re.subn(r'\bquest_user_id\b.+?\b,', 'quest_user_id_token BLOB,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column quest_user_id not found in table 'clans', check db_create_clans_sql")
+            cur.execute(new_sql)
+            insert_columns = ("clan_name, alert_enabled, alert_message, channel_id_token, stealth_current, stealth_threshold, "
+                            "quest_user_id_token, upgrade_quests_enabled, alert_visible")
+            select_columns = ("clan_name, alert_enabled, alert_message, uid_token(channel_id), stealth_current, stealth_threshold, "
+                            "uid_token(quest_user_id), upgrade_quests_enabled, alert_visible")
+            cur.execute(f"INSERT INTO clans_new ({insert_columns}) SELECT {select_columns} FROM clans")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM clans").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM clans_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old clans, but only migrated {record_count_new} clans.")
+            cur.execute("DROP TABLE clans")
+            cur.execute("ALTER TABLE clans_new RENAME TO clans")
+            for sql in db_extras_clans:
+                cur.execute(sql.replace('user_id', 'user_id_hash'))
+                
+            # Migrate table "clans_raids"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE clans_raids_new', db_create_clans_raids_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser_id\b.+?\b,', 'user_id_hash TEXT NOT NULL, user_id_token BLOB NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_id not found in table 'clans_raids', check db_create_clans_raids_sql")
+            cur.execute(new_sql)
+            insert_columns = "clan_name, user_id_hash, user_id_token, energy, raid_time"
+            select_columns = "clan_name, uid_hash(user_id), uid_token(user_id), energy, raid_time"
+            cur.execute(f"INSERT INTO clans_raids_new ({insert_columns}) SELECT {select_columns} FROM clans_raids")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM clans_raids").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM clans_raids_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old clans_raids, but only migrated {record_count_new} clans_raids.")
+            cur.execute("DROP TABLE clans_raids")
+            cur.execute("ALTER TABLE clans_raids_new RENAME TO clans_raids")
+            for sql in db_extras_clans_raids:
+                cur.execute(sql.replace('user_id', 'user_id_hash'))
+                
+            # Migrate table "errors"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE errors_new', db_create_errors_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\bjump_url\b\s+\bTEXT\b', 'jump_url_token BLOB',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column jump_url not found in table 'errors', check db_create_errors_sql")
+            cur.execute(new_sql)
+            insert_columns = "date_time, error, jump_url_token"
+            select_columns = "date_time, error, uid_token(jump_url)"
+            cur.execute(f"INSERT INTO errors_new ({insert_columns}) SELECT {select_columns} FROM errors")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM errors").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM errors_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old errors, but only migrated {record_count_new} errors.")
+            cur.execute("DROP TABLE errors")
+            cur.execute("ALTER TABLE errors_new RENAME TO errors")
+            for sql in db_extras_errors:
+                cur.execute(sql)
+
+            # Migrate table "guilds"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE guilds_new', db_create_guilds_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\bguild_id\b.+?\b,', 'guild_id_hash TEXT UNIQUE PRIMARY KEY,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column guild_id not found in table 'guilds', check db_create_guilds_sql")
+            cur.execute(new_sql)
+            insert_columns = ", ".join(column for column in db_columns_guilds).replace('guild_id,', 'guild_id_hash,').replace('prefix,','')
+            select_columns = ", ".join(column for column in db_columns_guilds).replace('guild_id,', 'uid_hash(guild_id),').replace('prefix,','')
+            cur.execute(f"INSERT INTO guilds_new ({insert_columns}) SELECT {select_columns} FROM guilds")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM guilds").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM guilds_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old guilds, but only migrated {record_count_new} guilds.")
+            cur.execute("DROP TABLE guilds")
+            cur.execute("ALTER TABLE guilds_new RENAME TO guilds")
+            for sql in db_extras_guilds:
+                cur.execute(sql.replace('guild_id', 'guild_id_hash'))
+                
+            # Migrate table "reminders_clans"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE reminders_clans_new', db_create_reminders_clans_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\bchannel_id\b.+?\b,', 'channel_id_token BLOB NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column channel_id not found in table 'reminders_clans', check db_create_reminders_clans_sql")
+            cur.execute(new_sql)
+            insert_columns = "clan_name, activity, channel_id_token, end_time, message, triggered"
+            select_columns = "clan_name, activity, uid_token(channel_id), end_time, message, triggered"
+            cur.execute(f"INSERT INTO reminders_clans_new ({insert_columns}) SELECT {select_columns} FROM reminders_clans")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM reminders_clans").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM reminders_clans_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old reminders_clans, but only migrated {record_count_new} reminders_clans.")
+            cur.execute("DROP TABLE reminders_clans")
+            cur.execute("ALTER TABLE reminders_clans_new RENAME TO reminders_clans")
+            for sql in db_extras_reminders_clans:
+                cur.execute(sql)
+                
+            # Migrate table "reminders_users"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE reminders_users_new', db_create_reminders_users_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser_id\b\s+\bINTEGER\b', 'user_id_hash TEXT',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_id not found in table 'reminders_users', check db_create_reminders_users_sql")
+            new_sql, number_of_replacements = re.subn(r'user_id,', 'user_id_hash,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_id not found in table 'reminders_users', check db_create_reminders_users_sql")
+            new_sql, number_of_replacements = re.subn(r'\bchannel_id\b.+?\b,', 'channel_id_token BLOB NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column channel_id not found in table 'reminders_users', check db_create_reminders_users_sql")
+            cur.execute(new_sql)
+            insert_columns = "user_id_hash, activity, channel_id_token, end_time, message, triggered, custom_id, pet_id"
+            select_columns = "uid_hash(user_id), activity, uid_token(channel_id), end_time, message, triggered, custom_id, pet_id"
+            cur.execute(f"INSERT INTO reminders_users_new ({insert_columns}) SELECT {select_columns} FROM reminders_users")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM reminders_users").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM reminders_users_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old reminders_users, but only migrated {record_count_new} reminders_users.")
+            cur.execute("DROP TABLE reminders_users")
+            cur.execute("ALTER TABLE reminders_users_new RENAME TO reminders_users")
+            for sql in db_extras_reminders_users:
+                cur.execute(sql.replace('user_id', 'user_id_hash'))
+
+            # Migrate table "tracking_log"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE tracking_log_new', db_create_tracking_log_sql, flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser_id\b.+?\b,', 'user_id_hash TEXT NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_id not found in table 'tracking_log', check db_create_tracking_log_sql")
+            new_sql, number_of_replacements = re.subn(r'\bguild_id\b.+?\b,', '',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column guild_id not found in table 'tracking_log', check db_create_tracking_log_sql")
+            cur.execute(new_sql)
+            insert_columns = "user_id_hash, command, command_count, date_time, type"
+            select_columns = "uid_hash(user_id), command, command_count, date_time, type"
+            cur.execute(f"INSERT INTO tracking_log_new ({insert_columns}) SELECT {select_columns} FROM tracking_log")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM tracking_log").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM tracking_log_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old tracking_logs, but only migrated {record_count_new} tracking_logs.")
+            cur.execute("DROP TABLE tracking_log")
+            cur.execute("ALTER TABLE tracking_log_new RENAME TO tracking_log")
+            for sql in db_extras_tracking_log:
+                cur.execute(sql.replace('user_id', 'user_id_hash'))
+                
+            # Migrate table "users_portals"
+            new_sql = re.sub(r'^CREATE TABLE\s+\S+', 'CREATE TABLE users_portals_new', db_create_users_portals_sql.replace("'",""), flags=re.IGNORECASE)
+            new_sql, number_of_replacements = re.subn(r'\buser_id\b.+?\b,', 'user_id_hash TEXT NOT NULL,',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column user_id not found in table 'users_portals', check db_create_users_portals_sql")
+            new_sql, number_of_replacements = re.subn(r'\bchannel_id\b\s+\bINTEGER\b\s+\bNOT\b\s+\bNULL\b', 'channel_id_hash TEXT NOT NULL, channel_id_token BLOB NOT NULL',
+                                                            new_sql, flags=re.IGNORECASE)
+            if number_of_replacements != 1: 
+                raise Exception("Column channel_id not found in table 'users_portals', check db_create_users_portals_sql")
+            cur.execute(new_sql)
+            insert_columns = "user_id_hash, channel_id_hash, channel_id_token, sort_index"
+            select_columns = "uid_hash(user_id), uid_hash(channel_id), uid_token(channel_id), sort_index"
+            cur.execute(f"INSERT INTO users_portals_new ({insert_columns}) SELECT {select_columns} FROM users_portals")
+            record_count_old = cur.execute("SELECT COUNT(*) FROM users_portals").fetchone()[0]
+            record_count_new = cur.execute("SELECT COUNT(*) FROM users_portals_new").fetchone()[0]
+            if record_count_old != record_count_new:
+                raise Exception(f"Row count mismatch: Found {record_count_old} old users_portals, but only migrated {record_count_new} users_portals.")
+            cur.execute("DROP TABLE users_portals")
+            cur.execute("ALTER TABLE users_portals_new RENAME TO users_portals")
+            for sql in db_extras_users_portals:
+                cur.execute(sql.replace('user_id', 'user_id_hash').replace('channel_id', 'channel_id_hash'))
+
+            # Drop table "tracking_leaderboard" which was never used for anything
+            cur.execute("DROP TABLE IF EXISTS tracking_leaderboard")
+        
+            # Check for forgein key errors
+            foreign_key_errors = cur.execute("PRAGMA foreign_key_check").fetchall()
+            assert not foreign_key_errors, f"foreign key violations: {foreign_key_errors[:5]}"
+
+            # Commit
+            cur.execute("COMMIT")
+        except Exception:
+            cur.execute("ROLLBACK")
+            raise
+        finally:            
+            cur.execute("PRAGMA foreign_keys=ON")
+
+    # Run all SQLs since version 32
     for sql in sqls:
         try:
             cur.execute(sql)

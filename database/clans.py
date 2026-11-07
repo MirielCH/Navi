@@ -5,10 +5,10 @@
 from dataclasses import dataclass
 from datetime import datetime
 import sqlite3
-from typing import Any, NamedTuple, Optional, Union
+from typing import Any, NamedTuple, Optional
 
 from database import errors
-from resources import exceptions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 # Containers
@@ -56,10 +56,10 @@ class Clan():
     alert_enabled: bool
     alert_message: str
     alert_visible: bool
-    channel_id: int
+    channel_id: int | None
     clan_name: str
     members: tuple[ClanMember, ...]
-    quest_user_id: int
+    quest_user_id: int | None
     stealth_current: int
     stealth_threshold: int
     upgrade_quests_enabled: bool
@@ -170,21 +170,27 @@ async def _dict_to_clan(record_clan: dict[str, Any], clan_members: tuple[ClanMem
     clan_member: ClanMember
     
     try:
+        quest_user_id = channel_id = None
+        if record_clan['quest_user_id_token']:
+            quest_user_id = int(functions.decrypt(record_clan['quest_user_id_token']))
+        if record_clan['channel_id_token']:
+            channel_id = int(functions.decrypt(record_clan['channel_id_token']))
+            
         clan = Clan(
             alert_enabled = bool(record_clan['alert_enabled']),
             alert_message = record_clan['alert_message'],
             alert_visible = bool(record_clan['alert_visible']),
-            channel_id = record_clan['channel_id'],
+            channel_id = channel_id,
             clan_name = record_clan['clan_name'],
             members = clan_members,
-            quest_user_id = record_clan['quest_user_id'],
+            quest_user_id = quest_user_id,
             stealth_current = record_clan['stealth_current'],
             stealth_threshold = record_clan['stealth_threshold'],
             upgrade_quests_enabled = bool(record_clan['upgrade_quests_enabled'])
         )
     except Exception as error:
         await errors.log_error(
-            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record)
+            strings.INTERNAL_ERROR_DICT_TO_OBJECT.format(function=function_name, record=record_clan)
         )
         raise LookupError(error)
 
@@ -211,7 +217,7 @@ async def _dict_to_clan_member(record: dict[str, Any]) -> ClanMember:
         clan_member = ClanMember(
             clan_name = record['clan_name'],
             member_type = record['member_type'],
-            user_id = record['user_id']
+            user_id = int(functions.decrypt(record['user_id_token'])) # pyright: ignore
         )
     except Exception as error:
         await errors.log_error(
@@ -237,13 +243,13 @@ async def _dict_to_clan_raid(record: dict[str, Any]) -> ClanRaid:
     ------
     LookupError if something goes wrong reading the dict. Also logs this error to the database.
     """
-    function_name: str = '_dict_to_leaderbord_user'
+    function_name: str = '_dict_to_clan_raid'
     try:
         clan_raid = ClanRaid(
             clan_name = record['clan_name'],
             energy = record['energy'],
             raid_time = record['raid_time'],
-            user_id = record['user_id']
+            user_id = functions.decrypt(record['user_id_token']) # pyright: ignore
         )
     except Exception as error:
         await errors.log_error(
@@ -271,10 +277,10 @@ async def get_clan_by_user_id(user_id: int) -> Clan:
     """
     function_name: str = 'get_clan_by_user_id'
     table: str = 'clan_members'
-    sql: str = f'SELECT * FROM {table} WHERE user_id=?'
+    sql: str = f'SELECT * FROM {table} WHERE user_id_hash=?'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id,))
+        cur.execute(sql, (functions.create_hash(user_id),))
         record_clan_member: Any = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -357,10 +363,10 @@ async def get_clan_member(user_id: int) -> ClanMember:
     """
     function_name: str = 'get_clan_member'    
     table: str = 'clan_members'
-    sql: str = f'SELECT * FROM {table} WHERE user_id=?'
+    sql: str = f'SELECT * FROM {table} WHERE user_id_hash=?'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id,))
+        cur.execute(sql, (functions.create_hash(user_id),))
         record: Any = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -470,10 +476,10 @@ async def get_clan_raid(clan_name: str, user_id: str, raid_time: datetime) -> Cl
     """
     table: str = 'clans_raids'
     function_name: str = 'get_clan_raid'
-    sql: str = f'SELECT * FROM {table} WHERE clan_name=? AND user_id=? AND raid_time=?'
+    sql: str = f'SELECT * FROM {table} WHERE clan_name=? AND user_id_hash=? AND raid_time=?'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (clan_name, user_id, raid_time))
+        cur.execute(sql, (clan_name, functions.create_hash(user_id), raid_time))
         record: Any = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -689,6 +695,9 @@ async def _update_clan(current_clan_name: str, **updated_settings) -> None:
         error_msg: str = 'If argument "member_ids" is specified, argument "leader_ids" also needs to be specified.'
         await errors.log_error(error_msg)
         raise exceptions.MissingArgumentsError(error_msg)
+    if 'channel_id' in updated_settings:
+        updated_settings['channel_id_token'] = functions.encrypt(updated_settings['channel_id'])
+        del updated_settings['channel_id']
 
     member_ids: list[int] = updated_settings.pop('member_ids', [])
     leader_ids: list[int] = updated_settings.pop('leader_ids', [])
@@ -766,9 +775,9 @@ async def _update_clan_member(user_id: str, **updated_settings) -> None:
         sql: str = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
-        updated_settings['user_id'] = user_id
+        updated_settings['user_id_hash'] = functions.create_hash(user_id)
         sql = sql.strip(",")
-        sql = f'{sql} WHERE user_id = :user_id'
+        sql = f'{sql} WHERE user_id_hash = :user_id_hash'
         cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
@@ -858,10 +867,10 @@ async def insert_clan_member(clan_name: str, user_id: int, member_type: str) -> 
     """
     function_name: str = 'insert_clan_member'
     table: str = 'clan_members'
-    sql: str = f'INSERT INTO {table} (user_id, clan_name, member_type) VALUES (?, ?, ?)'
+    sql: str = f'INSERT INTO {table} (user_id_hash, user_id_token, clan_name, member_type) VALUES (?, ?, ?, ?)'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, clan_name, member_type))
+        cur.execute(sql, (functions.create_hash(user_id), functions.encrypt(user_id), clan_name, member_type))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -886,10 +895,10 @@ async def insert_clan_raid(clan_name: str, user_id: int, energy: int, raid_time:
     """
     function_name: str = 'insert_clan_raid'
     table: str = 'clans_raids'
-    sql: str = f'INSERT INTO {table} (clan_name, user_id, energy, raid_time) VALUES (?, ?, ?, ?)'
+    sql: str = f'INSERT INTO {table} (clan_name, user_id_hash, user_id_token, energy, raid_time) VALUES (?, ?, ?, ?)'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (clan_name, user_id, energy, raid_time))
+        cur.execute(sql, (clan_name, functions.create_hash(user_id), functions.encrypt(user_id), energy, raid_time))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

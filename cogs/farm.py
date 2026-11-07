@@ -155,7 +155,7 @@ class FarmCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'farm', current_time)
+                    await tracking.insert_log_entry(user.id, 'farm', current_time)
                 updated_settings = {}
                 seed_used_type_match = re.search(r':\d+>(.+?)seed', message_content.lower())
                 seed_used_type = seed_used_type_match.group(1).strip()
@@ -258,7 +258,7 @@ class FarmCog(commands.Cog):
                         return
                     if not user_settings.bot_enabled: return
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', utils.utcnow())
+                        await tracking.insert_log_entry(user.id, 'farm', utils.utcnow())
                     if not user_settings.alert_farm.enabled: return
                     user_command = await functions.get_slash_command(user_settings, 'farm')
                     last_farm_seed = None
@@ -296,7 +296,7 @@ class FarmCog(commands.Cog):
                     if not user_settings.bot_enabled: return
                     user_command = await functions.get_slash_command(user_settings, 'farm')
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'farm', utils.utcnow())
+                        await tracking.insert_log_entry(user.id, 'farm', utils.utcnow())
                     if not user_settings.alert_farm.enabled: return
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'farm')
                     if time_left < timedelta(0): return

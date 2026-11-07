@@ -171,7 +171,7 @@ class AdventureCog(commands.Cog):
                         user_command = f"{user_command} `{last_adventure_mode}`".replace('` `', ' ')
                 current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'adventure', current_time)
+                    await tracking.insert_log_entry(user.id, 'adventure', current_time)
                 if not user_settings.alert_adventure.enabled: return
                 await user_settings.update(last_adventure_mode=last_adventure_mode)
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'adventure')

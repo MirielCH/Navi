@@ -10,7 +10,7 @@ from discord import utils
 from discord.ext import tasks
 
 from database import cooldowns, errors
-from resources import exceptions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 # Reminders scheduled for task creation / deletion
@@ -25,14 +25,14 @@ class Reminder():
     The attribute "reminder_type" is set accordingly. If it is a user reminder, "clan_name" is None and vice versa."""
     activity: str
     channel_id: int
-    clan_name: str
-    custom_id: int
+    clan_name: str | None
+    custom_id: int | None
     end_time: datetime
     message: str
     reminder_type: str  # "clan" or "user"
     task_name: str # Unique Task name for scheduling tasks (<user_id>-<activity>)
     triggered: bool
-    user_id: int
+    user_id: int | None
     record_exists: bool = True
 
     async def delete(self) -> None:
@@ -119,7 +119,7 @@ async def schedule_reminders():
 
 
 # Miscellaneous functions
-async def _dict_to_reminder(record: dict) -> Reminder:
+async def _dict_to_reminder(record: dict, user_id: int | None = None) -> Reminder:
     """Creates a Reminder object from a database record
 
     Arguments
@@ -136,20 +136,25 @@ async def _dict_to_reminder(record: dict) -> Reminder:
     """
     function_name = '_dict_to_reminder'
     try:
-        user_id = record.get('user_id', None)
+        record_user_id = record.get('user_id_hash', None)
         custom_id = record.get('custom_id', None)
-        if user_id is None:
+        if not record_user_id:
             reminder_type = 'clan'
             task_name = f"{record['clan_name']}-{record['activity']}"
         else:
             reminder_type = 'user'
+            if not user_id:
+                sql = f'SELECT user_id_token FROM users WHERE user_id_hash=?'
+                cur = settings.NAVI_DB.cursor()
+                cur.execute(sql, (record['user_id_hash'],))
+                user_id = int(functions.decrypt(dict(cur.fetchone())['user_id_token'])) # pyright: ignore
             if custom_id is not None:
                 task_name = f"{user_id}-{record['activity']}-{custom_id}"
             else:
                 task_name = f"{user_id}-{record['activity']}"
         reminder = Reminder(
             activity = record['activity'],
-            channel_id = record['channel_id'],
+            channel_id = int(functions.decrypt(record['channel_id_token'])), # pyright: ignore
             clan_name = record.get('clan_name', None),
             custom_id = record.get('custom_id', None),
             end_time = record['end_time'],
@@ -157,7 +162,7 @@ async def _dict_to_reminder(record: dict) -> Reminder:
             reminder_type = reminder_type,
             task_name = task_name,
             triggered = bool(record['triggered']),
-            user_id = record.get('user_id', None),
+            user_id = user_id,
             record_exists = True,
         )
     except Exception as error:
@@ -195,11 +200,11 @@ async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int
     function_name = 'get_user_reminder'
     if activity == 'custom' and custom_id is None:
         raise ValueError('Activity "custom" given but custom_id is None.')
-    sql = f'SELECT * FROM {table} WHERE user_id=? AND activity=?'
+    sql = f'SELECT * FROM {table} WHERE user_id_hash=? AND activity=?'
     if custom_id is not None: sql = f'{sql} AND custom_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, activity)) if custom_id is None else cur.execute(sql, (user_id, activity, custom_id))
+        cur.execute(sql, (functions.create_hash(user_id), activity)) if custom_id is None else cur.execute(sql, (functions.create_hash(user_id), activity, custom_id))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -210,7 +215,7 @@ async def get_user_reminder(user_id: int, activity: str, custom_id: Optional[int
         raise exceptions.NoDataFoundError(
             f'No reminder data found in database for user "{user_id}" and activity "{activity}".'
         )
-    reminder = await _dict_to_reminder(dict(record))
+    reminder = await _dict_to_reminder(dict(record), user_id)
 
     return reminder
 
@@ -278,8 +283,8 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
         end_time = utils.utcnow()
     queries: list[Any] = [end_time,]
     if user_id is not None:
-        sql = f'{sql} AND user_id=?'
-        queries.append(user_id)
+        sql = f'{sql} AND user_id_hash=?'
+        queries.append(functions.create_hash(user_id))
     if activity is not None:
         sql = f"{sql} AND activity LIKE ?"
         queries.append(f'{activity}%')
@@ -300,7 +305,7 @@ async def get_active_user_reminders(user_id: Optional[int] = None, activity: Opt
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(dict(record), user_id)
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -368,7 +373,7 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
     if user_id is None:
         sql = f'SELECT * FROM {table} WHERE triggered=? AND end_time BETWEEN ? AND ?'
     else:
-        sql = f'SELECT * FROM {table} WHERE user_id=? AND triggered=? AND end_time BETWEEN ? AND ?'
+        sql = f'SELECT * FROM {table} WHERE user_id_hash=? AND triggered=? AND end_time BETWEEN ? AND ?'
     try:
         cur = settings.NAVI_DB.cursor()
         current_time = utils.utcnow()
@@ -377,7 +382,7 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
         if user_id is None:
             cur.execute(sql, (triggered, current_time, end_time))
         else:
-            cur.execute(sql, (user_id, triggered, current_time, end_time))
+            cur.execute(sql, (functions.create_hash(user_id), triggered, current_time, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -391,7 +396,7 @@ async def get_due_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(dict(record), user_id)
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -466,11 +471,11 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
     if user_id is None:
         sql = f'SELECT * FROM {table} WHERE end_time < ?'
     else:
-        sql = f'SELECT * FROM {table} WHERE user_id=? AND end_time < ?'
+        sql = f'SELECT * FROM {table} WHERE user_id_hash=? AND end_time < ?'
     try:
         cur = settings.NAVI_DB.cursor()
         end_time = utils.utcnow() - timedelta(seconds=20)
-        cur.execute(sql, (end_time,)) if user_id is None else cur.execute(sql, (user_id, end_time))
+        cur.execute(sql, (end_time,)) if user_id is None else cur.execute(sql, (functions.create_hash(user_id), end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -484,7 +489,7 @@ async def get_old_user_reminders(user_id: Optional[int] = None) -> tuple[Reminde
         raise exceptions.NoDataFoundError(error_message)
     reminders = []
     for record in records:
-        reminder = await _dict_to_reminder(dict(record))
+        reminder = await _dict_to_reminder(dict(record), user_id)
         reminders.append(reminder)
 
     return tuple(reminders)
@@ -514,7 +519,7 @@ async def get_old_clan_reminders(clan_name: Optional[str] = None) -> tuple[Remin
     try:
         cur = settings.NAVI_DB.cursor()
         end_time = utils.utcnow() - timedelta(seconds=20)
-        cur.execute(sql, (end_time_str,)) if clan_name is None else cur.execute(sql, (clan_name, end_time))
+        cur.execute(sql, (end_time,)) if clan_name is None else cur.execute(sql, (clan_name, end_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -548,14 +553,14 @@ async def _delete_reminder(reminder: Reminder) -> None:
     function_name = '_delete_reminder'
     if reminder.reminder_type == 'user':
         table = 'reminders_users'
-        sql = f'DELETE FROM {table} WHERE user_id=? AND activity=?'
+        sql = f'DELETE FROM {table} WHERE user_id_hash=? AND activity=?'
     else:
         table = 'reminders_clans'
         sql = f'DELETE FROM {table} WHERE clan_name=? AND activity=?'
     if reminder.activity == 'custom': sql = f'{sql} AND custom_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        reminder_id = reminder.user_id if reminder.reminder_type == 'user' else reminder.clan_name
+        reminder_id = functions.create_hash(reminder.user_id) if reminder.reminder_type == 'user' else reminder.clan_name
         if reminder.activity == 'custom':
             cur.execute(sql, (reminder_id, reminder.activity, reminder.custom_id))
         else:
@@ -601,6 +606,12 @@ async def _update_reminder(reminder: Reminder, **updated_settings) -> None:
     time_left = end_time - utils.utcnow()
     triggered = False if time_left.total_seconds() > 15 else True
     if 'triggered' not in updated_settings: updated_settings['triggered'] = triggered
+    if 'user_id' in updated_settings:
+        updated_settings['user_id_hash'] = functions.create_hash(updated_settings['user_id'])
+        del updated_settings['user_id']
+    if 'channel_id' in updated_settings:
+        updated_settings['channel_id_token'] = functions.encrypt(updated_settings['channel_id'])
+        del updated_settings['channel_id']
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
@@ -610,8 +621,8 @@ async def _update_reminder(reminder: Reminder, **updated_settings) -> None:
         updated_settings['activity_old'] = reminder.activity
         sql = f'{sql} WHERE activity = :activity_old'
         if reminder.reminder_type == 'user':
-            updated_settings['user_id_old'] = reminder.user_id
-            sql = f'{sql} AND user_id = :user_id_old'
+            updated_settings['user_id_hash_old'] = functions.create_hash(reminder.user_id)
+            sql = f'{sql} AND user_id_hash = :user_id_hash_old'
         else:
             updated_settings['clan_name_old'] = reminder.clan_name
             sql = f'{sql} AND clan_name = :clan_name_old'
@@ -656,8 +667,8 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
     try:
         cur = settings.NAVI_DB.cursor()
         if activity == 'custom':
-            sql = f'SELECT custom_id FROM {table} WHERE user_id = ? AND activity = ? ORDER BY custom_id ASC'
-            cur.execute(sql, (user_id, 'custom',))
+            sql = f'SELECT custom_id FROM {table} WHERE user_id_hash = ? AND activity = ? ORDER BY custom_id ASC'
+            cur.execute(sql, (functions.create_hash(user_id), 'custom',))
             record_custom_reminders = cur.fetchall()
             if not record_custom_reminders:
                 custom_id = 1
@@ -695,11 +706,11 @@ async def insert_user_reminder(user_id: int, activity: str, time_left: timedelta
             await reminder.update(end_time=end_time, channel_id=channel_id)
     else:
         sql = (
-            f'INSERT INTO {table} (user_id, activity, end_time, channel_id, message, custom_id, triggered) '
+            f'INSERT INTO {table} (user_id_hash, activity, end_time, channel_id_token, message, custom_id, triggered) '
             f'VALUES (?, ?, ?, ?, ?, ?, ?)'
         )
         try:
-            cur.execute(sql, (user_id, activity, end_time, channel_id, message, custom_id, triggered))
+            cur.execute(sql, (functions.create_hash(user_id), activity, end_time, functions.encrypt(channel_id), message, custom_id, triggered))
         except sqlite3.Error as error:
             await errors.log_error(
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -744,12 +755,12 @@ async def insert_clan_reminder(clan_name: str, time_left: timedelta, channel_id:
         await reminder.update(end_time=end_time, channel_id=channel_id, message=message, triggered=triggered)
     else:
         sql = (
-            f'INSERT INTO {table} (clan_name, activity, end_time, channel_id, message, triggered) '
+            f'INSERT INTO {table} (clan_name, activity, end_time, channel_id_token, message, triggered) '
             f'VALUES (?, ?, ?, ?, ?, ?)'
         )
         try:
             cur = settings.NAVI_DB.cursor()
-            cur.execute(sql, (clan_name, 'guild', end_time, channel_id, message, triggered))
+            cur.execute(sql, (clan_name, 'guild', end_time, functions.encrypt(channel_id), message, triggered))
         except sqlite3.Error as error:
             await errors.log_error(
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

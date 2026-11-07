@@ -256,7 +256,7 @@ class WorkCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'work', utils.utcnow())
+                    await tracking.insert_log_entry(user.id, 'work', utils.utcnow())
                 if not user_settings.alert_work.enabled: return
                 if slash_command:
                     interaction = await functions.get_interaction(message)
@@ -357,7 +357,7 @@ class WorkCog(commands.Cog):
                         return
                     if not user_settings.bot_enabled: return
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', utils.utcnow())
+                        await tracking.insert_log_entry(user.id, 'work', utils.utcnow())
                     if not user_settings.alert_work.enabled: return
                     for command in strings.WORK_COMMANDS:
                         if command in user_command_message.content.lower():
@@ -404,7 +404,7 @@ class WorkCog(commands.Cog):
                     if not user_settings.bot_enabled: return
                     user_command = await functions.get_slash_command(user_settings, interaction.name)
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'work', utils.utcnow())
+                        await tracking.insert_log_entry(user.id, 'work', utils.utcnow())
                     if not user_settings.alert_work.enabled: return
                     time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'work')
                     if time_left < timedelta(0): return

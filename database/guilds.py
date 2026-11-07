@@ -4,9 +4,10 @@
 
 from dataclasses import dataclass
 import sqlite3
+from typing import NamedTuple
 
 from database import errors
-from resources import exceptions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 # Containers
@@ -199,7 +200,7 @@ class Guild():
 
 
 # Miscellaneous functions
-async def _dict_to_guild(record: dict) -> Guild:
+async def _dict_to_guild(record: dict, guild_id: int) -> Guild:
     """Creates a Guild object from a database record
 
     Arguments
@@ -269,7 +270,7 @@ async def _dict_to_guild(record: dict) -> Guild:
             event_lootbox = EventPing(enabled=bool(record['event_lootbox_enabled']), message=record['event_lootbox_message']),
             event_miniboss = EventPing(enabled=bool(record['event_miniboss_enabled']), message=record['event_miniboss_message']),
             event_rare_hunt_monster = EventPing(enabled=bool(record['event_rare_hunt_monster_enabled']), message=record['event_rare_hunt_monster_message']),
-            guild_id = record['guild_id'],
+            guild_id = guild_id,
         )
     except Exception as error:
         await errors.log_error(
@@ -297,10 +298,10 @@ async def get_guild(guild_id: int) -> Guild:
     """
     table = 'guilds'
     function_name = 'get_guild'
-    sql_select = f'SELECT * FROM {table} WHERE guild_id=?'
+    sql_select = f'SELECT * FROM {table} WHERE guild_id_hash=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql_select, (guild_id,))
+        cur.execute(sql_select, (functions.create_hash(guild_id),))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -308,18 +309,18 @@ async def get_guild(guild_id: int) -> Guild:
         )
         raise
     if not record:
-        sql = f'INSERT INTO {table} (guild_id) VALUES (?)'
+        sql = f'INSERT INTO {table} (guild_id_hash) VALUES (?)'
         try:
-            cur.execute(sql, (guild_id,))
+            cur.execute(sql, (functions.create_hash(guild_id),))
             sql = sql_select
-            cur.execute(sql, (guild_id,))
+            cur.execute(sql, (functions.create_hash(guild_id),))
             record = cur.fetchone()
         except sqlite3.Error as error:
             await errors.log_error(
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
             )
             raise
-    guild = await _dict_to_guild(dict(record))
+    guild = await _dict_to_guild(dict(record), guild_id)
 
     return guild
 
@@ -410,8 +411,8 @@ async def _update_guild(guild_id: int, **updated_settings) -> None:
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        updated_settings['guild_id'] = guild_id
-        sql = f'{sql} WHERE guild_id = :guild_id'
+        updated_settings['guild_id_hash'] = functions.create_hash(guild_id)
+        sql = f'{sql} WHERE guild_id_hash = :guild_id_hash'
         cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(

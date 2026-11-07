@@ -141,6 +141,7 @@ class SetMultiplierModal(Modal):
         updated_settings = {}
         if self.activity == 'all':
             for activity in strings.ACTIVITIES_WITH_CHANGEABLE_MULTIPLIER:
+                if activity == 'hunt-partner': continue
                 updated_settings[f'alert_{activity.replace("-","_")}_multiplier'] = new_multiplier
         else:
             updated_settings[f'alert_{self.activity.replace("-","_")}_multiplier'] = new_multiplier
@@ -282,7 +283,7 @@ class SetPartnerPocketWatchReductionModal(Modal):
         self.view = view
         self.add_item(
             InputText(
-                label='New reduction in percent (0 - 5):',
+                label='New reduction in percent (0 - 99):',
                 placeholder="Enter reduction ...",
             )
         )
@@ -295,9 +296,9 @@ class SetPartnerPocketWatchReductionModal(Modal):
             await interaction.response.edit_message(view=self.view)
             await interaction.followup.send('That is not a valid number.', ephemeral=True)
             return
-        if not 0 <= new_reduction <= 5.0:
+        if not 0 <= new_reduction <= 99.0:
             await interaction.response.edit_message(view=self.view)
-            await interaction.followup.send('The pocket reduction needs to be between 0 and 5', ephemeral=True)
+            await interaction.followup.send('The pocket reduction needs to be between 0 and 99', ephemeral=True)
             return
         await self.view.user_settings.update(partner_pocket_watch_multiplier=(100 - new_reduction) / 100)
         partner_settings = getattr(self.view, 'partner_settings', None)

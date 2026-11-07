@@ -2,10 +2,13 @@
 
 from argparse import ArgumentError
 from datetime import datetime, timedelta
+import hashlib
+import hmac
 from math import ceil, floor
 import re
 from typing import Any, Coroutine
 
+from cryptography.fernet import Fernet
 import discord
 from discord import utils
 from discord.abc import GuildChannel, PrivateChannel
@@ -15,6 +18,22 @@ from discord.utils import MISSING
 from database import cooldowns, errors, reminders, users
 from database import settings as settings_db
 from resources import emojis, exceptions, logs, settings, strings
+
+
+# --- Encryption ---
+def create_hash(value: Any) -> str:
+    return hmac.new(settings.HMAC_KEY, str(value).encode(), hashlib.sha256).hexdigest()
+
+def encrypt(value: Any) -> bytes | None:
+    if value is None: return None
+    f: Fernet = Fernet(settings.FERNET_KEY)
+    return f.encrypt(str(value).encode())
+
+def decrypt(value: bytes) -> str | None:
+    if value is None: return None
+    f: Fernet = Fernet(settings.FERNET_KEY)
+    return f.decrypt(value).decode()
+
 
 # --- Get discord data ---
 async def get_interaction(message: discord.Message) -> discord.MessageInteraction | None:

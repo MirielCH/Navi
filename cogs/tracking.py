@@ -115,7 +115,7 @@ class TrackingCog(commands.Cog):
                     except exceptions.FirstTimeUserError:
                         return
                     if user_settings.tracking_enabled and user_settings.bot_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'epic guard',
+                        await tracking.insert_log_entry(user.id, 'epic guard',
                                                         utils.utcnow())
                         
                 # Losing time travel in area 20

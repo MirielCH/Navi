@@ -1,13 +1,18 @@
 # settings.py
 """Contains global settings"""
 
+import base64
 import datetime
+import hashlib
+import hmac
 import os
+from pathlib import Path
+import secrets
 import sqlite3
 import sys
 from typing import Final, NamedTuple, TextIO
 
-from dotenv import load_dotenv
+from dotenv import load_dotenv, set_key
 
 
 
@@ -17,7 +22,7 @@ ENV_VARIABLE_MISSING: Final[str] = (
 )
 
 PYTHON_VERSION: Final[float] = 3.12
-NAVI_DB_VERSION: Final[int] = 31
+NAVI_DB_VERSION: Final[int] = 32
 
 # Files and directories
 BOT_DIR: Final[str] = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -165,6 +170,26 @@ if _suggestion_channel_id_env:
         sys.exit()
 else:
     SUGGESTION_CHANNEL_ID: Final[int | None] = None
+
+_encryption_secret_key: str | None = os.getenv('ENCRYPTION_SECRET_KEY')
+if not _encryption_secret_key:
+    _encryption_secret_key = secrets.token_hex(32)
+    ENV_FILE: Path = Path(".env")
+    env_content: str = ENV_FILE.read_text(encoding="utf-8")
+    if "ENCRYPTION_SECRET_KEY" in env_content:
+        set_key(ENV_FILE, "ENCRYPTION_SECRET_KEY", _encryption_secret_key, "never")
+    else:
+        with open(ENV_FILE, "a") as file:
+            file.write(
+                f"\n\n"
+                f"# Required. Secret key the bot uses to hash/encrypt Discord API data with before storing it in the database.\n"
+                f"# If no key is provided, the bot will generate one on the first start.\n"
+                f"# IF YOU LOSE THIS KEY, NAVI WILL NO LONGER BE ABLE TO MATCH ANY STORED DATA TO YOUR USERS AND ASK THEM TO REGISTER AGAIN.\n"
+                f"ENCRYPTION_SECRET_KEY={_encryption_secret_key}"
+            )
+    print('No secret key found, generated a new one.')
+HMAC_KEY: Final[bytes] = hmac.new(_encryption_secret_key.encode(), 'hmac-key'.encode(), hashlib.sha256).digest()
+FERNET_KEY: Final[bytes] = base64.urlsafe_b64encode(hmac.new(_encryption_secret_key.encode(), 'fernet-key'.encode(), hashlib.sha256).digest())
 
 
 # Read bot version

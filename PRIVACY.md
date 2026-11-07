@@ -1,10 +1,10 @@
 # Navi Privacy Policy
 
-This policy is effective as of 15 August 2022 and was last updated on 15 August 2026.  
+This policy is effective as of 15 August 2022 and was last updated on 06 November 2026.  
 
 ## User information the bot collects
 
-Navi does neither collect nor store any personal user data.  
+Navi uses user IDs, the user name of hunting partners and message jump URLs to store settings, tracked data and errors. All data is hashed and/or encrypted before it is stored in the database.  
 
 ## Command tracking
 
@@ -20,15 +20,11 @@ Important things to note:
 ## Message content access
 
 Navi has access to the content of all messages it can see. This access is necessary to create reminders.  
-Navi reads EPIC RPG messages and also reads the commands you issue to trigger said messages (e.g. if a hunt message is detected, it will also read your `/hunt` slash command or your `rpg hunt` message).    
+Navi reads EPIC RPG messages and also reads the commands you issue to trigger said messages.  
 
 ## Storing message data
 
 Navi caches all messages sent by users that either mention the EPIC RPG bot or start with `rpg `. They are used to reduce API calls and increase performance. These messages are discarded after 10 minutes and **not** stored permanently.  
-
-If there is an error, the following data is stored permanently in the error log:  
-• Content of the **EPIC RPG** message that couldn’t get processed correctly (but never messages by **you** or any other users).  
-• A message link to the **EPIC RPG** message that couldn’t get processed correctly. If the error happened in a private channel, I do not have access to that channel, as the stored message link will **not** work.  
 
 ## Purging user data
 
@@ -47,7 +43,7 @@ Please be aware that I have no control over the code and policies of forks and o
 
 This policy therefore only applies to:  
 • The code in the [main repository](https://github.com/MirielCH/Navi), maintained by myself.  
-• The bot instances with the username `Navi#4692` and `Navi Lite#9605`, hosted by myself. **All** other bot instances not listed here are outside of the scope of this privacy policy.  
+• The bot instances with the user IDs 796359341752975390 (Navi in RPG ARMY) and 1213487623688167494 (Navi Lite), hosted by myself. If you encounter another Navi with another user ID, it is outside of the scope of this privacy policy, even if it falsely links to this document.  
 
 Navi may also link to external sites that are not operated by me. The same limits apply to those sites.  
 
@@ -57,4 +53,4 @@ At my discretion, I may change my privacy policy to reflect updates. If I decide
 
 ## Contact me
 
-For any questions or concerns regarding this policy, you may contact me (miriel.ch) on the "Navi Support" discord server.  
+For any questions or concerns regarding this policy, you may contact me (miriel.ch) on the [Navi Support server](https://discord.gg/g2hu4kmajX).  

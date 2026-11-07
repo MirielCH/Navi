@@ -11,7 +11,7 @@ from discord import utils
 
 from database import alts as alts_db
 from database import errors, reminders
-from resources import exceptions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 # Containers
@@ -117,12 +117,12 @@ class User():
     megarace_helper_enabled: bool
     multiplier_management_enabled: bool
     partner_alert_threshold: int
-    partner_channel_id: int
+    partner_channel_id: int | None
     partner_chocolate_box_unlocked: bool
     partner_donor_tier: int
     partner_hunt_end_time: datetime
-    partner_id: int
-    partner_name: str
+    partner_id: int | None
+    partner_name: str | None
     partner_pocket_watch_multiplier: float
     pet_helper_enabled: bool
     pet_helper_icon_mode: bool
@@ -150,7 +150,7 @@ class User():
     ready_up_next_as_timestamp: bool
     ready_up_next_show_hidden_reminders: bool
     ready_up_next_visible: bool
-    reminder_channel_id: int
+    reminder_channel_id: int | None
     round_card_active: bool
     ruby_counter_button_mode: bool
     ruby_counter_enabled: bool
@@ -641,7 +641,7 @@ class User():
 
 
 # Miscellaneous functions
-async def _dict_to_user(record: dict[str, Any]) -> User:
+async def _dict_to_user(record: dict[str, Any], user_id: int | None = None) -> User:
     """Creates a User object from a database record
 
     Arguments
@@ -659,6 +659,21 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
     function_name: str = '_dict_to_user'
     none_date: datetime = datetime(1970, 1, 1, 0, 0, 0)
     try:
+        user_id_db = int(functions.decrypt(record['user_id_token'])) # pyright: ignore
+        if user_id:
+            if user_id != user_id_db:
+                sql = 'UPDATE users SET user_id_token = ? WHERE user_id_hash = ?'
+                cur = settings.NAVI_DB.cursor()
+                cur.execute(sql, (functions.encrypt(user_id), record['user_id_hash']))
+        else:
+            user_id = user_id_db
+        partner_id = partner_channel_id = reminder_channel_id = None
+        if record['partner_id_hash'] and record['partner_id_token']:
+            partner_id = int(functions.decrypt(record['partner_id_token'])) # pyright: ignore
+        if record['partner_channel_id_token']:
+            partner_channel_id = int(functions.decrypt(record['partner_channel_id_token'])) # pyright: ignore
+        if record['reminder_channel_id_token']:
+            reminder_channel_id = int(functions.decrypt(record['reminder_channel_id_token'])) # pyright: ignore
         user = User(
             alert_advent = UserAlert(enabled=bool(record['alert_advent_enabled']),
                                      message=record['alert_advent_message'],
@@ -872,12 +887,12 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             megarace_helper_enabled = bool(record['megarace_helper_enabled']),
             multiplier_management_enabled = bool(record['multiplier_management_enabled']),
             partner_alert_threshold = record['partner_alert_threshold'],
-            partner_channel_id = record['partner_channel_id'],
+            partner_channel_id = partner_channel_id,
             partner_chocolate_box_unlocked = bool(record['partner_chocolate_box_unlocked']),
             partner_donor_tier = record['partner_donor_tier'],
             partner_hunt_end_time = record['partner_hunt_end_time'].replace(tzinfo=timezone.utc),
-            partner_id = record['partner_id'],
-            partner_name = record['partner_name'],
+            partner_id = partner_id,
+            partner_name = functions.decrypt(record['partner_name_token']),
             partner_pocket_watch_multiplier = float(record['partner_pocket_watch_multiplier']),
             pet_helper_enabled = record['pet_helper_enabled'],
             pet_helper_icon_mode = bool(record['pet_helper_icon_mode']),
@@ -905,7 +920,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             ready_up_next_as_timestamp = bool(record['ready_up_next_as_timestamp']),
             ready_up_next_show_hidden_reminders = bool(record['ready_up_next_show_hidden_reminders']),
             ready_up_next_visible = bool(record['ready_up_next_visible']),
-            reminder_channel_id = record['reminder_channel_id'],
+            reminder_channel_id = reminder_channel_id,
             round_card_active = bool(record['round_card_active']),
             ruby_counter_button_mode = bool(record['ruby_counter_button_mode']),
             ruby_counter_enabled = bool(record['ruby_counter_enabled']),
@@ -920,7 +935,7 @@ async def _dict_to_user(record: dict[str, Any]) -> User:
             training_helper_button_mode = bool(record['training_helper_button_mode']),
             training_helper_enabled = bool(record['training_helper_enabled']),
             user_donor_tier = record['user_donor_tier'],
-            user_id = record['user_id'],
+            user_id = user_id,
             user_pocket_watch_multiplier = float(record['user_pocket_watch_multiplier']),
         )
     except Exception as error:
@@ -949,10 +964,10 @@ async def get_user(user_id: int) -> User:
     """
     table: str = 'users'
     function_name: str = 'get_user'
-    sql: str = f'SELECT * FROM {table} WHERE user_id=?'
+    sql: str = f'SELECT * FROM {table} WHERE user_id_hash=?'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id,))
+        cur.execute(sql, (functions.create_hash(user_id),))
         record: Any = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -963,7 +978,7 @@ async def get_user(user_id: int) -> User:
         raise exceptions.FirstTimeUserError(f'No user data found in database for user "{user_id}".')
     record: dict[str, Any] = dict(record)
     record['alts'] = await alts_db.get_alts(user_id)
-    user: User = await _dict_to_user(record)
+    user: User = await _dict_to_user(record, user_id)
 
     return user
 
@@ -1019,7 +1034,7 @@ async def get_user_count() -> int:
     """
     table: str = 'users'
     function_name: str = 'get_user_count'
-    sql: str = f'SELECT COUNT(user_id) FROM {table}'
+    sql: str = f'SELECT COUNT(user_id_hash) FROM {table}'
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         cur.execute(sql)
@@ -1297,11 +1312,23 @@ async def _update_user(user: User, **updated_settings) -> None:
     try:
         cur: sqlite3.Cursor = settings.NAVI_DB.cursor()
         sql: str = f'UPDATE {table} SET'
+        if 'partner_id' in updated_settings:
+            updated_settings['partner_id_hash'] = functions.create_hash(updated_settings['partner_id'])
+            del updated_settings['partner_id']
+        if 'partner_channel_id' in updated_settings:
+            updated_settings['partner_channel_id_token'] = functions.encrypt(updated_settings['partner_channel_id'])
+            del updated_settings['partner_channel_id']
+        if 'partner_name' in updated_settings:
+            updated_settings['partner_name_token'] = functions.encrypt(updated_settings['partner_name'])
+            del updated_settings['partner_name']
+        if 'reminder_channel_id' in updated_settings:
+            updated_settings['reminder_channel_id_token'] = functions.encrypt(updated_settings['reminder_channel_id'])
+            del updated_settings['reminder_channel_id']
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        updated_settings['user_id'] = user.user_id
-        sql = f'{sql} WHERE user_id = :user_id'
+        updated_settings['user_id_hash'] = functions.create_hash(user.user_id)
+        sql = f'{sql} WHERE user_id_hash = :user_id_hash'
         cur.execute(sql, updated_settings)
         if 'user_donor_tier' in updated_settings and user.partner_id is not None:
             partner: User = await get_user(user.partner_id)
@@ -1334,11 +1361,11 @@ async def insert_user(user_id: int) -> User:
     else:
         reactions_enabled: int = 1
         ready_after_all_commands: int = 1
-    values: list[int] = [user_id, reactions_enabled, ready_after_all_commands]
+    values: list[Any] = [functions.create_hash(user_id), functions.encrypt(user_id), reactions_enabled, ready_after_all_commands]
     for activity, default_message in strings.DEFAULT_MESSAGES.items():
         columns = f'{columns},{strings.ACTIVITIES_COLUMNS[activity]}_message'
         values.append(default_message)
-    sql: str = f'INSERT INTO {table} (user_id, reactions_enabled, ready_after_all_commands{columns}) VALUES ('
+    sql: str = f'INSERT INTO {table} (user_id_hash, user_id_token, reactions_enabled, ready_after_all_commands{columns}) VALUES ('
     value: int
     for value in values:
         sql = f'{sql}?,'

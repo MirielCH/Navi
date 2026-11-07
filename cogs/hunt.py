@@ -294,7 +294,7 @@ class HuntCog(commands.Cog):
                 current_time = utils.utcnow()
                 if user_settings.tracking_enabled:
                     command = 'hunt' if not together else 'hunt together'
-                    await tracking.insert_log_entry(user.id, message.guild.id, command, current_time)
+                    await tracking.insert_log_entry(user.id, command, current_time)
                 if user_settings.partner_id is not None:
                     partner: users.User = await users.get_user(user_settings.partner_id)
                     if partner.partner_channel_id is not None and partner.alert_partner.enabled and partner.bot_enabled:
@@ -558,7 +558,7 @@ class HuntCog(commands.Cog):
                     if not user_settings.bot_enabled: return
                     current_time = utils.utcnow()
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                        await tracking.insert_log_entry(user.id, 'hunt', current_time)
                     if not user_settings.alert_hunt.enabled: return
                     user_command_message_content = re.sub(r'\bh\b', 'hardmode', user_command_message.content.lower())
                     user_command_message_content = re.sub(r'\bt\b', 'together', user_command_message_content)
@@ -622,7 +622,7 @@ class HuntCog(commands.Cog):
                     if not user_settings.bot_enabled: return
                     current_time = utils.utcnow()
                     if user_settings.tracking_enabled:
-                        await tracking.insert_log_entry(user.id, message.guild.id, 'hunt', current_time)
+                        await tracking.insert_log_entry(user.id, 'hunt', current_time)
                     if not user_settings.alert_hunt.enabled: return
                     bot_answer_time = message.edited_at if message.edited_at else message.created_at
                     time_elapsed = current_time - bot_answer_time

@@ -103,6 +103,18 @@ To reload files in subfolders, use `folder.file` (e.g. `resources.settings`). Co
 
 Lists all servers Navi is in by name.  
 
+### `/dev create-hash`  
+
+Creates a hash of a value using the secret key in your .env file.  
+
+### `/dev dump-error-log`
+
+Exports the contents of the table `errors` as a CSV file.  
+
+### `/dev delete-error-log`
+
+Deletes all records in the table `errors`.  
+
 ### `/dev shutdown`  
 
 Shuts down the bot. Note that if the bot is registered as a systemctl or systemd service, it will of course automatically restart.  

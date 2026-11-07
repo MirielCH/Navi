@@ -9,7 +9,7 @@ import discord
 from discord import utils
 from discord.ext import bridge, commands
 
-from resources import exceptions, logs, settings, strings
+from resources import functions, logs, settings, strings
 
 
 async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.BridgeContext, discord.Message]] = None) -> None:
@@ -27,7 +27,7 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.Bri
     """
     table = 'errors'
     function_name = 'log_error'
-    sql = f'INSERT INTO {table} (date_time, message_content, error, user_settings, jump_url) VALUES (?, ?, ?, ?, ?)'
+    sql = f'INSERT INTO {table} (date_time, error, jump_url_token) VALUES (?, ?, ?)'
     if hasattr(error, 'message'):
         error_message = f'Error: {error.message}'
     else:
@@ -58,40 +58,15 @@ async def log_error(error: Union[Exception, str], ctx: Optional[Union[bridge.Bri
     elif isinstance(ctx, discord.Message):
         message = ctx
     if message is not None:
-        user_settings = message_content = 'N/A'
         date_time = message.edited_at if message.edited_at else message.created_at
         jump_url = message.jump_url
-        if message.author.id in [settings.EPIC_RPG_ID, settings.TESTY_ID]:
-            message_content = f'---Message content---\n{message.content}'
-            if message.embeds:
-                embed = message.embeds[0]
-                if embed.author is not None:
-                    message_content = f'{message_content}\n\n---Embed author---\n{embed.author.name}'
-                if embed.title is not None:
-                    message_content = f'{message_content}\n\n---Embed title---\n{embed.title}'
-                if embed.description is not None:
-                    message_content = f'{message_content}\n\n---Embed description---\n{embed.description}'
-                for field_no, field in enumerate(embed.fields):
-                    message_content = f'{message_content}\n\n---Embed field {field_no} name---\n{field.name}'
-                    message_content = f'{message_content}\n\n---Embed field {field_no} value---\n{field.value}'
-                if embed.footer is not None:
-                    message_content = f'{message_content}\n\n---Embed footer---\n{embed.footer.text}'
-            if not message.author.bot:
-                try:
-                    from database import users
-                    user: users.User = await users.get_user(message.author.id)
-                    user_settings = str(user)
-                except exceptions.FirstTimeUserError:
-                    pass
     else:
         date_time = utils.utcnow()
-        message_content = 'N/A'
         jump_url = 'N/A'
-        user_settings = 'N/A'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (date_time, message_content, error_message, user_settings, jump_url))
-        logs.logger.error(f'\n{error_message}\n>> Jump URL: {jump_url}')
+        cur.execute(sql, (date_time, error_message, functions.encrypt(jump_url)))
+        logs.logger.error(f'\n{error_message}')
     except sqlite3.Error as error:
         if ctx is not None:
             logs.logger.error(

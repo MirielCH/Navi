@@ -112,6 +112,7 @@ DEFAULT_MESSAGES_EVENT_PINGS: Final[dict[str, str]] = {
     'log': '@here Hey! Click or type `CUT` to get some logs!',
     'lootbox': '@here Hey! Click or type `SUMMON` to get a lootbox!',
     'miniboss': '@here Hey! Click or type `FIGHT` to get some coins!',
+    'rare_hunt_monster': '@here Hey! Click or type `LET\'S GET THAT PICKAXE` to get an artifact part!',
 }
 DEFAULT_MESSAGE_CUSTOM_REMINDER: Final[str] = 'Hey! This is your reminder for **{message}**!'
 

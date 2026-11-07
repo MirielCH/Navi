@@ -8,10 +8,9 @@ import sqlite3
 from typing import NamedTuple, Optional
 
 from discord import utils
-from discord.ext import tasks
 
-from database import errors, users
-from resources import exceptions, settings, strings
+from database import errors
+from resources import exceptions, functions, settings, strings
 
 
 # Containers
@@ -22,7 +21,6 @@ class LogEntry():
     command_count: int
     date_time: datetime
     entry_type: str
-    guild_id: int
     user_id: int
     record_exists: bool = True
 
@@ -46,7 +44,7 @@ class LogEntry():
         All other values will stay on their old values before deletion (!).
         """
         try:
-            new_settings = await get_log_entry(self.user_id, self.guild_id, self.command, self.date_time)
+            new_settings = await get_log_entry(self.user_id, self.command, self.date_time)
         except exceptions.NoDataFoundError as error:
             self.record_exists = False
             return
@@ -54,7 +52,6 @@ class LogEntry():
         self.command_count = new_settings.command_count
         self.entry_type = new_settings.entry_type
         self.date_time = new_settings.date_time
-        self.guild_id = new_settings.guild_id
         self.user_id = new_settings.user_id
 
     async def update(self, **updated_settings) -> None:
@@ -67,7 +64,6 @@ class LogEntry():
             command_count: int
             date_time: datetime
             entry_type: Literal['single', 'summary']
-            guild_id: int
         """
         await _update_log_entry(self, **updated_settings)
         await self.refresh()
@@ -77,7 +73,6 @@ class LogReport(NamedTuple):
     adventure_amount: int
     epic_guard_amount: int
     farm_amount: int
-    guild_id: int # Set to None if no guild_id was provided
     hunt_amount: str
     hunt_together_amount: str
     timeframe: timedelta
@@ -88,7 +83,7 @@ class LogReport(NamedTuple):
 
 
 # Miscellaneous functions
-async def _dict_to_log_entry(record: dict) -> LogEntry:
+async def _dict_to_log_entry(record: dict, user_id: int | None = None) -> LogEntry:
     """Creates a LogEntry object from a database record
 
     Arguments
@@ -105,13 +100,17 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
     """
     function_name = '_dict_to_log_entry'
     try:
+        if not user_id:
+            sql = f'SELECT user_id_token FROM users WHERE user_id_hash=?'
+            cur = settings.NAVI_DB.cursor()
+            cur.execute(sql, (record['user_id_hash'],))
+            user_id = int(functions.decrypt(dict(cur.fetchone())['user_id_token'])) # pyright: ignore
         log_entry = LogEntry(
             command = record['command'],
             command_count = record['command_count'],
             date_time = record['date_time'].replace(tzinfo=timezone.utc),
             entry_type = record['type'],
-            guild_id = record['guild_id'],
-            user_id = record['user_id'],
+            user_id = user_id,
         )
     except Exception as error:
         await errors.log_error(
@@ -123,7 +122,7 @@ async def _dict_to_log_entry(record: dict) -> LogEntry:
 
 
 # Read Data
-async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: datetime, entry_type: Optional[str] = 'single') -> LogEntry:
+async def get_log_entry(user_id: int, command: str, date_time: datetime, entry_type: Optional[str] = 'single') -> LogEntry:
     """Gets a specific log entry based on a specific user, command and an EXACT time.
     Since the exact time is usually unknown, this is mostly used for refreshing an object.
 
@@ -140,10 +139,10 @@ async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: da
     """
     table = 'tracking_log'
     function_name = 'get_log_entry'
-    sql = f'SELECT * FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND date_time=? AND type=?'
+    sql = f'SELECT * FROM {table} WHERE user_id_hash=? AND command=? AND date_time=? AND type=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, guild_id, command, date_time, entry_type))
+        cur.execute(sql, (functions.create_hash(user_id), command, date_time, entry_type))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -154,22 +153,19 @@ async def get_log_entry(user_id: int, guild_id: int, command: str, date_time: da
         raise exceptions.NoDataFoundError(
             f'No log data found in database for user "{user_id}", command "{command}" and time "{str(datetime)}".'
         )
-    log_entry = await _dict_to_log_entry(dict(record))
+    log_entry = await _dict_to_log_entry(dict(record), user_id)
 
     return log_entry
 
 
-async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
-                          guild_id: Optional[int] = None) -> tuple[LogEntry, ...]:
+async def get_log_entries(user_id: int, command: str, timeframe: timedelta) -> tuple[LogEntry, ...]:
     """Gets all log entries for one command for a certain amount of time from a user id.
-    If the guild_id is specified, the log entries are limited to that guild.
 
     Arguments
     ---------
     user_id: int
     command: str
     timeframe: timedelta object with the amount of time that should be covered, starting from UTC now
-    guild_id: Optional[int]
 
     Returns
     -------
@@ -185,16 +181,12 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
     table = 'tracking_log'
     function_name = 'get_log_entries'
     sql = (
-        f'SELECT * FROM {table} WHERE user_id=? AND date_time>=? AND command=?'
+        f'SELECT * FROM {table} WHERE user_id_hash=? AND date_time>=? AND command=?'
     )
     date_time = utils.utcnow() - timeframe
-    if guild_id is not None: sql = f'{sql} AND guild_id=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        if guild_id is None:
-            cur.execute(sql, (user_id, date_time, command))
-        else:
-            cur.execute(sql, (user_id, date_time, command, guild_id))
+        cur.execute(sql, (functions.create_hash(user_id), date_time, command))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -203,11 +195,10 @@ async def get_log_entries(user_id: int, command: str, timeframe: timedelta,
         raise
     if not records:
         error_message = f'No log data found in database for timeframe "{str(timeframe)}".'
-        if guild_id is not None: error_message = f'{error_message} Guild: {guild_id}'
         raise exceptions.NoDataFoundError(error_message)
     log_entries = []
     for record in records:
-        log_entry = await _dict_to_log_entry(dict(record))
+        log_entry = await _dict_to_log_entry(dict(record), user_id)
         log_entries.append(log_entry)
 
     return tuple(log_entries)
@@ -234,11 +225,11 @@ async def get_all_log_entries(user_id: int) -> tuple[LogEntry, ...]:
     table = 'tracking_log'
     function_name = 'get_all_log_entries'
     sql = (
-        f'SELECT * FROM {table} WHERE user_id=?'
+        f'SELECT * FROM {table} WHERE user_id_hash=?'
     )
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id,))
+        cur.execute(sql, (functions.create_hash(user_id),))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -250,7 +241,7 @@ async def get_all_log_entries(user_id: int) -> tuple[LogEntry, ...]:
         raise exceptions.NoDataFoundError(error_message)
     log_entries = []
     for record in records:
-        log_entry = await _dict_to_log_entry(dict(record))
+        log_entry = await _dict_to_log_entry(dict(record), user_id)
         log_entries.append(log_entry)
 
     return tuple(log_entries)
@@ -263,7 +254,6 @@ async def get_old_log_entries(days: int) -> tuple[LogEntry, ...]:
     ---------
     user_id: int
     days: amount of days that should be kept as single entries
-    guild_id: Optional[int]
 
     Returns
     -------
@@ -303,10 +293,8 @@ async def get_old_log_entries(days: int) -> tuple[LogEntry, ...]:
     return tuple(log_entries)
 
 
-async def get_log_report(user_id: int, timeframe: timedelta,
-                         guild_id: Optional[int] = None) -> LogReport:
+async def get_log_report(user_id: int, timeframe: timedelta) -> LogReport:
     """Gets a summary log report for all commands for a certain amount of time from a user id.
-    If the guild_id is specified, the report is limited to that guild.
 
     Returns
     -------
@@ -320,16 +308,12 @@ async def get_log_report(user_id: int, timeframe: timedelta,
     """
     table = 'tracking_log'
     function_name = 'get_log_report'
-    sql = f'SELECT command, SUM(command_count) FROM {table} WHERE user_id=? AND date_time>=?'
+    sql = f'SELECT command, SUM(command_count) FROM {table} WHERE user_id_hash=? AND date_time>=?'
     date_time = utils.utcnow() - timeframe
-    if guild_id is not None: sql = f'{sql} AND guild_id=?'
     sql = f'{sql} GROUP BY command'
     try:
         cur = settings.NAVI_DB.cursor()
-        if guild_id is None:
-            cur.execute(sql, (user_id, date_time))
-        else:
-            cur.execute(sql, (user_id, date_time, guild_id))
+        cur.execute(sql, (functions.create_hash(user_id), date_time))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -358,7 +342,6 @@ async def get_log_report(user_id: int, timeframe: timedelta,
         training_amount = records_data['training'],
         ultraining_amount = records_data['ultraining'],
         work_amount = records_data['work'],
-        guild_id = guild_id,
         timeframe = timeframe,
         user_id = user_id
     )
@@ -377,10 +360,10 @@ async def _delete_log_entry(log_entry: LogEntry) -> None:
     """
     table = 'tracking_log'
     function_name = '_delete_log_entry'
-    sql = f'DELETE FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND date_time=? AND type=?'
+    sql = f'DELETE FROM {table} WHERE user_id_hash=? AND command=? AND date_time=? AND type=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (log_entry.user_id, log_entry.guild_id, log_entry.command, log_entry.date_time,
+        cur.execute(sql, (functions.create_hash(log_entry.user_id), log_entry.command, log_entry.date_time,
                           log_entry.entry_type))
     except sqlite3.Error as error:
         await errors.log_error(
@@ -400,7 +383,6 @@ async def _update_log_entry(log_entry: LogEntry, **updated_settings) -> None:
         command_count: int
         date_time: datetime
         entry_type: Literal['single', 'summary']
-        guild_id: int
         user_id: int
 
     Raises
@@ -419,15 +401,18 @@ async def _update_log_entry(log_entry: LogEntry, **updated_settings) -> None:
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
+        if 'user_id' in updated_settings:
+            updated_settings['user_id_hash'] = functions.create_hash(updated_settings['user_id'])
+            del updated_settings['user_id']
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
         sql = sql.strip(",")
-        updated_settings['user_id_old'] = log_entry.user_id
+        updated_settings['user_id_hash_old'] = functions.create_hash(log_entry.user_id)
         updated_settings['command_old'] = log_entry.command
         updated_settings['date_time_old'] = log_entry.date_time
         updated_settings['entry_type_old'] = log_entry.entry_type
         sql = (
-            f'{sql} WHERE user_id = :user_id_old AND type = :entry_type_old AND command = :command_old '
+            f'{sql} WHERE user_id_hash = :user_id_hash_old AND type = :entry_type_old AND command = :command_old '
             f'AND date_time = :date_time_old'
         )
         cur.execute(sql, updated_settings)
@@ -438,8 +423,7 @@ async def _update_log_entry(log_entry: LogEntry, **updated_settings) -> None:
         raise
 
 
-async def insert_log_entry(user_id: int, guild_id: int,
-                           command: str, date_time: datetime) -> LogEntry:
+async def insert_log_entry(user_id: int, command: str, date_time: datetime) -> LogEntry:
     """Inserts a single record to the table "tracking_log".
 
     Returns
@@ -454,22 +438,22 @@ async def insert_log_entry(user_id: int, guild_id: int,
     function_name = 'insert_log_entry'
     table = 'tracking_log'
     sql = (
-        f'INSERT INTO {table} (user_id, guild_id, command, command_count, date_time) VALUES (?, ?, ?, ?, ?)'
+        f'INSERT INTO {table} (user_id_hash, command, command_count, date_time) VALUES (?, ?, ?, ?)'
     )
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, guild_id, command, 1, date_time))
+        cur.execute(sql, (functions.create_hash(user_id), command, 1, date_time))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
         )
         raise
-    log_entry = await get_log_entry(user_id, guild_id, command, date_time)
+    log_entry = await get_log_entry(user_id, command, date_time)
 
     return log_entry
 
 
-async def insert_log_summary(user_id: int, guild_id: int, command: str, date_time: datetime, amount: int) -> LogEntry:
+async def insert_log_summary(user_id: int, command: str, date_time: datetime, amount: int) -> LogEntry:
     """Inserts a summary record to the table "tracking_log". If record already exists, count is increased by one instead.
 
     Returns
@@ -485,29 +469,29 @@ async def insert_log_summary(user_id: int, guild_id: int, command: str, date_tim
     table = 'tracking_log'
     log_entry = None
     try:
-        log_entry = await get_log_entry(user_id, guild_id, command, date_time, 'summary')
+        log_entry = await get_log_entry(user_id, command, date_time, 'summary')
     except exceptions.NoDataFoundError:
         pass
     if log_entry is not None:
         await log_entry.update(command_count=log_entry.command_count + amount)
     else:
         sql = (
-            f'INSERT INTO {table} (user_id, guild_id, command, command_count, date_time, type) VALUES (?, ?, ?, ?, ?, ?)'
+            f'INSERT INTO {table} (user_id_hash, command, command_count, date_time, type) VALUES (?, ?, ?, ?, ?)'
         )
         try:
             cur = settings.NAVI_DB.cursor()
-            cur.execute(sql, (user_id, guild_id, command, amount, date_time, 'summary'))
+            cur.execute(sql, (functions.create_hash(user_id), command, amount, date_time, 'summary'))
         except sqlite3.Error as error:
             await errors.log_error(
                 strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
             )
             raise
-        log_entry = await get_log_entry(user_id, guild_id, command, date_time, 'summary')
+        log_entry = await get_log_entry(user_id, command, date_time, 'summary')
 
     return log_entry
 
 
-async def delete_log_entries(user_id: int, guild_id: int, command: str, date_time_min: datetime,
+async def delete_log_entries(user_id: int, command: str, date_time_min: datetime,
                              date_time_max: datetime) -> None:
     """Deletes all single log entries between two datetimes.
 
@@ -519,10 +503,10 @@ async def delete_log_entries(user_id: int, guild_id: int, command: str, date_tim
     """
     table = 'tracking_log'
     function_name = '_delete_log_entries'
-    sql = f'DELETE FROM {table} WHERE user_id=? AND guild_id=? AND command=? AND type=? AND date_time BETWEEN ? AND ?'
+    sql = f'DELETE FROM {table} WHERE user_id_hash=? AND command=? AND type=? AND date_time BETWEEN ? AND ?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, guild_id, command, 'single', date_time_min, date_time_max))
+        cur.execute(sql, (functions.create_hash(user_id), command, 'single', date_time_min, date_time_max))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

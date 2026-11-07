@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import sqlite3
 
 from database import errors
-from resources import exceptions, settings, strings
+from resources import exceptions, functions, settings, strings
 
 
 # Containers
@@ -49,7 +49,7 @@ class Portal():
 
 
 # Miscellaneous functions
-async def _dict_to_portal(record: dict) -> Portal:
+async def _dict_to_portal(record: dict, user_id: int) -> Portal:
     """Creates a Portal object from a database record
 
     Arguments
@@ -67,8 +67,8 @@ async def _dict_to_portal(record: dict) -> Portal:
     function_name = '_dict_to_portal'
     try:
         portal = Portal(
-            channel_id = record['channel_id'],
-            user_id = record['user_id'],
+            channel_id = int(functions.decrypt(record['channel_id_token'])), # pyright: ignore
+            user_id = user_id,
         )
     except Exception as error:
         await errors.log_error(
@@ -102,10 +102,10 @@ async def get_portal(user_id: int, channel_id: int) -> Portal:
     """
     table = 'users_portals'
     function_name = 'get_portal'
-    sql = f'SELECT * FROM {table} WHERE user_id=? AND channel_id=?'
+    sql = f'SELECT * FROM {table} WHERE user_id_hash=? AND channel_id_hash=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id, channel_id))
+        cur.execute(sql, (functions.create_hash(user_id), functions.create_hash(channel_id)))
         record = cur.fetchone()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -116,7 +116,7 @@ async def get_portal(user_id: int, channel_id: int) -> Portal:
         raise exceptions.NoDataFoundError(
             f'No portal found in database with user id "{user_id}" and channel id "{channel_id}".'
         )
-    portal = await _dict_to_portal(dict(record))
+    portal = await _dict_to_portal(dict(record), user_id)
 
     return portal
 
@@ -141,10 +141,10 @@ async def get_portals(user_id: int) -> tuple[Portal, ...]:
     """
     table = 'users_portals'
     function_name = 'get_portals'
-    sql = f'SELECT * FROM {table} WHERE user_id=? ORDER BY sort_index ASC'
+    sql = f'SELECT * FROM {table} WHERE user_id_hash=? ORDER BY sort_index ASC'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (user_id,))
+        cur.execute(sql, (functions.create_hash(user_id),))
         records = cur.fetchall()
     except sqlite3.Error as error:
         await errors.log_error(
@@ -156,7 +156,7 @@ async def get_portals(user_id: int) -> tuple[Portal, ...]:
         raise exceptions.NoDataFoundError(f'No portals found in database with user id {user_id}.')
     user_portals = []
     for record in records:
-        portal = await _dict_to_portal(dict(record))
+        portal = await _dict_to_portal(dict(record), user_id)
         user_portals.append(portal)
 
     return tuple(user_portals)
@@ -174,10 +174,10 @@ async def _delete_portal(portal: Portal) -> None:
     """
     function_name = '_delete_portal'
     table = 'users_portals'
-    sql = f'DELETE FROM {table} WHERE user_id=? AND channel_id=?'
+    sql = f'DELETE FROM {table} WHERE user_id_hash=? AND channel_id_hash=?'
     try:
         cur = settings.NAVI_DB.cursor()
-        cur.execute(sql, (portal.user_id, portal.channel_id))
+        cur.execute(sql, (functions.create_hash(portal.user_id), functions.create_hash(portal.channel_id)))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)
@@ -208,14 +208,21 @@ async def _update_portal(portal: Portal, **updated_settings) -> None:
             strings.INTERNAL_ERROR_NO_ARGUMENTS.format(table=table, function=function_name)
         )
         raise exceptions.NoArgumentsError('You need to specify at least one keyword argument.')
-    updated_settings['user_id_old'] = portal.user_id
-    updated_settings['channel_id_old'] = portal.channel_id
+    if 'user_id' in updated_settings:
+        updated_settings['user_id_hash'] = functions.create_hash(updated_settings['user_id'])
+        del updated_settings['user_id']
+    if 'channel_id' in updated_settings:
+        updated_settings['channel_id_hash'] = functions.create_hash(updated_settings['channel_id'])
+        updated_settings['channel_id_token'] = functions.encrypt(updated_settings['channel_id'])
+        del updated_settings['channel_id']
+    updated_settings['user_id_hash_old'] = functions.create_hash(portal.user_id)
+    updated_settings['channel_id_hash_old'] = functions.create_hash(portal.channel_id)
     try:
         cur = settings.NAVI_DB.cursor()
         sql = f'UPDATE {table} SET'
         for updated_setting in updated_settings:
             sql = f'{sql} {updated_setting} = :{updated_setting},'
-        sql = f'{sql} WHERE user_id = :user_id_old AND channel_id = :channel_id_old'
+        sql = f'{sql} WHERE user_id_hash = :user_id_hash_old AND channel_id_hash = :channel_id_hash_old'
         cur.execute(sql, updated_settings)
     except sqlite3.Error as error:
         await errors.log_error(
@@ -245,9 +252,9 @@ async def insert_portal(user_id: int, channel_id: int) -> Portal:
     function_name = 'insert_portal'
     table = 'users_portals'
     cur = settings.NAVI_DB.cursor()
-    sql = f'INSERT INTO {table} (user_id, channel_id) VALUES (?, ?)'
+    sql = f'INSERT INTO {table} (user_id_hash, channel_id_hash, channel_id_token) VALUES (?, ?, ?)'
     try:
-        cur.execute(sql, (user_id, channel_id))
+        cur.execute(sql, (functions.create_hash(user_id), functions.create_hash(channel_id), functions.encrypt(channel_id)))
     except sqlite3.Error as error:
         await errors.log_error(
             strings.INTERNAL_ERROR_SQLITE3.format(error=error, table=table, function=function_name, sql=sql)

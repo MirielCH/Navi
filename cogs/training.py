@@ -157,7 +157,7 @@ class TrainingCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'ultraining', utils.utcnow())
+                    await tracking.insert_log_entry(user.id, 'ultraining', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'ultraining')
                 await user_settings.update(last_training_command='ultraining')
@@ -211,7 +211,7 @@ class TrainingCog(commands.Cog):
                 if not user_settings.bot_enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'training')
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', utils.utcnow())
+                    await tracking.insert_log_entry(user.id, 'training', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 await user_settings.update(last_training_command='training')
                 time_left = await functions.calculate_time_left_from_cooldown(message, user_settings, 'training')
@@ -253,7 +253,7 @@ class TrainingCog(commands.Cog):
                     return
                 if not user_settings.bot_enabled: return
                 if user_settings.tracking_enabled:
-                    await tracking.insert_log_entry(user.id, message.guild.id, 'training', utils.utcnow())
+                    await tracking.insert_log_entry(user.id, 'training', utils.utcnow())
                 if not user_settings.alert_training.enabled: return
                 user_command = await functions.get_slash_command(user_settings, 'training')
                 await user_settings.update(last_training_command='training')

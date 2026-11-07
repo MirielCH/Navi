@@ -3,6 +3,7 @@
 """Internal dev commands"""
 
 import asyncio
+import csv
 import importlib
 import os
 import re
@@ -604,6 +605,96 @@ class DevCog(commands.Cog):
         await ctx.respond(content=f'**User settings for `{user_id}`**', file=discord.File(text_file_path))
 
         os.remove(text_file_path)
+
+
+    @dev_group.command(name='create-hash')
+    async def dev_create_hash(
+        self,
+        ctx: bridge.BridgeContext,
+        value: BridgeOption(str, 'Value to create a hash for'),
+    ) -> None:
+        """Creates a hash of the given value"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        await ctx.respond(
+            f'Hash of `{value}`:\n```{functions.create_hash(value)}```'
+        )
+        
+
+    @dev_group.command(name='dump-error-log')
+    @commands.bot_has_permissions(send_messages=True, attach_files=True)
+    async def dev_user_settings(
+        self,
+        ctx: bridge.BridgeContext,
+        amount: BridgeOption(int, 'Amount of records, newest first', default=0),
+    ) -> None:
+        """Dumps the error log as a CSV file"""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+
+        await ctx.defer()
+        try:
+            if amount > 0:
+                sql = f'SELECT * FROM (SELECT * FROM errors ORDER BY date_time DESC LIMIT {amount}) AS newest ORDER BY date_time ASC' 
+            else:
+                sql = 'SELECT * FROM errors ORDER BY date_time ASC'
+            cur = settings.NAVI_DB.cursor()
+            cur.execute(sql)
+            records = cur.fetchall()
+        except Exception as error:
+            await ctx.respond(content=f'Error retrieving data:\n```{error}```')
+            return
+
+        all_records_as_dict = []
+        for record in records:
+            record_as_dict = dict(record)
+            if record_as_dict['jump_url_token'] is not None:
+                record_as_dict['jump_url'] = functions.decrypt(record_as_dict['jump_url_token'])
+            else:
+                record_as_dict['jump_url'] = 'N/A'
+            del record_as_dict['jump_url_token']
+            all_records_as_dict.append(record_as_dict)
+
+        if not all_records_as_dict:
+            await ctx.respond(content='The error log is empty.')    
+            return
+
+        csv_file_path = 'error_log.csv'
+
+        with open("error_log.csv", "w", encoding="utf-8-sig", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=list(all_records_as_dict[0].keys()), delimiter=";", quoting=csv.QUOTE_ALL)
+            writer.writeheader()
+            writer.writerows(all_records_as_dict)
+
+        await ctx.respond(content=f'Error log as CSV:', file=discord.File(csv_file_path))
+        os.remove(csv_file_path)
+        
+
+    @dev_group.command(name='delete-error-log')
+    async def delete_error_log(self, ctx: bridge.BridgeContext):
+        """Erases the data of the table "errors"""""
+        if ctx.author.id not in settings.DEV_IDS:
+            await ctx.respond(MSG_NOT_DEV, ephemeral=True)
+            return
+        view = views.ConfirmCancelView(ctx, styles=[discord.ButtonStyle.red, discord.ButtonStyle.grey])
+        interaction = await ctx.respond(f'**{ctx.author.global_name}**, are you **SURE**?', view=view)
+        view.interaction_message = interaction
+        await view.wait()
+        if view.value is None:
+            await interaction.edit(content=f'**{ctx.author.global_name}**, you didn\'t answer in time.', view=None)
+        elif view.value == 'confirm':
+            await interaction.edit(content='Erasing data...', view=None)
+            try:
+                cur = settings.NAVI_DB.cursor()
+                cur.execute('DELETE FROM errors')
+                await interaction.edit(content='Done.', view=None)    
+            except Exception as error:
+                await interaction.edit(content=f'Got an error:```{error}```', view=None)    
+        else:
+            await interaction.edit(content='Aborted.', view=None)
 
 
 def setup(bot: bridge.AutoShardedBot):
